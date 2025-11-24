@@ -1,3 +1,4 @@
+/* eslint-disable no-undef */
 import 'reflect-metadata';
 import { Dictionary } from '../types';
 
@@ -138,9 +139,7 @@ const isElectron: () => boolean = (): boolean => {
    */
   if (
     typeof process !== 'undefined' &&
-    // eslint-disable-next-line no-undef
     typeof process?.versions === 'object' &&
-    // eslint-disable-next-line no-undef
     !!process.versions?.electron
   ) {
     /**
@@ -204,6 +203,7 @@ const isTouchDevice: () => boolean = (): boolean => {
        */
       document.createEvent('TouchEvent');
       return true;
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (e) {
       try {
         /**
@@ -221,6 +221,7 @@ const isTouchDevice: () => boolean = (): boolean => {
            */
           'onmsgesturechange' in window
         );
+        // eslint-disable-next-line no-empty
       } catch {}
     }
   }
@@ -443,7 +444,6 @@ export const Platform = {
   isTouchDevice,
   isServerSide,
   isClientSide,
-  isMobileBrowser,
   isAndroidMobileBrowser,
   isReactNativeWebview,
 };

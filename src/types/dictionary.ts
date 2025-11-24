@@ -15,15 +15,20 @@ export type Dictionary = Record<string, any>;
  * A utility type that capitalizes the first character of a string type.
  * If the string is empty, it returns the same string.
  *
+ * Note: This is equivalent to TypeScript's built-in `Capitalize<S>` utility type.
+ * Consider using `Capitalize<S>` directly for better TypeScript ecosystem compatibility.
+ *
  * @typeParam S - The string type to capitalize. Must extend `string`.
  *
  * @example
  * ```typescript
- * type Greeting = UcFirst<'hello'>; // Results in 'Hello'
- * type Empty = UcFirst<''>; // Results in ''
- * type AlreadyCapitalized = UcFirst<'World'>; // Results in 'World'
+ * type Greeting = UppercaseFirst<'hello'>; // Results in 'Hello'
+ * type Empty = UppercaseFirst<''>; // Results in ''
+ * type AlreadyCapitalized = UppercaseFirst<'World'>; // Results in 'World'
  * ```
+ *
+ * @deprecated Consider using TypeScript's built-in `Capitalize<S>` instead
  */
-export type UcFirst<S extends string> = S extends `${infer F}${infer R}`
+export type UppercaseFirst<S extends string> = S extends `${infer F}${infer R}`
   ? `${Uppercase<F>}${R}`
   : S;
