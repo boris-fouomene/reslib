@@ -42,7 +42,7 @@ export function FieldMeta<T extends FieldType = FieldType>(
  * class MyClass {
  *   @FieldMeta({ type: 'string' }) myField: string;
  * }
- * const fields = getFields(MyClass);
+ * const fields = getFieldsFromTarget(MyClass);
  * console.log(fields); // Output: { myField: { name: 'myField', type: 'string' } }
  * ```
  */
