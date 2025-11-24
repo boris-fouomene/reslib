@@ -58,6 +58,7 @@ export const getQueryParams = function (
   if (typeof uri !== 'string') return {};
   return queryString.parse(extractQueryString(uri, false), {
     allowSparse: true,
+    decoder: (str: string) => decodeURIComponent(str.replace(/\+/g, ' ')),
     ...Object.assign({}, queryStringOpts),
   });
 };
@@ -122,7 +123,9 @@ const defaultStringifyOptions: IStringifyBaseOptions = {
  */
 export function setQueryParams(
   url: string | undefined | null,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   key: any,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   value?: any,
   options: IStringifyBaseOptions = {}
 ): string {
@@ -175,10 +178,12 @@ export function setQueryParams(
  * ```
  */
 export function objectToQueryString(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   o: any,
   encodeURI: boolean = false
 ): string {
   if (o == null || typeof o !== 'object') return '';
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   function iter(o: any, path: string) {
     if (Array.isArray(o)) {
       o.forEach(function (a) {
@@ -258,7 +263,7 @@ export const parseURI = (
   }
   uri = isUriEncoded(uri) ? decodeURIComponent(uri) : uri;
   var m = uri.match(
-    /^(([^:\/?#]+:)?(?:\/\/((?:([^\/?#:]*):([^\/?#:]*)@)?([^\/?#:]*)(?::([^\/?#:]*))?)))?([^?#]*)(\?[^#]*)?(#.*)?$/
+    /^(([^:\\/?#]+:)?(?:\/\/((?:([^\\/?#:]*):([^\\/?#:]*)@)?([^\\/?#:]*)(?::([^\\/?#:]*))?)))?([^?#]*)(\?[^#]*)?(#.*)?$/
   );
   let r = !m
     ? {}
@@ -477,25 +482,68 @@ export function isUrl(value: string, options: IsUrlOptions = {}): boolean {
   // - Fragment: optional (e.g., #section)
 
   if (requireHost) {
-    // Strict regex for host-requiring protocols
-    let protocolPattern = '[a-zA-Z][a-zA-Z\\d+\\-.]*';
-
-    // If allowedProtocols is specified, create a pattern for those specific protocols
-    if (allowedProtocols && allowedProtocols.length > 0) {
-      protocolPattern = `(?:${allowedProtocols.join('|')})`;
-    }
-
-    const urlRegex = new RegExp(
-      `^(${protocolPattern}):\/\/` + // Protocol
-        '([a-zA-Z\\d-]+(\\.[a-zA-Z\\d-]+)*|' + // Domain with dots
-        '\\[[0-9a-fA-F:]+\\]|' + // IPv6
-        'localhost|' + // Localhost
-        '\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3})' + // IPv4
-        '(:\\d{1,5})?' + // Optional port
-        '(\\/[^\\s]*)?$' // Optional path
+    const colonIndex = trimmedValue.indexOf('://');
+    if (colonIndex === -1) return false;
+    const protocol = trimmedValue.slice(0, colonIndex);
+    if (!protocol) return false;
+    if (
+      allowedProtocols &&
+      allowedProtocols.length > 0 &&
+      !allowedProtocols.includes(protocol)
+    )
+      return false;
+    const afterProtocol = trimmedValue.slice(colonIndex + 3);
+    if (afterProtocol === '') return false;
+    // Remove auth
+    const atIndex = afterProtocol.indexOf('@');
+    const hostAndRest =
+      atIndex >= 0 ? afterProtocol.slice(atIndex + 1) : afterProtocol;
+    if (hostAndRest === '' || hostAndRest.startsWith('/')) return false;
+    // Extract host
+    const slashIndex = hostAndRest.indexOf('/');
+    const questionIndex = hostAndRest.indexOf('?');
+    const hashIndex = hostAndRest.indexOf('#');
+    const endIndex = Math.min(
+      slashIndex >= 0 ? slashIndex : hostAndRest.length,
+      questionIndex >= 0 ? questionIndex : hostAndRest.length,
+      hashIndex >= 0 ? hashIndex : hostAndRest.length
     );
-
-    return urlRegex.test(trimmedValue);
+    const host = hostAndRest.slice(0, endIndex);
+    if (!host) return false;
+    // Extract hostname
+    let hostname = host;
+    if (host.startsWith('[')) {
+      // IPv6
+      const closeIndex = host.indexOf(']');
+      if (closeIndex === -1) return false;
+      hostname = host.slice(0, closeIndex + 1);
+      const after = host.slice(closeIndex + 1);
+      if (after && !after.startsWith(':')) return false;
+    } else {
+      const colonIndex2 = host.indexOf(':');
+      if (colonIndex2 >= 0) {
+        hostname = host.slice(0, colonIndex2);
+      }
+    }
+    if (!hostname) return false;
+    // Validate hostname
+    if (hostname === 'localhost') return true;
+    if (/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(hostname)) {
+      const octets = hostname.split('.').map(Number);
+      if (octets.some((o) => o > 255 || o < 0)) return false;
+      return true;
+    }
+    if (/^\[.*\]$/.test(hostname)) {
+      // Basic IPv6 check
+      const content = hostname.slice(1, -1);
+      if (!content || content.includes(':::')) return false;
+      return true;
+    }
+    // Domain
+    if (/^[a-zA-Z\d-]*(\.[a-zA-Z\d-]+)*$/.test(hostname) && hostname !== '') {
+      return true;
+    }
+    return false;
   } else {
     // More permissive regex that accepts various URI schemes
     // This will match: protocol:// OR protocol: (for schemes like mailto:, tel:)
@@ -531,7 +579,7 @@ export function isUrl(value: string, options: IsUrlOptions = {}): boolean {
  * console.log(isUriEncoded('https://example.com')); // false
  * console.log(isUriEncoded('hello%20world%21normal')); // true (mixed)
  */
-export const isUriEncoded = (str: any): boolean => {
+export const isUriEncoded = (str: string): boolean => {
   // Check if input is a valid string
   if (!isNonNullString(str)) return false;
 
@@ -563,6 +611,7 @@ export const isUriEncoded = (str: any): boolean => {
       // Double decode failed, but we have valid encoding, so it's encoded
       return true;
     }
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
   } catch (error) {
     return false;
   }

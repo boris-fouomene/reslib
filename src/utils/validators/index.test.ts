@@ -1,4 +1,4 @@
-import { isValidImageSrc } from '@utils/image';
+import { isImageSrc } from '@utils/image';
 import '../string';
 import { isValidEmail } from './index';
 
@@ -25,25 +25,23 @@ describe('Validator Utils', () => {
     });
   });
 
-  describe('isValidImageSrc', () => {
+  describe('isImageSrc', () => {
     it('should return true for valid image URLs', () => {
-      expect(isValidImageSrc('https://example.com/image.jpg')).toBe(true);
-      expect(isValidImageSrc('http://sub.example.com/path/image.png')).toBe(
-        true
-      );
-      expect(isValidImageSrc('blob:http://example.com/image.jpg')).toBe(true);
+      expect(isImageSrc('https://example.com/image.jpg')).toBe(true);
+      expect(isImageSrc('http://sub.example.com/path/image.png')).toBe(true);
+      expect(isImageSrc('blob:http://example.com/image.jpg')).toBe(true);
     });
 
     it('should return false for invalid valid data URLs', () => {
-      expect(isValidImageSrc('data:image/jpeg;base64,abc123')).toBe(false);
-      expect(isValidImageSrc('data:image/png;base64,xyz789')).toBe(false);
+      expect(isImageSrc('data:image/jpeg;base64,abc123')).toBe(false);
+      expect(isImageSrc('data:image/png;base64,xyz789')).toBe(false);
     });
 
     it('should return false for invalid sources', () => {
-      expect(isValidImageSrc('invalid-url')).toBe(false);
-      expect(isValidImageSrc('')).toBe(false);
-      expect(isValidImageSrc(null)).toBe(false);
-      expect(isValidImageSrc(undefined)).toBe(false);
+      expect(isImageSrc('invalid-url')).toBe(false);
+      expect(isImageSrc('')).toBe(false);
+      expect(isImageSrc(null)).toBe(false);
+      expect(isImageSrc(undefined)).toBe(false);
     });
   });
 });

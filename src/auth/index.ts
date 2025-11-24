@@ -14,12 +14,12 @@ import { IDict } from '../types/dictionary';
 import { isNonNullString, isObj, JsonHelper, stringify } from '../utils';
 import './types';
 import {
+  AuthUser,
   IAuthEvent,
   IAuthPerm,
   IAuthPerms,
   IAuthRole,
   IAuthSessionStorage,
-  IAuthUser,
 } from './types';
 
 export * from './types';
@@ -30,7 +30,7 @@ const SESSION_ENCRYPT_KEY = 'auth-decrypted-key';
 const USER_SESSION_KEY = 'user-session';
 
 type ILocalUserRef = {
-  current: IAuthUser | null;
+  current: AuthUser | null;
 };
 
 /***
@@ -279,7 +279,7 @@ export class Auth {
    *
    * ### Parameters
    *
-   * - `user` (IAuthUser , optional): The user object to check. If not
+   * - `user` (AuthUser , optional): The user object to check. If not
    *   provided, the function will attempt to retrieve the signed user
    *   from the session.
    *
@@ -290,16 +290,16 @@ export class Auth {
    * ### Example Usage
    *
    * ```typescript
-   * const user: IAuthUser  = { id: "admin123" };
+   * const user: AuthUser  = { id: "admin123" };
    * Auth.isMasterAdmin = (user)=>{
    *  return checkSomeCondition(user);
    * }; // false (assuming the user is not a master admin)
    * ```
-   * @see {@link IAuthUser} for the `IAuthUser` type.
+   * @see {@link AuthUser} for the `AuthUser` type.
    */
-  static isMasterAdmin?: (user?: IAuthUser) => boolean;
-  private static _isMasterAdmin(user?: IAuthUser): boolean {
-    user = isObj(user) ? user : (Auth.getSignedUser() as IAuthUser);
+  static isMasterAdmin?: (user?: AuthUser) => boolean;
+  private static _isMasterAdmin(user?: AuthUser): boolean {
+    user = isObj(user) ? user : (Auth.getSignedUser() as AuthUser);
     return typeof Auth.isMasterAdmin == 'function'
       ? Auth.isMasterAdmin(user)
       : false;
@@ -327,7 +327,7 @@ export class Auth {
    *
    * @returns The authenticated user object containing user information, permissions, and roles,
    *          or `null` if no user is currently signed in, session data is corrupted, or
-   *          decryption fails. The returned object conforms to the `IAuthUser` interface.
+   *          decryption fails. The returned object conforms to the `AuthUser` interface.
    *
    * @example
    * ```typescript
@@ -357,7 +357,7 @@ export class Auth {
    * ```typescript
    * // Handling authentication state in React component
    * function UserProfile() {
-   *   const [user, setUser] = useState<IAuthUser | null>(null);
+   *   const [user, setUser] = useState<AuthUser | null>(null);
    *
    *   useEffect(() => {
    *     const currentUser = Auth.getSignedUser();
@@ -413,7 +413,7 @@ export class Auth {
    * @throws {CryptoError} May throw during decryption if session data is corrupted
    * @throws {SyntaxError} May throw during JSON parsing if decrypted data is malformed
    *
-   * @see {@link IAuthUser} - Complete user object interface definition
+   * @see {@link AuthUser} - Complete user object interface definition
    * @see {@link setSignedUser} - Method to store user in session
    * @see {@link signIn} - High-level user authentication method
    * @see {@link signOut} - Method to clear user session
@@ -442,7 +442,7 @@ export class Auth {
    * - Gracefully handles session storage corruption
    * - Automatically recovers from temporary decryption failures
    */
-  static getSignedUser(): IAuthUser | null {
+  static getSignedUser(): AuthUser | null {
     if (isObj(Auth.localUserRef.current)) return Auth.localUserRef.current;
     const encrypted = $session.get(USER_SESSION_KEY);
     if (encrypted) {
@@ -450,7 +450,7 @@ export class Auth {
         const ded = decrypt(encrypted, SESSION_ENCRYPT_KEY);
         if (ded && typeof ded?.toString == 'function') {
           const decoded = ded.toString(CryptoJS.enc.Utf8);
-          Auth.localUserRef.current = JsonHelper.parse(decoded) as IAuthUser;
+          Auth.localUserRef.current = JsonHelper.parse(decoded) as AuthUser;
           return Auth.localUserRef.current;
         }
       } catch (e) {
@@ -497,7 +497,7 @@ export class Auth {
    * @example
    * ```typescript
    * // Standard user sign-in with event broadcasting
-   * const user: IAuthUser = {
+   * const user: AuthUser = {
    *   id: "user123",
    *   username: "john_doe",
    *   email: "john@example.com",
@@ -575,7 +575,7 @@ export class Auth {
    * @throws {CryptoError} May throw if encryption fails due to invalid encryption key
    * @throws {StorageError} May throw if session storage is unavailable or quota exceeded
    *
-   * @see {@link IAuthUser} - Complete user object interface with all required fields
+   * @see {@link AuthUser} - Complete user object interface with all required fields
    * @see {@link getSignedUser} - Retrieve the currently stored user from session
    * @see {@link signIn} - High-level user authentication wrapper
    * @see {@link signOut} - High-level user sign-out wrapper
@@ -605,9 +605,9 @@ export class Auth {
    * - Event payload includes the full user object for flexibility
    * - Use `triggerEvent: false` for internal operations to avoid recursion
    */
-  static async setSignedUser(u: IAuthUser | null, triggerEvent?: boolean) {
+  static async setSignedUser(u: AuthUser | null, triggerEvent?: boolean) {
     Auth.localUserRef.current = u;
-    const uToSave = u as IAuthUser;
+    const uToSave = u as AuthUser;
     let encrypted: any = null;
     try {
       if (isObj(uToSave)) {
@@ -652,7 +652,7 @@ export class Auth {
    * - **Session Timestamping**: Automatically tracks when authentication session was created
    *
    * @param user - The authenticated user object containing all necessary user information.
-   *               Must be a valid object conforming to the `IAuthUser` interface, including
+   *               Must be a valid object conforming to the `AuthUser` interface, including
    *               properties like id, username, email, permissions, roles, and authentication token.
    *               The object should come from a successful authentication process (login API, OAuth, etc.).
    *
@@ -699,7 +699,7 @@ export class Auth {
    *     const tokenResponse = await exchangeCodeForToken(authCode);
    *     const userProfile = await fetchUserProfile(tokenResponse.access_token);
    *
-   *     const user: IAuthUser = {
+   *     const user: AuthUser = {
    *       id: userProfile.id,
    *       username: userProfile.login,
    *       email: userProfile.email,
@@ -786,7 +786,7 @@ export class Auth {
    * }
    * ```
    *
-   * @see {@link IAuthUser} - Complete user object interface specification
+   * @see {@link AuthUser} - Complete user object interface specification
    * @see {@link setSignedUser} - Lower-level method for secure user storage
    * @see {@link getSignedUser} - Retrieve currently authenticated user
    * @see {@link signOut} - Sign out and clear user session
@@ -817,13 +817,13 @@ export class Auth {
    * - Supports both traditional and modern authentication workflows
    */
   static async signIn(
-    user: IAuthUser,
+    user: AuthUser,
     triggerEvent: boolean = true
-  ): Promise<IAuthUser> {
+  ): Promise<AuthUser> {
     if (!isObj(user)) {
       throw new Error(i18n.t('auth.invalidSignInUser'));
     }
-    return (await Auth.setSignedUser(user, triggerEvent)) as IAuthUser;
+    return (await Auth.setSignedUser(user, triggerEvent)) as AuthUser;
   }
 
   /**
@@ -1109,7 +1109,7 @@ export class Auth {
    * const cannotAccess = Auth.isAllowed(false); // Returns: false
    *
    * // Function-based permission - custom logic
-   * const customPerm = (user: IAuthUser) => user.age >= 18;
+   * const customPerm = (user: AuthUser) => user.age >= 18;
    * const canAccessAdultContent = Auth.isAllowed(customPerm); // Returns: true if user is 18+
    * ```
    *
@@ -1141,7 +1141,7 @@ export class Auth {
    * @example
    * ```typescript
    * // Checking permissions for a specific user
-   * const specificUser: IAuthUser = {
+   * const specificUser: AuthUser = {
    *   id: "user123",
    *   perms: { documents: ["read", "update"] },
    *   roles: [{ name: "editor", perms: { images: ["upload"] } }]
@@ -1165,7 +1165,7 @@ export class Auth {
    * ```
    *
    * @see {@link IAuthPerm} - Permission configuration type definitions
-   * @see {@link IAuthUser} - User object structure with permissions and roles
+   * @see {@link AuthUser} - User object structure with permissions and roles
    * @see {@link IResourceName} - Valid resource name types
    * @see {@link IResourceActionName} - Valid action name types
    * @see {@link checkUserPermission} - Low-level permission checking
@@ -1176,9 +1176,9 @@ export class Auth {
    */
   static isAllowed<ResourceName extends IResourceName = IResourceName>(
     perm: IAuthPerm<ResourceName>,
-    user?: IAuthUser
+    user?: AuthUser
   ): boolean {
-    user = Object.assign({}, user || (Auth.getSignedUser() as IAuthUser));
+    user = Object.assign({}, user || (Auth.getSignedUser() as AuthUser));
     if (typeof perm === 'boolean') return perm;
     if (Auth._isMasterAdmin(user)) return true;
     if (!perm) return true;
@@ -1238,7 +1238,7 @@ export class Auth {
    * 2. Permissions inherited from user roles (`user.roles[].perms`)
    *
    * @param user - The user object containing permission and role information.
-   *               Must be a valid `IAuthUser` object with properly structured
+   *               Must be a valid `AuthUser` object with properly structured
    *               permissions and roles. The object should include `perms` for
    *               direct permissions and optionally `roles` array for role-based permissions.
    *
@@ -1260,7 +1260,7 @@ export class Auth {
    * @example
    * ```typescript
    * // Basic permission checking - user with direct permissions
-   * const user: IAuthUser = {
+   * const user: AuthUser = {
    *   id: "user123",
    *   username: "john_doe",
    *   perms: {
@@ -1279,7 +1279,7 @@ export class Auth {
    * @example
    * ```typescript
    * // Role-based permission checking
-   * const userWithRoles: IAuthUser = {
+   * const userWithRoles: AuthUser = {
    *   id: "user456",
    *   username: "jane_smith",
    *   perms: {
@@ -1319,7 +1319,7 @@ export class Auth {
    * @example
    * ```typescript
    * // Default action parameter (read)
-   * const user: IAuthUser = {
+   * const user: AuthUser = {
    *   id: "reader",
    *   perms: {
    *     articles: ["read"],
@@ -1377,7 +1377,7 @@ export class Auth {
    * @example
    * ```typescript
    * // Batch permission checking for UI elements
-   * function getUserCapabilities(user: IAuthUser) {
+   * function getUserCapabilities(user: AuthUser) {
    *   const capabilities = {
    *     canReadDocs: Auth.checkUserPermission(user, "documents", "read"),
    *     canCreateDocs: Auth.checkUserPermission(user, "documents", "create"),
@@ -1409,7 +1409,7 @@ export class Auth {
    * @example
    * ```typescript
    * // Complex permission scenarios with multiple roles
-   * const adminUser: IAuthUser = {
+   * const adminUser: AuthUser = {
    *   id: "admin001",
    *   perms: {
    *     profile: ["read", "update"]
@@ -1440,7 +1440,7 @@ export class Auth {
    * console.log(Auth.checkUserPermission(adminUser, "billing", "read")); // false (no permission)
    * ```
    *
-   * @see {@link IAuthUser} - Complete user object interface with permissions and roles
+   * @see {@link AuthUser} - Complete user object interface with permissions and roles
    * @see {@link IResourceName} - Valid resource name types for permission checking
    * @see {@link IResourceActionName} - Valid action types for permission operations
    * @see {@link checkPermission} - Lower-level permission checking against permission objects
@@ -1479,7 +1479,7 @@ export class Auth {
   static checkUserPermission<
     ResourceName extends IResourceName = IResourceName,
   >(
-    user: IAuthUser,
+    user: AuthUser,
     resource: ResourceName,
     action: IResourceActionName<ResourceName> = 'read'
   ) {
@@ -2214,7 +2214,7 @@ export class Auth {
    * class AuthSessionManager {
    *   private static session = Auth.Session;
    *
-   *   static async storeAuthSession(user: IAuthUser, rememberMe: boolean = false): Promise<void> {
+   *   static async storeAuthSession(user: AuthUser, rememberMe: boolean = false): Promise<void> {
    *     const sessionData = {
    *       user,
    *       timestamp: Date.now(),
@@ -2231,7 +2231,7 @@ export class Auth {
    *     });
    *   }
    *
-   *   static getAuthSession(): { user: IAuthUser; sessionId: string } | null {
+   *   static getAuthSession(): { user: AuthUser; sessionId: string } | null {
    *     const sessionData = this.session.getDecrypted('auth_session');
    *
    *     if (!sessionData || this.isSessionExpired(sessionData)) {
@@ -2260,7 +2260,7 @@ export class Auth {
    * @see {@link Session} - The Session class with complete session management functionality
    * @see {@link setSignedUser} - Method that uses Session for storing encrypted user data
    * @see {@link getSignedUser} - Method that uses Session for retrieving encrypted user data
-   * @see {@link IAuthUser} - User interface that may be stored in session
+   * @see {@link AuthUser} - User interface that may be stored in session
    *
    * @since 1.0.0
    * @public

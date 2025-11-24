@@ -910,16 +910,16 @@ describe('URI Utils', () => {
 
     describe('Input validation', () => {
       it('should return false for non-string inputs', () => {
-        expect(isUriEncoded(null)).toBe(false);
-        expect(isUriEncoded(undefined)).toBe(false);
-        expect(isUriEncoded(123)).toBe(false);
-        expect(isUriEncoded(0)).toBe(false);
-        expect(isUriEncoded(true)).toBe(false);
-        expect(isUriEncoded(false)).toBe(false);
-        expect(isUriEncoded({})).toBe(false);
-        expect(isUriEncoded([])).toBe(false);
-        expect(isUriEncoded(() => {})).toBe(false);
-        expect(isUriEncoded(new Date())).toBe(false);
+        expect(isUriEncoded(null as any)).toBe(false);
+        expect(isUriEncoded(undefined as any)).toBe(false);
+        expect(isUriEncoded(123 as any)).toBe(false);
+        expect(isUriEncoded(0 as any)).toBe(false);
+        expect(isUriEncoded(true as any)).toBe(false);
+        expect(isUriEncoded(false as any)).toBe(false);
+        expect(isUriEncoded({} as any)).toBe(false);
+        expect(isUriEncoded([] as any)).toBe(false);
+        expect(isUriEncoded((() => {}) as any)).toBe(false);
+        expect(isUriEncoded(new Date() as any)).toBe(false);
       });
 
       it('should handle empty and whitespace strings', () => {
@@ -1621,17 +1621,19 @@ describe('isDataUrl', () => {
     ).toBe(false);
     expect(
       isDataUrl('data:text/plain,Hello%20World', { validateBase64: true })
-    ).toBe(false);
+    ).toBe(true);
     expect(
       isDataUrl('data:application/json;base64,eyJhIjoxfQ==', {
         validateBase64: true,
       })
-    ).toBe(false);
+    ).toBe(true);
   });
 
   it('should return false for invalid data URLs', () => {
     expect(isDataUrl('data:')).toBe(false);
-    expect(isDataUrl('data:image/x-icon;base64,abc123')).toBe(false);
+    expect(
+      isDataUrl('data:image/x-icon;base64,abc123', { validateBase64: true })
+    ).toBe(false);
     expect(isDataUrl('https://example.com/image.jpg')).toBe(false);
     expect(isDataUrl('')).toBe(false);
   });

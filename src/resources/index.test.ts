@@ -1,4 +1,4 @@
-import { Auth, IAuthUser } from '@/auth';
+import { Auth, AuthUser } from '@/auth';
 import { i18n } from '@/i18n';
 import '../translations';
 import { Resource, ResourceMeta } from './index';
@@ -154,7 +154,7 @@ class TestUserResource extends Resource<'users', MockData, string> {
 
 describe('Resource Class', () => {
   let resource: TestUserResource;
-  let adminUser: IAuthUser;
+  let adminUser: AuthUser;
 
   beforeAll(() => {
     i18n.setLocale('en');

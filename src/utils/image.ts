@@ -32,36 +32,23 @@ import { isDataUrl } from './uri';
  *
  * @example
  * // Valid image sources
- * console.log(isValidImageSrc('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUA...')); // true
- * console.log(isValidImageSrc('https://example.com/image.jpg')); // true
- * console.log(isValidImageSrc('image.png')); // true (if file extension is valid)
+ * console.log(isImageSrc('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUA...')); // true
+ * console.log(isImageSrc('https://example.com/image.jpg')); // true
+ * console.log(isImageSrc('image.png')); // true (if file extension is valid)
  *
  * // Invalid image sources
- * console.log(isValidImageSrc(null)); // false
- * console.log(isValidImageSrc('')); // false
- * console.log(isValidImageSrc('not-a-valid-url')); // false
- * console.log(isValidImageSrc('blob:http://example.com/...')); // true (if valid blob URL)
+ * console.log(isImageSrc(null)); // false
+ * console.log(isImageSrc('')); // false
+ * console.log(isImageSrc('not-a-valid-url')); // false
+ * console.log(isImageSrc('blob:http://example.com/...')); // true (if valid blob URL)
  */
-export const isValidImageSrc = (src: any) => {
+export const isImageSrc = (src: string) => {
   if (!isNonNullString(src)) return false;
   src = src.trim();
   if (src.startsWith('blob:http')) {
     src = src.ltrim('blob:');
   }
-  // Basic data URI regex pattern
-  const dataUriRegex =
-    /^data:image\/(jpeg|jpg|png|gif|bmp|webp|svg\+xml|x-icon|vnd\.microsoft\.icon|tiff|avif|heic);base64,([A-Za-z0-9+/=]+)$/;
-  // Also support data URIs without explicit base64 declaration (implied)
-  const dataUriRegexImplied =
-    /^data:image\/(jpeg|jpg|png|gif|bmp|webp|svg\+xml|x-icon|vnd\.microsoft\.icon|tiff|avif|heic),([A-Za-z0-9+/=]+)$/;
-  if (dataUriRegex.test(src) || dataUriRegexImplied.test(src)) {
-    return true;
-  }
-  return (
-    isDataUrl(src, { validateBase64: true }) ||
-    src.startsWith('data:image/') ||
-    hasImageExtension(src)
-  );
+  return isDataUrl(src, { validateBase64: true }) || hasImageExtension(src);
 };
 
 function hasImageExtension(url: string): boolean {
@@ -70,15 +57,52 @@ function hasImageExtension(url: string): boolean {
   return [
     '.jpg',
     '.jpeg',
+    '.jpe',
+    '.jfif',
     '.png',
     '.gif',
     '.bmp',
+    '.dib',
+    '.tiff',
+    '.tif',
     '.webp',
     '.svg',
     '.ico',
-    '.tiff',
-    '.tif',
+    '.cur',
     '.avif',
     '.heic',
+    '.heif',
+    '.jp2',
+    '.j2k',
+    '.jpf',
+    '.jpx',
+    '.psd',
+    '.apng',
+    '.tga',
+    '.icb',
+    '.vda',
+    '.vst',
+    '.pbm',
+    '.pgm',
+    '.ppm',
+    '.xbm',
+    '.xpm',
+    '.pcx',
+    '.ras',
+    '.sgi',
+    '.rgb',
+    '.bw',
+    '.cr2',
+    '.nef',
+    '.arw',
+    '.dng',
+    '.orf',
+    '.rw2',
+    '.pef',
+    '.srw',
+    '.bpg',
+    '.flif',
+    '.jxr',
+    '.hdp',
   ].includes(ext);
 }

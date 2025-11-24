@@ -1,4 +1,4 @@
-import { IAuthUser } from '@/auth/types';
+import { AuthUser } from '@/auth/types';
 import { i18n } from '@/i18n';
 import { observableFactory } from '@/observable';
 import { Scope, TranslateOptions } from 'i18n-js';
@@ -819,7 +819,7 @@ export abstract class Resource<
    *
    * @param action - The action to check. It can be a string or an array of strings representing the action name and the resource name.
 
-   * @param user - The user for whom the permission is being checked. It can be an object implementing the IAuthUser interface.The user object for whom the permission.If not provided, the function will attempt 
+   * @param user - The user for whom the permission is being checked. It can be an object implementing the AuthUser interface.The user object for whom the permission.If not provided, the function will attempt 
    *   to retrieve the signed user from the session.
    * @returns A boolean indicating whether the permission is allowed for the user.
    *
@@ -833,7 +833,7 @@ export abstract class Resource<
    */
   isAllowed(
     action?: IResourceActionName<Name> | IResourceActionName<Name>[],
-    user?: IAuthUser
+    user?: AuthUser
   ): boolean {
     const perms: IResourceActionTupleArray<Name>[] = [];
     if (isNonNullString(action)) {
@@ -852,7 +852,7 @@ export abstract class Resource<
    * @param user - The user whose read access is being checked. If no user is provided, the method will use default permissions.
    * @returns A boolean indicating whether the user has read access.
    */
-  canUserRead(user?: IAuthUser): boolean {
+  canUserRead(user?: AuthUser): boolean {
     return this.isAllowed(`read`, user);
   }
   /**
@@ -861,7 +861,7 @@ export abstract class Resource<
    * @param user - The user whose permissions are being checked. If not provided, the method will use the default user.
    * @returns A boolean indicating whether the user is allowed to create the resource.
    */
-  canUserCreate(user?: IAuthUser): boolean {
+  canUserCreate(user?: AuthUser): boolean {
     return this.isAllowed(`create`, user);
   }
   /**
@@ -870,7 +870,7 @@ export abstract class Resource<
    * @param user - The user whose update permissions are being checked. If no user is provided, the method will use default permissions.
    * @returns A boolean indicating whether the user has permission to update the resource.
    */
-  canUserUpdate(user?: IAuthUser): boolean {
+  canUserUpdate(user?: AuthUser): boolean {
     return this.isAllowed(`update`, user);
   }
 
@@ -880,7 +880,7 @@ export abstract class Resource<
    * @param user - The authenticated user whose permissions are being checked. Optional.
    * @returns A boolean indicating whether the user is allowed to delete.
    */
-  canUserDelete(user?: IAuthUser): boolean {
+  canUserDelete(user?: AuthUser): boolean {
     return this.isAllowed(`delete`, user);
   }
 

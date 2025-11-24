@@ -2,13 +2,13 @@ import {
   IResourceActionName,
   IResourceActionTuple,
   IResourceName,
-} from "@resources/types";
-import { IDict } from "../types/dictionary";
+} from '@resources/types';
+import { IDict } from '../types/dictionary';
 /**
- * @interface IAuthUser
+ * @interface AuthUser
  * Represents an authenticated user in the application.
  *
- * The `IAuthUser ` interface defines the structure for an authenticated
+ * The `AuthUser ` interface defines the structure for an authenticated
  * user object, which includes an identifier, an optional timestamp
  * for when the authentication session was created, and an optional
  * permissions map that specifies the actions the user can perform
@@ -32,10 +32,10 @@ import { IDict } from "../types/dictionary";
  *
  * ### Example Usage
  *
- * Here is an example of how the `IAuthUser ` interface can be used:
+ * Here is an example of how the `AuthUser ` interface can be used:
  *
  * ```typescript
- * const user: IAuthUser  = {
+ * const user: AuthUser  = {
  *     id: "user123",
  *     authSessionCreatedAt: Date.now(),
  *     perms: {
@@ -45,7 +45,7 @@ import { IDict } from "../types/dictionary";
  * };
  *
  * // Function to check if a user has permission to perform an action
- * function hasPermission(user: IAuthUser , resource: IResourceName, action: IResourceActionName): boolean {
+ * function hasPermission(user: AuthUser , resource: IResourceName, action: IResourceActionName): boolean {
  *     return user.perms?.[resource]?.includes(action) ?? false;
  * }
  *
@@ -54,7 +54,7 @@ import { IDict } from "../types/dictionary";
  * const canDeleteUsers = hasPermission(user, "users", "delete"); // true
  * ```
  *
- * In this example, the `IAuthUser ` interface is used to define a user
+ * In this example, the `AuthUser ` interface is used to define a user
  * object with an ID, session creation timestamp, and a permissions map.
  * The `hasPermission` function checks if the user has the specified
  * permission for a given resource, demonstrating how the `perms`
@@ -63,7 +63,8 @@ import { IDict } from "../types/dictionary";
  * @see {@link IResourceActionName} for the `IResourceActionName` type.
  * @see {@link IAuthPerms} for the `IAuthPerms` type.
  */
-export interface IAuthUser extends Record<string, any> {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export interface AuthUser extends Record<string, any> {
   id: string | number;
   authSessionCreatedAt?: number;
   perms?: IAuthPerms;
@@ -94,6 +95,7 @@ export interface IAuthUser extends Record<string, any> {
  * };
  * ```
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export interface IAuthRole extends Record<string, any> {
   /**
    * The name of the authorization role.
@@ -170,6 +172,7 @@ export interface IAuthSessionStorage {
    * @param {string} key - The key of the value to retrieve.
    * @returns {any} The value associated with the specified key, or undefined if the key does not exist.
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   get: (key?: string) => any;
 
   /**
@@ -232,7 +235,7 @@ export interface IAuthSessionStorage {
  * 
  * ```typescript
  * // Example of a dynamic permission check using a function
- * const dynamicPermission: IAuthPerm = (user: IAuthUser) => {
+ * const dynamicPermission: IAuthPerm = (user: AuthUser) => {
  *     const userRole = getUserRole(user); // Assume this function retrieves the user's role
  *     return userRole === 'admin'; // Grant access if the user is an admin
  * };
@@ -254,10 +257,10 @@ export interface IAuthSessionStorage {
  * 
  * 
  * @see {@link IResourceName} for the `IResourceName` type.
- * @typedef {((user: IAuthUser) => boolean) | false | IResourceActionTuple<ResourceName> | IResourceActionTuple<ResourceName>[]} IAuthPerm
+ * @typedef {((user: AuthUser) => boolean) | false | IResourceActionTuple<ResourceName> | IResourceActionTuple<ResourceName>[]} IAuthPerm
  */
 export type IAuthPerm<ResourceName extends IResourceName = IResourceName> =
-  | ((user: IAuthUser) => boolean)
+  | ((user: AuthUser) => boolean)
   | false
   | IResourceActionTuple<ResourceName>
   | IResourceActionTuple<ResourceName>[];
