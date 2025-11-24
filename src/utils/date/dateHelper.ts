@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { I18n } from '@/i18n';
 import { DateFormat } from '@/types';
 import { defaultStr } from '@utils/defaultStr';
@@ -9,7 +10,7 @@ import { isDateObj } from './isDateObj';
 /**
  * Result object returned by the date parser
  */
-export interface IDateHelperResult {
+export interface DateHelperResult {
   /** The parsed Date object if successful */
   date: Date | null;
   /** The format that successfully parsed the date string, if any */
@@ -127,7 +128,7 @@ export class DateHelper {
    *
    * @param dateString - The date string to parse
    * @param preferredFormats - Optional array of preferred formats to try first
-   * @returns A {@link IDateHelperResult} object containing the parsing results
+   * @returns A {@link DateHelperResult} object containing the parsing results
    *
    * @example
    * ```typescript
@@ -156,7 +157,7 @@ export class DateHelper {
   static parseString(
     dateString: string,
     preferredFormats?: string[] | string
-  ): IDateHelperResult {
+  ): DateHelperResult {
     if (isNonNullString(dateString) && isNonNullString(preferredFormats)) {
       try {
         const date = moment(dateString, preferredFormats, true);
@@ -167,6 +168,7 @@ export class DateHelper {
             isValid: true,
           };
         }
+        // eslint-disable-next-line no-empty
       } catch (error) {}
     }
     try {
@@ -235,6 +237,7 @@ export class DateHelper {
    * @param {string} [format] The format of the date, using Moment.js format. See https://momentjs.com/docs/#/parsing/string-format/
    * @returns {Date|null} The parsed date, or null if the input is not a valid date.
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   static parseDate(date: any, format?: DateFormat): Date | null {
     /**
      * If the date is already a Date object, return it as is.
@@ -443,6 +446,7 @@ export class DateHelper {
    * @param {string} [format] The format of the date, using Moment.js format. See https://momentjs.com/docs/#/parsing/string-format/
    * @returns {boolean} True if the date is valid, false otherwise.
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   static isValidDate(sDate: any, format?: DateFormat): boolean {
     if (sDate === null || sDate === undefined) return false;
     /**
@@ -469,7 +473,9 @@ export class DateHelper {
      * If the input is a number that can be converted to a string, it's not a valid date.
      */
     if (
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (sDate as any)?.toString &&
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (sDate as any)?.toString() == parseInt(sDate).toString()
     )
       return false;
@@ -538,11 +544,13 @@ export class DateHelper {
     }
     if (
       isNonNullString(setFunction) &&
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       typeof (date as any)['set' + setFunction] === 'function' &&
-      typeof (date as any)['get' + setFunction] === 'function'
+      typeof (date as never)['get' + setFunction] === 'function'
     ) {
       const set = 'set' + setFunction;
       const get = 'get' + setFunction;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       date = new Date((date as any)[set]((date as any)[get]() + days));
     }
     return date as Date;
@@ -555,6 +563,7 @@ export class DateHelper {
    * @param {Date|string} [date] The date object to add days to. If not provided, the current date is used.
    * @returns {Date} The updated date.
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   static addDays(days: number, date?: any): Date {
     return DateHelper.addToDate(days, date, 'Date');
   }
@@ -597,6 +606,7 @@ export class DateHelper {
    * @param {Date} [dateObj] The date object to add seconds to. If not provided, the current date is used.
    * @returns {Date} The updated date object with the added seconds.
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   static addSeconds(seconds: number, dateObj?: any): Date {
     if (!isNumber(seconds)) {
       seconds = 0;
@@ -611,6 +621,7 @@ export class DateHelper {
    * @param {Date} [dateObj] The date object to add minutes to. If not provided, the current date is used.
    * @returns {Date|string} The updated date object with the added minutes, or a string in the specified format.
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   static addMinutes(minutes: number, dateObj?: any): Date {
     if (!isNumber(minutes)) {
       minutes = 0;
@@ -625,6 +636,7 @@ export class DateHelper {
    * @param {Date} [dateObj] The date object to add hours to. If not provided, the current date is used.
    * @returns {Date} The updated date object with the added hours.
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   static addHours(hours: number, dateObj?: any): Date {
     if (!isNumber(hours)) {
       hours = 0;
@@ -686,6 +698,7 @@ export class DateHelper {
    * ```
    */
   static getCurrentMonthDaysRange = (
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     date?: any
   ): { first: Date; last: Date } => {
     /**
@@ -735,6 +748,7 @@ export class DateHelper {
    * ```
    */
   static getPreviousWeekDaysRange = (
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     date?: any
   ): { first: Date; last: Date } => {
     /**
@@ -803,6 +817,7 @@ export class DateHelper {
    * console.log(getCurrentWeekDaysRange(new Date("2022-01-15"))); // Output: { first: Date, last: Date }
    * ```
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   static getCurrentWeekDaysRange = (date?: any) => {
     /**
      * If no date is provided, use the current date.
@@ -876,6 +891,7 @@ export class DateHelper {
           ) as unknown as DateFormat
         );
       }
+      // eslint-disable-next-line no-empty
     } catch (error) {}
     return defaultStr(DateHelper.isValidDate(date) ? date?.toString() : '');
   }
@@ -968,6 +984,7 @@ const parseDString = (dateString: string, format: string) => {
         isValid: true,
       };
     }
+    // eslint-disable-next-line no-empty
   } catch (e) {}
   return null;
 };

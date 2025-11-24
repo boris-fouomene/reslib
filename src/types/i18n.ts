@@ -1,7 +1,7 @@
 import { Dictionary } from './dictionary';
 
 /**
- * @interface II18nTranslation
+ * @interface I18nTranslation
  * Represents a dictionary for internationalization (i18n) strings.
  * 
  * This interface defines a structure for storing localized strings
@@ -9,7 +9,7 @@ import { Dictionary } from './dictionary';
  * associated with a string or another dictionary for nested translations.
  * 
  * @example
- * const translations: II18nTranslation = {
+ * const translations: I18nTranslation = {
  *     en: {
  *         greeting: "Hello",
  *         farewell: "Goodbye",
@@ -24,7 +24,7 @@ import { Dictionary } from './dictionary';
  * };
  */
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
-export interface II18nTranslation extends Dictionary {}
+export interface I18nTranslation extends Dictionary {}
 
 /**
  * Represents the different events related to internationalization (i18n).

@@ -11,8 +11,8 @@ import { ClassConstructor } from '../types/index';
 import {
   defaultStr,
   extendObj,
-  IInterpolateOptions,
   interpolate,
+  InterpolateOptions,
   isNonNullString,
   isObj,
   stringify,
@@ -1004,7 +1004,7 @@ export abstract class Resource<
    * @param {Record<string, any>} [params] - An object containing key-value pairs for interpolation.
    *                                         These parameters will be merged with the resource context.
    *                                         If null, undefined, or empty object, only resource context is used.
-   * @param {IInterpolateOptions} [options] - Optional configuration object for advanced interpolation behavior.
+   * @param {InterpolateOptions} [options] - Optional configuration object for advanced interpolation behavior.
    *                                          Note: The `tagRegex` option will override the default `{key}` pattern.
    * @returns {string} The interpolated string with all placeholders replaced by their corresponding values.
    *                   Placeholders without matching keys are replaced with empty strings.
@@ -1051,7 +1051,7 @@ export abstract class Resource<
   interpolate(
     text?: string,
     params?: Record<string, any>,
-    options?: IInterpolateOptions
+    options?: InterpolateOptions
   ) {
     return interpolate(text, this.getResourceContext(params), {
       tagRegex: /\{([^}]+)\}/g,

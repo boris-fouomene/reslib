@@ -1,5 +1,5 @@
 import { ObservableCallback } from '../../observable';
-import { II18nTranslation } from '../../types/i18n';
+import { I18nTranslation } from '../../types/i18n';
 import '../../utils';
 import { I18n, Translate, i18n as defaultI18n } from '../index';
 
@@ -96,7 +96,7 @@ describe('I18n', () => {
   });
 
   test('should register and retrieve translations', () => {
-    const translations: II18nTranslation = {
+    const translations: I18nTranslation = {
       en: {
         greeting: 'Hello, %{name}!',
         farewell: 'Goodbye!',
@@ -110,7 +110,7 @@ describe('I18n', () => {
   test('should trigger and handle events', () => {
     const callback: ObservableCallback = jest.fn();
     i18n.on('translations-changed', callback);
-    const translations: II18nTranslation = {
+    const translations: I18nTranslation = {
       en: {
         greeting: 'Hello, %{name}!',
       },
@@ -143,7 +143,7 @@ describe('I18n', () => {
     public nestedExample: string = '';
   }
 
-  const translations: II18nTranslation = {
+  const translations: I18nTranslation = {
     en: {
       greeting: 'Hello!',
       nested: {

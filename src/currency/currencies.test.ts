@@ -5,7 +5,7 @@ import '../utils/numbers';
 import {
   _abreviateNumber,
   abreviateNumber,
-  IAbreviateNumberResult,
+  AbreviateNumberResult,
 } from '../utils/numbers';
 import { CurrencyUtils } from './index';
 import session from './session';
@@ -744,12 +744,7 @@ describe('_abreviateNumber formatting options', () => {
   });
 
   test('should work with returnObject and formatting options', () => {
-    const result = _abreviateNumber(
-      1500,
-      3,
-      ',',
-      '.'
-    ) as IAbreviateNumberResult;
+    const result = _abreviateNumber(1500, 3, ',', '.') as AbreviateNumberResult;
 
     expect(result.result).toBe('1.500K');
     expect(result.formattedValue).toBe('1.500');

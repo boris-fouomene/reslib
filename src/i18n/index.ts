@@ -25,7 +25,7 @@ import {
 } from 'i18n-js';
 import moment, { LocaleSpecification } from 'moment';
 import 'reflect-metadata';
-import { I18nEvent, II18nTranslation } from '../types/i18n';
+import { I18nEvent, I18nTranslation } from '../types/i18n';
 import { Dictionary } from '../types/index';
 /**
  * A key to store metadata for translations.
@@ -284,7 +284,7 @@ export class I18n extends I18nJs implements Observable<I18nEvent> {
    */
   private namespaceResolvers: Record<
     string,
-    (locale: string) => Promise<II18nTranslation>
+    (locale: string) => Promise<I18nTranslation>
   > = {};
   /**
    * Singleton instance of the I18n class.
@@ -296,7 +296,7 @@ export class I18n extends I18nJs implements Observable<I18nEvent> {
    * @param options Optional configuration options for the I18n instance.
    */
   constructor(
-    translations: II18nTranslation = {},
+    translations: I18nTranslation = {},
     options: Partial<I18nOptions> = {}
   ) {
     super({}, options);
@@ -507,9 +507,7 @@ export class I18n extends I18nJs implements Observable<I18nEvent> {
         })
     * @param translations The language translations.
     */
-  static RegisterTranslations(
-    translations: II18nTranslation
-  ): II18nTranslation {
+  static RegisterTranslations(translations: I18nTranslation): I18nTranslation {
     return I18n.getInstance().registerTranslations(translations);
   }
 
@@ -519,7 +517,7 @@ export class I18n extends I18nJs implements Observable<I18nEvent> {
    * @returns A new I18n instance.
    */
   static createInstance(
-    translations: II18nTranslation = {},
+    translations: I18nTranslation = {},
     options: Partial<I18nOptions> & {
       interpolate?: (i18n: I18nJs, str: string, params: Dictionary) => string;
     } = {}
@@ -621,9 +619,7 @@ export class I18n extends I18nJs implements Observable<I18nEvent> {
    * @param translations The translations to register.
    * @returns The updated translations.
    */
-  public registerTranslations(
-    translations: II18nTranslation
-  ): II18nTranslation {
+  public registerTranslations(translations: I18nTranslation): I18nTranslation {
     this.store(translations);
     return this.getTranslations();
   }
@@ -695,7 +691,7 @@ export class I18n extends I18nJs implements Observable<I18nEvent> {
   getMissingPlaceholderString(
     placeholder: string,
     message?: string,
-    options?: II18nTranslation
+    options?: I18nTranslation
   ) {
     if (typeof this.missingPlaceholder == 'function') {
       return this.missingPlaceholder(
@@ -818,7 +814,7 @@ export class I18n extends I18nJs implements Observable<I18nEvent> {
    */
   registerNamespaceResolver(
     namespace: string,
-    resolver: (locale: string) => Promise<II18nTranslation>
+    resolver: (locale: string) => Promise<I18nTranslation>
   ): void {
     if (!isNonNullString(namespace) || typeof resolver !== 'function') {
       console.warn(
@@ -854,7 +850,7 @@ export class I18n extends I18nJs implements Observable<I18nEvent> {
     namespace: string,
     locale?: string,
     updateTranslations: boolean = true
-  ): Promise<II18nTranslation> {
+  ): Promise<I18nTranslation> {
     if (!isNonNullString(namespace) || !this.namespaceResolvers[namespace]) {
       return Promise.reject(
         new Error(`Invalid namespace or resolver for namespace "${namespace}".`)
@@ -867,7 +863,7 @@ export class I18n extends I18nJs implements Observable<I18nEvent> {
       );
     }
     return this.namespaceResolvers[namespace](locale).then((translations) => {
-      const dict: II18nTranslation = {};
+      const dict: I18nTranslation = {};
       dict[locale as string] = Object.assign({}, translations);
       if (isObj(translations)) {
         if (updateTranslations !== false) {
@@ -883,7 +879,7 @@ export class I18n extends I18nJs implements Observable<I18nEvent> {
     namespace: string,
     locale?: string,
     updateTranslations: boolean = true
-  ): Promise<II18nTranslation> {
+  ): Promise<I18nTranslation> {
     return I18n.getInstance().loadNamespace(
       namespace,
       locale,
@@ -894,9 +890,9 @@ export class I18n extends I18nJs implements Observable<I18nEvent> {
   loadNamespaces(
     locale?: string,
     updateTranslations: boolean = true
-  ): Promise<II18nTranslation> {
+  ): Promise<I18nTranslation> {
     const namespaces = [];
-    const translations: II18nTranslation = {};
+    const translations: I18nTranslation = {};
     locale = defaultStr(locale, this.getLocale());
     this._isLoading = true;
     //const errors : any[] = [];
@@ -923,7 +919,7 @@ export class I18n extends I18nJs implements Observable<I18nEvent> {
     }
     return Promise.all(namespaces)
       .then(() => {
-        const dict: II18nTranslation = {};
+        const dict: I18nTranslation = {};
         dict[locale as string] = translations;
         if (updateTranslations !== false) {
           this.store(dict);
@@ -941,12 +937,12 @@ export class I18n extends I18nJs implements Observable<I18nEvent> {
    * Load all registered namespaces for the current locale on the I18n default instance.
    * @param locale optional locale to load the namespaces for
    * @param updateTranslations optional boolean to update the translations
-   * @returns {Promise<II18nTranslation>} A promise that resolves to the combined translations for the current local
+   * @returns {Promise<I18nTranslation>} A promise that resolves to the combined translations for the current local
    */
   static LoadNamespaces(
     locale?: string,
     updateTranslations: boolean = true
-  ): Promise<II18nTranslation> {
+  ): Promise<I18nTranslation> {
     return I18n.getInstance().loadNamespaces(locale, updateTranslations);
   }
   /**

@@ -182,7 +182,7 @@ Number.prototype.formatMoney = function (
 /**
  * Represents the result of abbreviating a number.
  */
-export type IAbreviateNumberResult = {
+export type AbreviateNumberResult = {
   /**
    * The abbreviated result.
    */
@@ -225,14 +225,14 @@ export type IAbreviateNumberResult = {
  *  @param {number} [options.decimalDigits] Number of decimal digits to display. If not provided, will use the minimum number required for precision.
  *  @param {string} [options.thousandsSeparator] Character to use as thousands separator. Example: "," for 1,234 or " " for 1 234.
  *  @param {string} [options.decimalSeparator] Character to use as decimal separator. Example: "." for 1.5 or "," for 1,5.
- * @returns {IAbreviateNumberResult} The abbreviated number or an object with additional information.
+ * @returns {AbreviateNumberResult} The abbreviated number or an object with additional information.
  */
 export const _abreviateNumber = (
   num: number,
   decimalDigits?: number,
   thousandsSeparator?: string,
   decimalSeparator?: string
-): IAbreviateNumberResult => {
+): AbreviateNumberResult => {
   if (num === null || typeof num !== 'number' || isNaN(num)) {
     return {
       result: '',
@@ -256,7 +256,7 @@ export const _abreviateNumber = (
       suffix: '',
       formattedValue: infinityString,
       minAbreviationDecimalDigits: 0,
-    } as IAbreviateNumberResult;
+    } as AbreviateNumberResult;
   }
 
   const isUnder1000 = Math.abs(num) < 1000;

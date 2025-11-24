@@ -1,7 +1,7 @@
 /**
  * Options for customizing the debounce function behavior
  */
-export interface IDebounceOptions {
+export interface DebounceOptions {
   /**
    * If true, the debounced function will be invoked on the leading edge of the timeout
    * instead of the trailing edge
@@ -20,7 +20,8 @@ export interface IDebounceOptions {
 /**
  * A debounced function that can be invoked, cancelled, and flushed
  */
-export interface IDebouncedFunction<T extends (...args: any[]) => any> {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export interface DebouncedFunction<T extends (...args: any[]) => any> {
   /**
    * Invokes the debounced function
    */
@@ -51,9 +52,15 @@ export interface IDebouncedFunction<T extends (...args: any[]) => any> {
  * @param options The options object with leading, trailing, and maxWait properties
  * @returns A debounced version of the function with cancel, flush, and isPending methods
  */
-export function debounce<T extends (...args: any[]) => any>(func: T, wait = 0, options: IDebounceOptions = {}): IDebouncedFunction<T> {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function debounce<T extends (...args: any[]) => any>(
+  func: T,
+  wait = 0,
+  options: DebounceOptions = {}
+): DebouncedFunction<T> {
   options = Object.assign({}, options);
   let lastArgs: Parameters<T> | undefined;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let lastThis: any;
   let maxWait: number | undefined;
   let result: ReturnType<T> | undefined;
@@ -105,7 +112,10 @@ export function debounce<T extends (...args: any[]) => any>(func: T, wait = 0, o
   }
 
   // Start a timer for the trailing edge call
-  function startTimer(pendingFunc: () => void, wait: number): ReturnType<typeof setTimeout> {
+  function startTimer(
+    pendingFunc: () => void,
+    wait: number
+  ): ReturnType<typeof setTimeout> {
     return setTimeout(pendingFunc, wait);
   }
 
@@ -169,12 +179,17 @@ export function debounce<T extends (...args: any[]) => any>(func: T, wait = 0, o
   }
 
   // The main debounced function
-  function debounced(this: any, ...args: Parameters<T>): ReturnType<T> | undefined {
+  function debounced(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    this: any,
+    ...args: Parameters<T>
+  ): ReturnType<T> | undefined {
     const time = getTime();
     const isInvoking = shouldInvoke(time);
 
     // Store the args and this context for later use
     lastArgs = args;
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
     lastThis = this;
     lastCallTime = time;
 
