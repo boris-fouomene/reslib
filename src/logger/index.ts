@@ -81,13 +81,13 @@ export class Logger {
   /**
    * Internal logging method that delegates calls to the registered logger.
    *
-   * @param {ILoggerLevel} level - The log level (e.g., "info", "error").
+   * @param {LoggerLogLevel} level - The log level (e.g., "info", "error").
    * @param {...any[]} data - Data to log.
    *
    * @returns {this} The logger instance for method chaining.
    */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  static _log(level: ILoggerLevel, ...data: any[]) {
+  static _log(level: LoggerLogLevel, ...data: any[]) {
     const logger = Logger.logger;
     level = defaultStr(level);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -175,10 +175,10 @@ export class Logger {
  *
  * @example
  * ```ts
- * const level: ILoggerLevel = "info";
+ * const level: LoggerLogLevel = "info";
  * ```
  */
-export type ILoggerLevel = 'info' | 'debug' | 'warn' | 'error' | string;
+export type LoggerLogLevel = 'info' | 'debug' | 'warn' | 'error' | string;
 
 /**
  * Interface for a logger that provides methods for logging messages at different levels.

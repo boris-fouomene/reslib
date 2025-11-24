@@ -1,6 +1,6 @@
 import {
-  IObservable,
-  IObservableCallback,
+  Observable,
+  ObservableCallback,
   observableFactory,
 } from '@/observable';
 import {
@@ -64,7 +64,7 @@ export function Translate(key: string): PropertyDecorator & MethodDecorator {
  * through observable patterns.
  *
  * @extends I18nJs
- * @implements IObservable<I18nEvent>
+ * @implements Observable<I18nEvent>
  *
  * @example
  * // Example usage of the I18n class
@@ -78,7 +78,7 @@ export function Translate(key: string): PropertyDecorator & MethodDecorator {
  * console.log(i18nInstance.translate("greeting", { name: "John" })); // Outputs: Hello, John!
  * @see https://www.npmjs.com/package/i18n-js?activeTab=readme for more information on i18n-js library.
  */
-export class I18n extends I18nJs implements IObservable<I18nEvent> {
+export class I18n extends I18nJs implements Observable<I18nEvent> {
   /**
    * Custom instanceof check. When consumers import `I18n` from built packages or
    * across module boundaries, class identity can differ. Using Symbol.hasInstance
@@ -86,6 +86,7 @@ export class I18n extends I18nJs implements IObservable<I18nEvent> {
    * shape (duck typing). This preserves `instanceof` checks externally while
    * keeping the current exported API intact.
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   static [Symbol.hasInstance](obj: any) {
     return this.isI18nInstance(obj);
   }
@@ -96,11 +97,14 @@ export class I18n extends I18nJs implements IObservable<I18nEvent> {
    * @param obj The object to check.
    * @returns True if the object is an I18n instance, false otherwise.
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   static isI18nInstance(obj: any): obj is I18n {
     if (!obj || typeof obj !== 'object') return false;
     // If it's an actual instance of the native i18n-js class, consider true
     try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       if (obj instanceof (I18nJs as any)) return true;
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (e) {
       // ignore cross-realm issues
     }
@@ -154,6 +158,7 @@ export class I18n extends I18nJs implements IObservable<I18nEvent> {
    * @param options The translation options.
    * @returns The translated keys.
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-empty-object-type
   translateTarget<T extends { new (...args: any[]): {} } = any>(
     target: T,
     options?: TranslateOptions
@@ -243,7 +248,7 @@ export class I18n extends I18nJs implements IObservable<I18nEvent> {
    *
    * @since 1.20.3
    */
-  translateObject<T extends Record<string, string> = any>(
+  translateObject<T extends Record<string, string>>(
     object: T,
     options?: TranslateOptions
   ): T {
@@ -252,6 +257,7 @@ export class I18n extends I18nJs implements IObservable<I18nEvent> {
     for (const key in object) {
       const i18nKey = object[key];
       if (isNonNullString(i18nKey)) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (translatedKeys as any)[key] = i18n.translate(i18nKey, options);
       }
     }
@@ -309,7 +315,7 @@ export class I18n extends I18nJs implements IObservable<I18nEvent> {
    * @param fn The callback function to be invoked when the event is triggered.
    * @returns An object containing a remove method to unsubscribe from the event.
    */
-  on(event: I18nEvent, fn: IObservableCallback) {
+  on(event: I18nEvent, fn: ObservableCallback) {
     return this._observableFactory.on.call(this, event, fn);
   }
   /**
@@ -318,7 +324,7 @@ export class I18n extends I18nJs implements IObservable<I18nEvent> {
    * @param fn The callback function to be invoked.
    * @returns The observable instance.
    */
-  finally(event: I18nEvent, fn: IObservableCallback) {
+  finally(event: I18nEvent, fn: ObservableCallback) {
     return this._observableFactory.finally.call(this, event, fn);
   }
   /**
@@ -327,7 +333,7 @@ export class I18n extends I18nJs implements IObservable<I18nEvent> {
    * @param fn The callback function to remove.
    * @returns The observable instance.
    */
-  off(event: I18nEvent, fn: IObservableCallback) {
+  off(event: I18nEvent, fn: ObservableCallback) {
     return this._observableFactory?.off.call(this, event, fn);
   }
   /**
@@ -336,6 +342,7 @@ export class I18n extends I18nJs implements IObservable<I18nEvent> {
    * @param args Optional arguments to pass to the event callbacks.
    * @returns The observable instance.
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   trigger(event: I18nEvent | '*', ...args: any[]) {
     return this._observableFactory?.trigger.call(this, event, ...args);
   }
@@ -343,7 +350,7 @@ export class I18n extends I18nJs implements IObservable<I18nEvent> {
    * Unsubscribes all event callbacks for this component.
    * @returns The observable instance.
    */
-  offAll(): IObservable<I18nEvent> {
+  offAll(): Observable<I18nEvent> {
     return this._observableFactory?.offAll.call(this);
   }
   /**
@@ -352,7 +359,7 @@ export class I18n extends I18nJs implements IObservable<I18nEvent> {
    * @param fn The callback function to be invoked.
    * @returns An object containing a remove method to unsubscribe from the event.
    */
-  once(event: I18nEvent, fn: IObservableCallback) {
+  once(event: I18nEvent, fn: ObservableCallback) {
     return this._observableFactory?.once.call(this, event, fn);
   }
   /**
@@ -469,8 +476,7 @@ export class I18n extends I18nJs implements IObservable<I18nEvent> {
         ? scope
         : [];
     if (!scopeArray.length) return undefined;
-    let result: any = this.getTranslations(locale);
-    const canLog = scope === 'dates.defaultDateFormat';
+    let result = this.getTranslations(locale);
     for (const k of scopeArray) {
       if (isObj(result)) {
         result = result[k];
@@ -515,11 +521,7 @@ export class I18n extends I18nJs implements IObservable<I18nEvent> {
   static createInstance(
     translations: II18nTranslation = {},
     options: Partial<I18nOptions> & {
-      interpolate?: (
-        i18n: I18nJs,
-        str: string,
-        params: Record<string, any>
-      ) => string;
+      interpolate?: (i18n: I18nJs, str: string, params: Dictionary) => string;
     } = {}
   ): I18n {
     const { interpolate: i18nInterpolate, ...restOptions } = Object.assign(
@@ -527,11 +529,7 @@ export class I18n extends I18nJs implements IObservable<I18nEvent> {
       options
     );
     const i18n = new I18n(translations, restOptions);
-    i18n.interpolate = (
-      i18n: I18nJs,
-      str: string,
-      params: Record<string, any>
-    ) => {
+    i18n.interpolate = (i18n: I18nJs, str: string, params: Dictionary) => {
       const flattenParams = I18n.flattenObject(params);
       const formattedValue = this.defaultInterpolator(i18n, str, flattenParams);
       if (isNonNullString(formattedValue) && formattedValue !== str) {
@@ -671,6 +669,7 @@ export class I18n extends I18nJs implements IObservable<I18nEvent> {
         const metadataKey = Reflect.getMetadata(TRANSLATION_KEY, target, key);
         if (metadataKey) {
           try {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             (target as any)[key] = this.translate(metadataKey);
           } catch (error) {
             Logger.error(
@@ -775,7 +774,7 @@ export class I18n extends I18nJs implements IObservable<I18nEvent> {
     return this._isLoading;
   }
 
-  private _namespacesLoaded: Record<string, any> = {};
+  private _namespacesLoaded: Dictionary = {};
   setLocale(locale: string, forceUpdate: boolean = false): Promise<string> {
     if (
       super.locale === locale &&
@@ -845,6 +844,7 @@ export class I18n extends I18nJs implements IObservable<I18nEvent> {
    */
   static RegisterNamespaceResolver(
     namespace: string,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     resolver: (locale: string) => Promise<any>
   ): void {
     return I18n.getInstance().registerNamespaceResolver(namespace, resolver);
@@ -902,11 +902,14 @@ export class I18n extends I18nJs implements IObservable<I18nEvent> {
     //const errors : any[] = [];
     for (const namespace in this.namespaceResolvers) {
       if (
-        this.namespaceResolvers.hasOwnProperty(namespace) &&
+        Object.prototype.hasOwnProperty.call(
+          this.namespaceResolvers,
+          namespace
+        ) &&
         typeof this.namespaceResolvers[namespace] === 'function'
       ) {
         namespaces.push(
-          new Promise((resolve, reject) => {
+          new Promise((resolve) => {
             this.namespaceResolvers[namespace](locale as string)
               .then((trs) => {
                 extendObj(translations, trs);
@@ -946,6 +949,66 @@ export class I18n extends I18nJs implements IObservable<I18nEvent> {
   ): Promise<II18nTranslation> {
     return I18n.getInstance().loadNamespaces(locale, updateTranslations);
   }
+  /**
+   * Flattens a nested object into a single-level object with dot-notation keys.
+   *
+   * This utility method transforms complex nested objects into flat key-value pairs,
+   * where nested properties are represented using dot notation (e.g., `user.name`).
+   * This is particularly useful for interpolation processes that need to access
+   * nested values using simple string keys.
+   *
+   * @param obj - The object to flatten. Can be any type.
+   * @returns A flattened object where nested properties are accessible via dot-notation keys,
+   *          or the original input if it's not an object.
+   *
+   * @example
+   * ```typescript
+   * // Basic flattening
+   * const nested = {
+   *   user: {
+   *     name: 'John',
+   *     profile: {
+   *       age: 30,
+   *       city: 'New York'
+   *     }
+   *   },
+   *   settings: { theme: 'dark' }
+   * };
+   *
+   * const flattened = I18n.flattenObject(nested);
+   * // Result: {
+   * //   'user.name': 'John',
+   * //   'user.profile.age': 30,
+   * //   'user.profile.city': 'New York',
+   * //   'settings.theme': 'dark'
+   * // }
+   * ```
+   *
+   * @example
+   * ```typescript
+   * // Non-object inputs are returned as-is
+   * I18n.flattenObject("string"); // Returns: "string"
+   * I18n.flattenObject(42); // Returns: 42
+   * I18n.flattenObject(null); // Returns: null
+   * ```
+   *
+   * @example
+   * ```typescript
+   * // Usage in interpolation
+   * const params = { user: { firstName: 'John', lastName: 'Doe' } };
+   * const flattened = I18n.flattenObject(params);
+   * // Now flattened can be used for interpolation like:
+   * // "Hello %{user.firstName} %{user.lastName}" -> "Hello John Doe"
+   * ```
+   *
+   * @note This method relies on `Object.flatten()` which should be available
+   *       in the environment. If the input is not an object, it is returned unchanged.
+   * @note Circular references in objects may cause issues during flattening.
+   * @note Arrays are treated as objects and their indices become keys in the flattened result.
+   *
+   * @see {@link defaultInterpolator} for how this method is used in string interpolation.
+   */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   static flattenObject(obj: any): TranslateOptions {
     if (!isObj(obj)) return obj;
     return Object.flatten(obj);
@@ -967,7 +1030,7 @@ export class I18n extends I18nJs implements IObservable<I18nEvent> {
   private static defaultInterpolator(
     i18n: I18nJs,
     value: string,
-    params?: Record<string, any>
+    params?: Dictionary
   ) {
     if (isNullable(value)) return '';
     if (!isPrimitive(value)) {
@@ -996,6 +1059,7 @@ const i18n = I18n.getInstance();
 // the class prototype. This preserves the current exported logic.
 try {
   Object.setPrototypeOf(i18n, I18n.prototype);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
 } catch (e) {
   // Setting the prototype may fail on frozen objects in some environments.
   // If it does, fallback to relying on Symbol.hasInstance which is already

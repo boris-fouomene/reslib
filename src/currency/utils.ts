@@ -1,7 +1,7 @@
-import { ICurrency } from "./types";
+import { Currency } from './types';
 
 /**
- * @group Currency
+ *
  * Checks if the provided object is a valid currency object.
  * A valid currency object must be a non-null object with the following properties:
  * - `name`: A string representing the name of the currency.
@@ -12,22 +12,23 @@ import { ICurrency } from "./types";
  *
  * @example
  * const usd = { name: "US Dollar", symbol: "$" };
- * console.log(isValidCurrency(usd)); // Output: true
+ * console.log(isCurrency(usd)); // Output: true
  *
  * const invalidCurrency = { name: "Invalid Currency" };
- * console.log(isValidCurrency(invalidCurrency)); // Output: false
+ * console.log(isCurrency(invalidCurrency)); // Output: false
  *
  * const notAnObject = "Not an object";
- * console.log(isValidCurrency(notAnObject)); // Output: false
+ * console.log(isCurrency(notAnObject)); // Output: false
  *
  * const arrayInput = ["$"];
- * console.log(isValidCurrency(arrayInput)); // Output: false
+ * console.log(isCurrency(arrayInput)); // Output: false
  */
-export const isValidCurrency = (obj: any): obj is ICurrency =>
-    obj &&
-    typeof obj === 'object' &&
-    !Array.isArray(obj) &&
-    obj.name &&
-    typeof obj.name === "string" &&
-    obj.symbol &&
-    typeof obj.symbol === "string";
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const isCurrency = (obj: any): obj is Currency =>
+  obj &&
+  typeof obj === 'object' &&
+  !Array.isArray(obj) &&
+  obj.name &&
+  typeof obj.name === 'string' &&
+  obj.symbol &&
+  typeof obj.symbol === 'string';

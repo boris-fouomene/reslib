@@ -1,4 +1,4 @@
-import { ICurrency } from '@/currency/types';
+import { Currency } from '@/currency/types';
 import { Dictionary } from '@/types';
 import countries from './countries';
 /****
@@ -41,7 +41,7 @@ export interface Country extends Dictionary {
   /****
    * The currency of the country.
    */
-  currency?: ICurrency;
+  currency?: Currency;
 
   /**
    * The dial code of the country.

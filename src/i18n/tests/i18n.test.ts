@@ -1,4 +1,4 @@
-import { IObservableCallback } from '../../observable';
+import { ObservableCallback } from '../../observable';
 import { II18nTranslation } from '../../types/i18n';
 import '../../utils';
 import { I18n, Translate, i18n as defaultI18n } from '../index';
@@ -108,7 +108,7 @@ describe('I18n', () => {
   });
 
   test('should trigger and handle events', () => {
-    const callback: IObservableCallback = jest.fn();
+    const callback: ObservableCallback = jest.fn();
     i18n.on('translations-changed', callback);
     const translations: II18nTranslation = {
       en: {

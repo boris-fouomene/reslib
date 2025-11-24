@@ -1,4 +1,4 @@
-import { IObservable, observable } from '@/observable';
+import { Observable, observable } from '@/observable';
 import {
   ResourceActionName,
   ResourceActionTupleArray,
@@ -254,15 +254,15 @@ export class Auth {
    * Authentication event handler.
    * Initializes an observable event handler for authentication Auth.events.
    *
-   * This constant `events` is assigned an instance of `IObservable<AuthEvent>`, which is used to manage
+   * This constant `events` is assigned an instance of `Observable<AuthEvent>`, which is used to manage
    * authentication-related events in the application. The initialization checks if the global
    * `Global.eventsResourcesObservableHandler` exists and is an object. If it does, it assigns it to
-   * `events`; otherwise, it defaults to an empty object cast as `IObservable<AuthEvent>`.
+   * `events`; otherwise, it defaults to an empty object cast as `Observable<AuthEvent>`.
    *
    * This pattern allows for flexible handling of events, ensuring that the application can respond
    * to authentication actions such as sign-in, sign-out, and sign-up.
    *
-   * @type {IObservable<AuthEvent>}
+   * @type {Observable<AuthEvent>}
    *
    * @example
    * import {Auth} from 'reslib/auth';
@@ -274,7 +274,7 @@ export class Auth {
    *     Auth.events.trigger('SIGN_IN', user);
    * }
    */
-  static events: IObservable<AuthEvent> = observable<AuthEvent>({});
+  static events: Observable<AuthEvent> = observable<AuthEvent>({});
   private static localUserRef: ILocalUserRef = { current: null };
   /**
    * Checks if the user is a master admin.

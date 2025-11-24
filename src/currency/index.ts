@@ -4,25 +4,25 @@ import { defaultStr } from '../utils/defaultStr';
 import { isNonNullString } from '../utils/isNonNullString';
 import { currencies } from './currencies';
 import session from './session';
-import { ICurrency, ICurrencySymbol } from './types';
-import { isValidCurrency } from './utils';
+import { Currency, CurrencySymbol } from './types';
+import { isCurrency } from './utils';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const isObj = (x: any) => x && typeof x == 'object';
 
 /**
- * @group Currency
- * Extends the default options with the provided ICurrency object to initialize default values.
+ * 
+ * Extends the default options with the provided Currency object to initialize default values.
    it sets up default values for currency formatting, merging them with any user-provided options. This ensures that all necessary settings are available for the formatting process.
  * 
- * @param options The ICurrency object to merge with the default options.
- * @returns The merged ICurrency object with default values.
+ * @param options The Currency object to merge with the default options.
+ * @returns The merged Currency object with default values.
  */
-function prepareOptions(options?: ICurrency): ICurrency {
+function prepareOptions(options?: Currency): Currency {
   /**
-   * Create a new ICurrency object with default values.
+   * Create a new Currency object with default values.
    */
-  const object: ICurrency = Object.assign({}, session.getCurrency());
+  const object: Currency = Object.assign({}, session.getCurrency());
 
   /**
    * If options are provided, merge them with the default object.
@@ -34,9 +34,9 @@ function prepareOptions(options?: ICurrency): ICurrency {
     for (let i in options) {
       if (
         Object.prototype.hasOwnProperty.call(options, i) &&
-        options[i as keyof ICurrency] !== undefined
+        options[i as keyof Currency] !== undefined
       ) {
-        (object as Dictionary)[i] = options[i as keyof ICurrency];
+        (object as Dictionary)[i] = options[i as keyof Currency];
       }
     }
   }
@@ -55,13 +55,13 @@ function prepareOptions(options?: ICurrency): ICurrency {
   }
 
   /**
-   * Return the merged ICurrency object with default values.
+   * Return the merged Currency object with default values.
    */
   return object;
 }
 
 /**
- * @group Currency
+ *
  * Checks and normalizes the value of decimalDigits to ensure it's a positive integer.
  *
  * @param val The value to check and normalize.
@@ -83,7 +83,7 @@ function checkPrecision(val?: number, base?: number): number {
 }
 
 /**
- * @group Currency
+ *
  * Parses a format string or object and returns a format object for use in rendering.
  *
  * @param {string | { pos: string, neg?: string, zero?: string } | (() => string | { pos: string, neg?: string, zero?: string })} format
@@ -142,7 +142,7 @@ function checkCurrencyFormat(
 }
 
 /**
- * @group Currency
+ * 
  * Takes a string or array of strings, removes all formatting/cruft, and returns the raw float value.
 	The unformat function takes a formatted currency string and converts it back to a raw number. This is useful when you need to perform calculations on currency values that may have been stored or input as formatted strings.
  *
@@ -209,7 +209,7 @@ const unformat = (
 };
 
 /**
- * @group Currency
+ * 
  * Implementation of toFixed() that treats floats more like decimals.
 	The toFixed function addresses issues with floating-point precision in JavaScript, ensuring that decimal places are rounded correctly for currency display.
  *
@@ -268,7 +268,7 @@ const toFixed: (value: number, decimalDigits?: number) => string = (
 };
 
 /**
- * @group Currency
+ *
  * Format a number, with comma-separated thousands and custom decimalDigits/decimalSeparator places.
  * The formatNumber function takes a number and formats it with the appropriate thousand separators and decimal places, based on the provided options.
  *
@@ -278,19 +278,19 @@ const toFixed: (value: number, decimalDigits?: number) => string = (
  * 2nd parameter `decimalDigits` can be an object matching `settings.number`
  *
  * @param {number} number The number to format.
- * @param {ICurrency | number} [optionsOrDecimalDigits] The options object or decimal digits to use.
+ * @param {Currency | number} [optionsOrDecimalDigits] The options object or decimal digits to use.
  * @param {string} [thousandSeparator] The thousand separator to use.
  * @param {string} [decimalSeparator] The decimal separator to use.
  * @returns {string} The formatted number as a string.
  */
 const formatNumber: (
   number: number,
-  optionsOrDecimalDigits?: ICurrency | number,
+  optionsOrDecimalDigits?: Currency | number,
   thousandSeparator?: string,
   decimalSeparator?: string
 ) => string = (
   number: number,
-  optionsOrDecimalDigits?: ICurrency | number,
+  optionsOrDecimalDigits?: Currency | number,
   thousandSeparator?: string,
   decimalSeparator?: string
 ): string => {
@@ -301,11 +301,11 @@ const formatNumber: (
   /**
    * Prepare the options object from the second parameter (if an object) or all parameters, extending default options.
    */
-  const toPrepare: ICurrency = (
-    isValidCurrency(optionsOrDecimalDigits)
+  const toPrepare: Currency = (
+    isCurrency(optionsOrDecimalDigits)
       ? optionsOrDecimalDigits
       : session.getCurrency()
-  ) as ICurrency;
+  ) as Currency;
   if (typeof optionsOrDecimalDigits === 'number') {
     toPrepare.decimalDigits = optionsOrDecimalDigits;
   }
@@ -363,7 +363,7 @@ const formatNumber: (
 };
 
 /**
- * @group Currency
+ *
  * Format a number into currency.
  * The formatMoney and formatMoneyAsObject functions are the main workhorses of the module. They take a number and format it as a currency string, applying the appropriate symbol, decimal places, and formatting style. The formatMoneyAsObject version provides more detailed information about the formatting process.
  *
@@ -377,12 +377,12 @@ const formatNumber: (
  * To do: tidy up the parameters
  *
  * @param {number} [number] The number to format.
- * @param {ICurrency | ICurrencySymbol} [symbol] The symbol or options object.
+ * @param {Currency | CurrencySymbol} [symbol] The symbol or options object.
  * @param {number} [decimalDigits] The decimal digits to use.
  * @param {string} [thousandSeparator] The thousand separator to use.
  * @param {string} [decimalSeparator] The decimal separator to use.
  * @param {string} [format] The format to use.
- * @returns {ICurrency & {
+ * @returns {Currency & {
  *   formattedValue: string,
  *   formattedNumber: string,
  *   usedFormat: string,
@@ -391,12 +391,12 @@ const formatNumber: (
  */
 const formatMoneyAsObject = (
   number?: number,
-  symbol?: ICurrency | ICurrencySymbol,
+  symbol?: Currency | CurrencySymbol,
   decimalDigits?: number,
   thousandSeparator?: string,
   decimalSeparator?: string,
   format?: string
-): ICurrency & {
+): Currency & {
   formattedValue: string;
   formattedNumber: string;
   usedFormat: string;
@@ -410,8 +410,8 @@ const formatMoneyAsObject = (
   /**
    * Prepare the options object from the second parameter (if an object) or all parameters, extending default options.
    */
-  const toPrepare: ICurrency = isValidCurrency(symbol)
-    ? (symbol as ICurrency)
+  const toPrepare: Currency = isCurrency(symbol)
+    ? (symbol as Currency)
     : session.getCurrency();
   if (symbol !== undefined && typeof symbol === 'string') {
     toPrepare.symbol = symbol;
@@ -476,7 +476,7 @@ const formatMoneyAsObject = (
 };
 
 /**
- * @group Currency
+ *
  * Format a number into currency.
  *
  * The symbol can be an object, in which case the other properties can be null.
@@ -489,7 +489,7 @@ const formatMoneyAsObject = (
  * To do: tidy up the parameters
  *
  * @param {number} [number] The number to format.
- * @param {ICurrency | ICurrencySymbol} [symbol] The symbol or options object.
+ * @param {Currency | CurrencySymbol} [symbol] The symbol or options object.
  * @param {number} [decimalDigits] The decimal digits to use.
  * @param {string} [thousandSeparator] The thousand separator to use.
  * @param {string} [decimalSeparator] The decimal separator to use.
@@ -498,14 +498,14 @@ const formatMoneyAsObject = (
  */
 const formatMoney: (
   number?: number,
-  symbol?: ICurrency | ICurrencySymbol,
+  symbol?: Currency | CurrencySymbol,
   decimalDigits?: number,
   thousandSeparator?: string,
   decimalSeparator?: string,
   format?: string
 ) => string = (
   number?: number,
-  symbol?: ICurrency | ICurrencySymbol,
+  symbol?: Currency | CurrencySymbol,
   decimalDigits?: number,
   thousandSeparator?: string,
   decimalSeparator?: string,
@@ -525,7 +525,7 @@ const formatMoney: (
 };
 
 /**
- * @group Currency
+ *
  * Parse the currency format and return an object containing the parsed format and decimal digits.
  * The parseFormat function helps interpret custom format strings, allowing users to specify how they want their currency displayed (e.g., where the symbol should appear, how many decimal places to show).
  *
@@ -536,11 +536,11 @@ const formatMoney: (
  * For example, the format %v %s .### formats the number 12555.6893300244 as $12555.689, with 3 decimal digits.
  * If no decimal digits are desired, simply omit the # characters after the dot (e.g., %s %v .).
  *
- * @returns {ICurrency} An object containing the parsed format and decimal digits.
+ * @returns {Currency} An object containing the parsed format and decimal digits.
  */
-const parseFormat: (format?: string) => ICurrency = (
+const parseFormat: (format?: string) => Currency = (
   format?: string
-): ICurrency => {
+): Currency => {
   /**
    * Trim the format string.
    */
@@ -549,7 +549,7 @@ const parseFormat: (format?: string) => ICurrency = (
   /**
    * Initialize the return object.
    */
-  const ret: ICurrency = {} as ICurrency;
+  const ret: Currency = {} as Currency;
 
   /**
    * Check if the format string is not empty.
@@ -558,7 +558,8 @@ const parseFormat: (format?: string) => ICurrency = (
     /**
      * Regular expression to match the decimal digits specification.
      */
-    const reg = /(\.)(\\#{0,9}\s*$)/;
+    // eslint-disable-next-line no-useless-escape
+    const reg = /(\.)(\#{0,9}\s*$)/;
 
     /**
      * Match the decimal digits specification in the format string.
@@ -589,11 +590,11 @@ const parseFormat: (format?: string) => ICurrency = (
   /**
    * Return the parsed format and decimal digits.
    */
-  return ret as ICurrency;
+  return ret as Currency;
 };
 
 /**
- * @group Currency
+ *
  * @description
  * Description of the format for displaying numeric values.
  *
@@ -607,22 +608,22 @@ const parseFormat: (format?: string) => ICurrency = (
  *   - . for no decimal places in the display.
  * For example, the format %v %s .## returns: 12.35 $ for the value 12.357777 converted to dollars.
  */
-const formatDescription: string = `Display format for numerical values: a character string consisting of the letters %v and %s, where %v represents the value of the amount and %s represents the currency: example %s%v => $10 and %v %s => $10.
+/* const formatDescription: string = `Display format for numerical values: a character string consisting of the letters %v and %s, where %v represents the value of the amount and %s represents the currency: example %s%v => $10 and %v %s => $10.
 	To define decimals, use the [.][#{0,n}] pattern, e.g. .### for display with 3 decimals and . to exclude decimals from the display. 
 	for example, the format %v %s .## returns: 12.35 $ for the value 12.357777 converted into dollard.  
-`;
+`; */
 
-export const Currency = {
+export const CurrencyUtils = {
   parse: unformat,
   session,
   formatMoney,
   currencies,
-  isValidCurrency,
+  isCurrency,
   formatNumber,
   formatMoneyAsObject,
   unformat,
   toFixed,
-  formatDescription,
+  //formatDescription,
   prepareOptions,
   parseFormat,
 };

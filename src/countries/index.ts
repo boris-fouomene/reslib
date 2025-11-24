@@ -1,4 +1,4 @@
-import { ICurrency } from '@/currency/types';
+import { Currency } from '@/currency/types';
 import { i18n } from '@/i18n';
 import { defaultStr } from '@utils/defaultStr';
 import { isNonNullString } from '@utils/isNonNullString';
@@ -98,14 +98,14 @@ export class CountriesManager {
    * Gets the currency for a given country code.
    *
    * @param {CountryCode} code The country code.
-   * @returns {ICurrency | undefined} The currency for the given country code, or undefined if the country code is not found.
+   * @returns {Currency | undefined} The currency for the given country code, or undefined if the country code is not found.
    *
    * @example
    * ```typescript
    * console.log(CountriesManager.getCurrency('US')); // { code: 'USD', symbol: '$' }
    * ```
    */
-  static getCurrency(code: CountryCode): ICurrency | undefined {
+  static getCurrency(code: CountryCode): Currency | undefined {
     return this.getCountry(code)?.currency;
   }
 

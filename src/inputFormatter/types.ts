@@ -1,4 +1,4 @@
-import { ICurrencyFormatterKey } from '@/currency/types';
+import { CurrencyFormatName } from '@/currency/types';
 import { CountryCode } from '@countries/types';
 import { DateFormat } from '../types/date';
 
@@ -573,7 +573,7 @@ export type InputFormatterValueFunc = (
  * - `"number"`: For standard numerical formatting.
  * - `"money"`: For formatting values as monetary amounts, following currency rules.
  * - `"custom"`: For user-defined formatting rules.
- * - `ICurrencyFormatterKey`: Represents a specific currency format that adheres to the structure defined in the `ICurrencyFormatterKey` interface.
+ * - `CurrencyFormatName`: Represents a specific currency format that adheres to the structure defined in the `CurrencyFormatName` interface.
  *
  * ### Example Usage:
  * ```typescript
@@ -583,7 +583,7 @@ export type InputFormatterValueFunc = (
  * // Define a custom format
  * const customValue: InputFormatterValueFormat = "custom";
  *
- * // Define a value using ICurrencyFormatterKey
+ * // Define a value using CurrencyFormatName
  * const currencyValue: InputFormatterValueFormat = "formatUSD" | "formatCAD" | "formatEUR" | "formatAED" | "formatAFN" | "formatALL" | "formatAMD" | "formatARS" |;
  * ```
  */
@@ -591,5 +591,5 @@ export type InputFormatterValueFormat =
   | 'number'
   | 'money'
   | 'custom'
-  | ICurrencyFormatterKey
+  | CurrencyFormatName
   | InputFormatterValueFunc;

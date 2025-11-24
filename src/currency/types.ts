@@ -1,6 +1,6 @@
 /**
- * @interface ICurrency
- * @group Currency
+ * @interface Currency
+ *
  * Represents a currency with its associated properties for formatting and display.
  *
  * This type provides essential details about a currency, including its symbol,
@@ -10,7 +10,7 @@
  *
  * @example
  * // Example of a currency object for US Dollar
- * const usd: ICurrency = {
+ * const usd: Currency = {
  *   symbol: "$",
  *   name: "United States Dollar",
  *   symbolNative: "$",
@@ -23,7 +23,7 @@
  *   thousandSeparator: ","
  * };
  */
-export type ICurrency = {
+export type Currency = {
   /**
    * The symbol of the currency (e.g., "$", "FCFA").
    *
@@ -128,8 +128,8 @@ export type ICurrency = {
 };
 
 /**
- * @group Currency
- * @interface ICurrencyFormatter
+ * 
+ * @interface CurrencyFormatter
  * Dynamically formats a number into a string based on currency properties (like symbol and decimal places)
  * retrieved from a predefined currency object.
  *
@@ -179,7 +179,7 @@ export type ICurrency = {
     console.log(result3); // Output: "123,456.79 €"
  * ```
  */
-export type ICurrencyFormatter = (
+export type CurrencyFormatter = (
   decimalDigits?: number,
   thousandSeparator?: string,
   decimalSeparator?: string,
@@ -187,7 +187,7 @@ export type ICurrencyFormatter = (
 ) => string;
 
 /**
- * @group Currency
+ *
  * @interface
  * A string template type representing the dynamic formatter function names.
  *
@@ -201,43 +201,43 @@ export type ICurrencyFormatter = (
  * // If `currencies` contains { USD, CAD, EUR }, the keys will be:
  * // 'formatUSD', 'formatCAD', 'formatEUR'
  */
-export type ICurrencyFormatterKey = `format${ICurrencyCode}`;
+export type CurrencyFormatName = `format${CurrencyCode}`;
 
 /**
- * @group Currency
+ *
  * Represents a string template type for dynamically generating keys for abbreviated currency formatters.
  *
- * The `ICurrencyAbreviate2FormatKey` type constructs keys by combining the `abreviate2Format` prefix
- * with the keys of the `ICurrencies` interface. This allows for the creation of dynamic formatter keys
+ * The `CurrencyAbbreviateFormatName` type constructs keys by combining the `abreviate2Format` prefix
+ * with the keys of the `Currencies` interface. This allows for the creation of dynamic formatter keys
  * specific to each currency.
  *
- * @template ICurrencyCode - The keys of the `ICurrencies` interface, representing ISO currency codes.
+ * @template CurrencyCode - The keys of the `Currencies` interface, representing ISO currency codes.
  *
  * @example
  * ```typescript
- * // Assuming the `ICurrencies` interface contains the following keys:
+ * // Assuming the `Currencies` interface contains the following keys:
  * // { USD, CAD, EUR }
  *
- * type AbbreviatedFormatKeys = ICurrencyAbreviate2FormatKey;
+ * type AbbreviatedFormatKeys = CurrencyAbbreviateFormatName;
  *
  * // The resulting type will include:
  * // 'abreviate2FormatUSD', 'abreviate2FormatCAD', 'abreviate2FormatEUR'
  *
- * const formatKey: ICurrencyAbreviate2FormatKey = "abreviate2FormatUSD";
+ * const formatKey: CurrencyAbbreviateFormatName = "abreviate2FormatUSD";
  * console.log(formatKey); // Output: "abreviate2FormatUSD"
  * ```
  *
  * @remarks
  * - This type is useful for defining dynamic keys for currency-specific formatting functions.
- * - It ensures that the keys are consistent with the currencies defined in the `ICurrencies` interface.
+ * - It ensures that the keys are consistent with the currencies defined in the `Currencies` interface.
  *
- * @see {@link ICurrencies} for the structure of the currencies interface.
- * @see {@link ICurrencyFormatterKey} for a similar type used for general currency formatters.
+ * @see {@link Currencies} for the structure of the currencies interface.
+ * @see {@link CurrencyFormatName} for a similar type used for general currency formatters.
  */
-export type ICurrencyAbreviate2FormatKey = `abreviate2Format${ICurrencyCode}`;
+export type CurrencyAbbreviateFormatName = `abreviate2Format${CurrencyCode}`;
 
 /**
- * @group Currency
+ *
  * Represents a collection of dynamically generated currency formatter functions.
  *
  * Each key is a string formed by combining the `format` prefix with a currency code
@@ -249,7 +249,7 @@ export type ICurrencyAbreviate2FormatKey = `abreviate2Format${ICurrencyCode}`;
  *
  * @example
  * // Assuming the `currencies` object contains USD and CAD:
- * const formatters: ICurrencyFormatters = {
+ * const formatters: CurrencyFormatters = {
  *   formatUSD: (value) => `$${value.toFixed(2)}`,
  *   formatCAD: (value) => `CA$${value.toFixed(2)}`,
  *
@@ -262,15 +262,15 @@ export type ICurrencyAbreviate2FormatKey = `abreviate2Format${ICurrencyCode}`;
  * const formattedCAD = formatters.formatCAD(123456.789);
  * console.log(formattedCAD); // Output: "CA$123,456.79"
  */
-export type ICurrencyFormatters = Record<
-  ICurrencyFormatterKey | ICurrencyAbreviate2FormatKey,
-  ICurrencyFormatter
+export type CurrencyFormatters = Record<
+  CurrencyFormatName | CurrencyAbbreviateFormatName,
+  CurrencyFormatter
 >;
 
 /**
- * @interface ICurrencies
+ * @interface Currencies
  * Represents a collection of currencies, with each currency identified by its ISO code.
- * Each currency is associated with the `ICurrency` interface, which defines its attributes such as symbol, name, and formatting options.
+ * Each currency is associated with the `Currency` interface, which defines its attributes such as symbol, name, and formatting options.
  * This interface allows for easy management of various currencies by providing a
  * centralized structure. Each currency is identified by its ISO 4217 code, and
  * contains detailed information such as symbol, name, and formatting options.
@@ -278,8 +278,8 @@ export type ICurrencyFormatters = Record<
  * such as e-commerce platforms, financial applications, and accounting software.
  *
  * @example
- * // Example of an ICurrencies object containing multiple currencies
- * const currencies: ICurrencies = {
+ * // Example of an Currencies object containing multiple currencies
+ * const currencies: Currencies = {
  *     USD: {
  *         symbol: "$",
  *         name: "United States Dollar",
@@ -319,862 +319,862 @@ export type ICurrencyFormatters = Record<
  *     // ... additional currencies
  * };
  */
-export interface ICurrencies {
+export interface Currencies {
   /**
    * The United States Dollar (USD).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  USD: ICurrency;
+  USD: Currency;
 
   /**
    * The Canadian Dollar (CAD).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  CAD: ICurrency;
+  CAD: Currency;
 
   /**
    * The Euro (EUR).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  EUR: ICurrency;
+  EUR: Currency;
 
   /**
    * The United Arab Emirates Dirham (AED).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  AED: ICurrency;
+  AED: Currency;
 
   /**
    * The Afghan Afghani (AFN).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  AFN: ICurrency;
+  AFN: Currency;
 
   /**
    * The Albanian Lek (ALL).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  ALL: ICurrency;
+  ALL: Currency;
 
   /**
    * The Armenian Dram (AMD).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  AMD: ICurrency;
+  AMD: Currency;
 
   /**
    * The Argentine Peso (ARS).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  ARS: ICurrency;
+  ARS: Currency;
 
   /**
    * The Australian Dollar (AUD).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  AUD: ICurrency;
+  AUD: Currency;
 
   /**
    * The Azerbaijani Manat (AZN).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  AZN: ICurrency;
+  AZN: Currency;
 
   /**
    * The Bosnia and Herzegovina Convertible Mark (BAM).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  BAM: ICurrency;
+  BAM: Currency;
 
   /**
    * The Bangladeshi Taka (BDT).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  BDT: ICurrency;
+  BDT: Currency;
 
   /**
    * The Bulgarian Lev (BGN).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  BGN: ICurrency;
+  BGN: Currency;
 
   /**
    * The Bahraini Dinar (BHD).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  BHD: ICurrency;
+  BHD: Currency;
 
   /**
    * The Burundian Franc (BIF).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  BIF: ICurrency;
+  BIF: Currency;
 
   /**
    * The Brunei Dollar (BND).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  BND: ICurrency;
+  BND: Currency;
 
   /**
    * The Bolivian Boliviano (BOB).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  BOB: ICurrency;
+  BOB: Currency;
 
   /**
    * The Brazilian Real (BRL).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  BRL: ICurrency;
+  BRL: Currency;
 
   /**
    * The Botswana Pula (BWP).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  BWP: ICurrency;
+  BWP: Currency;
 
   /**
    * The Belarusian Ruble (BYR).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  BYR: ICurrency;
+  BYR: Currency;
 
   /**
    * The Belize Dollar (BZD).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  BZD: ICurrency;
+  BZD: Currency;
 
   /**
    * The Congolese Franc (CDF).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  CDF: ICurrency;
+  CDF: Currency;
 
   /**
    * The Swiss Franc (CHF).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  CHF: ICurrency;
+  CHF: Currency;
 
   /**
    * The Chilean Peso (CLP).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  CLP: ICurrency;
+  CLP: Currency;
 
   /**
    * The Chinese Yuan Renminbi (CNY).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  CNY: ICurrency;
+  CNY: Currency;
 
   /**
    * The Colombian Peso (COP).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  COP: ICurrency;
+  COP: Currency;
 
   /**
    * The Costa Rican Colón (CRC).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  CRC: ICurrency;
+  CRC: Currency;
 
   /**
    * The Cape Verdean Escudo (CVE).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  CVE: ICurrency;
+  CVE: Currency;
 
   /**
    * The Czech Koruna (CZK).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  CZK: ICurrency;
+  CZK: Currency;
 
   /**
    * The Djiboutian Franc (DJF).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  DJF: ICurrency;
+  DJF: Currency;
 
   /**
    * The Danish Krone (DKK).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  DKK: ICurrency;
+  DKK: Currency;
 
   /**
    * The Dominican Peso (DOP).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  DOP: ICurrency;
+  DOP: Currency;
 
   /**
    * The Algerian Dinar (DZD).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  DZD: ICurrency;
+  DZD: Currency;
 
   /**
    * The Estonian Kroon (EEK).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  EEK: ICurrency;
+  EEK: Currency;
 
   /**
    * The Egyptian Pound (EGP).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  EGP: ICurrency;
+  EGP: Currency;
 
   /**
    * The Eritrean Nakfa (ERN).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  ERN: ICurrency;
+  ERN: Currency;
 
   /**
    * The Ethiopian Birr (ETB).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  ETB: ICurrency;
+  ETB: Currency;
 
   /**
    * The British Pound Sterling (GBP).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  GBP: ICurrency;
+  GBP: Currency;
 
   /**
    * The Georgian Lari (GEL).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  GEL: ICurrency;
+  GEL: Currency;
 
   /**
    * The Ghanaian Cedi (GHS).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  GHS: ICurrency;
+  GHS: Currency;
 
   /**
    * The Guinean Franc (GNF).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  GNF: ICurrency;
+  GNF: Currency;
 
   /**
    * The Guatemalan Quetzal (GTQ).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  GTQ: ICurrency;
+  GTQ: Currency;
 
   /**
    * The Hong Kong Dollar (HKD).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  HKD: ICurrency;
+  HKD: Currency;
 
   /**
    * The Honduran Lempira (HNL).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  HNL: ICurrency;
+  HNL: Currency;
 
   /**
    * The Croatian Kuna (HRK).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  HRK: ICurrency;
+  HRK: Currency;
 
   /**
    * The Hungarian Forint (HUF).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  HUF: ICurrency;
+  HUF: Currency;
 
   /**
    * The Indonesian Rupiah (IDR).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  IDR: ICurrency;
+  IDR: Currency;
 
   /**
    * The Israeli New Shekel (ILS).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  ILS: ICurrency;
+  ILS: Currency;
 
   /**
    * The Indian Rupee (INR).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  INR: ICurrency;
+  INR: Currency;
 
   /**
    * The Iraqi Dinar (IQD).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  IQD: ICurrency;
+  IQD: Currency;
 
   /**
    * The Iranian Rial (IRR).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  IRR: ICurrency;
+  IRR: Currency;
 
   /**
    * The Icelandic Króna (ISK).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  ISK: ICurrency;
+  ISK: Currency;
 
   /**
    * The Jamaican Dollar (JMD).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  JMD: ICurrency;
+  JMD: Currency;
 
   /**
    * The Jordanian Dinar (JOD).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  JOD: ICurrency;
+  JOD: Currency;
 
   /**
    * The Japanese Yen (JPY).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  JPY: ICurrency;
+  JPY: Currency;
 
   /**
    * The Kenyan Shilling (KES).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  KES: ICurrency;
+  KES: Currency;
 
   /**
    * The Cambodian Riel (KHR).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  KHR: ICurrency;
+  KHR: Currency;
 
   /**
    * The Comorian Franc (KMF).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  KMF: ICurrency;
+  KMF: Currency;
 
   /**
    * The South Korean Won (KRW).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  KRW: ICurrency;
+  KRW: Currency;
 
   /**
    * The Kuwaiti Dinar (KWD).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  KWD: ICurrency;
+  KWD: Currency;
 
   /**
    * The Kazakhstani Tenge (KZT).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  KZT: ICurrency;
+  KZT: Currency;
 
   /**
    * The Lebanese Pound (LBP).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  LBP: ICurrency;
+  LBP: Currency;
 
   /**
    * The Sri Lankan Rupee (LKR).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  LKR: ICurrency;
+  LKR: Currency;
 
   /**
    * The Lithuanian Litas (LTL).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  LTL: ICurrency;
+  LTL: Currency;
 
   /**
    * The Latvian Lats (LVL).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  LVL: ICurrency;
+  LVL: Currency;
 
   /**
    * The Libyan Dinar (LYD).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  LYD: ICurrency;
+  LYD: Currency;
 
   /**
    * The Moroccan Dirham (MAD).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  MAD: ICurrency;
+  MAD: Currency;
 
   /**
    * The Moldovan Leu (MDL).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  MDL: ICurrency;
+  MDL: Currency;
 
   /**
    * The Malagasy Ariary (MGA).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  MGA: ICurrency;
+  MGA: Currency;
 
   /**
    * The Macedonian Denar (MKD).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  MKD: ICurrency;
+  MKD: Currency;
 
   /**
    * The Myanmar Kyat (MMK).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  MMK: ICurrency;
+  MMK: Currency;
 
   /**
    * The Macanese Pataca (MOP).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  MOP: ICurrency;
+  MOP: Currency;
 
   /**
    * The Mauritian Rupee (MUR).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  MUR: ICurrency;
+  MUR: Currency;
 
   /**
    * The Mexican Peso (MXN).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  MXN: ICurrency;
+  MXN: Currency;
 
   /**
    * The Malaysian Ringgit (MYR).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  MYR: ICurrency;
+  MYR: Currency;
 
   /**
    * The Mozambican Metical (MZN).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  MZN: ICurrency;
+  MZN: Currency;
 
   /**
    * The Namibian Dollar (NAD).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  NAD: ICurrency;
+  NAD: Currency;
 
   /**
    * The Nigerian Naira (NGN).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  NGN: ICurrency;
+  NGN: Currency;
 
   /**
    * The Nicaraguan Córdoba (NIO).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  NIO: ICurrency;
+  NIO: Currency;
 
   /**
    * The Norwegian Krone (NOK).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  NOK: ICurrency;
+  NOK: Currency;
 
   /**
    * The Nepalese Rupee (NPR).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  NPR: ICurrency;
+  NPR: Currency;
 
   /**
    * The New Zealand Dollar (NZD).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  NZD: ICurrency;
+  NZD: Currency;
 
   /**
    * The Omani Rial (OMR).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  OMR: ICurrency;
+  OMR: Currency;
 
   /**
    * The Panamanian Balboa (PAB).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  PAB: ICurrency;
+  PAB: Currency;
 
   /**
    * The Peruvian Sol (PEN).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  PEN: ICurrency;
+  PEN: Currency;
 
   /**
    * The Philippine Peso (PHP).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  PHP: ICurrency;
+  PHP: Currency;
 
   /**
    * The Pakistani Rupee (PKR).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  PKR: ICurrency;
+  PKR: Currency;
 
   /**
    * The Polish Zloty (PLN).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  PLN: ICurrency;
+  PLN: Currency;
 
   /**
    * The Paraguayan Guarani (PYG).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  PYG: ICurrency;
+  PYG: Currency;
 
   /**
    * The Qatari Rial (QAR).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  QAR: ICurrency;
+  QAR: Currency;
 
   /**
    * The Romanian Leu (RON).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  RON: ICurrency;
+  RON: Currency;
 
   /**
    * The Serbian Dinar (RSD).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  RSD: ICurrency;
+  RSD: Currency;
 
   /**
    * The Russian Ruble (RUB).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  RUB: ICurrency;
+  RUB: Currency;
 
   /**
    * The Rwandan Franc (RWF).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  RWF: ICurrency;
+  RWF: Currency;
 
   /**
    * The Saudi Riyal (SAR).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  SAR: ICurrency;
+  SAR: Currency;
 
   /**
    * The Sudanese Pound (SDG).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  SDG: ICurrency;
+  SDG: Currency;
 
   /**
    * The Swedish Krona (SEK).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  SEK: ICurrency;
+  SEK: Currency;
 
   /**
    * The Singapore Dollar (SGD).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  SGD: ICurrency;
+  SGD: Currency;
 
   /**
    * The Somali Shilling (SOS).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  SOS: ICurrency;
+  SOS: Currency;
 
   /**
    * The Syrian Pound (SYP).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  SYP: ICurrency;
+  SYP: Currency;
 
   /**
    * The Thai Baht (THB).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  THB: ICurrency;
+  THB: Currency;
 
   /**
    * The Tunisian Dinar (TND).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  TND: ICurrency;
+  TND: Currency;
 
   /**
    * The Tongan Paʻanga (TOP).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  TOP: ICurrency;
+  TOP: Currency;
 
   /**
    * The Turkish Lira (TRY).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  TRY: ICurrency;
+  TRY: Currency;
 
   /**
    * The Trinidad and Tobago Dollar (TTD).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  TTD: ICurrency;
+  TTD: Currency;
 
   /**
    * The New Taiwan Dollar (TWD).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  TWD: ICurrency;
+  TWD: Currency;
 
   /**
    * The Tanzanian Shilling (TZS).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  TZS: ICurrency;
+  TZS: Currency;
 
   /**
    * The Ukrainian Hryvnia (UAH).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  UAH: ICurrency;
+  UAH: Currency;
 
   /**
    * The Ugandan Shilling (UGX).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  UGX: ICurrency;
+  UGX: Currency;
 
   /**
    * The Uruguayan Peso (UYU).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  UYU: ICurrency;
+  UYU: Currency;
 
   /**
    * The Uzbek Som (UZS).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  UZS: ICurrency;
+  UZS: Currency;
 
   /**
    * The Venezuelan Bolívar (VEF).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  VEF: ICurrency;
+  VEF: Currency;
 
   /**
    * The Vietnamese Dong (VND).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  VND: ICurrency;
+  VND: Currency;
 
   /**
    * The Central African CFA Franc (XAF).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  XAF: ICurrency;
+  XAF: Currency;
 
   /**
    * The West African CFA Franc (XOF).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  XOF: ICurrency;
+  XOF: Currency;
 
   /**
    * The Yemeni Rial (YER).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  YER: ICurrency;
+  YER: Currency;
 
   /**
    * The South African Rand (ZAR).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  ZAR: ICurrency;
+  ZAR: Currency;
 
   /**
    * The Zambian Kwacha (ZMK).
    *
-   * @type {ICurrency}
+   * @type {Currency}
    */
-  ZMK: ICurrency;
+  ZMK: Currency;
 }
 
 /**
- * @group Currency
+ *
  * Represents the ISO 4217 currency codes available in the currencies collection.
  *
- * This type is derived from the keys of the `ICurrencies` interface, ensuring that
+ * This type is derived from the keys of the `Currencies` interface, ensuring that
  * only valid currency codes are accepted. It provides type safety when working
  * with currency codes throughout the application.
  *
  * @example
  * ```typescript
- * const currencyCode: ICurrencyCode = "USD"; // Valid
- * const invalidCode: ICurrencyCode = "INVALID"; // TypeScript error
+ * const currencyCode: CurrencyCode = "USD"; // Valid
+ * const invalidCode: CurrencyCode = "INVALID"; // TypeScript error
  * ```
  */
-export type ICurrencyCode = keyof ICurrencies;
+export type CurrencyCode = keyof Currencies;
 
 /**
- * @group Currency
+ *
  * Represents the currency symbols for all available currencies.
  *
- * This type extracts the symbol property from each currency in the `ICurrencies`
+ * This type extracts the symbol property from each currency in the `Currencies`
  * interface, providing a union type of all possible currency symbols. It's useful
  * for type-safe operations involving currency symbols.
  *
  * @example
  * ```typescript
- * const symbol: ICurrencySymbol = "$"; // Valid (USD symbol)
- * const euroSymbol: ICurrencySymbol = "€"; // Valid (EUR symbol)
+ * const symbol: CurrencySymbol = "$"; // Valid (USD symbol)
+ * const euroSymbol: CurrencySymbol = "€"; // Valid (EUR symbol)
  * ```
  */
-export type ICurrencySymbol = ICurrencies[ICurrencyCode]["symbol"];
+export type CurrencySymbol = Currencies[CurrencyCode]['symbol'];
