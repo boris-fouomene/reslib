@@ -1,7 +1,7 @@
 import { DateHelper } from '@utils/date';
 import { defaultStr } from '@utils/defaultStr';
 import 'reflect-metadata';
-import { IClassConstructor, IDict } from '../types/index';
+import { IClassConstructor } from '../types/index';
 
 /**
  * Represents a logger that provides logging functionalities with different log levels.
@@ -86,10 +86,13 @@ export class Logger {
    *
    * @returns {this} The logger instance for method chaining.
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   static _log(level: ILoggerLevel, ...data: any[]) {
     const logger = Logger.logger;
     level = defaultStr(level);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     if (level && typeof ((logger as any)[level] as any) === 'function') {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (logger as any)[level](Logger.getDateTimeString(), ...data);
     } else {
       console.log('Logger level not found : [', level, ']', ...data);
@@ -125,6 +128,7 @@ export class Logger {
    * Logs a message with the "log" level.
    * @param {...any[]} data - Data to log.
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   static log(...data: any[]): void {
     this._log('log', ...data);
   }
@@ -133,6 +137,7 @@ export class Logger {
    * Logs a message with the "info" level.
    * @param {...any[]} data - Data to log.
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   static info(...data: any[]): void {
     this._log('info', ...data);
   }
@@ -141,6 +146,7 @@ export class Logger {
    * Logs a message with the "debug" level.
    * @param {...any[]} data - Data to log.
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   static debug(...data: any[]): void {
     this._log('debug', ...data);
   }
@@ -149,6 +155,7 @@ export class Logger {
    * Logs a message with the "warn" level.
    * @param {...any[]} data - Data to log.
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   static warn(...data: any[]): void {
     this._log('warn', ...data);
   }
@@ -157,6 +164,7 @@ export class Logger {
    * Logs a message with the "error" level.
    * @param {...any[]} data - Data to log.
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   static error(...data: any[]): void {
     this._log('error', ...data);
   }
@@ -217,6 +225,7 @@ export interface ILogger {
    * logger.log({ foo: 'bar' });
    * ```
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   log(dateTimeString: string, ...data: any[]): void;
 
   /**
@@ -232,6 +241,7 @@ export interface ILogger {
    * logger.info('User  logged in.');
    * ```
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   info(dateTimeString: string, ...data: any[]): void;
 
   /**
@@ -247,6 +257,7 @@ export interface ILogger {
    * logger.debug('Function foo was called.');
    * ```
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   debug(dateTimeString: string, ...data: any[]): void;
 
   /**
@@ -262,6 +273,7 @@ export interface ILogger {
    * logger.warn('Invalid user input detected.');
    * ```
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   warn(dateTimeString: string, ...data: any[]): void;
 
   /**
@@ -277,6 +289,7 @@ export interface ILogger {
    * logger.error('Invalid data detected.');
    * ```
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   error(dateTimeString: string, ...data: any[]): void;
 }
 
@@ -296,7 +309,8 @@ const isValidLogger = (logger?: ILogger): boolean => {
   if (!logger) return false;
   try {
     return ['warn', 'info', 'error'].every(
-      (value) => typeof (logger as IDict)[value] === 'function'
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (value) => typeof (logger as any)[value] === 'function'
     );
   } catch {
     return false;

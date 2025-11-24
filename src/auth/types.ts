@@ -3,7 +3,7 @@ import {
   IResourceActionTuple,
   IResourceName,
 } from '@resources/types';
-import { IDict } from '../types/dictionary';
+import { Dictionary } from '../types/dictionary';
 /**
  * @interface AuthUser
  * Represents an authenticated user in the application.
@@ -73,7 +73,7 @@ export interface AuthUser extends Record<string, any> {
    */
   token?: string;
 
-  roles?: IAuthRole[];
+  roles?: AuthRole[];
 }
 
 /**
@@ -84,7 +84,7 @@ export interface AuthUser extends Record<string, any> {
  *
  * @example
  * ```typescript
- * const adminRole: IAuthRole = {
+ * const adminRole: AuthRole = {
  *   name: 'admin',
  *   perms: {
  *     // permissions for the admin role
@@ -96,7 +96,7 @@ export interface AuthUser extends Record<string, any> {
  * ```
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export interface IAuthRole extends Record<string, any> {
+export interface AuthRole extends Record<string, any> {
   /**
    * The name of the authorization role.
    *
@@ -141,18 +141,18 @@ export interface IAuthRole extends Record<string, any> {
  *   @returns {any} The value associated with the specified key, or
  *   undefined if the key does not exist.
  *
- * - `set(key?: string | IDict, value?: any): any`: Persists a value
+ * - `set(key?: string | Dictionary, value?: any): any`: Persists a value
  *   in the session storage. This can either be a single key-value
  *   pair or an object containing multiple session data.
  *
- *   @param {string | IDict} key - The key of the value to persist, or
+ *   @param {string | Dictionary} key - The key of the value to persist, or
  *   an object containing session data.
  *   @param {any} value - The value to persist. This can be of any type.
  *
- * - `getData(): IDict`: Retrieves all session data associated with
+ * - `getData(): Dictionary`: Retrieves all session data associated with
  *   the session name defined in the `sessionName` property.
  *
- *   @returns {IDict} An object containing all session data.
+ *   @returns {Dictionary} An object containing all session data.
  *
  * - `getKey(): string`: Returns the key associated with the session
  *   name defined in the `sessionName` property.
@@ -178,18 +178,19 @@ export interface IAuthSessionStorage {
   /**
    * Persists a value in the session storage.
    *
-   * @param {string | IDict} key - The key of the value to persist, or an object containing session data.
+   * @param {string | Dictionary} key - The key of the value to persist, or an object containing session data.
    * @param {any} value - The value to persist. This can be of any type.
    * @returns {any} The result of the persistence operation.
    */
-  set: (key?: string | IDict, value?: any) => any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  set: (key?: string | Dictionary, value?: any) => any;
 
   /**
    * Retrieves all session data associated with the session name.
    *
-   * @returns {IDict} An object containing all session data.
+   * @returns {Dictionary} An object containing all session data.
    */
-  getData: () => IDict;
+  getData: () => Dictionary;
 
   /**
    * Returns the key associated with the session name.

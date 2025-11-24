@@ -127,6 +127,7 @@
   "scripts": {
     "clear-npx-cache": "npx clear-npx-cache",
     "pretest": "npm run build-test",
+    "prebuild": "npm run clean && npm run lint",
     "build": "tsup --config tsup.config.build.ts",
     "build-dts": "tsc -p tsconfig.dts.json && npx tsc-alias -p tsconfig.dts.json",
     "build-test": "tsup --config tsup.config.test.ts",

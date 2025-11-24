@@ -1,7 +1,7 @@
 import { isPromise } from '@utils/isPromise';
 import 'reflect-metadata';
 import { Platform } from '../platform';
-import { IClassConstructor, IDict } from '../types/index';
+import { Dictionary, IClassConstructor } from '../types/index';
 import { isNonNullString } from '../utils/isNonNullString';
 import { JsonHelper } from '../utils/json';
 
@@ -12,7 +12,7 @@ class Manager {
    *
    * This property is initialized lazily when the `storage` getter is called.
    */
-  private static _storage: ISessionStorage | undefined;
+  private static _storage: SessionStorage | undefined;
 
   /**
    * The namespace prefix to use for all keys in the session storage.
@@ -49,7 +49,7 @@ class Manager {
    * - **Node.js environments** - Uses in-memory storage
    * - **React Native** - Can use custom storage implementations
    *
-   * @returns The active session storage implementation conforming to {@link ISessionStorage}
+   * @returns The active session storage implementation conforming to {@link SessionStorage}
    *
    * @example
    * ```typescript
@@ -93,7 +93,7 @@ class Manager {
    * ```typescript
    * // Custom storage integration example
    * @AttachSessionStorage()
-   * class RedisStorage implements ISessionStorage {
+   * class RedisStorage implements SessionStorage {
    *   constructor(private redis: RedisClient) {}
    *
    *   get(key: string): any {
@@ -171,7 +171,7 @@ class Manager {
    * }
    * ```
    *
-   * @see {@link ISessionStorage} - Interface that all storage implementations must follow
+   * @see {@link SessionStorage} - Interface that all storage implementations must follow
    * @see {@link AttachSessionStorage} - Decorator for registering custom storage implementations
    * @see {@link isValidStorage} - Function used to validate storage implementations
    * @see {@link Platform.isClientSide} - Platform detection utility
@@ -210,7 +210,7 @@ class Manager {
    * - In-memory storage access is synchronous but not thread-safe across workers
    * - Custom storage implementations should handle concurrency appropriately
    */
-  public static get storage(): ISessionStorage {
+  public static get storage(): SessionStorage {
     const storage = Reflect.getMetadata(
       Manager.sessionStorageMetaData,
       Manager
@@ -227,6 +227,7 @@ class Manager {
     ) {
       this._storage = {
         get: (key: string) => window.localStorage.getItem(key),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         set: (key: string, value: any) =>
           window.localStorage.setItem(key, value),
         remove: (key: string) => window.localStorage.removeItem(key),
@@ -234,24 +235,25 @@ class Manager {
       };
     } else {
       //in memory storage. When there is not a localStorage, we use an in memory storage
-      let InMemoryStorage: IDict = {};
+      let InMemoryStorage: Dictionary = {};
       this._storage = {
         get: (key: string) => InMemoryStorage[key],
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         set: (key: string, value: any) => (InMemoryStorage[key] = value),
         remove: (key: string) => delete InMemoryStorage[key],
         removeAll: () => (InMemoryStorage = {}),
       };
     }
-    return this._storage as ISessionStorage;
+    return this._storage as SessionStorage;
   }
   /**
    * Sets the storage object used by the session manager.
    *
    * The provided storage object must be valid and have the required methods.
    *
-   * @param {ISessionStorage} storage - The storage object to use.
+   * @param {SessionStorage} storage - The storage object to use.
    */
-  public static set storage(storage: ISessionStorage) {
+  public static set storage(storage: SessionStorage) {
     if (isValidStorage(storage)) {
       Reflect.defineMetadata(Manager.sessionStorageMetaData, storage, Manager);
     }
@@ -846,6 +848,7 @@ function sanitizeKey(key: string): string {
  * @param {boolean} {decycle=true} whether to decycle the value
  * @return {string} sanitized value
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const handleSetValue = (value: any, decycle?: boolean) => {
   value = value ? JsonHelper.stringify(value, decycle) : value;
   if (value === null || value === undefined) value = '';
@@ -924,7 +927,7 @@ const handleSetValue = (value: any, decycle?: boolean) => {
  * @example
  * ```typescript
  * // Database storage integration
- * class DatabaseStorage implements ISessionStorage {
+ * class DatabaseStorage implements SessionStorage {
  *   async get(key: string): Promise<string> {
  *     const result = await this.db.query('SELECT value FROM sessions WHERE key = ?', [key]);
  *     return result[0]?.value || null;
@@ -1068,7 +1071,7 @@ const handleSetValue = (value: any, decycle?: boolean) => {
  * @see {@link JsonHelper.parse} - The JSON parsing utility used for deserialization
  * @see {@link isPromise} - Utility function for Promise detection
  * @see {@link handleSetValue} - Complementary function for value serialization
- * @see {@link ISessionStorage} - Interface defining storage contract
+ * @see {@link SessionStorage} - Interface defining storage contract
  * @see {@link Session.get} - Main session retrieval method that uses this function
  *
  * @since 1.0.0
@@ -1106,13 +1109,16 @@ const handleSetValue = (value: any, decycle?: boolean) => {
  * - Promise handling is inherently async-safe
  * - Can be called concurrently without issues
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const handleGetValue: any = (value: any) => {
   if (isPromise(value)) {
     return new Promise((resolve, reject) => {
       value
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .then((v: any) => {
           resolve(JsonHelper.parse(v));
         })
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .catch((err: any) => {
           reject(err);
         });
@@ -1217,7 +1223,7 @@ const removeAll = () => {
  *
  * This interface defines the methods for setting, getting, and removing values from a session storage object.
  */
-export interface ISessionStorage {
+export interface SessionStorage {
   /**
    * Sets a value in the session storage object.
    *
@@ -1226,6 +1232,7 @@ export interface ISessionStorage {
    * @param {boolean} [decycle] - Optional parameter to decycle the value.
    * @returns {any} The set value.
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   set: (key: string, value: any, decycle?: boolean) => any;
 
   /**
@@ -1234,6 +1241,7 @@ export interface ISessionStorage {
    * @param {string} key - The key to get the value for.
    * @returns {any} The value associated with the key.
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   get: (key: string) => any;
 
   /**
@@ -1242,12 +1250,14 @@ export interface ISessionStorage {
    * @param {string} key - The key to remove the value for.
    * @returns {any} The removed value.
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   remove: (key: string) => any;
 
   /**
    * Removes all values from the session storage object.
    *
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   removeAll: () => any;
 }
 
@@ -1259,10 +1269,10 @@ export interface ISessionStorage {
  * - `set`
  * - `remove`
  *
- * @param {ISessionStorage} storage - The storage object to check.
+ * @param {SessionStorage} storage - The storage object to check.
  * @returns {boolean} `true` if the storage object is valid, `false` otherwise.
  */
-const isValidStorage = (storage?: ISessionStorage): boolean => {
+const isValidStorage = (storage?: SessionStorage): boolean => {
   /**
    * Check if the storage object is null or undefined.
    * If so, return false immediately.
@@ -1275,7 +1285,7 @@ const isValidStorage = (storage?: ISessionStorage): boolean => {
      * If any of these checks fail, the storage object is not valid.
      */
     return ['get', 'set', 'remove', 'removeAll'].every(
-      (value) => typeof (storage as IDict)[value] === 'function'
+      (value) => typeof (storage as Dictionary)[value] === 'function'
     );
   } catch {
     /**
@@ -1296,7 +1306,7 @@ const isValidStorage = (storage?: ISessionStorage): boolean => {
  * ### Core Features:
  * - **Automatic Serialization**: JSON serialization/deserialization with decycling support
  * - **Key Sanitization**: Automatic key cleaning and namespace prefixing
- * - **Storage Abstraction**: Works with any storage backend implementing ISessionStorage
+ * - **Storage Abstraction**: Works with any storage backend implementing SessionStorage
  * - **Type Safety**: Full TypeScript support with intelligent type inference
  * - **Async Support**: Seamless handling of both sync and async storage operations
  * - **Error Resilience**: Graceful handling of storage failures and edge cases
@@ -1671,7 +1681,7 @@ export const Session = {
    * @see {@link sanitizeKey} - Key sanitization and namespace handling
    * @see {@link handleSetValue} - Value serialization with decycling support
    * @see {@link Manager} - Global session manager configuration
-   * @see {@link ISessionStorage} - Storage backend interface
+   * @see {@link SessionStorage} - Storage backend interface
    *
    * @since 1.0.0
    * @public
@@ -1697,11 +1707,12 @@ export const Session = {
    * - Circular references without decycling may cause infinite recursion
    *
    * **Browser Compatibility:**
-   * - Works with any storage backend implementing ISessionStorage
+   * - Works with any storage backend implementing SessionStorage
    * - JSON serialization uses native JSON.stringify/parse
    * - No dependencies on specific browser APIs
    * - Graceful degradation when storage is unavailable
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   set: (key: string, value: any, decycle: boolean = true) => {
     key = sanitizeKey(key);
     return Manager.storage.set(key, handleSetValue(value, decycle));
@@ -1730,18 +1741,18 @@ export const Session = {
  * - **Automatic Registration**: Instantiates and registers the storage class automatically
  * - **Validation**: Ensures the storage implementation meets the required interface
  * - **Error Handling**: Gracefully handles instantiation failures
- * - **Type Safety**: Enforces ISessionStorage interface compliance at compile time
+ * - **Type Safety**: Enforces SessionStorage interface compliance at compile time
  * - **Global Scope**: Makes the storage available throughout the entire application
  *
  * ### Storage Requirements:
- * The decorated class must implement the {@link ISessionStorage} interface with these methods:
+ * The decorated class must implement the {@link SessionStorage} interface with these methods:
  * - `get(key: string): any` - Retrieve a value by key
  * - `set(key: string, value: any, decycle?: boolean): any` - Store a value with optional decycling
  * - `remove(key: string): any` - Remove a value by key
  * - `removeAll(): any` - Clear all stored values
  *
  * @decorator
- * @param target - The class constructor that implements {@link ISessionStorage}
+ * @param target - The class constructor that implements {@link SessionStorage}
  *
  * @returns A class decorator function that registers the storage implementation
  *
@@ -1751,7 +1762,7 @@ export const Session = {
  * ```typescript
  * // Basic localStorage implementation
  * @AttachSessionStorage()
- * class LocalStorageProvider implements ISessionStorage {
+ * class LocalStorageProvider implements SessionStorage {
  *   get(key: string): any {
  *     return localStorage.getItem(key);
  *   }
@@ -1781,7 +1792,7 @@ export const Session = {
  * ```typescript
  * // Custom encrypted storage implementation
  * @AttachSessionStorage()
- * class EncryptedStorageProvider implements ISessionStorage {
+ * class EncryptedStorageProvider implements SessionStorage {
  *   private encrypt(value: string): string {
  *     // Your encryption logic here
  *     return btoa(value); // Simple base64 for demo
@@ -1819,7 +1830,7 @@ export const Session = {
  * ```typescript
  * // In-memory storage with expiration
  * @AttachSessionStorage()
- * class ExpiringMemoryStorage implements ISessionStorage {
+ * class ExpiringMemoryStorage implements SessionStorage {
  *   private storage = new Map<string, { value: any; expires: number }>();
  *
  *   get(key: string): any {
@@ -1858,7 +1869,7 @@ export const Session = {
  * ```typescript
  * // Database-backed storage implementation
  * @AttachSessionStorage()
- * class DatabaseStorageProvider implements ISessionStorage {
+ * class DatabaseStorageProvider implements SessionStorage {
  *   constructor(private db: Database) {}
  *
  *   async get(key: string): Promise<any> {
@@ -1891,7 +1902,7 @@ export const Session = {
  * ```typescript
  * // Testing with mock storage
  * @AttachSessionStorage()
- * class MockStorageProvider implements ISessionStorage {
+ * class MockStorageProvider implements SessionStorage {
  *   private mockData = new Map<string, any>();
  *
  *   get(key: string): any {
@@ -1919,7 +1930,7 @@ export const Session = {
  * }
  * ```
  *
- * @see {@link ISessionStorage} - The interface that storage implementations must implement
+ * @see {@link SessionStorage} - The interface that storage implementations must implement
  * @see {@link Manager} - The session manager that uses the attached storage
  * @see {@link Session} - The exported session utilities that use the attached storage
  * @see {@link isValidStorage} - Function used to validate storage implementations
@@ -1949,7 +1960,7 @@ export const Session = {
  * - Implement cleanup strategies for temporary data
  */
 export function AttachSessionStorage() {
-  return function (target: IClassConstructor<ISessionStorage>) {
+  return function (target: IClassConstructor<SessionStorage>) {
     try {
       const storage = new target();
       if (!isValidStorage(storage)) {

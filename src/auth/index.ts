@@ -10,15 +10,15 @@ import 'reflect-metadata';
 import { i18n } from '../i18n';
 import { Logger } from '../logger';
 import { Session as $session } from '../session';
-import { IDict } from '../types/dictionary';
+import { Dictionary } from '../types/dictionary';
 import { isNonNullString, isObj, JsonHelper, stringify } from '../utils';
 import './types';
 import {
+  AuthRole,
   AuthUser,
   IAuthEvent,
   IAuthPerm,
   IAuthPerms,
-  IAuthRole,
   IAuthSessionStorage,
 } from './types';
 
@@ -82,12 +82,17 @@ class Session {
    * // Example of replacing the entire session data with an object
    * const updatedData = set('mySession', { userPreference: 'lightMode', language: ' English' }); // Returns: { userPreference: 'lightMode', language: 'English' }
    */
-  static set(sessionName?: string, key?: string | IDict, value?: any): IDict {
+  static set(
+    sessionName?: string,
+    key?: string | Dictionary,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    value?: any
+  ): Dictionary {
     let data = Session.getData(sessionName);
     if (isNonNullString(key)) {
       data[key as string] = value;
     } else if (isObj(key)) {
-      data = key as IDict;
+      data = key;
     }
     $session.set(Session.getKey(sessionName), data);
     return data;
@@ -134,7 +139,7 @@ class Session {
    * // Example of retrieving session data with an invalid session name
    * const sessionData = getData(null); // Returns: {}
    */
-  static getData(sessionName?: string): IDict {
+  static getData(sessionName?: string): Dictionary {
     if (!isNonNullString(sessionName)) return {};
     const key = Session.getKey(sessionName);
     return Object.assign({}, $session.get(key));
@@ -196,8 +201,8 @@ class Session {
    * @returns An object implementing the `IAuthSessionStorage` interface, which includes
    *          methods for session management:
    *          - `get(key?: string): any`: Retrieves the value associated with the specified key.
-   *          - `set(key?: string | IDict, value?: any): void`: Stores a value under the specified key.
-   *          - `getData(): IDict`: Returns all data stored in the session as a dictionary.
+   *          - `set(key?: string | Dictionary, value?: any): void`: Stores a value under the specified key.
+   *          - `getData(): Dictionary`: Returns all data stored in the session as a dictionary.
    *          - `getKey(): string`: Returns the session key used for storage.
    *
    * @example
@@ -230,10 +235,11 @@ class Session {
       get: (key?: string) => {
         return Session.get(sessionName, key);
       },
-      set: (key?: string | IDict, value?: any) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      set: (key?: string | Dictionary, value?: any) => {
         return Session.set(sessionName, key, value);
       },
-      getData: (): IDict => {
+      getData: (): Dictionary => {
         return Session.getData(sessionName);
       },
       getKey: () => {
@@ -1185,11 +1191,13 @@ export class Auth {
     if (typeof perm === 'function') return !!perm(user);
     if (Auth.isResourceActionTupleObject(perm)) {
       if (
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         Auth.checkUserPermission(user, perm.resourceName, perm.action as any)
       ) {
         return true;
       }
     } else if (Auth.isResourceActionTupleArray(perm)) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       if (Auth.checkUserPermission(user, perm[0], perm[1] as any)) {
         return true;
       }
@@ -1446,7 +1454,7 @@ export class Auth {
    * @see {@link checkPermission} - Lower-level permission checking against permission objects
    * @see {@link isAllowed} - Higher-level permission checking with multiple formats
    * @see {@link IAuthPerms} - Permission object structure and format
-   * @see {@link IAuthRole} - Role object structure with embedded permissions
+   * @see {@link AuthRole} - Role object structure with embedded permissions
    *
    * @since 1.0.0
    * @public

@@ -26,7 +26,7 @@ import {
 import moment, { LocaleSpecification } from 'moment';
 import 'reflect-metadata';
 import { I18nEvent, II18nTranslation } from '../types/i18n';
-import { IDict } from '../types/index';
+import { Dictionary } from '../types/index';
 /**
  * A key to store metadata for translations.
  */
@@ -423,7 +423,7 @@ export class I18n extends I18nJs implements IObservable<I18nEvent> {
    */
   canPluralize(scope: Scope, locale?: string) {
     locale = defaultStr(locale, this.getLocale());
-    const r = this.getNestedTranslation(scope, locale) as IDict;
+    const r = this.getNestedTranslation(scope, locale) as Dictionary;
     if (!isObj(r) || !r) return false;
     return isNonNullString(r?.one) && isNonNullString(r?.other); //&& isNonNullString(r?.zero);
   }
@@ -460,7 +460,7 @@ export class I18n extends I18nJs implements IObservable<I18nEvent> {
   getNestedTranslation(
     scope: Scope,
     locale?: string
-  ): string | IDict | undefined {
+  ): string | Dictionary | undefined {
     locale = defaultStr(locale, this.getLocale());
     const scopeArray = isNonNullString(scope)
       ? scope.trim().split('.')
@@ -663,7 +663,7 @@ export class I18n extends I18nJs implements IObservable<I18nEvent> {
    * const component = new MyComponent();
    * I18n.getInstance().resolveTranslations(component);
    */
-  public resolveTranslations<T extends Object>(target: T): void {
+  public resolveTranslations<T extends object>(target: T): void {
     try {
       const keys = Object.getOwnPropertyNames(target);
       for (const key of keys) {

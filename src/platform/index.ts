@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { IDict } from '../types';
+import { Dictionary } from '../types';
 
 /**
   @group Platform 
@@ -126,7 +126,8 @@ const isElectron: () => boolean = (): boolean => {
      */
     if (
       typeof window?.process === 'object' &&
-      (window?.process as IDict)?.type === 'renderer'
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (window?.process as any)?.type === 'renderer'
     ) {
       return true;
     }
@@ -137,7 +138,9 @@ const isElectron: () => boolean = (): boolean => {
    */
   if (
     typeof process !== 'undefined' &&
+    // eslint-disable-next-line no-undef
     typeof process?.versions === 'object' &&
+    // eslint-disable-next-line no-undef
     !!process.versions?.electron
   ) {
     /**
@@ -152,7 +155,6 @@ const isElectron: () => boolean = (): boolean => {
    */
   if (
     typeof navigator === 'object' &&
-    navigator &&
     typeof navigator.userAgent === 'string'
   ) {
     /**
@@ -272,53 +274,9 @@ const isClientSide: () => boolean = (): boolean => {
    * Check if the window object is defined and is an object.
    * This is a characteristic of client-side environments.
    */
-  return typeof window !== 'undefined' && typeof window === 'object';
-};
-
-/**
-  @group Platform
- * Checks if the current environment is a mobile browser.
- *
- * This function assesses the presence of mobile browser characteristics,
- * such as being in a web environment and having a user agent string that matches a mobile browser pattern.
- *
- * @returns {boolean} True if the environment is a mobile browser, false otherwise.
- *
- * @example
- * ```typescript
- * if (isMobileBrowser()) {
- *   console.log("We're on a mobile browser!");
- * } else {
- *   console.log("We're not on a mobile browser.");
- * }
- * ```
- */
-const isMobileBrowser: () => boolean = (): boolean => {
-  /**
-   * Check if we're in a web environment.
-   */
-  if (!isWeb()) {
-    return false;
-  }
-
-  /**
-   * Check if the navigator object is defined and has a userAgent property.
-   */
-  if (
-    typeof navigator !== 'object' ||
-    !navigator ||
-    typeof (navigator as { userAgent: string }).userAgent !== 'string'
-  ) {
-    return false;
-  }
-
-  /**
-   * Check if the user agent string matches a mobile browser pattern.
-   */
-  const userAgent = (
-    navigator as { userAgent: string }
-  ).userAgent.toLowerCase();
-  return /android|webos|iphone|blackberry|iemobile|opera mini/i.test(userAgent);
+  return typeof window !== 'undefined' && typeof window === 'object' && window
+    ? true
+    : false;
 };
 
 /**
@@ -396,7 +354,7 @@ const isReactNativeWebview: () => boolean = (): boolean => {
   /**
    * Check if the window object has a ReactNativeWebView property.
    */
-  if (!(window as IDict)?.ReactNativeWebView) {
+  if (!(window as Dictionary)?.ReactNativeWebView) {
     return false;
   }
 
@@ -404,7 +362,8 @@ const isReactNativeWebview: () => boolean = (): boolean => {
    * Check if the ReactNativeWebView object has a postMessage method.
    */
   return (
-    typeof (window as IDict)?.ReactNativeWebView?.postMessage === 'function'
+    typeof (window as Dictionary)?.ReactNativeWebView?.postMessage ===
+    'function'
   );
 };
 

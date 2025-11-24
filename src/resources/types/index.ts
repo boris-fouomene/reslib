@@ -1,15 +1,15 @@
-import { IAuthPerm } from "@/auth/types";
-import { IInputFormatterOptions } from "@/inputFormatter/types";
-import { IUcFirst } from "@/types/dictionary";
-import { IMongoQuery, IResourceQueryOrderBy } from "./filters";
+import { IAuthPerm } from '@/auth/types';
+import { IInputFormatterOptions } from '@/inputFormatter/types';
+import { UcFirst } from '@/types/dictionary';
+import { IMongoQuery, IResourceQueryOrderBy } from './filters';
 
-export * from "./filters";
+export * from './filters';
 
 export interface IFieldBase<
   FieldType extends IFieldType = IFieldType,
-  ValueType = any
+  ValueType = any,
 > extends Partial<IResourceActionTupleObject<IResourceName>>,
-    Omit<IInputFormatterOptions<FieldType, ValueType>, "value" | "type"> {
+    Omit<IInputFormatterOptions<FieldType, ValueType>, 'value' | 'type'> {
   /**
    * The type of the field.
    *
@@ -195,10 +195,10 @@ export interface IFieldActionsMap {
 
 export type IField<
   T extends IFieldType = IFieldType,
-  ValueType = any
+  ValueType = any,
 > = IFieldMap[T] extends IFieldBase
   ? IFieldMap[T] & {
-      [key in keyof IFieldActionsMap as `for${IUcFirst<key>}`]?: Partial<
+      [key in keyof IFieldActionsMap as `for${UcFirst<key>}`]?: Partial<
         IFieldMap[keyof IFieldMap]
       >;
     }
@@ -655,7 +655,7 @@ export type IResourceName = keyof ValidatedResourceRegistry;
  * ```
  */
 export type IResourceActionName<
-  ResourceName extends IResourceName = IResourceName
+  ResourceName extends IResourceName = IResourceName,
 > = IResourceGetActionNames<GetResource<ResourceName>>;
 
 /**
@@ -715,7 +715,7 @@ export type IResourceActionTupleArray<ResourceName extends IResourceName> = [
    *
    * @type {IResourceActionName<ResourceName>}
    */
-  IResourceActionName<ResourceName>
+  IResourceActionName<ResourceName>,
 ];
 
 /**
@@ -736,7 +736,7 @@ export type IResourceActionTupleArray<ResourceName extends IResourceName> = [
  * @interface IResourceActionTupleObject
  */
 export interface IResourceActionTupleObject<
-  ResourceName extends IResourceName
+  ResourceName extends IResourceName,
 > {
   /**
    * The name of the resource.
@@ -806,12 +806,10 @@ export interface IResourceAction {
   title?: string;
 }
 
-type IResourceActionsRecord<TActions> = TActions extends Record<
-  string,
-  IResourceAction
->
-  ? TActions & Partial<IResourceDefaultActions>
-  : never;
+type IResourceActionsRecord<TActions> =
+  TActions extends Record<string, IResourceAction>
+    ? TActions & Partial<IResourceDefaultActions>
+    : never;
 
 /**
  * Type representing the actions record for a specific resource.
@@ -945,7 +943,7 @@ type IResourceActionsRecord<TActions> = TActions extends Record<
  */
 export type IResourceActions<ResourceName extends IResourceName> =
   IResources[ResourceName] extends { actions: Record<string, IResourceAction> }
-    ? IResourceActionsRecord<IResources[ResourceName]["actions"]>
+    ? IResourceActionsRecord<IResources[ResourceName]['actions']>
     : never;
 
 /**
@@ -969,8 +967,8 @@ export type IResourceActionNames<T extends Record<string, IResourceAction>> =
   keyof T & string;
 
 type IResourceGetActionNames<
-  TResource extends { actions?: Record<string, IResourceAction> }
-> = keyof IResourceActionsRecord<TResource["actions"]> & string;
+  TResource extends { actions?: Record<string, IResourceAction> },
+> = keyof IResourceActionsRecord<TResource['actions']> & string;
 
 export interface IResourceDefaultActions {
   /**
@@ -1056,7 +1054,7 @@ export interface IResource<
   Actions extends Record<string, IResourceAction> = Record<
     string,
     IResourceAction
-  >
+  >,
 > {
   /**
    * The internal name of the resource.
@@ -1369,7 +1367,7 @@ export type IResourcePrimaryKey = string | number | object;
  */
 export interface IResourceDataService<
   DataType = unknown,
-  PrimaryKeyType extends IResourcePrimaryKey = IResourcePrimaryKey
+  PrimaryKeyType extends IResourcePrimaryKey = IResourcePrimaryKey,
 > {
   /***
    * Creates a new resource record.
@@ -1710,7 +1708,7 @@ export interface IResourceDataService<
  * ### Type Parameters
  * - **PrimaryKeyType**: The type of the primary key used to identify resources.
  *   Defaults to `IResourcePrimaryKey`, which can be a string, number, or object.
- * - **DataType**: The type of data associated with the resource. Defaults to `IDict`,
+ * - **DataType**: The type of data associated with the resource. Defaults to `Dictionary`,
  *   which is a generic dictionary type allowing for any key-value pairs.
  *
  * ### Possible Forms
@@ -1788,7 +1786,7 @@ export interface IResourceDataService<
  */
 export type IResourceManyCriteria<
   DataType = unknown,
-  PrimaryKeyType extends IResourcePrimaryKey = IResourcePrimaryKey
+  PrimaryKeyType extends IResourcePrimaryKey = IResourcePrimaryKey,
 > = PrimaryKeyType[] | IMongoQuery<DataType>;
 
 /**

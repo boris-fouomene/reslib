@@ -1,8 +1,8 @@
-import { IDict, IPrimitive } from "../types";
-import { isDateObj } from "./date/isDateObj";
-import { isDOMElement } from "./dom";
-import { isPrimitive } from "./isPrimitive";
-import { isRegExp } from "./isRegex";
+import { Dictionary, IPrimitive } from '../types';
+import { isDateObj } from './date/isDateObj';
+import { isDOMElement } from './dom';
+import { isPrimitive } from './isPrimitive';
+import { isRegExp } from './isRegex';
 
 /**
  * Determines whether a value is a plain object (POJO - Plain Old JavaScript Object).
@@ -122,7 +122,7 @@ export function isObj<T = any>(
   // Early rejection for null, non-objects, and known non-plain object types
   if (
     obj === null ||
-    typeof obj !== "object" ||
+    typeof obj !== 'object' ||
     isDOMElement(obj) ||
     isDateObj(obj) ||
     isRegExp(obj) ||
@@ -142,7 +142,7 @@ export function isObj<T = any>(
   // Check if the constructor is Object and has the default prototype chain
   // This handles browser environments where Object.prototype might have been modified
   const Ctor = proto.constructor;
-  if (typeof Ctor !== "function") {
+  if (typeof Ctor !== 'function') {
     return false;
   }
 
@@ -152,7 +152,7 @@ export function isObj<T = any>(
   }
 
   const protoCtor = Ctor.prototype;
-  if (typeof protoCtor !== "object") {
+  if (typeof protoCtor !== 'object') {
     return false;
   }
 
@@ -165,9 +165,9 @@ export function isObj<T = any>(
   // This is important to detect objects from iframes or different execution contexts
   // where the Object constructor might be different but the object is still plain
   return (
-    typeof proto.hasOwnProperty === "function" &&
-    proto.hasOwnProperty("isPrototypeOf") &&
-    typeof proto.isPrototypeOf === "function"
+    typeof proto.hasOwnProperty === 'function' &&
+    proto.hasOwnProperty('isPrototypeOf') &&
+    typeof proto.isPrototypeOf === 'function'
   );
 }
 
@@ -218,7 +218,7 @@ export function cloneObject<T = any>(source: T): T {
     }
     return clone as T;
   } else if (isObj(source) && source) {
-    const clone: IDict = {};
+    const clone: Dictionary = {};
     for (var prop in source) {
       if (source.hasOwnProperty(prop)) {
         clone[prop] = cloneObject(source[prop]);
@@ -273,7 +273,7 @@ export const objectSize = (Object.getSize = function (
   obj: any,
   breakOnFirstElementFound: boolean = false
 ): number {
-  if (!obj || typeof obj !== "object") return 0;
+  if (!obj || typeof obj !== 'object') return 0;
   /**
    * If the object is an array, return its length.
    */
@@ -283,7 +283,7 @@ export const objectSize = (Object.getSize = function (
   /**
    * Ensure breakOnFirstElementFound is a boolean.
    */
-  if (typeof breakOnFirstElementFound !== "boolean") {
+  if (typeof breakOnFirstElementFound !== 'boolean') {
     breakOnFirstElementFound = false;
   }
 
@@ -764,11 +764,11 @@ export function flattenObject(
   obj: any,
   options?: FlattenObjectOptions
 ): Record<string, any> {
-  return _flattenObject(obj, "", {}, options);
+  return _flattenObject(obj, '', {}, options);
 }
 function _flattenObject(
   obj: any,
-  prefix: string = "",
+  prefix: string = '',
   flattened: Record<string, any> = {},
   options?: FlattenObjectOptions
 ): Record<string, IPrimitive> {
@@ -788,8 +788,8 @@ function _flattenObject(
 
   // Skip if it's a function or a class instance (but not a plain object)
   if (
-    typeof obj === "function" ||
-    (typeof obj === "object" && !isObj(obj) && !isIterableStructure(obj))
+    typeof obj === 'function' ||
+    (typeof obj === 'object' && !isObj(obj) && !isIterableStructure(obj))
   ) {
     return flattened;
   }
@@ -819,7 +819,7 @@ function _flattenObject(
       if (!Object.prototype.hasOwnProperty.call(obj, key)) continue;
       const value = obj[key];
       const newKey = prefix
-        ? prefix.endsWith("]")
+        ? prefix.endsWith(']')
           ? `${prefix}.${key}`
           : `${prefix}.${key}`
         : key;

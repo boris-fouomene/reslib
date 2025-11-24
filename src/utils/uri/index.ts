@@ -2,7 +2,7 @@ import { ltrim, rtrim } from '../string';
 
 import queryString, { IParseBaseOptions, IStringifyBaseOptions } from 'qs';
 
-import { IDict } from '../../types';
+import { Dictionary } from '../../types';
 import { isNonNullString } from '../isNonNullString';
 /**
  * Returns the query string from a given URL.
@@ -54,7 +54,7 @@ export const extractQueryString = (
 export const getQueryParams = function (
   uri: string | null | undefined,
   queryStringOpts: IParseBaseOptions = {}
-): IDict {
+): Dictionary {
   if (typeof uri !== 'string') return {};
   return queryString.parse(extractQueryString(uri, false), {
     allowSparse: true,
