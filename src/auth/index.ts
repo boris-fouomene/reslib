@@ -1,9 +1,9 @@
 import { IObservable, observable } from '@/observable';
 import {
-  IResourceActionName,
-  IResourceActionTupleArray,
-  IResourceActionTupleObject,
-  IResourceName,
+  ResourceActionName,
+  ResourceActionTupleArray,
+  ResourceActionTupleObject,
+  ResourceName,
 } from '@resources/types';
 import CryptoJS from 'crypto-js';
 import 'reflect-metadata';
@@ -14,10 +14,9 @@ import { Dictionary } from '../types/dictionary';
 import { isNonNullString, isObj, JsonHelper, stringify } from '../utils';
 import './types';
 import {
-  AuthRole,
+  AuthPerm,
   AuthUser,
   IAuthEvent,
-  IAuthPerm,
   IAuthPerms,
   IAuthSessionStorage,
 } from './types';
@@ -57,6 +56,7 @@ class Session {
    * // Example of trying to retrieve a value with an invalid key
    * const value = get('mySession', null); // Returns: undefined
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   static get(sessionName?: string, key?: string): any {
     if (!isNonNullString(key)) return undefined;
     return Session.getData(sessionName)[key as string];
@@ -614,6 +614,7 @@ export class Auth {
   static async setSignedUser(u: AuthUser | null, triggerEvent?: boolean) {
     Auth.localUserRef.current = u;
     const uToSave = u as AuthUser;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let encrypted: any = null;
     try {
       if (isObj(uToSave)) {
@@ -1052,10 +1053,10 @@ export class Auth {
   }
 
   private static isResourceActionTupleArray<
-    ResourceName extends IResourceName = IResourceName,
+    TResourceName extends ResourceName = ResourceName,
   >(
-    perm: IAuthPerm<ResourceName>
-  ): perm is IResourceActionTupleArray<ResourceName> {
+    perm: AuthPerm<TResourceName>
+  ): perm is ResourceActionTupleArray<TResourceName> {
     return (
       Array.isArray(perm) &&
       perm.length === 2 &&
@@ -1064,10 +1065,10 @@ export class Auth {
     );
   }
   private static isResourceActionTupleObject<
-    ResourceName extends IResourceName = IResourceName,
+    TResourceName extends ResourceName = ResourceName,
   >(
-    perm: IAuthPerm<ResourceName>
-  ): perm is IResourceActionTupleObject<ResourceName> {
+    perm: AuthPerm<TResourceName>
+  ): perm is ResourceActionTupleObject<TResourceName> {
     return (
       !Array.isArray(perm) &&
       typeof perm === 'object' &&
@@ -1092,14 +1093,14 @@ export class Auth {
    * 5. Resource-action permissions are checked against user's role permissions
    * 6. Array permissions are evaluated with OR logic (any match grants access)
    *
-   * @template ResourceName - The resource name type, extending IResourceName
+   * @template TResourceName - The resource name type, extending ResourceName
    *
    * @param perm - The permission configuration to evaluate. Can be:
    *   - `boolean`: Direct permission flag (true = allowed, false = denied)
    *   - `function`: Custom permission evaluator receiving user context
-   *   - `IResourceActionTupleObject`: Object with resourceName and action properties
-   *   - `IResourceActionTupleArray`: Array tuple [resourceName, action]
-   *   - `Array<IAuthPerm>`: Multiple permission configurations (OR logic)
+   *   - `ResourceActionTupleObject`: Object with resourceName and action properties
+   *   - `ResourceActionTupleArray`: Array tuple [resourceName, action]
+   *   - `Array<AuthPerm>`: Multiple permission configurations (OR logic)
    *   - `null|undefined`: Defaults to allowing access
    *
    * @param user - Optional user object to check permissions against.
@@ -1170,18 +1171,18 @@ export class Auth {
    * ); // Returns: true (master admin bypass)
    * ```
    *
-   * @see {@link IAuthPerm} - Permission configuration type definitions
+   * @see {@link AuthPerm} - Permission configuration type definitions
    * @see {@link AuthUser} - User object structure with permissions and roles
-   * @see {@link IResourceName} - Valid resource name types
-   * @see {@link IResourceActionName} - Valid action name types
+   * @see {@link ResourceName} - Valid resource name types
+   * @see {@link ResourceActionName} - Valid action name types
    * @see {@link checkUserPermission} - Low-level permission checking
    * @see {@link isMasterAdmin} - Master admin detection function
    *
    * @since 1.0.0
    * @public
    */
-  static isAllowed<ResourceName extends IResourceName = IResourceName>(
-    perm: IAuthPerm<ResourceName>,
+  static isAllowed<TResourceName extends ResourceName = ResourceName>(
+    perm: AuthPerm<TResourceName>,
     user?: AuthUser
   ): boolean {
     user = Object.assign({}, user || (Auth.getSignedUser() as AuthUser));
@@ -1203,7 +1204,7 @@ export class Auth {
       }
     } else if (Array.isArray(perm)) {
       for (let i in perm) {
-        const p = perm[i] as IAuthPerm;
+        const p = perm[i] as AuthPerm;
         if (Auth.isResourceActionTupleArray(p)) {
           if (Auth.checkUserPermission(user, p[0], p[1])) {
             return true;
@@ -1251,7 +1252,7 @@ export class Auth {
    *               direct permissions and optionally `roles` array for role-based permissions.
    *
    * @param resource - The resource name to check permissions against.
-   *                   Should be a valid resource identifier from the `IResourceName` type.
+   *                   Should be a valid resource identifier from the `ResourceName` type.
    *                   Examples include "documents", "users", "admin", "reports", etc.
    *                   The resource name is case-sensitive and should match exactly.
    *
@@ -1357,7 +1358,7 @@ export class Auth {
    * ```typescript
    * // Integration with access control middleware
    * class PermissionGuard {
-   *   static requirePermission(resource: IResourceName, action: IResourceActionName = "read") {
+   *   static requirePermission(resource: ResourceName, action: ResourceActionName = "read") {
    *     return (req: Request, res: Response, next: NextFunction) => {
    *       const user = Auth.getSignedUser();
    *
@@ -1449,8 +1450,8 @@ export class Auth {
    * ```
    *
    * @see {@link AuthUser} - Complete user object interface with permissions and roles
-   * @see {@link IResourceName} - Valid resource name types for permission checking
-   * @see {@link IResourceActionName} - Valid action types for permission operations
+   * @see {@link ResourceName} - Valid resource name types for permission checking
+   * @see {@link ResourceActionName} - Valid action types for permission operations
    * @see {@link checkPermission} - Lower-level permission checking against permission objects
    * @see {@link isAllowed} - Higher-level permission checking with multiple formats
    * @see {@link IAuthPerms} - Permission object structure and format
@@ -1484,12 +1485,10 @@ export class Auth {
    * - Does not throw exceptions, making it safe for use in conditional statements
    * - Logs errors internally for debugging purposes without exposing sensitive information
    */
-  static checkUserPermission<
-    ResourceName extends IResourceName = IResourceName,
-  >(
+  static checkUserPermission<TResourceName extends ResourceName = ResourceName>(
     user: AuthUser,
-    resource: ResourceName,
-    action: IResourceActionName<ResourceName> = 'read'
+    resource: TResourceName,
+    action: ResourceActionName<TResourceName> = 'read'
   ) {
     if (!isObj(user) || !user) return false;
     if (
@@ -1544,7 +1543,7 @@ export class Auth {
    * - **Memory Safety**: Creates defensive copies of input objects to prevent mutation
    * - **Minimal Processing**: Only processes relevant permission entries
    *
-   * @template ResourceName - The resource name type constraint extending IResourceName
+   * @template TResourceName - The resource name type constraint extending ResourceName
    *
    * @param perms - The permission object containing resource-to-actions mappings.
    *                Must be a valid `IAuthPerms` object where keys are resource names
@@ -1552,7 +1551,7 @@ export class Auth {
    *                copied to prevent external mutations during processing.
    *
    * @param resource - The resource name to check permissions for.
-   *                   Should be a valid identifier from the `IResourceName` type.
+   *                   Should be a valid identifier from the `ResourceName` type.
    *                   The resource name undergoes case-insensitive matching, so
    *                   "Documents", "documents", and "DOCUMENTS" are treated as equivalent.
    *                   Empty or invalid resource names result in permission denial.
@@ -1661,7 +1660,7 @@ export class Auth {
    * console.log(Auth.checkPermission(nullPermissions as any, "docs", "read")); // false
    *
    * // Invalid resource name
-   * console.log(Auth.checkPermission(validPermissions, "" as IResourceName, "read")); // false
+   * console.log(Auth.checkPermission(validPermissions, "" as ResourceName, "read")); // false
    * console.log(Auth.checkPermission(validPermissions, null as any, "read")); // false
    * ```
    *
@@ -1670,8 +1669,8 @@ export class Auth {
    * // Permission validation utility function
    * function validateUserAccess(
    *   userPerms: IAuthPerms,
-   *   requiredResource: IResourceName,
-   *   requiredAction: IResourceActionName
+   *   requiredResource: ResourceName,
+   *   requiredAction: ResourceActionName
    * ): { allowed: boolean; reason: string } {
    *   if (!userPerms || typeof userPerms !== 'object') {
    *     return { allowed: false, reason: 'Invalid permission object' };
@@ -1716,8 +1715,8 @@ export class Auth {
    *           combined[resource as keyof IAuthPerms] = [];
    *         }
    *
-   *         const existingActions = combined[resource as keyof IAuthPerms] as IResourceActionName[];
-   *         const newActions = actions as IResourceActionName[];
+   *         const existingActions = combined[resource as keyof IAuthPerms] as ResourceActionName[];
+   *         const newActions = actions as ResourceActionName[];
    *
    *         // Merge actions, avoiding duplicates
    *         for (const action of newActions) {
@@ -1731,13 +1730,13 @@ export class Auth {
    *     return combined;
    *   }
    *
-   *   static hasAnyPermission(perms: IAuthPerms, checks: Array<[IResourceName, IResourceActionName]>): boolean {
+   *   static hasAnyPermission(perms: IAuthPerms, checks: Array<[ResourceName, ResourceActionName]>): boolean {
    *     return checks.some(([resource, action]) =>
    *       Auth.checkPermission(perms, resource, action)
    *     );
    *   }
    *
-   *   static hasAllPermissions(perms: IAuthPerms, checks: Array<[IResourceName, IResourceActionName]>): boolean {
+   *   static hasAllPermissions(perms: IAuthPerms, checks: Array<[ResourceName, ResourceActionName]>): boolean {
    *     return checks.every(([resource, action]) =>
    *       Auth.checkPermission(perms, resource, action)
    *     );
@@ -1753,8 +1752,8 @@ export class Auth {
    * ```
    *
    * @see {@link IAuthPerms} - Permission object structure and type definitions
-   * @see {@link IResourceName} - Valid resource name types for permission checking
-   * @see {@link IResourceActionName} - Valid action types for permission operations
+   * @see {@link ResourceName} - Valid resource name types for permission checking
+   * @see {@link ResourceActionName} - Valid action types for permission operations
    * @see {@link checkUserPermission} - Higher-level user permission checking method
    * @see {@link isAllowed} - Comprehensive permission evaluation with multiple formats
    * @see {@link isAllowedForAction} - Action-specific permission matching utility
@@ -1787,25 +1786,25 @@ export class Auth {
    * - Provides meaningful return values that can be safely used in conditional statements
    * - Logs internal errors for debugging without exposing sensitive permission details
    */
-  static checkPermission<ResourceName extends IResourceName = IResourceName>(
+  static checkPermission<TResourceName extends ResourceName = ResourceName>(
     perms: IAuthPerms,
-    resource: ResourceName,
-    action: IResourceActionName<ResourceName> = 'read'
+    resource: TResourceName,
+    action: ResourceActionName<TResourceName> = 'read'
   ) {
     perms = Object.assign({}, perms);
-    resource = (isNonNullString(resource) ? resource : '') as ResourceName;
+    resource = (isNonNullString(resource) ? resource : '') as TResourceName;
     if (!isObj(perms) || !resource) {
       return false;
     }
     const resourceStr = String(resource).trim().toLowerCase();
     action = isNonNullString(action) ? action : 'read';
-    let userActions: IResourceActionName[] = [];
+    let userActions: ResourceActionName[] = [];
     for (let i in perms) {
       if (
         String(i).toLowerCase().trim() === resourceStr &&
         Array.isArray(perms[i as keyof IAuthPerms])
       ) {
-        userActions = perms[i as keyof IAuthPerms] as IResourceActionName[];
+        userActions = perms[i as keyof IAuthPerms] as ResourceActionName[];
         break;
       }
     }
@@ -1814,7 +1813,7 @@ export class Auth {
       return true;
     }
     for (let i in userActions) {
-      if (Auth.isAllowedForAction<ResourceName>(userActions[i], action)) {
+      if (Auth.isAllowedForAction<TResourceName>(userActions[i], action)) {
         return true;
       }
     }
@@ -1848,16 +1847,16 @@ export class Auth {
    * - **String Optimization**: Uses native JavaScript string methods for efficiency
    * - **Memory Efficient**: No intermediate object creation or complex processing
    *
-   * @template ResourceName - The resource name type constraint extending IResourceName
+   * @template TResourceName - The resource name type constraint extending ResourceName
    *
    * @param permFromResource - The permission action to check against.
-   *                     Must be a valid string conforming to `IResourceActionName<ResourceName>`.
+   *                     Must be a valid string conforming to `ResourceActionName<TResourceName>`.
    *                     This represents the action that is granted by a permission entry.
    *                     Examples: "read", "write", "delete", "create", "all", "custom_action".
    *                     Empty strings, null, or undefined values will result in `false`.
    *
    * @param action - The requested action to validate.
-   *                 Must be a valid string conforming to `IResourceActionName<ResourceName>`.
+   *                 Must be a valid string conforming to `ResourceActionName<TResourceName>`.
    *                 This represents the action that a user is attempting to perform.
    *                 The comparison is performed case-insensitively with whitespace trimming.
    *                 Examples: "READ", "Write", " delete ", "CREATE", "All".
@@ -1899,8 +1898,8 @@ export class Auth {
    * ```typescript
    * // Integration with permission checking workflow
    * function checkSpecificPermission(
-   *   userActions: IResourceActionName[],
-   *   requiredAction: IResourceActionName
+   *   userActions: ResourceActionName[],
+   *   requiredAction: ResourceActionName
    * ): boolean {
    *   // Check if user has "all" permission (universal access)
    *   if (userActions.includes("all")) {
@@ -1918,7 +1917,7 @@ export class Auth {
    * }
    *
    * // Usage example
-   * const userPermissions: IResourceActionName[] = ["read", "UPDATE", " create "];
+   * const userPermissions: ResourceActionName[] = ["read", "UPDATE", " create "];
    *
    * console.log(checkSpecificPermission(userPermissions, "read")); // true
    * console.log(checkSpecificPermission(userPermissions, "update")); // true (case-insensitive)
@@ -1963,8 +1962,8 @@ export class Auth {
    * ```typescript
    * // Permission matrix validation
    * interface PermissionCheck {
-   *   granted: IResourceActionName;
-   *   requested: IResourceActionName;
+   *   granted: ResourceActionName;
+   *   requested: ResourceActionName;
    *   expected: boolean;
    * }
    *
@@ -1997,9 +1996,9 @@ export class Auth {
    * // Real-world usage in permission engine
    * class PermissionEngine {
    *   static evaluateActionPermission(
-   *     grantedActions: IResourceActionName[],
-   *     requestedAction: IResourceActionName
-   *   ): { allowed: boolean; matchedAction?: IResourceActionName } {
+   *     grantedActions: ResourceActionName[],
+   *     requestedAction: ResourceActionName
+   *   ): { allowed: boolean; matchedAction?: ResourceActionName } {
    *     // Check for universal permission first
    *     if (grantedActions.includes("all")) {
    *       return { allowed: true, matchedAction: "all" };
@@ -2024,7 +2023,7 @@ export class Auth {
    * console.log(result); // { allowed: true, matchedAction: "CREATE" }
    * ```
    *
-   * @see {@link IResourceActionName} - Type definition for valid action names
+   * @see {@link ResourceActionName} - Type definition for valid action names
    * @see {@link checkPermission} - Higher-level permission checking method that uses this function
    * @see {@link checkUserPermission} - User-specific permission validation
    * @see {@link isAllowed} - Comprehensive permission evaluation system
@@ -2057,9 +2056,9 @@ export class Auth {
    * - Validate edge cases (empty strings, null, undefined)
    * - Ensure consistent behavior across different JavaScript environments
    */
-  static isAllowedForAction<ResourceName extends IResourceName = IResourceName>(
-    permFromResource: IResourceActionName<ResourceName>,
-    action: IResourceActionName<ResourceName>
+  static isAllowedForAction<TResourceName extends ResourceName = ResourceName>(
+    permFromResource: ResourceActionName<TResourceName>,
+    action: ResourceActionName<TResourceName>
   ) {
     if (!isNonNullString(action) || !isNonNullString(permFromResource)) {
       return false;

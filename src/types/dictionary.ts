@@ -26,8 +26,6 @@ export type Dictionary = Record<string, any>;
  * type Empty = UppercaseFirst<''>; // Results in ''
  * type AlreadyCapitalized = UppercaseFirst<'World'>; // Results in 'World'
  * ```
- *
- * @deprecated Consider using TypeScript's built-in `Capitalize<S>` instead
  */
 export type UppercaseFirst<S extends string> = S extends `${infer F}${infer R}`
   ? `${Uppercase<F>}${R}`

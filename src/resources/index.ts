@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { AuthUser } from '@/auth/types';
 import { i18n } from '@/i18n';
 import { observableFactory } from '@/observable';
@@ -18,20 +20,20 @@ import {
 import { getFields } from './fields';
 import { ResourcePaginationHelper } from './ResourcePaginationHelper';
 import {
-  IField,
-  IResource,
-  IResourceAction,
-  IResourceActionName,
-  IResourceActions,
-  IResourceActionTupleArray,
-  IResourceContext,
-  IResourceDataService,
-  IResourceDefaultEvent,
-  IResourceManyCriteria,
-  IResourceName,
-  IResourcePaginatedResult,
-  IResourcePrimaryKey,
-  IResourceQueryOptions,
+  Field,
+  ResourceAction,
+  ResourceActionName,
+  ResourceActions,
+  ResourceActionTupleArray,
+  ResourceBase,
+  ResourceContext,
+  ResourceDataService,
+  ResourceDefaultEvent,
+  ResourceManyCriteria,
+  ResourceName,
+  ResourcePaginatedResult,
+  ResourcePrimaryKey,
+  ResourceQueryOptions,
 } from './types';
 
 export * from './decorators';
@@ -44,10 +46,10 @@ const resourcesMetaDataKey = Symbol('resources');
 const resourcesClassNameMetaData = Symbol('resourceFromClassName');
 
 export abstract class Resource<
-  Name extends IResourceName = IResourceName,
+  Name extends ResourceName = ResourceName,
   DataType = unknown,
-  PrimaryKeyType extends IResourcePrimaryKey = IResourcePrimaryKey,
-  EventType = IResourceDefaultEvent<Name>,
+  TPrimaryKey extends ResourcePrimaryKey = ResourcePrimaryKey,
+  EventType = ResourceDefaultEvent<Name>,
 > {
   /**
    * The internal name of the resource.
@@ -57,11 +59,13 @@ export abstract class Resource<
    *
    * @example
    * ```typescript
-   * const userResource: IResource = { name: "user" };
+   * const userResource: ResourceBase = { name: "user" };
    * ```
    */
   protected abstract name: Name;
+
   private _onDictionaryChangedListener?: { remove: () => any };
+
   private _onLocaleChangeListener?: { remove: () => any };
   constructor() {
     this._onDictionaryChangedListener = i18n.on(
@@ -74,15 +78,15 @@ export abstract class Resource<
     );
     this.init();
   }
-  actions?: Partial<IResourceActions<Name>>;
-  getMetaData(): IResource<Name, DataType> {
+  actions?: Partial<ResourceActions<Name>>;
+  getMetaData(): ResourceBase<Name> {
     return Object.assign(
       {},
       Reflect.getMetadata(ResourcesManager.resourceMetaData, this.constructor)
     );
   }
   static events = observableFactory<
-    IResourceDefaultEvent<IResourceName> | string
+    ResourceDefaultEvent<ResourceName> | string
   >();
 
   /**
@@ -93,7 +97,7 @@ export abstract class Resource<
    *
    * @example
    * ```typescript
-   * const productResource: IResource = { label: "Product" };
+   * const productResource: ResourceBase = { label: "Product" };
    * ```
    */
   label?: string;
@@ -106,17 +110,17 @@ export abstract class Resource<
    *
    * @example
    * ```typescript
-   * const userResource: IResource = { title : "This resource manages user information." };
+   * const userResource: ResourceBase = { title : "This resource manages user information." };
    * ```
    */
   title?: string;
 
   /**
-  * A type that represents a map of field names to their corresponding IField instances.
+  * A type that represents a map of field names to their corresponding Field instances.
    @description this is the list of fields that are part of the resource.It's a map where each key represents a field name, and the value contains field metadata.
-   Fields are created using the @Field decorator when resources are defined.
+   Fields are created using the @FieldMeta decorator when resources are defined.
   */
-  fields?: Record<string, IField>;
+  fields?: Record<string, Field>;
   /**
    * Resolves the translations for the resource when the i18n dictionary or locale changes.
    * This method is called when the "translations-changed" or "locale-changed" events are triggered.
@@ -128,7 +132,7 @@ export abstract class Resource<
    * Resolves the translations for the resource when the i18n dictionary or locale changes.
    * This method is called when the "translations-changed" or "locale-changed" events are triggered.
    */
-  resolveTranslations(options?: TranslateOptions) {
+  resolveTranslations() {
     return i18n.resolveTranslations(this);
   }
   /**
@@ -146,7 +150,7 @@ export abstract class Resource<
    * providing essential resource information to translation functions and event listeners.
    *
    * @param additionalParams - Optional additional parameters to include in the context object.
-   * @returns An IResourceContext object containing resource information and additional parameters.
+   * @returns An ResourceContext object containing resource information and additional parameters.
    *
    * @example
    * ```typescript
@@ -154,7 +158,8 @@ export abstract class Resource<
    * // Returns: { resourceName: "user", resourceLabel: "User", userId: 123 }
    * ```
    */
-  getResourceContext(additionalParams?: Record<string, any>): IResourceContext {
+
+  getResourceContext(additionalParams?: Record<string, any>): ResourceContext {
     return {
       ...Object.assign({}, additionalParams),
       resourceLabel: this.getLabel(),
@@ -181,16 +186,17 @@ export abstract class Resource<
   }
   /**
    * get the data provider for the resource.
-   * @returns {IResourceDataService<DataType>} The data provider for the resource.
+   * @returns {ResourceDataService<DataType>} The data provider for the resource.
    */
-  abstract getDataService(): IResourceDataService<DataType>;
+  abstract getDataService(): ResourceDataService<DataType>;
   /***
    * trigger the event
    * @param event - The event to trigger.
    * When the event is triggered, the events observable is also triggered.
    * @param args - The arguments to pass to the event.
    */
-  trigger(event: EventType | IResourceDefaultEvent<Name>, ...args: any[]) {
+
+  trigger(event: EventType | ResourceDefaultEvent<Name>, ...args: any[]) {
     Resource.events.trigger(event as any, this.getResourceContext(), ...args);
   }
   /**
@@ -209,7 +215,7 @@ export abstract class Resource<
    * await resource.authorizeAction('create');
    * ```
    */
-  async authorizeAction(action: IResourceActionName<Name>): Promise<void> {
+  async authorizeAction(action: ResourceActionName<Name>): Promise<void> {
     if (!this.hasDataService()) {
       throw new Error(this.INVALID_DATA_PROVIDER_ERROR);
     }
@@ -231,7 +237,7 @@ export abstract class Resource<
         break;
       default:
         // For custom actions, check if user is allowed
-        hasPermission = this.isAllowed(action as IResourceActionName<Name>);
+        hasPermission = this.isAllowed(action as ResourceActionName<Name>);
         break;
     }
 
@@ -246,10 +252,10 @@ export abstract class Resource<
   }
   /***
    * Fetches all records from the resource.
-   * @param {IResourceQueryOptions<DataType>} options - Optional options for fetching resources.
-   * @returns {Promise<IResourcePaginatedResult<DataType>>} A promise that resolves to the result of the list operation.
+   * @param {ResourceQueryOptions<DataType>} options - Optional options for fetching resources.
+   * @returns {Promise<ResourcePaginatedResult<DataType>>} A promise that resolves to the result of the list operation.
    */
-  async find(options?: IResourceQueryOptions<DataType>) {
+  async find(options?: ResourceQueryOptions<DataType>) {
     return this.authorizeAction('read').then(() => {
       return this.getDataService()
         ?.find(options)
@@ -261,10 +267,10 @@ export abstract class Resource<
   }
   /***
    * fetches a single record from the resource.
-   * @param {PrimaryKeyType | IResourceQueryOptions<DataType>} options - The primary key or query options of the resource to retrieve.
+   * @param {TPrimaryKey | ResourceQueryOptions<DataType>} options - The primary key or query options of the resource to retrieve.
    * @returns {Promise<IResourceOperationResult<DataType>>} A promise that resolves to the result of the list operation.
    */
-  async findOne(options: PrimaryKeyType | IResourceQueryOptions<DataType>) {
+  async findOne(options: TPrimaryKey | ResourceQueryOptions<DataType>) {
     return this.authorizeAction('read').then(() => {
       return this.getDataService()
         .findOne(options)
@@ -304,11 +310,9 @@ export abstract class Resource<
   /***
    * fetches a single record from the resource.
    * If the record is not found, it throws an error.
-   * @param {PrimaryKeyType | IResourceQueryOptions<DataType>} options - The primary key or query options of the resource to retrieve.
+   * @param {TPrimaryKey | ResourceQueryOptions<DataType>} options - The primary key or query options of the resource to retrieve.
    */
-  async findOneOrFail(
-    options: PrimaryKeyType | IResourceQueryOptions<DataType>
-  ) {
+  async findOneOrFail(options: TPrimaryKey | ResourceQueryOptions<DataType>) {
     const result = await this.findOne(options);
     if (!isObj(result) || !result) {
       throw new Error(
@@ -329,51 +333,58 @@ export abstract class Resource<
    * @param record {Partial<DataType>} The record to be created.
    * @returns {Promise<void>} A promise that resolves when the operation is complete.
    */
+
   protected async beforeCreate(record: Partial<DataType>): Promise<void> {}
   /***
    * trigger called after the create operation.
    * @param {DataType} record - The created record.
    * @returns {Promise<void>} A promise that resolves when the operation is complete.
    */
+
   protected async afterCreate(record: DataType): Promise<void> {}
   /**
    * Trigger called before the update operation.
-   * @param primaryKey {PrimaryKeyType}, the primary key of the record to be updated.
+   * @param primaryKey {TPrimaryKey}, the primary key of the record to be updated.
    * @param dataToUpdate {Partial<DataType>} - The updated data for the record.
    * @returns {Promise<void>} A promise that resolves when the operation is complete.
    */
   protected async beforeUpdate(
-    primaryKey: PrimaryKeyType,
+    primaryKey: TPrimaryKey,
+
     dataToUpdate: Partial<DataType>
   ): Promise<void> {}
   /**
    * Triggers called after the update operation.
    * @param {DataType} updatedData  - The updated record.
-   * @param {PrimaryKeyType} primaryKey  - The primary key of the updated record.
+   * @param {TPrimaryKey} primaryKey  - The primary key of the updated record.
    * @param {Partial<DataType>} dataToUpdate - The data that was used to update the record.
    * @returns {Promise<void>} A promise that resolves when the operation is complete.
    */
   protected async afterUpdate(
     updatedData: DataType,
-    primaryKey: PrimaryKeyType,
+
+    primaryKey: TPrimaryKey,
+
     dataToUpdate: Partial<DataType>
   ): Promise<void> {}
 
   /**
    * Trigger called before the delete operation.
-   * @param primaryKey {PrimaryKeyType} - The primary key of the record to be deleted.
+   * @param primaryKey {TPrimaryKey} - The primary key of the record to be deleted.
    * @returns {Promise<void>} A promise that resolves when the operation is complete.
    */
-  protected async beforeDelete(primaryKey: PrimaryKeyType): Promise<void> {}
+
+  protected async beforeDelete(primaryKey: TPrimaryKey): Promise<void> {}
   /***
    * Triggers called after the delete operation.
    * @param {boolean} result - The result of the delete operation.
-   * @param {PrimaryKeyType} primaryKey - The primary key of the deleted record.
+   * @param {TPrimaryKey} primaryKey - The primary key of the deleted record.
    * @returns {Promise<void>} A promise that resolves when the operation is complete.
    */
   protected async afterDelete(
     result: boolean,
-    primaryKey: PrimaryKeyType
+
+    primaryKey: TPrimaryKey
   ): Promise<void> {}
 
   /***
@@ -381,6 +392,7 @@ export abstract class Resource<
    * @param {Partial<DataType>[]} records - The records to be created.
    * @returns {Promise<void>} A promise that resolves when the operation is complete.
    */
+
   protected async beforeCreateMany(records: Partial<DataType>[]) {}
   /***
    * trigger called after the createMany operation.
@@ -390,48 +402,51 @@ export abstract class Resource<
    */
   protected async afterCreateMany(
     records: DataType[],
+
     data: Partial<DataType>[]
   ) {}
   /***
    * Trigger called before the updateMany operation.
-   * @param {IResourceManyCriteria} criteria - The criteria for the update operation.
+   * @param {ResourceManyCriteria} criteria - The criteria for the update operation.
    * @param {Partial<DataType>} data - The data for the update operation.
    * @returns {Promise<void>} A promise that resolves when the operation is complete.
    */
   protected async beforeUpdateMany(
-    criteria: IResourceManyCriteria<DataType, PrimaryKeyType>,
+    criteria: ResourceManyCriteria<DataType, TPrimaryKey>,
+
     data: Partial<DataType>
   ) {}
   /**
    * Triggers called after the updateMany operation.
    * @param affectedRows {number} The number of records updated
-   * @param criteria {IResourceManyCriteria} The criteria used for the update operation.
+   * @param criteria {ResourceManyCriteria} The criteria used for the update operation.
    * @param {Partial<DataType>[]} records The records updated
    * @returns {Promise<void>} A promise that resolves when the operation is complete.
    */
   protected async afterUpdateMany(
     affectedRows: number,
-    criteria: IResourceManyCriteria<DataType, PrimaryKeyType>,
+
+    criteria: ResourceManyCriteria<DataType, TPrimaryKey>,
     records: Partial<DataType>
   ) {}
   /***
    * Trigger called before the deleteMany operation.
-   * @param {IResourceManyCriteria} criteria - The criteria for the delete operation.
+   * @param {ResourceManyCriteria} criteria - The criteria for the delete operation.
    * @return {Promise<void>} A promise that resolves when the operation is complete.
    */
   protected async beforeDeleteMany(
-    criteria: IResourceManyCriteria<DataType, PrimaryKeyType>
+    criteria: ResourceManyCriteria<DataType, TPrimaryKey>
   ) {}
 
   /**
    * Trigger called after the deleteMany operation.
    * @param {number} affectedRows The number of affected rows
-   * @param {IResourceManyCriteria<DataType,PrimaryKeyType>} criteria The criteria for the delete operation.
+   * @param {ResourceManyCriteria<DataType,TPrimaryKey>} criteria The criteria for the delete operation.
    * @returns {Promise<void>} A promise that resolves when the operation is complete.
    */
   protected async afterDeleteMany(
     affectedRows: number,
-    criteria: IResourceManyCriteria<DataType, PrimaryKeyType>
+    criteria: ResourceManyCriteria<DataType, TPrimaryKey>
   ) {}
   /***
    * creates a new record in the resource.
@@ -462,12 +477,12 @@ export abstract class Resource<
    * It first authorizes the action, then calls the `beforeUpdate` hook, performs the update,
    * and finally calls the `afterUpdate` hook before triggering the "update" event.
    * @template T - The type of the data being updated.
-   * @param key {PrimaryKeyType} The primary key of the resource to update.
+   * @param key {TPrimaryKey} The primary key of the resource to update.
    * @param dataToUpdate
    * @returns
    */
   async update<T extends Partial<DataType>>(
-    primaryKey: PrimaryKeyType,
+    primaryKey: TPrimaryKey,
     dataToUpdate: T
   ) {
     return this.authorizeAction('update').then(async () => {
@@ -496,11 +511,11 @@ export abstract class Resource<
    * It first authorizes the action, then calls the `beforeDelete` hook, performs the deletion,
    * and finally calls the `afterDelete` hook before triggering the "delete" event.
    *
-   * @template PrimaryKeyType - The type of the primary key of the resource.
-   * @param primaryKey {PrimaryKeyType} The primary key of the resource to delete.
+   * @template TPrimaryKey - The type of the primary key of the resource.
+   * @param primaryKey {TPrimaryKey} The primary key of the resource to delete.
    * @returns Promise<number> A promise that resolves to the result of the delete operation.
    */
-  async delete(primaryKey: PrimaryKeyType) {
+  async delete(primaryKey: TPrimaryKey) {
     return this.authorizeAction('delete').then(() => {
       return this.beforeDelete(primaryKey).then(() => {
         return this.getDataService()
@@ -523,7 +538,7 @@ export abstract class Resource<
    * @param options - Optional query options to filter, sort, and paginate the results.
    * @returns A promise that resolves to an object containing the list of records and the total count.
    */
-  async findAndCount(options?: IResourceQueryOptions<DataType>) {
+  async findAndCount(options?: ResourceQueryOptions<DataType>) {
     return this.authorizeAction('read').then(() => {
       return this.getDataService()
         .findAndCount(options)
@@ -543,8 +558,8 @@ export abstract class Resource<
    * @returns A promise that resolves to an object containing the paginated list of records and the total count.
    */
   async findAndPaginate(
-    options?: IResourceQueryOptions<DataType> | undefined
-  ): Promise<IResourcePaginatedResult<DataType>> {
+    options?: ResourceQueryOptions<DataType> | undefined
+  ): Promise<ResourcePaginatedResult<DataType>> {
     options = Object.assign({}, options);
     const [data, count] = await this.findAndCount(options);
     return ResourcePaginationHelper.paginate<DataType>(
@@ -587,7 +602,7 @@ export abstract class Resource<
    * @returns A promise that resolves to the result of the update operation.
    */
   async updateMany<T extends Partial<DataType>>(
-    criteria: IResourceManyCriteria<DataType, PrimaryKeyType>,
+    criteria: ResourceManyCriteria<DataType, TPrimaryKey>,
     data: T
   ) {
     return this.authorizeAction('update').then(() => {
@@ -618,7 +633,7 @@ export abstract class Resource<
    * @param criteria - The query options to filter the records to be deleted.
    * @returns A promise that resolves to the result of the delete operation.
    */
-  async deleteMany(criteria: IResourceManyCriteria<DataType, PrimaryKeyType>) {
+  async deleteMany(criteria: ResourceManyCriteria<DataType, TPrimaryKey>) {
     return this.authorizeAction('delete').then(() => {
       return this.beforeDeleteMany(criteria).then(() => {
         return this.getDataService()
@@ -642,7 +657,7 @@ export abstract class Resource<
    * @param options - Optional query options to filter the results.
    * @returns {Promise<number>} A promise that resolves to the result of the count operation.
    */
-  async count(options?: IResourceQueryOptions<DataType>) {
+  async count(options?: ResourceQueryOptions<DataType>) {
     return this.authorizeAction('read').then(() => {
       return this.getDataService()
         .count(options)
@@ -657,10 +672,10 @@ export abstract class Resource<
    * This method allows you to check if a record exists in the resource.
    * It first authorizes the action, then calls the `exists` method on the data service,
    * and finally triggers the "exists" event with the result.
-   * @param {PrimaryKeyType} primaryKey - The primary key of the record to check.
+   * @param {TPrimaryKey} primaryKey - The primary key of the record to check.
    * @returns {Promise<boolean>} A promise that resolves to the result of the exists operation.
    */
-  async exists(primaryKey: PrimaryKeyType): Promise<boolean> {
+  async exists(primaryKey: TPrimaryKey): Promise<boolean> {
     return this.authorizeAction('read').then(() => {
       return this.getDataService()
         .exists(primaryKey)
@@ -670,9 +685,7 @@ export abstract class Resource<
         });
     });
   }
-  updateMetadata(
-    options: IResource<Name, DataType>
-  ): IResource<Name, DataType> {
+  updateMetadata(options: ResourceBase<Name>): ResourceBase<Name> {
     options = Object.assign({}, options);
     const metadata = extendObj({}, this.getMetaData(), options);
     Reflect.defineMetadata(
@@ -685,7 +698,7 @@ export abstract class Resource<
   /**
    * Initializes the resource with the provided metaData.
    *
-   * @param metaData - An object implementing the IResource interface, containing the data to initialize the resource with.
+   * @param metaData - An object implementing the ResourceBase interface, containing the data to initialize the resource with.
    *
    * This method assigns the provided metaData to the resource, ensuring that any empty properties
    * on the resource are filled with the corresponding values from the metaData object. It skips
@@ -724,11 +737,12 @@ export abstract class Resource<
    * //   title: "User Information",
    * // }
    */
+
   getTranslations(locale?: string): Record<string, any> {
     locale = defaultStr(locale, i18n.getLocale());
     const nameStr = String(this.getName()).trim();
     if (!isNonNullString(nameStr)) return {};
-    const t = i18n.getNestedTranslation(['resources', nameStr], locale) as any;
+    const t = i18n.getNestedTranslation(['resources', nameStr], locale);
     return isObj(t) && t ? t : {};
   }
 
@@ -773,7 +787,7 @@ export abstract class Resource<
         : [];
     if (
       scopeArray[0] !== 'resources' &&
-      !ResourcesManager.hasResource(scopeArray[1] as IResourceName)
+      !ResourcesManager.hasResource(scopeArray[1] as ResourceName)
     ) {
       scopeArray.unshift(this.getName(), 'resources');
     }
@@ -790,11 +804,11 @@ export abstract class Resource<
   /**
    * Retrieves the actions associated with the resource.
    * If the actions are not already defined or not an object,
-   * it initializes them as an empty object of type `IResourceActions`.
+   * it initializes them as an empty object of type `ResourceActions`.
    *
    * @returns  The map of resource actions.
    */
-  getActions(): Partial<IResourceActions<Name>> {
+  getActions(): Partial<ResourceActions<Name>> {
     if (!isObj(this.actions) || !this.actions) {
       this.actions = {};
     }
@@ -805,7 +819,7 @@ export abstract class Resource<
    * @param action - The action to check
    * @returns true if the action exists, false otherwise
    */
-  hasAction(action: string): action is IResourceActionName<Name> {
+  hasAction(action: string): action is ResourceActionName<Name> {
     if (!isNonNullString(action)) return false;
     const actions = this.getActions();
     return (
@@ -832,16 +846,16 @@ export abstract class Resource<
    * 6. Otherwise, it delegates the permission check to the Auth.isAllowed method.
    */
   isAllowed(
-    action?: IResourceActionName<Name> | IResourceActionName<Name>[],
+    action?: ResourceActionName<Name> | ResourceActionName<Name>[],
     user?: AuthUser
   ): boolean {
-    const perms: IResourceActionTupleArray<Name>[] = [];
+    const perms: ResourceActionTupleArray<Name>[] = [];
     if (isNonNullString(action)) {
-      perms.push([this.getName(), action as IResourceActionName<Name>]);
+      perms.push([this.getName(), action as ResourceActionName<Name>]);
     } else if (Array.isArray(action)) {
       action.forEach((a) => {
         if (isNonNullString(a)) {
-          perms.push([this.getName(), a as IResourceActionName<Name>]);
+          perms.push([this.getName(), a as ResourceActionName<Name>]);
         }
       });
     }
@@ -951,12 +965,12 @@ export abstract class Resource<
    * This method populates the `fields` property by invoking an external `getFields` function,
    * which dynamically retrieves and returns all the fields related to the resource.
    *
-   * @returns {Record<string, IField>} A record containing all the fields of the resource.
+   * @returns {Record<string, Field>} A record containing all the fields of the resource.
    */
-  getFields(): Record<string, IField> {
+  getFields(): Record<string, Field> {
     try {
       this.resolveTranslations();
-      this.fields = getFields(this) as Record<string, IField>;
+      this.fields = getFields(this) as Record<string, Field>;
       return this.fields;
     } catch (e) {
       Logger.log(e, ' getting resources fieldss');
@@ -1052,7 +1066,7 @@ export abstract class Resource<
    * @returns The formatted action label.
    */
   getActionLabel(
-    actionName: IResourceActionName<Name>,
+    actionName: ResourceActionName<Name>,
     params?: Record<string, any>
   ) {
     return this.interpolate(this.getAction(actionName)?.label, params);
@@ -1065,7 +1079,7 @@ export abstract class Resource<
    * @returns The formatted title of the specified action.
    */
   getActionTitle(
-    actionName: IResourceActionName<Name>,
+    actionName: ResourceActionName<Name>,
     params?: Record<string, any>
   ) {
     return this.interpolate(this.getAction(actionName)?.title, params);
@@ -1073,10 +1087,10 @@ export abstract class Resource<
   /**
    * Retrieves a specific action by its name.
    *
-   * @param {IResourceActionName<Name>} actionName - The name of the action to retrieve.
-   * @returns {IResourceAction} The action object if found, otherwise an empty object.
+   * @param {ResourceActionName<Name>} actionName - The name of the action to retrieve.
+   * @returns {ResourceAction} The action object if found, otherwise an empty object.
    */
-  getAction(actionName: IResourceActionName<Name>): IResourceAction {
+  getAction(actionName: ResourceActionName<Name>): ResourceAction {
     if (!isNonNullString(actionName)) return {};
     const actions = this.getActions();
     return (isObj(actions[actionName]) && actions[actionName]) || {};
@@ -1085,10 +1099,10 @@ export abstract class Resource<
   /**
    * Retrieves the primary key fields from the current object's fields.
    *
-   * @returns {IField[]} An array of fields that are marked as primary keys.
+   * @returns {Field[]} An array of fields that are marked as primary keys.
    */
-  getPrimaryKeys(): IField[] {
-    const primaryKeys: IField[] = [];
+  getPrimaryKeys(): Field[] {
+    const primaryKeys: Field[] = [];
     if (isObj(this.fields)) {
       for (let i in this.fields) {
         if (isObj(this.fields[i]) && (this.fields[i] as any).primaryKey) {
@@ -1127,7 +1141,7 @@ export class ResourcesManager {
   /**
    * A global constant storing a record of all instantiated resources.
    *
-   * This represents a record of all resources, where the keys are derived from `IResourceName`
+   * This represents a record of all resources, where the keys are derived from `ResourceName`
    * and the values are instances of `Resource`.
    *
    * @example
@@ -1135,8 +1149,8 @@ export class ResourcesManager {
    *   userResource: new UserResource()
    * };
    */
-  private static resources: Record<IResourceName, Resource> = {} as Record<
-    IResourceName,
+  private static resources: Record<ResourceName, Resource> = {} as Record<
+    ResourceName,
     Resource
   >;
 
@@ -1146,9 +1160,9 @@ export class ResourcesManager {
    * This method returns a copy of the internal record of resource metaData, which can be used to access
    * the configuration and settings for each registered resource.
    *
-   * @returns {Record<IResourceName, IResource>} A copy of the resource metaData record.
+   * @returns {Record<ResourceName, ResourceBase>} A copy of the resource metaData record.
    */
-  public static getAllMetaData(): Record<IResourceName, IResource> {
+  public static getAllMetaData(): Record<ResourceName, ResourceBase> {
     return Object.assign(
       {},
       Reflect.getMetadata(resourcesMetaDataKey, ResourcesManager)
@@ -1160,27 +1174,21 @@ export class ResourcesManager {
    * This method updates the internal record of resource metaData with the provided `metaData` for the given `resourceName`.
    * The updated record is then stored as metadata on the `ResourcesManager` class.
    *
-   * @param {IResourceName} resourceName - The unique name of the resource.
-   * @param {IResource} metaData - The resource metaData to be associated with the given `resourceName`.
+   * @param {ResourceName} resourceName - The unique name of the resource.
+   * @param {ResourceBase} metaData - The resource metaData to be associated with the given `resourceName`.
    */
-  public static addMetaData(resourceName: IResourceName, metaData: IResource) {
+  public static addMetaData(
+    resourceName: ResourceName,
+    metaData: ResourceBase
+  ) {
     const allOptions = this.getAllMetaData();
     if (!isNonNullString(resourceName) || !resourceName) return;
     metaData = Object.assign({}, metaData);
     metaData.name = isNonNullString(metaData?.name)
       ? metaData.name
       : resourceName;
-    (allOptions as any)[resourceName] = metaData;
+    allOptions[resourceName] = metaData;
     Reflect.defineMetadata(resourcesMetaDataKey, allOptions, ResourcesManager);
-    if (isNonNullString(metaData.className)) {
-      const classNames = ResourcesManager.getAllClassNames();
-      (classNames as any)[metaData.className] = metaData.name;
-      Reflect.defineMetadata(
-        resourcesClassNameMetaData,
-        classNames,
-        ResourcesManager
-      );
-    }
   }
   /**
    * Retrieves the global record of resource class names managed by the `ResourcesManager`.
@@ -1188,9 +1196,9 @@ export class ResourcesManager {
    * This method returns a copy of the internal record of resource class names, which can be used to access
    * the class name associated with each registered resource.
    *
-   * @returns {Record<string,IResourceName>} A copy of the resource class names record.
+   * @returns {Record<string,ResourceName>} A copy of the resource class names record.
    */
-  public static getAllClassNames(): Record<string, IResourceName> {
+  public static getAllClassNames(): Record<string, ResourceName> {
     return Object.assign(
       {},
       Reflect.getMetadata(resourcesClassNameMetaData, ResourcesManager)
@@ -1203,12 +1211,12 @@ export class ResourcesManager {
    * managed by the `ResourcesManager`. If the resource name is not found, or is not a valid non-null string, this
    * method will return `undefined`.
    *
-   * @param {IResourceName} resourceName - The unique name of the resource to retrieve the class name for.
+   * @param {ResourceName} resourceName - The unique name of the resource to retrieve the class name for.
    * @returns {string | undefined} The class name associated with the specified resource name, or `undefined` if not found.
    */
   public static getNameFromClassName(
     className: string
-  ): IResourceName | undefined {
+  ): ResourceName | undefined {
     if (!isNonNullString(className)) return undefined;
     const classNames = this.getAllClassNames();
     return classNames[className];
@@ -1220,15 +1228,15 @@ export class ResourcesManager {
    * record of resource metaData managed by the `ResourcesManager`. If the resource name is not a valid
    * non-null string, or if the resource metaData are not found, this method will return `undefined`.
    *
-   * @param {IResourceName} resourceName - The unique name of the resource to retrieve the metaData for.
-   * @returns {IResource | undefined} The resource metaData for the specified resource name, or `undefined` if not found.
+   * @param {ResourceName} resourceName - The unique name of the resource to retrieve the metaData for.
+   * @returns {ResourceBase | undefined} The resource metaData for the specified resource name, or `undefined` if not found.
    */
   public static getMetaDataFromName(
-    resourceName: IResourceName
-  ): IResource | undefined {
+    resourceName: ResourceName
+  ): ResourceBase | undefined {
     const allOptions = this.getAllMetaData();
     if (!isNonNullString(resourceName) || !resourceName) return;
-    return (allOptions as any)[resourceName];
+    return allOptions[resourceName];
   }
 
   /**
@@ -1242,7 +1250,7 @@ export class ResourcesManager {
    */
   public static getMetaDataFromTarget(
     target: ClassConstructor
-  ): IResource | undefined {
+  ): ResourceBase | undefined {
     return Object.assign(
       {},
       Reflect.getMetadata(ResourcesManager.resourceMetaData, target.prototype)
@@ -1257,11 +1265,11 @@ export class ResourcesManager {
    * If the resource name is not found, or if the resource metaData are not found, this method will return `undefined`.
    *
    * @param {string} className - The class name of the resource to retrieve the metaData for.
-   * @returns {IResource<any, any> | undefined} The resource mata data for the specified resource class name, or `undefined` if not found.
+   * @returns {ResourceBase<any, any> | undefined} The resource mata data for the specified resource class name, or `undefined` if not found.
    */
   public static getMetaDataByClassName(
     className: string
-  ): IResource | undefined {
+  ): ResourceBase | undefined {
     const resourceName = this.getNameFromClassName(className);
     if (!resourceName) return undefined;
     return this.getMetaDataFromName(resourceName);
@@ -1286,7 +1294,7 @@ export class ResourcesManager {
    * Retrieves a resource instance by its name from the `resources` record.
    *
    * @template ResourceInstanceType The type extending `Resource` for the resource being returned.
-   * @param {IResourceName} name - The name of the resource to retrieve, as defined in `IResourceName`.
+   * @param {ResourceName} name - The name of the resource to retrieve, as defined in `ResourceName`.
    * @returns {(ResourceInstanceType | null)} The resource instance if it exists, or `null` if the resource is not found.
    *
    * @example
@@ -1296,7 +1304,7 @@ export class ResourcesManager {
    * }
    */
   public static getResource<ResourceInstanceType extends Resource = Resource>(
-    name: IResourceName
+    name: ResourceName
   ): ResourceInstanceType | null {
     if (typeof name === 'string' && name) {
       return this.resources[name] as ResourceInstanceType;
@@ -1307,10 +1315,10 @@ export class ResourcesManager {
   /**
    * Checks if a resource with the given name exists in the `ResourcesManager`.
    *
-   * @param {IResourceName} name - The name of the resource to check.
+   * @param {ResourceName} name - The name of the resource to check.
    * @returns {boolean} `true` if the resource exists, `false` otherwise.
    */
-  public static hasResource(name: IResourceName) {
+  public static hasResource(name: ResourceName) {
     if (!isNonNullString(name) || !name) return false;
     const metaData = ResourcesManager.getMetaDataFromName(name);
     if (isObj(metaData) && metaData?.name == name) return true;
@@ -1319,7 +1327,7 @@ export class ResourcesManager {
   /**
    * Adds a new resource instance to the manager.
    *
-   * @param {IResourceName} name - The unique name of the resource to add.
+   * @param {ResourceName} name - The unique name of the resource to add.
    * @param {Resource<Name,DataType>} resource - The resource instance to be added.
    * @template DataType The type of data associated with the resource.
    *
@@ -1328,7 +1336,7 @@ export class ResourcesManager {
    * ResourcesManager.addResource('productResource', productResource);
    * console.log(ResourcesManager.getAllNames()); // Output: ['userResource', 'productResource']
    */
-  public static addResource<Name extends IResourceName, DataType = unknown>(
+  public static addResource<Name extends ResourceName, DataType = unknown>(
     name: Name,
     resource: Resource<Name, DataType>
   ) {
@@ -1347,9 +1355,9 @@ export class ResourcesManager {
    * This method deletes the specified resource from the `resources` record.
    * If the resource exists, it will be removed, and the updated list of resources will be returned.
    *
-   * @param {IResourceName} name - The name of the resource to be removed from the manager.
+   * @param {ResourceName} name - The name of the resource to be removed from the manager.
    *
-   * @returns {Record<IResourceName, Resource>} The updated record of all remaining resources after the removal.
+   * @returns {Record<ResourceName, Resource>} The updated record of all remaining resources after the removal.
    *
    * @example
    * // Assuming a resource named 'userResource' has been previously added
@@ -1362,8 +1370,8 @@ export class ResourcesManager {
    * console.log(ResourcesManager.getAllNames()); // Output: ['productResource']
    */
   public static removeResource(
-    name: IResourceName
-  ): Record<IResourceName, Resource> {
+    name: ResourceName
+  ): Record<ResourceName, Resource> {
     if (typeof name === 'string') {
       delete (this.resources as any)[name];
     }
@@ -1374,10 +1382,10 @@ export class ResourcesManager {
    * Retrieves all resource instances managed by the manager.
    *
    * This method returns a record of all resources currently stored in the `ResourcesManager`.
-   * The keys are derived from `IResourceName`, and the values are instances of `Resource`.
+   * The keys are derived from `ResourceName`, and the values are instances of `Resource`.
    * This allows for easy access to all registered resources.
    *
-   * @returns {Record<IResourceName, Resource>} A record containing all resource instances, where each key is a resource name.
+   * @returns {Record<ResourceName, Resource>} A record containing all resource instances, where each key is a resource name.
    *
    * @example
    * // Retrieve all registered resources
@@ -1389,7 +1397,7 @@ export class ResourcesManager {
    * //   productResource: ProductResourceInstance
    * // }
    */
-  public static getResources(): Record<IResourceName, Resource> {
+  public static getResources(): Record<ResourceName, Resource> {
     return this.resources;
   }
 }
@@ -1414,20 +1422,19 @@ export class ResourcesManager {
  * ```
  */
 export function ResourceMeta<
-  Name extends IResourceName = IResourceName,
+  Name extends ResourceName = ResourceName,
   DataType = unknown,
-  PrimaryKeyType extends IResourcePrimaryKey = IResourcePrimaryKey,
+  TPrimaryKey extends ResourcePrimaryKey = ResourcePrimaryKey,
 >(
-  metaData?: IResource<Name, DataType, PrimaryKeyType> & {
+  metaData?: ResourceBase<Name> & {
     /***
      * whether the resource should be instanciated or not
      */
     instanciate?: boolean;
   }
 ) {
-  return function (target: typeof Resource<Name, DataType, PrimaryKeyType>) {
+  return function (target: typeof Resource<Name, DataType, TPrimaryKey>) {
     metaData = Object.assign({}, metaData);
-    metaData.className = defaultStr(metaData.className, target?.name);
     if (typeof target == 'function') {
       if (metaData?.instanciate) {
         try {
@@ -1437,10 +1444,11 @@ export function ResourceMeta<
             metaData.name as any,
             resource
           );
+          // eslint-disable-next-line no-empty
         } catch {}
       }
     }
     Reflect.defineMetadata(ResourcesManager.resourceMetaData, metaData, target);
-    ResourcesManager.addMetaData(metaData.name as IResourceName, metaData);
+    ResourcesManager.addMetaData(metaData.name as ResourceName, metaData);
   };
 }

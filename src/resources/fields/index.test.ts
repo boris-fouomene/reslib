@@ -1,38 +1,38 @@
 import 'reflect-metadata';
 import '../types';
-import { Field, getFieldsFromTarget } from './index';
+import { FieldMeta, getFieldsFromTarget } from './index';
 
 declare module '../types' {
-  export interface IFieldMap {
-    text: IFieldBase<'text'>;
-    number: IFieldBase<'number'>;
-    boolean: IFieldBase<'boolean'>;
-    date: IFieldBase<'date'>;
+  export interface FieldMap {
+    text: FieldBase<'text'>;
+    number: FieldBase<'number'>;
+    boolean: FieldBase<'boolean'>;
+    date: FieldBase<'date'>;
   }
-  export interface IFieldBase {
+  export interface FieldBase {
     label?: string;
   }
 }
-describe('Field Decorator and getFieldsFromTarget Function', () => {
+describe('FieldMeta Decorator and getFieldsFromTarget Function', () => {
   // Test class with decorated properties
   class TestClass {
-    @Field({ type: 'text', label: 'Username' })
+    @FieldMeta({ type: 'text', label: 'Username' })
     username?: string;
 
-    @Field({ type: 'number', label: 'Age' })
+    @FieldMeta({ type: 'number', label: 'Age' })
     age?: number;
 
-    @Field({ type: 'boolean', label: 'Is Active' })
+    @FieldMeta({ type: 'boolean', label: 'Is Active' })
     isActive?: boolean;
 
-    @Field({ type: 'date', label: 'Created At' })
+    @FieldMeta({ type: 'date', label: 'Created At' })
     createdAt?: Date;
 
-    @Field({ type: 'text', label: 'Description' })
+    @FieldMeta({ type: 'text', label: 'Description' })
     description?: string;
   }
 
-  // Test 1: Verify that the Field decorator attaches metadata correctly
+  // Test 1: Verify that the FieldMeta decorator attaches metadata correctly
   it('should attach metadata to class properties', () => {
     const metadata = getFieldsFromTarget(TestClass);
 
@@ -98,7 +98,7 @@ describe('Field Decorator and getFieldsFromTarget Function', () => {
   // Test 3: Verify that the default type is assigned if not specified
   it('should assign a default type if none is specified', () => {
     class DefaultTypeClass {
-      @Field({ type: 'text', label: 'Default Type Field' })
+      @FieldMeta({ type: 'text', label: 'Default Type FieldMeta' })
       defaultField?: string;
     }
 
@@ -108,7 +108,7 @@ describe('Field Decorator and getFieldsFromTarget Function', () => {
     expect(metadata.defaultField).toEqual({
       name: 'defaultField',
       type: 'text', // Default type for string
-      label: 'Default Type Field',
+      label: 'Default Type FieldMeta',
     });
   });
 

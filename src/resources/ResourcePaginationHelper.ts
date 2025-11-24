@@ -1,15 +1,15 @@
-import { defaultArray } from "@utils/defaultArray";
-import { isNonNullString } from "@utils/isNonNullString";
-import { isNumber } from "@utils/isNumber";
-import { extendObj, isObj } from "@utils/object";
-import { isStringNumber } from "@utils/string";
-import { getQueryParams } from "@utils/uri";
+import { defaultArray } from '@utils/defaultArray';
+import { isNonNullString } from '@utils/isNonNullString';
+import { isNumber } from '@utils/isNumber';
+import { extendObj, isObj } from '@utils/object';
+import { isStringNumber } from '@utils/string';
+import { getQueryParams } from '@utils/uri';
 import {
-  IResourcePaginationMetaData,
-  IResourceQueryOptions,
-  IResourceQueryOrderBy,
   NestedPaths,
-} from "./types";
+  ResourcePaginationMeta,
+  ResourceQueryOptions,
+  ResourceQueryOrderBy,
+} from './types';
 
 export class ResourcePaginationHelper {
   /**
@@ -32,8 +32,8 @@ export class ResourcePaginationHelper {
    * - `limit`: Maximum records per page
    * - Formula: `skip = (page - 1) * limit`
    *
-   * @template DataType - The resource data type (used for type consistency with IResourceQueryOptions)
-   * @param {IResourceQueryOptions<DataType>} [options] - Pagination options containing page, skip, and/or limit
+   * @template DataType - The resource data type (used for type consistency with ResourceQueryOptions)
+   * @param {ResourceQueryOptions<DataType>} [options] - Pagination options containing page, skip, and/or limit
    * @param {number} [options.page] - The page number (1-based)
    * @param {number} [options.skip] - The number of records to skip (0-based offset)
    * @param {number} [options.limit] - The maximum number of records per page
@@ -156,7 +156,7 @@ export class ResourcePaginationHelper {
    * - Fractional skip values are floored when calculating page numbers
    */
   static normalizePagination<DataType = unknown>(
-    options?: IResourceQueryOptions<DataType>
+    options?: ResourceQueryOptions<DataType>
   ) {
     let { page, skip, limit } = Object.assign({}, options);
     if (!isNumber(limit)) {
@@ -222,7 +222,7 @@ export class ResourcePaginationHelper {
    * - The method performs type assertion to `NestedPaths<T>` - ensure input paths are valid at call site
    */
   static normalizeOrderBy<T = unknown>(
-    orderBy?: IResourceQueryOrderBy<T>
+    orderBy?: ResourceQueryOrderBy<T>
   ): Partial<Record<NestedPaths<T>, SortOrder>> {
     const fields = Array.isArray(orderBy)
       ? orderBy
@@ -232,9 +232,9 @@ export class ResourcePaginationHelper {
 
     const result: Partial<Record<NestedPaths<T>, SortOrder>> = {};
     fields.forEach((field) => {
-      if (!isNonNullString(field) || String(field).trim() === "") return;
-      const isDescending = String(field).startsWith("-");
-      const direction: SortOrder = isDescending ? "desc" : "asc";
+      if (!isNonNullString(field) || String(field).trim() === '') return;
+      const isDescending = String(field).startsWith('-');
+      const direction: SortOrder = isDescending ? 'desc' : 'asc';
       const path = isDescending ? String(field).slice(1) : field;
       // Type assertion - caller should ensure path validity
       const key = path as NestedPaths<T>;
@@ -254,7 +254,7 @@ export class ResourcePaginationHelper {
    * Determines if result can be paginated based on the provided query options.
    * It checks if the query options have a `limit` property of type number.
    * @template DataType The type of resource data.
-   * @param {IResourceQueryOptions} queryOptions - The query options.
+   * @param {ResourceQueryOptions} queryOptions - The query options.
    * @returns {boolean} Whether the result can be paginated.
    *
    * @example
@@ -264,7 +264,7 @@ export class ResourcePaginationHelper {
    * canPaginateResult({ page: 3, skip: 20 }); // true
    */
   static canPaginateResult<DataType = unknown>(
-    queryOptions: IResourceQueryOptions<DataType>
+    queryOptions: ResourceQueryOptions<DataType>
   ): boolean {
     if (!isObj(queryOptions)) {
       return false;
@@ -273,18 +273,18 @@ export class ResourcePaginationHelper {
   }
   static getPaginationMetaData<DataType = unknown>(
     count: number,
-    queryOptions?: IResourceQueryOptions<DataType>
-  ): IResourcePaginationMetaData {
+    queryOptions?: ResourceQueryOptions<DataType>
+  ): ResourcePaginationMeta {
     const { limit, page, skip } =
       ResourcePaginationHelper.normalizePagination(queryOptions);
     count = isNumber(count) ? count : 0;
-    const meta: IResourcePaginationMetaData = {
+    const meta: ResourcePaginationMeta = {
       total: count,
     };
     if (
-      typeof limit === "number" &&
+      typeof limit === 'number' &&
       limit > 0 &&
-      typeof page === "number" &&
+      typeof page === 'number' &&
       page >= 0
     ) {
       meta.currentPage = page;
@@ -321,11 +321,11 @@ export class ResourcePaginationHelper {
    * @template DataType - The type of individual data items in the array
    * @param {DataType[]} data - The complete array of data to be paginated
    * @param {number} count - The total number of records available (may be different from data.length for database queries)
-   * @param {IResourceQueryOptions<DataType>} [options] - Pagination and query options
+   * @param {ResourceQueryOptions<DataType>} [options] - Pagination and query options
    * @returns {{
    *   data: DataType[],
    *   total: number,
-   *   meta: IResourcePaginationMetaData
+   *   meta: ResourcePaginationMeta
    * }} An object containing:
    *   - `data`: The paginated slice of the original data array
    *   - `total`: The total count of records (unchanged from input)
@@ -439,7 +439,7 @@ export class ResourcePaginationHelper {
   static paginate<DataType = unknown>(
     data: DataType[],
     count: number,
-    options?: IResourceQueryOptions<DataType>
+    options?: ResourceQueryOptions<DataType>
   ) {
     const meta = ResourcePaginationHelper.getPaginationMetaData(count, options);
     const { currentPage, pageSize, totalPages } = meta;
@@ -464,7 +464,7 @@ export class ResourcePaginationHelper {
    * Parses query options from HTTP request data, extracting and normalizing parameters from multiple sources.
    *
    * This method consolidates query parameters from URL query strings, request headers, route parameters,
-   * and custom filters into a standardized `IResourceQueryOptions` object. It's designed for REST API
+   * and custom filters into a standardized `ResourceQueryOptions` object. It's designed for REST API
    * endpoints that need to handle complex query parameters for filtering, sorting, pagination, and more.
    *
    * **Parameter Sources (in precedence order):**
@@ -488,8 +488,8 @@ export class ResourcePaginationHelper {
    * @param {Record<string, any>} req.headers - Request headers (may include 'x-filters')
    * @param {Record<string, any>} [req.params] - Route parameters from URL path
    * @param {Record<string, any>} [req.filters] - Custom filter object
-   * @returns {IResourceQueryOptions<T> & {queryParams: Record<string, any>}} Normalized query options with:
-   *   - All standard `IResourceQueryOptions<T>` properties
+   * @returns {ResourceQueryOptions<T> & {queryParams: Record<string, any>}} Normalized query options with:
+   *   - All standard `ResourceQueryOptions<T>` properties
    *   - `queryParams`: Raw parsed query parameters for reference
    *
    * @example
@@ -635,25 +635,25 @@ export class ResourcePaginationHelper {
     headers: Record<string, any>;
     params?: Record<string, any>;
     filters?: Record<string, any>;
-  }): IResourceQueryOptions<T> & { queryParams: Record<string, any> } {
+  }): ResourceQueryOptions<T> & { queryParams: Record<string, any> } {
     const queryParams = extendObj({}, req?.params, getQueryParams(req?.url));
     const xFilters = extendObj(
       {},
       queryParams,
-      req?.headers?.["x-filters"],
+      req?.headers?.['x-filters'],
       req?.filters
     );
     const limit = parseNumber(xFilters.limit);
     const skip = parseNumber(xFilters.skip);
     const page = parseNumber(xFilters.page);
-    const result: IResourceQueryOptions<T> =
+    const result: ResourceQueryOptions<T> =
       ResourcePaginationHelper.normalizePagination({ limit, skip, page });
     let distinct = xFilters.distinct;
-    if (typeof distinct == "number") {
+    if (typeof distinct == 'number') {
       distinct = !!distinct;
     }
     if (
-      typeof distinct === "boolean" ||
+      typeof distinct === 'boolean' ||
       (Array.isArray(distinct) && distinct.length)
     ) {
       result.distinct = distinct;
@@ -680,7 +680,7 @@ export class ResourcePaginationHelper {
       result.where = where;
     }
     const includeDeleted = xFilters.includeDeleted;
-    if (typeof includeDeleted === "boolean") {
+    if (typeof includeDeleted === 'boolean') {
       result.includeDeleted = includeDeleted;
     }
     const relations = defaultArray(xFilters.relations);
@@ -710,10 +710,10 @@ const parseNumber = (value: any) => {
   if (isStringNumber(value)) {
     return Number(value);
   }
-  if (typeof value === "number") {
+  if (typeof value === 'number') {
     return value;
   }
   return undefined;
 };
 
-type SortOrder = "asc" | "desc";
+type SortOrder = 'asc' | 'desc';

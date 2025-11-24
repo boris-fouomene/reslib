@@ -76,10 +76,10 @@ export interface IMongoComparisonOperators<T = any>
  * };
  */
 export interface IMongoLogicalOperators<T = unknown> {
-  $and?: IMongoQuery<T>[]; // An array of filter selectors that must all match
-  $or?: IMongoQuery<T>[]; // An array of filter selectors where at least one must match
-  $nor?: IMongoQuery<T>[]; // An array of filter selectors where none must match
-  $not?: IMongoQuery<T>; // A filter selector or comparison operator that must not match
+  $and?: MongoQuery<T>[]; // An array of filter selectors that must all match
+  $or?: MongoQuery<T>[]; // An array of filter selectors where at least one must match
+  $nor?: MongoQuery<T>[]; // An array of filter selectors where none must match
+  $not?: MongoQuery<T>; // A filter selector or comparison operator that must not match
 }
 
 /**
@@ -197,7 +197,7 @@ type IMongoQueryDepth = [never, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 type IMongoCreateDotPaths<
   T,
   D extends number = 9,
-  Prefix extends string = "",
+  Prefix extends string = '',
 > = D extends 0
   ? never
   : T extends object
@@ -253,22 +253,22 @@ type IMongoTypeAtPath<
       : never;
 
 /**
- * @interface IMongoQuery
+ * @interface MongoQuery
  * A type that represents a MongoDB query.
  * 
  * This type is used to define a query that can be used to filter data in a MongoDB collection.
  * 
- * @typedef {object} IMongoQuery
+ * @typedef {object} MongoQuery
  * @template T - The type of the data being queried (default is nknown).
  * @template D - The depth limit for the query (default is 9).
  * @property {string} [key] - A key in the data being queried.
  * @property {T[key]} [value] - The value of the key in the data being queried.
  * @property {IMongoComparisonOperators<T[key]>} [comparisonOperator] - A comparison operator to apply to the value.
- * @property {IMongoQuery<T[key], IMongoQueryDepth[D]>} [nestedQuery] - A nested query to apply to the value.
+ * @property {MongoQuery<T[key], IMongoQueryDepth[D]>} [nestedQuery] - A nested query to apply to the value.
  * @property {IMongoLogicalOperators<T>} [logicalOperator] - A logical operator to apply to the query.
  * @returns {object} - The query object.
  * @example
- * // Example usage of IMongoQuery
+ * // Example usage of MongoQuery
  * ```typescript
  * interface TestDocument {
     name: string;
@@ -291,7 +291,7 @@ type IMongoTypeAtPath<
   }
 
   // These should all work now
-  const query1: IMongoQuery<TestDocument> = {
+  const query1: MongoQuery<TestDocument> = {
     'address.city.country.name': { $eq: 'France' },
     age: { $gt: 18 },
     tags: { $all: ['active', 'premium'] },
@@ -302,7 +302,7 @@ type IMongoTypeAtPath<
       }
     }
   };
-  const query2: IMongoQuery<TestDocument> = {
+  const query2: MongoQuery<TestDocument> = {
     $or: [
       { 'address.city.country.code': 'FR' },
       { 
@@ -321,7 +321,7 @@ type IMongoTypeAtPath<
  * @see {@link IMongoComparisonOperators} for more information on MongoDB comparison operators.
  * @see {@link IMongoLogicalOperators} for more information on MongoDB logical operators.
  */
-export type IMongoQuery<T = unknown, D extends number = 9> = D extends 0
+export type MongoQuery<T = unknown, D extends number = 9> = D extends 0
   ? never
   : {
       [P in IMongoCreateDotPaths<T, D> | keyof T]?: P extends keyof T
@@ -329,7 +329,7 @@ export type IMongoQuery<T = unknown, D extends number = 9> = D extends 0
             | T[P]
             | IMongoComparisonOperators<T[P]>
             | (T[P] extends object
-                ? IMongoQuery<T[P], IMongoQueryDepth[D]>
+                ? MongoQuery<T[P], IMongoQueryDepth[D]>
                 : never)
         : P extends string
           ?
@@ -358,7 +358,7 @@ export interface IMongoArrayOperators<T = unknown> {
   $in?: T extends Array<any> ? T : T[]; // in array
   $nin?: T extends Array<any> ? T : T[]; // not in array
   $all?: T extends Array<any> ? T : T[];
-  $elemMatch?: T extends Array<any> ? IMongoQuery<T[number]> : never;
+  $elemMatch?: T extends Array<any> ? MongoQuery<T[number]> : never;
 }
 
 /**
@@ -396,7 +396,7 @@ export type IMongoComparisonOperatorName = keyof IMongoComparisonOperators;
  * - Ascending order is specified by the field path as a string (e.g., `"name"`, `"address.city"`).
  * - Descending order is specified by prefixing the field path with a minus sign (e.g., `"-name"`, `"-address.city"`).
  * - Multiple sorting criteria can be provided as an array, where each element follows the same rules.
- * - Field paths are limited to a depth of 4 levels to prevent excessive recursion and maintain performance.
+ * - FieldMeta paths are limited to a depth of 4 levels to prevent excessive recursion and maintain performance.
  * - Only leaf properties (primitives, dates, etc.) can be used for sorting; object and array properties are excluded.
  *
  * @example
@@ -410,13 +410,13 @@ export type IMongoComparisonOperatorName = keyof IMongoComparisonOperators;
  * }
  *
  * // Single ascending field
- * const orderBy1: IResourceQueryOrderBy<User> = "name";
+ * const orderBy1: ResourceQueryOrderBy<User> = "name";
  *
  * // Single descending field
- * const orderBy2: IResourceQueryOrderBy<User> = "-age";
+ * const orderBy2: ResourceQueryOrderBy<User> = "-age";
  *
  * // Multiple fields (name ascending, then age descending)
- * const orderBy3: IResourceQueryOrderBy<User> = ["name", "-age"];
+ * const orderBy3: ResourceQueryOrderBy<User> = ["name", "-age"];
  * ```
  *
  * @example
@@ -439,12 +439,12 @@ export type IMongoComparisonOperatorName = keyof IMongoComparisonOperators;
  * }
  *
  * // Sorting by nested properties
- * const orderBy1: IResourceQueryOrderBy<User> = "profile.age";                    // Ascending by age
- * const orderBy2: IResourceQueryOrderBy<User> = "-profile.address.city";          // Descending by city
- * const orderBy3: IResourceQueryOrderBy<User> = "profile.address.country.name";   // Ascending by country name
+ * const orderBy1: ResourceQueryOrderBy<User> = "profile.age";                    // Ascending by age
+ * const orderBy2: ResourceQueryOrderBy<User> = "-profile.address.city";          // Descending by city
+ * const orderBy3: ResourceQueryOrderBy<User> = "profile.address.country.name";   // Ascending by country name
  *
  * // Multiple nested fields
- * const orderBy4: IResourceQueryOrderBy<User> = [
+ * const orderBy4: ResourceQueryOrderBy<User> = [
  *   "profile.address.country.name",  // Country name ascending
  *   "-profile.age",                  // Age descending
  *   "name"                           // Name ascending (as tiebreaker)
@@ -473,12 +473,12 @@ export type IMongoComparisonOperatorName = keyof IMongoComparisonOperators;
  * }
  *
  * // Valid sorting options
- * const orderBy1: IResourceQueryOrderBy<Product> = "-metadata.createdAt";              // Newest first
- * const orderBy2: IResourceQueryOrderBy<Product> = "metadata.stats.likes";              // Most liked first
- * const orderBy3: IResourceQueryOrderBy<Product> = "metadata.stats.ratings.average";    // Highest rated first
+ * const orderBy1: ResourceQueryOrderBy<Product> = "-metadata.createdAt";              // Newest first
+ * const orderBy2: ResourceQueryOrderBy<Product> = "metadata.stats.likes";              // Most liked first
+ * const orderBy3: ResourceQueryOrderBy<Product> = "metadata.stats.ratings.average";    // Highest rated first
  *
  * // Complex multi-field sorting
- * const orderBy4: IResourceQueryOrderBy<Product> = [
+ * const orderBy4: ResourceQueryOrderBy<Product> = [
  *   "-metadata.stats.ratings.average",  // Highest rated first
  *   "-metadata.stats.likes",            // Then most liked
  *   "metadata.createdAt"                // Then newest (as tiebreaker)
@@ -500,24 +500,24 @@ export type IMongoComparisonOperatorName = keyof IMongoComparisonOperators;
  * }
  *
  * // ❌ Invalid: Cannot sort by array properties
- * // const invalid1: IResourceQueryOrderBy<User> = "tags";
+ * // const invalid1: ResourceQueryOrderBy<User> = "tags";
  *
  * // ❌ Invalid: Cannot sort by array elements
- * // const invalid2: IResourceQueryOrderBy<User> = "profile.address.coordinates";
+ * // const invalid2: ResourceQueryOrderBy<User> = "profile.address.coordinates";
  *
  * // ❌ Invalid: Cannot sort by object properties
- * // const invalid3: IResourceQueryOrderBy<User> = "profile";
+ * // const invalid3: ResourceQueryOrderBy<User> = "profile";
  * ```
  */
-export type IResourceQueryOrderBy<T> =
+export type ResourceQueryOrderBy<T> =
   | NestedPaths<T, 8> // ascending
   | `-${NestedPaths<T, 8>}` // descending
   | Array<NestedPaths<T, 8> | `-${NestedPaths<T, 8>}`>;
 
 /* ------------------------------------------------------------------ */
-type Join<K, P, S extends string = "."> = K extends string | number
+type Join<K, P, S extends string = '.'> = K extends string | number
   ? P extends string | number
-    ? `${K}${"" extends P ? "" : S}${P}`
+    ? `${K}${'' extends P ? '' : S}${P}`
     : never
   : never;
 
@@ -565,7 +565,7 @@ type Prev = [never, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, ...0[]];
  * // Results in: "id" | "name" | "profile[]age" | "profile[]address[]city" | "profile[]address[]country"
  * ```
  */
-export type NestedPaths<T, D extends number = 3, S extends string = "."> = [
+export type NestedPaths<T, D extends number = 3, S extends string = '.'> = [
   D,
 ] extends [never]
   ? never
@@ -575,4 +575,4 @@ export type NestedPaths<T, D extends number = 3, S extends string = "."> = [
           ? Join<K, NestedPaths<T[K], Prev[D], S>, S>
           : never;
       }[keyof T]
-    : "";
+    : '';

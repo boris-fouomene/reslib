@@ -2438,7 +2438,7 @@ export type IValidatorValidateResult<Context = unknown> =
  * - **Parallel Validation**: All fields are validated concurrently
  * - **Error Aggregation**: Returns array of errors with field-level details
  * - **Class-Based**: Works with decorated class properties rather than single values
- * - **Field Mapping**: Maps validated data back to class structure with proper typing
+ * - **FieldMeta Mapping**: Maps validated data back to class structure with proper typing
  */
 
 /**

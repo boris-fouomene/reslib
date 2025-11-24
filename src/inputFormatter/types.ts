@@ -525,7 +525,7 @@ export interface InputFormatterMaskResult {
  * Represents a function that formats a field value according to specified options.
  *
  * The formatting can be customized based on the options provided when
- * the `format` function of the `IField` interface is called. This type
+ * the `format` function of the `Field` interface is called. This type
  * allows for greater flexibility in defining how field values should
  * be displayed or manipulated.
  *

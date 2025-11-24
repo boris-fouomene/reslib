@@ -1,15 +1,17 @@
-import { IAuthPerm } from '@/auth/types';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-empty-object-type */
+import { AuthPerm } from '@/auth/types';
 import { InputFormatterOptions } from '@/inputFormatter/types';
-import { UcFirst } from '@/types/dictionary';
-import { IMongoQuery, IResourceQueryOrderBy } from './filters';
+import { Dictionary, UppercaseFirst } from '@/types/dictionary';
+import { MongoQuery, ResourceQueryOrderBy } from './filters';
 
 export * from './filters';
 
-export interface IFieldBase<
-  FieldType extends IFieldType = IFieldType,
-  ValueType = any,
-> extends Partial<IResourceActionTupleObject<IResourceName>>,
-    Omit<InputFormatterOptions<FieldType, ValueType>, 'value' | 'type'> {
+export interface FieldBase<
+  TFieldType extends FieldType = FieldType,
+  TValueType = any,
+> extends Partial<ResourceActionTupleObject<ResourceName>>,
+    Omit<InputFormatterOptions<TFieldType, TValueType>, 'value' | 'type'> {
   /**
    * The type of the field.
    *
@@ -20,12 +22,12 @@ export interface IFieldBase<
    *
    * @example
    * ```typescript
-   * const textField: IFieldBase = {
+   * const textField: FieldBase = {
    *   type: 'text'
    * };
    * ```
    */
-  type: FieldType;
+  type: TFieldType;
 
   /**
    * The name of the field.
@@ -35,7 +37,7 @@ export interface IFieldBase<
    *
    * @example
    * ```typescript
-   * const textField: IFieldBase = {
+   * const textField: FieldBase = {
    *   name: 'textField'
    * };
    * ```
@@ -50,7 +52,7 @@ export interface IFieldBase<
    *
    * @example
    * ```typescript
-   * const textField: IFieldBase = {
+   * const textField: FieldBase = {
    *   databaseName: 'text_field'
    * };
    * ```
@@ -65,7 +67,7 @@ export interface IFieldBase<
    *
    * @example
    * ```typescript
-   * const textField: IFieldBase = {
+   * const textField: FieldBase = {
    *   databaseTableName: 'text_fields'
    * };
    * ```
@@ -125,99 +127,756 @@ export interface IFieldBase<
   /***
    * The permission associated with the field. This permission is used to determine if the field will be rendered or not.
    */
-  perm?: IAuthPerm;
+  perm?: AuthPerm;
 
   /**
    * The default value of the field.
    */
-  defaultValue?: ValueType;
+  defaultValue?: TValueType;
 }
-// Mapped type that ensures all values in IFieldMap extend IFieldBase
-export interface IFieldMap {}
-
 /**
- * Interface defining the mapping of field actions to their string identifiers.
- * Used to specify which actions are available for different field operations.
+ * ## FieldMap Interface
  *
- * This interface provides a standardized way to reference field actions throughout
- * the application, ensuring consistency in field operation naming.
+ * A global interface for defining field mappings in the resource system.
+ * This interface serves as a central registry for all available field types
+ * and their configurations, enabling type-safe field definitions across the application.
  *
- * @interface IFieldActionsMap
+ * ### Purpose
+ * The `FieldMap` interface is designed for **module augmentation**, allowing developers
+ * to extend it with custom field definitions. Each key represents a field type (e.g., "text", "number"),
+ * and each value must extend the `FieldBase` interface, ensuring consistent structure
+ * and type safety for all field configurations.
  *
- * @example
+ * ### How It Works
+ * - **Empty by Design**: The interface is intentionally empty in the core library.
+ * - **Module Augmentation**: Developers extend it via `declare module` statements.
+ * - **Type Safety**: The `Field<T>` type uses `FieldMap[T]` to enforce that field
+ *   configurations match their declared types.
+ * - **Extensibility**: New field types can be added without modifying the core library.
+ *
+ * ### Template Parameters
+ * This interface doesn't use generic parameters itself, but the values must conform to `FieldBase<TFieldType, ValueType>`.
+ *
+ * ### Examples
+ *
+ * #### Basic Module Augmentation
  * ```typescript
- * // Basic usage - defining field actions for a form
- * const fieldActions: IFieldActionsMap = {
- *   create: "createField",
- *   update: "updateField",
- *   createOrUpdate: "createOrUpdateField",
- *   filter: "filterField"
- * };
+ * // In your application's types file (e.g., types.ts or global.d.ts)
+ * import "reslib";
  *
- * // Usage in field configuration
- * const textField: IField = {
- *   type: "text",
- *   name: "username",
- *   forCreate: { required: true, minLength: 3 },
- *   forUpdate: { required: false },
- *   forFilter: { caseSensitive: false }
- * };
+ * declare module "reslib" {
+ *   interface FieldMap {
+ *     // Define a text field type
+ *     text: FieldBase<"text", string>;
+ *
+ *     // Define a number field type
+ *     number: FieldBase<"number", number>;
+ *
+ *     // Define an email field type
+ *     email: FieldBase<"email", string>;
+ *   }
+ * }
  * ```
  *
+ * #### Advanced FieldMeta Configuration
+ * ```typescript
+ * declare module "reslib" {
+ *   interface FieldMap {
+ *     // Text field with validation
+ *     text: FieldBase<"text", string> & {
+ *       minLength?: number;
+ *       maxLength?: number;
+ *       pattern?: RegExp;
+ *     };
+ *
+ *     // Number field with range constraints
+ *     number: FieldBase<"number", number> & {
+ *       min?: number;
+ *       max?: number;
+ *       step?: number;
+ *     };
+ *
+ *     // Select field with predefined options
+ *     select: FieldBase<"select", string> & {
+ *       options: Array<{ label: string; value: string }>;
+ *       multiple?: boolean;
+ *     };
+ *
+ *     // Date field with format options
+ *     date: FieldBase<"date", Date> & {
+ *       format?: string;
+ *       minDate?: Date;
+ *       maxDate?: Date;
+ *     };
+ *   }
+ * }
+ * ```
+ *
+ * #### Using Defined Fields
+ * ```typescript
+ * // After augmentation, you can create type-safe fields
+ * const userFields: Fields = {
+ *   username: {
+ *     type: "text",        // ✓ TypeScript knows this is valid
+ *     name: "username",
+ *     required: true,
+ *     minLength: 3,        // ✓ Additional properties available
+ *     maxLength: 50,
+ *     forCreate: { required: true },
+ *     forUpdate: { required: false }
+ *   },
+ *   age: {
+ *     type: "number",      // ✓ TypeScript knows this is valid
+ *     name: "age",
+ *     min: 0,              // ✓ Range constraints available
+ *     max: 150,
+ *     forFilter: { allowRange: true }
+ *   },
+ *   email: {
+ *     type: "email",       // ✓ TypeScript knows this is valid
+ *     name: "email",
+ *     required: true,
+ *     forCreate: { required: true }
+ *   }
+ * };
+ *
+ * // TypeScript will catch invalid field types:
+ * // const invalidField: Field = { type: "invalid" }; // ✗ Error: "invalid" not in FieldMap
+ * ```
+ *
+ * #### Conditional FieldMeta Extensions
+ * ```typescript
+ * declare module "reslib" {
+ *   interface FieldMap {
+ *     // Conditional field that changes behavior based on context
+ *     conditional: FieldBase<"conditional", any> & {
+ *       condition: (context: any) => boolean;
+ *       trueField: keyof FieldMap;
+ *       falseField: keyof FieldMap;
+ *     };
+ *   }
+ * }
+ * ```
+ *
+ * ### Best Practices
+ * - **Consistent Naming**: Use lowercase strings for field type keys (e.g., "text", "number").
+ * - **Extensive Properties**: Add as many type-specific properties as needed for your use case.
+ * - **Documentation**: Document custom field types clearly for team members.
+ * - **Versioning**: Consider the impact on existing field definitions when adding new properties.
+ * - **Validation**: Use TypeScript's type system to enforce field constraints at compile time.
+ *
+ * ### Integration with Other Types
+ * - **Field<T>**: Uses `FieldMap[T]` to create type-safe field configurations.
+ * - **FieldType**: Derives from `keyof FieldMap` to constrain valid field types.
+ * - **FieldBase**: Provides the base structure that all field definitions must extend.
+ *
+ * ### Migration Notes
+ * If you're upgrading from a version where field types were defined differently,
+ * update your module augmentations to use this new structure for better type safety.
+ *
+ * @interface FieldMap
+ * @public
+ * @since 1.0.0
+ * @see {@link FieldBase} - The base interface that field definitions must extend
+ * @see {@link Field} - How field configurations are created from this map
+ * @see {@link FieldType} - The union type of all defined field types
  * @example
  * ```typescript
- * // Advanced usage - conditional field actions based on user permissions
- * function getFieldActions(userRole: string): Partial<IFieldActionsMap> {
- *   const actions: Partial<IFieldActionsMap> = {};
+ * // Complete example of extending FieldMap
+ * declare module "reslib" {
+ *   interface FieldMap {
+ *     text: FieldBase<"text", string> & {
+ *       minLength?: number;
+ *       maxLength?: number;
+ *       placeholder?: string;
+ *     };
  *
- *   if (userRole === 'admin') {
- *     actions.create = 'adminCreate';
- *     actions.update = 'adminUpdate';
- *     actions.createOrUpdate = 'adminCreateOrUpdate';
- *     actions.filter = 'adminFilter';
- *   } else if (userRole === 'editor') {
- *     actions.update = 'editorUpdate';
- *     actions.filter = 'editorFilter';
- *   } else {
- *     actions.filter = 'readonlyFilter';
+ *     number: FieldBase<"number", number> & {
+ *       min?: number;
+ *       max?: number;
+ *       step?: number;
+ *     };
+ *
+ *     boolean: FieldBase<"boolean", boolean>;
+ *
+ *     date: FieldBase<"date", Date> & {
+ *       format?: string;
+ *     };
+ *
+ *     select: FieldBase<"select", string> & {
+ *       options: Array<{ label: string; value: any }>;
+ *       multiple?: boolean;
+ *     };
  *   }
- *
- *   return actions;
  * }
  * ```
  */
-export interface IFieldActionsMap {
+export interface FieldMap {}
+
+/**
+ * ## FieldActionsMap Interface
+ *
+ * A global interface defining the action contexts available for field configurations.
+ * This interface serves as a central registry for all possible field action types
+ * that can have different validation rules, requirements, or behaviors.
+ *
+ * ### Purpose
+ * The `FieldActionsMap` interface defines the different contexts in which fields
+ * can be used within the resource system. Each key represents an action context
+ * (e.g., "create", "update", "filter"), and the corresponding string value is used
+ * for type-level operations and transformations.
+ *
+ * ### How It Works
+ * - **Action Contexts**: Defines the different operations where field behavior might differ
+ * - **Type Generation**: Used by `Field<T>` to generate action-specific field overrides
+ *   like `forCreate`, `forUpdate`, `forCreateOrUpdate`, and `forFilter`
+ * - **Module Augmentation**: Can be extended via `declare module` for custom action contexts
+ * - **String Values**: The string values are primarily used for TypeScript type manipulation
+ *
+ * ### Default Action Contexts
+ *
+ * - **create**: FieldMeta configuration when creating new resource instances
+ * - **update**: FieldMeta configuration when updating existing resource instances
+ * - **createOrUpdate**: FieldMeta configuration for operations that can create or update
+ * - **filter**: FieldMeta configuration for filtering/searching resource instances
+ *
+ * ### Template Parameters
+ * This interface doesn't use generic parameters itself, but serves as a foundation
+ * for generating action-specific field configurations.
+ *
+ * ### Examples
+ *
+ * #### Basic Usage in FieldMeta Definitions
+ * ```typescript
+ * // Fields can have different configurations for different actions
+ * const userFields: Fields = {
+ *   password: {
+ *     type: "text",
+ *     required: true,
+ *     minLength: 8,
+ *     // Different requirements for create vs update
+ *     forCreate: { required: true },  // Password required when creating
+ *     forUpdate: { required: false }  // Password optional when updating
+ *   },
+ *   email: {
+ *     type: "email",
+ *     required: true,
+ *     unique: true,
+ *     // Email validation differs by context
+ *     forCreate: { required: true, unique: true },
+ *     forUpdate: { required: true, unique: true },
+ *     forFilter: { required: false } // Email optional for filtering
+ *   }
+ * };
+ * ```
+ *
+ * #### Module Augmentation for Custom Actions
+ * ```typescript
+ * // In your application's types file
+ * import "reslib";
+ *
+ * declare module "reslib" {
+ *   interface FieldActionsMap {
+ *     // Add custom action contexts
+ *     import: string;      // For bulk import operations
+ *     export: string;      // For data export configurations
+ *     validate: string;    // For validation-only contexts
+ *     preview: string;     // For preview/display contexts
+ *   }
+ * }
+ *
+ * // Now you can use these in field definitions
+ * const productFields: Fields = {
+ *   sku: {
+ *     type: "text",
+ *     required: true,
+ *     forCreate: { required: true },
+ *     forUpdate: { required: true },
+ *     forImport: { required: true, pattern: "^[A-Z0-9]+$" }, // Custom validation for imports
+ *     forExport: { required: false } // SKU optional in exports
+ *   }
+ * };
+ * ```
+ *
+ * #### Advanced FieldMeta Behavior Overrides
+ * ```typescript
+ * declare module "reslib" {
+ *   interface FieldActionsMap {
+ *     bulkUpdate: string;
+ *     softDelete: string;
+ *     archive: string;
+ *   }
+ * }
+ *
+ * const documentFields: Fields = {
+ *   status: {
+ *     type: "select",
+ *     options: ["draft", "published", "archived"],
+ *     required: true,
+ *     forCreate: { required: true, defaultValue: "draft" },
+ *     forUpdate: { required: true },
+ *     forBulkUpdate: { required: false }, // Optional in bulk operations
+ *     forSoftDelete: { readOnly: true },  // Can't change status when soft deleting
+ *     forArchive: { required: true, allowedValues: ["archived"] } // Only allow archive status
+ *   },
+ *   deletedAt: {
+ *     type: "date",
+ *     readOnly: true,
+ *     forSoftDelete: { required: true }, // Must set deletion timestamp
+ *     forArchive: { required: false }    // Optional for archiving
+ *   }
+ * };
+ * ```
+ *
+ * #### Conditional FieldMeta Requirements
+ * ```typescript
+ * const orderFields: Fields = {
+ *   paymentMethod: {
+ *     type: "select",
+ *     options: ["credit_card", "paypal", "bank_transfer"],
+ *     forCreate: { required: true },
+ *     forUpdate: { required: false }, // Can't change payment method after creation
+ *     forFilter: { required: false }
+ *   },
+ *   creditCardNumber: {
+ *     type: "text",
+ *     pattern: "^\\d{16}$",
+ *     forCreate: {
+ *       required: true,
+ *       // Only required if payment method is credit card
+ *       conditionalRequired: (data) => data.paymentMethod === "credit_card"
+ *     },
+ *     forUpdate: { readOnly: true }, // Never updatable for security
+ *     forFilter: { required: false }
+ *   }
+ * };
+ * ```
+ *
+ * ### Best Practices
+ * - **Consistent Naming**: Use lowercase action names (e.g., "create", "update")
+ * - **Semantic Actions**: Choose action names that clearly describe their purpose
+ * - **Minimal Overrides**: Only override field properties when behavior genuinely differs
+ * - **Security Considerations**: Use action contexts to enforce security rules
+ *   (e.g., making fields read-only in certain contexts)
+ * - **Documentation**: Document custom action contexts for team members
+ *
+ * ### Integration with Other Types
+ * - **Field<T>**: Uses `FieldActionsMap` to generate action-specific properties
+ * - **FieldMap**: Provides the base field configurations that can be overridden
+ * - **UppercaseFirst**: Used to transform action names (e.g., "create" → "Create" → "forCreate")
+ *
+ * ### Migration Notes
+ * When adding new action contexts, ensure that existing field definitions are
+ * compatible. Consider providing default behaviors for new actions to maintain
+ * backward compatibility.
+ *
+ * @interface FieldActionsMap
+ * @public
+ * @since 1.0.0
+ * @see {@link Field} - How action contexts are used in field definitions
+ * @see {@link FieldMap} - The base field configurations that can be overridden
+ * @see {@link UppercaseFirst} - Utility for transforming action names
+ * @example
+ * ```typescript
+ * // Complete example of extending FieldActionsMap
+ * declare module "reslib" {
+ *   interface FieldActionsMap {
+ *     // Standard CRUD operations
+ *     create: string;
+ *     update: string;
+ *     createOrUpdate: string;
+ *     filter: string;
+ *
+ *     // Custom business logic actions
+ *     approve: string;      // For approval workflows
+ *     reject: string;       // For rejection workflows
+ *     publish: string;      // For content publishing
+ *     archive: string;      // For archiving operations
+ *
+ *     // Data operations
+ *     import: string;       // For bulk import
+ *     export: string;       // For data export
+ *     migrate: string;      // For data migration
+ *
+ *     // Administrative actions
+ *     adminUpdate: string;  // For admin-only updates
+ *     systemUpdate: string; // For system-generated updates
+ *   }
+ * }
+ *
+ * // Usage in field definitions
+ * const contentFields: Fields = {
+ *   publishedAt: {
+ *     type: "date",
+ *     readOnly: true,
+ *     forCreate: { required: false },
+ *     forPublish: { required: true },    // Must set when publishing
+ *     forUpdate: { required: false },
+ *     forAdminUpdate: { required: false } // Admins can modify
+ *   },
+ *   approvalStatus: {
+ *     type: "select",
+ *     options: ["pending", "approved", "rejected"],
+ *     defaultValue: "pending",
+ *     forCreate: { required: false },
+ *     forApprove: { required: true, allowedValues: ["approved"] },
+ *     forReject: { required: true, allowedValues: ["rejected"] },
+ *     forUpdate: { readOnly: true } // Status changes through specific actions
+ *   }
+ * };
+ * ```
+ */
+export interface FieldActionsMap {
   create: string;
   update: string;
   createOrUpdate: string;
   filter: string;
 }
 
-export type IField<
-  T extends IFieldType = IFieldType,
-  ValueType = any,
-> = IFieldMap[T] extends IFieldBase
-  ? IFieldMap[T] & {
-      [key in keyof IFieldActionsMap as `for${UcFirst<key>}`]?: Partial<
-        IFieldMap[keyof IFieldMap]
-      >;
-    }
-  : never;
+/**
+ * ## Field Type
+ *
+ * The core type representing a field configuration in the resource system.
+ * This conditional type combines base field properties with action-specific overrides,
+ * enabling flexible and type-safe field definitions across different operations.
+ *
+ * ### Purpose
+ * The `Field` type serves as the primary interface for defining fields in resource schemas.
+ * It provides a structured way to specify field behavior, validation rules, and operation-specific
+ * customizations, ensuring type safety and consistency throughout the application.
+ *
+ * ### How It Works
+ * This type uses TypeScript's conditional types and mapped types to dynamically construct
+ * field configurations based on the field type and available actions:
+ *
+ * 1. **Base Configuration**: Inherits all properties from the specific field type in `FieldMap[T]`
+ * 2. **Action Overrides**: Adds optional properties for each action in `FieldActionsMap`
+ * 3. **Type Safety**: Ensures only valid field types and action contexts are used
+ * 4. **Extensibility**: Supports module augmentation for custom field types and actions
+ *
+ * ### Template Parameters
+ * - **T**: The field type (extends `FieldType`, which is `keyof FieldMap`). Defaults to `FieldType`.
+ *
+ * ### Type Construction
+ * ```typescript
+ * Field<T> = FieldMap[T] extends FieldBase
+ *   ? FieldMap[T] & {
+ *       [key in keyof FieldActionsMap as `for${UppercaseFirst<key>}`]?: Partial<FieldMap[keyof FieldMap]>
+ *     }
+ *   : never
+ * ```
+ *
+ * This creates a type that includes:
+ * - All base properties from `FieldMap[T]` (e.g., `type`, `name`, `required`, field-specific properties)
+ * - Optional action-specific overrides like `forCreate`, `forUpdate`, `forFilter`, etc.
+ *
+ * ### Examples
+ *
+ * #### Basic Field Definition
+ * ```typescript
+ * // Define a text field with basic properties
+ * const usernameField: Field<"text"> = {
+ *   type: "text",
+ *   name: "username",
+ *   required: true,
+ *   minLength: 3,
+ *   maxLength: 50,
+ *   placeholder: "Enter username"
+ * };
+ * ```
+ *
+ * #### Field with Action-Specific Overrides
+ * ```typescript
+ * // Field that behaves differently for different actions
+ * const passwordField: Field<"text"> = {
+ *   type: "text",
+ *   name: "password",
+ *   // Base configuration
+ *   minLength: 8,
+ *   pattern: "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).+$",
+ *
+ *   // Action-specific overrides
+ *   forCreate: {
+ *     required: true,        // Password required when creating
+ *     minLength: 8          // Minimum length for creation
+ *   },
+ *   forUpdate: {
+ *     required: false,       // Password optional when updating
+ *     minLength: 0           // No minimum when updating (keep existing)
+ *   },
+ *   forFilter: {
+ *     required: false,       // Not used in filtering
+ *     minLength: 0
+ *   }
+ * };
+ * ```
+ *
+ * #### Complex Field with Multiple Overrides
+ * ```typescript
+ * const statusField: Field<"select"> = {
+ *   type: "select",
+ *   name: "status",
+ *   required: true,
+ *   options: ["draft", "published", "archived"],
+ *   defaultValue: "draft",
+ *
+ *   // Different validation rules per action
+ *   forCreate: {
+ *     required: false,       // Optional during creation
+ *     defaultValue: "draft"  // Default to draft
+ *   },
+ *   forUpdate: {
+ *     required: true,        // Required during updates
+ *     allowedValues: ["published", "archived"] // Can't go back to draft
+ *   },
+ *   forFilter: {
+ *     required: false,       // Optional in filters
+ *     multiple: true         // Allow multiple values in filters
+ *   }
+ * };
+ * ```
+ *
+ * #### Field Collection Usage
+ * ```typescript
+ * // Using fields in a resource definition
+ * const userFields: Fields = {
+ *   id: {
+ *     type: "uuid",
+ *     name: "id",
+ *     primaryKey: true,
+ *     readOnly: true
+ *   },
+ *   username: {
+ *     type: "text",
+ *     name: "username",
+ *     required: true,
+ *     minLength: 3,
+ *     maxLength: 50,
+ *     forCreate: { required: true },
+ *     forUpdate: { required: true }
+ *   },
+ *   email: {
+ *     type: "email",
+ *     name: "email",
+ *     required: true,
+ *     unique: true,
+ *     forCreate: { required: true, unique: true },
+ *     forUpdate: { required: true, unique: true }
+ *   },
+ *   role: {
+ *     type: "select",
+ *     name: "role",
+ *     options: ["admin", "user", "moderator"],
+ *     defaultValue: "user",
+ *     forCreate: { required: false },
+ *     forUpdate: { required: true, allowedValues: ["admin", "user"] }
+ *   }
+ * };
+ * ```
+ *
+ * #### Type-Safe Field Access
+ * ```typescript
+ * // TypeScript ensures type safety
+ * function processField<T extends FieldType>(field: Field<T>) {
+ *   // field.type is guaranteed to be T
+ *   // field.name is always available
+ *   // Action overrides are optional and type-safe
+ *
+ *   if (field.forCreate) {
+ *     console.log("Create-specific config:", field.forCreate);
+ *   }
+ *
+ *   if (field.forUpdate) {
+ *     console.log("Update-specific config:", field.forUpdate);
+ *   }
+ * }
+ * ```
+ *
+ * #### Advanced Usage with Custom Field Types
+ * ```typescript
+ * // After extending FieldMap with custom types
+ * declare module "reslib" {
+ *   interface FieldMap {
+ *     richText: FieldBase<"richText", string> & {
+ *       toolbar: string[];
+ *       maxLength: number;
+ *       allowedFormats: string[];
+ *     };
+ *     dateRange: FieldBase<"dateRange", { start: Date; end: Date }> & {
+ *       minDate?: Date;
+ *       maxDate?: Date;
+ *       format: string;
+ *     };
+ *   }
+ * }
+ *
+ * // Now you can use these custom types
+ * const contentField: Field<"richText"> = {
+ *   type: "richText",
+ *   name: "content",
+ *   toolbar: ["bold", "italic", "link"],
+ *   maxLength: 10000,
+ *   allowedFormats: ["html", "markdown"],
+ *   forCreate: { required: true },
+ *   forUpdate: { required: false }
+ * };
+ *
+ * const dateRangeField: Field<"dateRange"> = {
+ *   type: "dateRange",
+ *   name: "eventDates",
+ *   format: "YYYY-MM-DD",
+ *   minDate: new Date(),
+ *   forFilter: { required: false }
+ * };
+ * ```
+ *
+ * ### Action-Specific Properties
+ * The `Field` type automatically generates properties for each action defined in `FieldActionsMap`:
+ *
+ * - **`forCreate`**: Configuration when creating new resource instances
+ * - **`forUpdate`**: Configuration when updating existing resource instances
+ * - **`forCreateOrUpdate`**: Configuration for operations that can create or update
+ * - **`forFilter`**: Configuration for filtering/searching resource instances
+ *
+ * Each action property is optional and can contain any subset of properties from any field type,
+ * allowing flexible customization of field behavior per operation.
+ *
+ * ### Best Practices
+ * - **Consistent Base Properties**: Define common properties (like `name`, `type`) at the base level
+ * - **Minimal Overrides**: Only specify action-specific properties when behavior genuinely differs
+ * - **Type Safety**: Leverage TypeScript's inference for field types and action properties
+ * - **Documentation**: Document custom field types and their action-specific behaviors
+ * - **Validation**: Use action overrides to enforce security rules and business logic
+ *
+ * ### Integration with Other Types
+ * - **`FieldMap`**: Provides the base field type definitions
+ * - **`FieldActionsMap`**: Defines available action contexts
+ * - **`Fields`**: Collection of fields for resource definitions
+ * - **`FieldBase`**: Common base properties for all field types
+ * - **`FieldType`**: Union of all valid field type keys
+ *
+ * ### Migration Notes
+ * When upgrading from simpler field definitions, gradually add action-specific overrides
+ * to maintain backward compatibility. The base properties remain available and functional
+ * even when action overrides are not specified.
+ *
+ * @type Field
+ * @template T - The field type (must be a key of FieldMap)
+ * @default FieldType
+ * @public
+ * @since 1.0.0
+ * @see {@link FieldMap} - The interface defining field type configurations
+ * @see {@link FieldActionsMap} - The interface defining action contexts
+ * @see {@link FieldBase} - The base properties shared by all field types
+ * @see {@link Fields} - How fields are collected into resource schemas
+ * @example
+ * ```typescript
+ * // Complete example of field definitions with action overrides
+ * import "reslib";
+ *
+ * declare module "reslib" {
+ *   interface FieldMap {
+ *     text: FieldBase<"text", string> & {
+ *       minLength?: number;
+ *       maxLength?: number;
+ *       pattern?: RegExp;
+ *       placeholder?: string;
+ *     };
+ *     select: FieldBase<"select", string> & {
+ *       options: string[];
+ *       multiple?: boolean;
+ *       defaultValue?: string;
+ *     };
+ *     number: FieldBase<"number", number> & {
+ *       min?: number;
+ *       max?: number;
+ *       step?: number;
+ *     };
+ *   }
+ * }
+ *
+ * // Define a comprehensive user resource schema
+ * const userFields: Fields = {
+ *   username: {
+ *     type: "text",
+ *     name: "username",
+ *     required: true,
+ *     minLength: 3,
+ *     maxLength: 50,
+ *     pattern: /^[a-zA-Z0-9_]+$/,
+ *     forCreate: { required: true },
+ *     forUpdate: { required: true },
+ *     forFilter: { required: false }
+ *   } as Field<"text">,
+ *
+ *   email: {
+ *     type: "email",
+ *     name: "email",
+ *     required: true,
+ *     forCreate: { required: true },
+ *     forUpdate: { required: true },
+ *     forFilter: { required: false }
+ *   } as Field<"text">, // email extends text with validation
+ *
+ *   role: {
+ *     type: "select",
+ *     name: "role",
+ *     options: ["admin", "user", "moderator"],
+ *     defaultValue: "user",
+ *     forCreate: { required: false },
+ *     forUpdate: { required: true },
+ *     forFilter: { required: false, multiple: true }
+ *   } as Field<"select">,
+ *
+ *   age: {
+ *     type: "number",
+ *     name: "age",
+ *     min: 0,
+ *     max: 150,
+ *     forCreate: { required: false },
+ *     forUpdate: { required: false },
+ *     forFilter: { required: false, min: 18, max: 100 }
+ *   } as Field<"number">
+ * };
+ *
+ * // Type-safe usage
+ * function validateField(field: Field, action: keyof FieldActionsMap, value: any): boolean {
+ *   const actionConfig = field[`for${action.charAt(0).toUpperCase() + action.slice(1)}` as keyof Field];
+ *
+ *   if (actionConfig && 'required' in actionConfig) {
+ *     if (actionConfig.required && (value === undefined || value === null)) {
+ *       return false;
+ *     }
+ *   }
+ *
+ *   // Additional validation logic...
+ *   return true;
+ * }
+ * ```
+ */
+export type Field<T extends FieldType = FieldType> =
+  FieldMap[T] extends FieldBase
+    ? FieldMap[T] & {
+        [key in keyof FieldActionsMap as `for${UppercaseFirst<key>}`]?: Partial<
+          FieldMap[keyof FieldMap]
+        >;
+      }
+    : never;
 
 /**
- * Type representing a collection of fields where each key is a string and each value is an IField.
+ * Type representing a collection of fields where each key is a string and each value is an Field.
  * This type is used to define the structure of fields for a resource or form.
  *
  * This type provides a flexible way to define multiple fields with their configurations,
  * validation rules, and action-specific overrides. It's commonly used when defining
  * the schema for resources, forms, or data validation.
  *
- * @type IFields
+ * @type Fields
  *
  * @example
  * ```typescript
  * // Basic field collection for a user resource
- * const userFields: IFields = {
+ * const userFields: Fields = {
  *   username: {
  *     type: "text",
  *     name: "username",
@@ -249,8 +908,8 @@ export type IField<
  * @example
  * ```typescript
  * // Dynamic field collection based on user permissions
- * function createFieldsForUser(userRole: string): IFields {
- *   const baseFields: IFields = {
+ * function createFieldsForUser(userRole: string): Fields {
+ *   const baseFields: Fields = {
  *     id: { type: "uuid", name: "id", primaryKey: true, readOnly: true },
  *     createdAt: { type: "date", name: "createdAt", readOnly: true },
  *     updatedAt: { type: "date", name: "updatedAt", readOnly: true }
@@ -281,7 +940,7 @@ export type IField<
  * @example
  * ```typescript
  * // Form validation using field collection
- * function validateFormData(fields: IFields, data: Record<string, any>): ValidationResult {
+ * function validateFormData(fields: Fields, data: Record<string, any>): ValidationResult {
  *   const errors: string[] = [];
  *
  *   for (const [fieldName, fieldConfig] of Object.entries(fields)) {
@@ -307,29 +966,29 @@ export type IField<
  * }
  * ```
  */
-export type IFields = Record<string, IField>;
+export type Fields = Record<string, Field>;
 
 /**
- * Type representing the union of all possible field types defined in IFieldMap.
+ * Type representing the union of all possible field types defined in FieldMap.
  * This type is used to constrain field types to only those defined in the field map.
  *
  * This type ensures type safety by only allowing field types that have been
- * explicitly defined in the IFieldMap interface. It prevents typos and ensures
+ * explicitly defined in the FieldMap interface. It prevents typos and ensures
  * that all field types are known and properly configured.
  *
- * @type IFieldType
+ * @type FieldType
  *
  * @example
  * ```typescript
  * // Basic usage - defining a field with a valid type
- * const textField: IFieldBase<"text"> = {
- *   type: "text", // ✓ Valid - "text" is in IFieldMap
+ * const textField: FieldBase<"text"> = {
+ *   type: "text", // ✓ Valid - "text" is in FieldMap
  *   name: "username",
  *   required: true
  * };
  *
- * const emailField: IFieldBase<"email"> = {
- *   type: "email", // ✓ Valid - "email" is in IFieldMap
+ * const emailField: FieldBase<"email"> = {
+ *   type: "email", // ✓ Valid - "email" is in FieldMap
  *   name: "userEmail",
  *   required: true
  * };
@@ -338,10 +997,10 @@ export type IFields = Record<string, IField>;
  * @example
  * ```typescript
  * // Type-safe field type checking
- * function createField<T extends IFieldType>(
+ * function createField<T extends FieldType>(
  *   type: T,
- *   config: Omit<IFieldBase<T>, 'type'>
- * ): IFieldBase<T> {
+ *   config: Omit<FieldBase<T>, 'type'>
+ * ): FieldBase<T> {
  *   return { type, ...config };
  * }
  *
@@ -360,19 +1019,19 @@ export type IFields = Record<string, IField>;
  *
  * // This would cause a TypeScript error:
  * // const invalidField = createField("invalidType", { name: "test" });
- * // Error: "invalidType" is not assignable to IFieldType
+ * // Error: "invalidType" is not assignable to FieldType
  * ```
  *
  * @example
  * ```typescript
  * // Dynamic field type validation
- * function isValidFieldType(type: string): type is IFieldType {
- *   const validTypes: IFieldType[] = ["text", "number", "boolean", "date", "email"];
- *   return validTypes.includes(type as IFieldType);
+ * function isValidFieldType(type: string): type is FieldType {
+ *   const validTypes: FieldType[] = ["text", "number", "boolean", "date", "email"];
+ *   return validTypes.includes(type as FieldType);
  * }
  *
  * // Usage in runtime validation
- * function validateFieldType(input: string): IFieldType {
+ * function validateFieldType(input: string): FieldType {
  *   if (!isValidFieldType(input)) {
  *     throw new Error(`Invalid field type: ${input}. Valid types are: text, number, boolean, date, email`);
  *   }
@@ -384,83 +1043,370 @@ export type IFields = Record<string, IField>;
  * // const invalidType = validateFieldType("invalid"); // ✗ Throws error
  * ```
  */
-export type IFieldType = keyof IFieldMap;
+export type FieldType = keyof FieldMap;
 
 /**
- * A global declaration for all resource names. This is the exported name of the IResourceName type.
- * Represents a type for all resource names.
- * This type is a union of all possible resource names.
- * 
- * @description
- * This interface serves as a map for all resource names.
- * 
- * @example
- * ```typescript
-  import "reslib";
- * declare module "reslib" {
- *   interface IResources {
- *   users : {
- *      actions : {
- *          read: {
- *              label: "Read User",
- *              title: "Click to read a specific user.",
- *          };
- *          create: {
- *              label: "Create User",
- *              title: "Click to create a new user.",
- *          };
- *          update: {
- *              label: "Update User",
- *              title: "Click to update a specific user.",
- *          };
- *          delete: {
- *              label: "Delete User",
- *              title: "Click to delete a specific user.",
- *          };
- *          all: {
- *              label: "All Actions",    
- *              title: "Click to perform all actions on the user.",
- *          };
- *      }
- *    }
- *   }
- * }
- * ```
- * This means that any variable or property with type `IResourceName` can only hold 
- * one of the values 'users', 'roles', or 'sales'.
- * 
- * @example
- * ```typescript
- * let resourceName: IResourceName = 'users'; // valid * let invalidResourceName: IResourceName = 'unknownResource'; // error: Type '"unknownResource"' is not assignable to type 'IResourceName'.
- * ```
- */
-export interface IResources {}
-
-type ValidatedResourceRegistry = {
-  [K in keyof IResources]: ValidateResource<IResources[K]>;
-};
-
-type ValidateResource<T> = T extends IResource ? T : never;
-
-// Helper type to get a specific resource's metadata (validated)
-/**
- * Helper type to get a specific resource's metadata (validated).
- * Ensures that the resource conforms to the IResource interface structure.
+ * ## Resources Interface
  *
- * This type provides type-safe access to resource definitions, ensuring that
- * only valid resources (those defined in IResources) can be accessed and that
- * they conform to the expected IResource structure.
+ * A global interface for defining resource configurations in the application.
+ * This interface serves as a central registry for all available resources and their
+ * metadata, enabling type-safe resource management across the entire codebase.
  *
- * @type GetResource
- * @template ResourceName - The name of the resource to retrieve
+ * ### Purpose
+ * The `Resources` interface is designed for **module augmentation**, allowing developers
+ * to extend it with custom resource definitions. Each key represents a resource name
+ * (e.g., "users", "posts", "products"), and each value must conform to the `ResourceBase` interface,
+ * ensuring consistent structure and type safety for all resource configurations.
  *
- * @example
+ * ### How It Works
+ * - **Empty by Design**: The interface is intentionally empty in the core library.
+ * - **Module Augmentation**: Developers extend it via `declare module` statements.
+ * - **Type Safety**: The `ResourceConfig<T>`, `ResourceName`, and other types use `Resources[K]`
+ *   to enforce that resource configurations match their declared types.
+ * - **Extensibility**: New resources can be added without modifying the core library.
+ *
+ * ### Template Parameters
+ * This interface doesn't use generic parameters itself, but the values must conform to `ResourceBase<Name, DataType, TPrimaryKey, Actions>`.
+ *
+ * ### Examples
+ *
+ * #### Basic Module Augmentation
  * ```typescript
- * // Basic usage - getting a validated resource type
+ * // In your application's types file (e.g., types.ts or global.d.ts)
  * import "reslib";
  *
  * declare module "reslib" {
- *   interface IResources {
+ *   interface Resources {
+ *     // Define a users resource
+ *     users: {
+ *       actions: {
+ *         read: { label: "Read User" };
+ *         create: { label: "Create User" };
+ *         update: { label: "Update User" };
+ *         delete: { label: "Delete User" };
+ *       }
+ *     };
+ *
+ *     // Define a posts resource
+ *     posts: {
+ *       actions: {
+ *         read: { label: "Read Post" };
+ *         create: { label: "Create Post" };
+ *         publish: { label: "Publish Post" };
+ *         archive: { label: "Archive Post" };
+ *       }
+ *     };
+ *   }
+ * }
+ * ```
+ *
+ * #### Advanced Resource Configuration
+ * ```typescript
+ * declare module "reslib" {
+ *   interface Resources {
+ *     // User resource with comprehensive actions
+ *     users: {
+ *       actions: {
+ *         read: { label: "Read User", title: "View user details" };
+ *         create: { label: "Create User", title: "Add new user" };
+ *         update: { label: "Update User", title: "Modify user data" };
+ *         delete: { label: "Delete User", title: "Remove user" };
+ *         activate: { label: "Activate User", title: "Enable user account" };
+ *         deactivate: { label: "Deactivate User", title: "Disable user account" };
+ *         resetPassword: { label: "Reset Password", title: "Send password reset" };
+ *       }
+ *     };
+ *
+ *     // Product resource with inventory management
+ *     products: {
+ *       actions: {
+ *         read: { label: "View Product" };
+ *         create: { label: "Add Product" };
+ *         update: { label: "Edit Product" };
+ *         delete: { label: "Remove Product" };
+ *         restock: { label: "Restock Product" };
+ *         discontinue: { label: "Discontinue Product" };
+ *       }
+ *     };
+ *
+ *     // Order resource with workflow actions
+ *     orders: {
+ *       actions: {
+ *         read: { label: "View Order" };
+ *         create: { label: "Create Order" };
+ *         update: { label: "Update Order" };
+ *         cancel: { label: "Cancel Order" };
+ *         ship: { label: "Ship Order" };
+ *         deliver: { label: "Mark Delivered" };
+ *         refund: { label: "Process Refund" };
+ *       }
+ *     };
+ *   }
+ * }
+ * ```
+ *
+ * #### Using Defined Resources
+ * ```typescript
+ * // After augmentation, you can use type-safe resource operations
+ * import { ResourceConfig, ResourceName, ResourceActions } from "reslib";
+ *
+ * // Type-safe resource access
+ * type UserResource = ResourceConfig<"users">;
+ * type PostResource = ResourceConfig<"posts">;
+ *
+ * // Type-safe action names
+ * type UserActionNames = ResourceActionName<"users">;
+ * // Result: "read" | "create" | "update" | "delete" | "activate" | "deactivate" | "resetPassword"
+ *
+ * // Type-safe action access
+ * type UserActions = ResourceActions<"users">;
+ * // Result: Complete actions record for users resource
+ *
+ * // Runtime usage with type safety
+ * function processUserAction(action: UserActionNames, userId: string) {
+ *   console.log(`Processing ${action} for user ${userId}`);
+ *
+ *   // TypeScript ensures action is a valid user action
+ *   switch (action) {
+ *     case "create":
+ *       return createUser();
+ *     case "activate":
+ *       return activateUser(userId);
+ *     case "resetPassword":
+ *       return resetUserPassword(userId);
+ *     // TypeScript will catch invalid actions
+ *   }
+ * }
+ * ```
+ *
+ * #### Resource Registry Implementation
+ * ```typescript
+ * // Create a type-safe resource registry
+ * class ResourceRegistry {
+ *   private resources = new Map<ResourceName, ResourceConfig<ResourceName>>();
+ *
+ *   register<TResourceName extends ResourceName>(
+ *     name: TResourceName,
+ *     config: ResourceConfig<TResourceName>
+ *   ) {
+ *     this.resources.set(name, config);
+ *   }
+ *
+ *   get<TResourceName extends ResourceName>(
+ *     name: TResourceName
+ *   ): ResourceConfig<TResourceName> | undefined {
+ *     return this.resources.get(name) as ResourceConfig<TResourceName>;
+ *   }
+ *
+ *   getAllActions<TResourceName extends ResourceName>(
+ *     name: TResourceName
+ *   ): ResourceActions<TResourceName> {
+ *     const resource = this.get(name);
+ *     if (!resource) throw new Error(`Resource ${name} not found`);
+ *     return resource.actions;
+ *   }
+ * }
+ *
+ * // Usage
+ * const registry = new ResourceRegistry();
+ *
+ * registry.register("users", {
+ *   actions: {
+ *     read: { label: "Read User" },
+ *     create: { label: "Create User" },
+ *     update: { label: "Update User" }
+ *   }
+ * });
+ *
+ * const userActions = registry.getAllActions("users");
+ * // TypeScript knows this contains only user actions
+ * ```
+ *
+ * #### Permission System Integration
+ * ```typescript
+ * // Define permissions based on resource actions
+ * type Permission<TResourceName extends ResourceName> = {
+ *   resource: TResourceName;
+ *   action: ResourceActionName<TResourceName>;
+ *   granted: boolean;
+ * };
+ *
+ * class PermissionManager {
+ *   private permissions = new Map<string, Permission<ResourceName>>();
+ *
+ *   grant<TResourceName extends ResourceName>(
+ *     resource: TResourceName,
+ *     action: ResourceActionName<TResourceName>
+ *   ) {
+ *     const key = `${resource}:${action}`;
+ *     this.permissions.set(key, { resource, action, granted: true });
+ *   }
+ *
+ *   check<TResourceName extends ResourceName>(
+ *     resource: TResourceName,
+ *     action: ResourceActionName<TResourceName>
+ *   ): boolean {
+ *     const key = `${resource}:${action}`;
+ *     return this.permissions.get(key)?.granted ?? false;
+ *   }
+ * }
+ *
+ * // Usage
+ * const permManager = new PermissionManager();
+ *
+ * permManager.grant("users", "create");
+ * permManager.grant("users", "update");
+ * permManager.grant("posts", "publish");
+ *
+ * // Type-safe permission checks
+ * if (permManager.check("users", "create")) {
+ *   // User can create users
+ * }
+ *
+ * // This would cause a TypeScript error:
+ * // permManager.check("users", "invalidAction"); // ✗ Error: not a valid user action
+ * ```
+ *
+ * ### Best Practices
+ * - **Consistent Naming**: Use lowercase, plural resource names (e.g., "users", "products").
+ * - **Comprehensive Actions**: Define all relevant actions for each resource's lifecycle.
+ * - **Documentation**: Document custom resources and their actions clearly for team members.
+ * - **Versioning**: Consider the impact on existing code when adding new resources or actions.
+ * - **Validation**: Use TypeScript's type system to enforce resource constraints at compile time.
+ *
+ * ### Integration with Other Types
+ * - **ResourceConfig<T>**: Provides type-safe access to individual resource configurations.
+ * - **ResourceName**: Union type of all defined resource names.
+ * - **ResourceActions<T>**: Type-safe access to a resource's actions.
+ * - **ResourceActionName<T>**: Union type of action names for a specific resource.
+ * - **ResourceBase**: The base interface that all resource definitions must implement.
+ *
+ * ### Migration Notes
+ * If you're upgrading from a version where resources were defined differently,
+ * update your module augmentations to use this new structure for better type safety.
+ * Existing code using the old structure may need to be updated to match the new interface.
+ *
+ * @interface Resources
+ * @public
+ * @since 1.0.0
+ * @see {@link ResourceBase} - The base interface that resource definitions must implement
+ * @see {@link ResourceConfig} - How to access individual resource configurations
+ * @see {@link ResourceName} - The union type of all defined resource names
+ * @see {@link ResourceActions} - How to access resource actions with type safety
+ * @example
+ * ```typescript
+ * // Complete example of extending Resources
+ * declare module "reslib" {
+ *   interface Resources {
+ *     // User management resource
+ *     users: {
+ *       actions: {
+ *         read: { label: "Read User" };
+ *         create: { label: "Create User" };
+ *         update: { label: "Update User" };
+ *         delete: { label: "Delete User" };
+ *         activate: { label: "Activate User" };
+ *         deactivate: { label: "Deactivate User" };
+ *       }
+ *     };
+ *
+ *     // Content management resource
+ *     posts: {
+ *       actions: {
+ *         read: { label: "Read Post" };
+ *         create: { label: "Create Post" };
+ *         update: { label: "Update Post" };
+ *         delete: { label: "Delete Post" };
+ *         publish: { label: "Publish Post" };
+ *         archive: { label: "Archive Post" };
+ *       }
+ *     };
+ *
+ *     // E-commerce resource
+ *     products: {
+ *       actions: {
+ *         read: { label: "View Product" };
+ *         create: { label: "Add Product" };
+ *         update: { label: "Edit Product" };
+ *         delete: { label: "Remove Product" };
+ *         restock: { label: "Restock Product" };
+ *         discontinue: { label: "Discontinue Product" };
+ *       }
+ *     };
+ *
+ *     // Order management resource
+ *     orders: {
+ *       actions: {
+ *         read: { label: "View Order" };
+ *         create: { label: "Create Order" };
+ *         update: { label: "Update Order" };
+ *         cancel: { label: "Cancel Order" };
+ *         ship: { label: "Ship Order" };
+ *         deliver: { label: "Mark Delivered" };
+ *         refund: { label: "Process Refund" };
+ *       }
+ *     };
+ *   }
+ * }
+ *
+ * // Usage examples with type safety
+ * type UserResource = ResourceConfig<"users">;
+ * type UserActions = ResourceActionName<"users">;
+ *
+ * function handleUserAction(action: UserActions, userId: string) {
+ *   // TypeScript ensures action is a valid user action
+ *   console.log(`Handling ${action} for user ${userId}`);
+ * }
+ *
+ * // Valid usage
+ * handleUserAction("create", "123");
+ * handleUserAction("activate", "456");
+ *
+ * // Invalid usage (TypeScript error)
+ * // handleUserAction("invalidAction", "123"); // ✗ Error
+ * ```
+ */
+export interface Resources {}
+
+type ValidatedResources = {
+  [K in keyof Resources]: ValidateResource<Resources[K]>;
+};
+
+type ValidateResource<T> = T extends ResourceBase ? T : never;
+
+/**
+ * ## ResourceName Type
+ *
+ * A union type representing all valid resource names defined in the global Resources interface.
+ * This type provides compile-time safety by ensuring that only resources that have been
+ * properly defined and validated can be referenced throughout the application.
+ *
+ * ### Purpose
+ * The `ResourceName` type serves as the foundation for type-safe resource operations by
+ * creating a union of all resource names that have been defined via module augmentation.
+ * It ensures that developers can only reference resources that actually exist and conform
+ * to the expected structure, preventing typos and invalid resource references.
+ *
+ * ### How It Works
+ * - **Module Augmentation**: Resources are defined by extending the `Resources` interface
+ * - **Validation**: `ValidatedResources` ensures each resource implements `ResourceBase`
+ * - **Key Extraction**: `keyof ValidatedResources` creates a union of all valid resource names
+ * - **Type Safety**: Any operation using `ResourceName` is guaranteed to reference a valid resource
+ *
+ * ### Type Construction
+ * ```typescript
+ * ResourceName = keyof ValidatedResources
+ * ```
+ *
+ * Where `ValidatedResources` maps each resource to its validated configuration.
+ *
+ * ### Examples
+ *
+ * #### Basic Resource Definition and Usage
+ * ```typescript
+ * // Define resources via module augmentation
+ * declare module "reslib" {
+ *   interface Resources {
  *     users: {
  *       actions: {
  *         read: { label: "Read User" };
@@ -471,61 +1417,77 @@ type ValidateResource<T> = T extends IResource ? T : never;
  *     posts: {
  *       actions: {
  *         read: { label: "Read Post" };
+ *         create: { label: "Create Post" };
  *         publish: { label: "Publish Post" };
+ *       }
+ *     };
+ *     products: {
+ *       actions: {
+ *         read: { label: "View Product" };
+ *         create: { label: "Add Product" };
+ *         update: { label: "Edit Product" };
  *       }
  *     };
  *   }
  * }
  *
- * // Type-safe resource access
- * type UserResource = GetResource<"users">;
- * // Result: The validated users resource with proper typing
+ * // ResourceName automatically becomes: "users" | "posts" | "products"
+ * type AvailableResources = ResourceName; // "users" | "posts" | "products"
  *
- * type PostResource = GetResource<"posts">;
- * // Result: The validated posts resource with proper typing
- * ```
- *
- * @example
- * ```typescript
- * // Using with resource functions
- * function processResource<ResourceName extends IResourceName>(
- *   resourceName: ResourceName,
- *   data: GetResource<ResourceName>
- * ) {
- *   // TypeScript knows the exact structure of data based on resourceName
- *   console.log(`Processing ${resourceName}:`, data.actions);
+ * // Type-safe resource operations
+ * function getResourceConfig(name: ResourceName): ResourceConfig<ResourceName> {
+ *   // TypeScript ensures name is a valid resource
+ *   return getResourceConfiguration(name);
  * }
  *
- * // Usage
- * const userResource: GetResource<"users"> = {
- *   actions: {
- *     read: { label: "Read User" },
- *     create: { label: "Create User" },
- *     update: { label: "Update User" }
- *   }
- * };
- *
- * processResource("users", userResource); // ✓ Valid
- * // processResource("invalid", userResource); // ✗ TypeScript error
+ * getResourceConfig("users");    // ✓ Valid
+ * getResourceConfig("posts");    // ✓ Valid
+ * getResourceConfig("products"); // ✓ Valid
+ * // getResourceConfig("invalid"); // ✗ TypeScript error
  * ```
  *
- * @example
+ * #### Generic Functions with Resource Names
  * ```typescript
- * // Advanced usage - resource registry
- * class ResourceRegistry {
- *   private resources = new Map<IResourceName, GetResource<IResourceName>>();
+ * // Generic function that works with any resource
+ * function createResourceHandler<T extends ResourceName>(resourceName: T) {
+ *   return {
+ *     name: resourceName,
+ *     config: {} as ResourceConfig<T>,
+ *     actions: [] as ResourceActionName<T>[]
+ *   };
+ * }
  *
- *   register<ResourceName extends IResourceName>(
- *     name: ResourceName,
- *     resource: GetResource<ResourceName>
- *   ) {
- *     this.resources.set(name, resource);
+ * // Usage with type safety
+ * const userHandler = createResourceHandler("users");
+ * // TypeScript knows this is specifically for users
+ *
+ * const postHandler = createResourceHandler("posts");
+ * // TypeScript knows this is specifically for posts
+ * ```
+ *
+ * #### Resource Registry with Type Safety
+ * ```typescript
+ * // Type-safe resource registry
+ * class ResourceRegistry {
+ *   private resources = new Map<ResourceName, ResourceConfig<ResourceName>>();
+ *
+ *   register<T extends ResourceName>(
+ *     name: T,
+ *     config: ResourceConfig<T>
+ *   ): void {
+ *     this.resources.set(name, config);
  *   }
  *
- *   get<ResourceName extends IResourceName>(
- *     name: ResourceName
- *   ): GetResource<ResourceName> | undefined {
- *     return this.resources.get(name) as GetResource<ResourceName>;
+ *   get<T extends ResourceName>(name: T): ResourceConfig<T> | undefined {
+ *     return this.resources.get(name) as ResourceConfig<T> | undefined;
+ *   }
+ *
+ *   has(name: ResourceName): boolean {
+ *     return this.resources.has(name);
+ *   }
+ *
+ *   getAllResourceNames(): ResourceName[] {
+ *     return Array.from(this.resources.keys());
  *   }
  * }
  *
@@ -539,14 +1501,530 @@ type ValidateResource<T> = T extends IResource ? T : never;
  *   }
  * });
  *
- * const userResource = registry.get("users");
- * // TypeScript knows userResource has the users resource structure
+ * registry.register("posts", {
+ *   actions: {
+ *     read: { label: "Read Post" },
+ *     create: { label: "Create Post" }
+ *   }
+ * });
+ *
+ * // Type-safe access
+ * const userConfig = registry.get("users"); // ResourceConfig<"users">
+ * const postConfig = registry.get("posts"); // ResourceConfig<"posts">
+ * ```
+ *
+ * #### Permission System with Resource Names
+ * ```typescript
+ * // Permission type using ResourceName
+ * type ResourcePermission = {
+ *   resource: ResourceName;
+ *   action: string; // Could be ResourceActionName<ResourceName> for full type safety
+ *   granted: boolean;
+ * };
+ *
+ * class PermissionManager {
+ *   private permissions = new Map<string, ResourcePermission>();
+ *
+ *   grantPermission(resource: ResourceName, action: string): void {
+ *     const key = `${resource}:${action}`;
+ *     this.permissions.set(key, { resource, action, granted: true });
+ *   }
+ *
+ *   checkPermission(resource: ResourceName, action: string): boolean {
+ *     const key = `${resource}:${action}`;
+ *     return this.permissions.get(key)?.granted ?? false;
+ *   }
+ *
+ *   getAllPermissionsForResource(resource: ResourceName): ResourcePermission[] {
+ *     return Array.from(this.permissions.values())
+ *       .filter(perm => perm.resource === resource);
+ *   }
+ * }
+ *
+ * // Usage
+ * const permManager = new PermissionManager();
+ *
+ * permManager.grantPermission("users", "read");
+ * permManager.grantPermission("users", "create");
+ * permManager.grantPermission("posts", "read");
+ *
+ * permManager.checkPermission("users", "read");    // true
+ * permManager.checkPermission("users", "delete");  // false
+ * permManager.checkPermission("invalid", "read");  // ✗ TypeScript error
+ * ```
+ *
+ * #### API Route Generation
+ * ```typescript
+ * // Generate API routes for all defined resources
+ * function generateApiRoutes(resources: ResourceName[]): string[] {
+ *   const routes: string[] = [];
+ *
+ *   for (const resource of resources) {
+ *     routes.push(`/api/${resource}`);
+ *     routes.push(`/api/${resource}/:id`);
+ *   }
+ *
+ *   return routes;
+ * }
+ *
+ * // Usage
+ * const allRoutes = generateApiRoutes(["users", "posts", "products"]);
+ * // Result: ["/api/users", "/api/users/:id", "/api/posts", "/api/posts/:id", ...]
+ * ```
+ *
+ * ### Best Practices
+ * - **Module Augmentation**: Always define resources via `declare module` to extend the `Resources` interface
+ * - **Consistent Naming**: Use lowercase, plural resource names (e.g., "users", "products", "orders")
+ * - **Type Constraints**: Use `T extends ResourceName` in generic functions for type safety
+ * - **Validation**: Resources must implement `ResourceBase` to be included in `ResourceName`
+ * - **Documentation**: Document custom resources and their purposes for team members
+ *
+ * ### Integration with Other Types
+ * - **`Resources`**: The global interface that defines all resource configurations
+ * - **`ResourceConfig<T>`**: Provides type-safe access to individual resource configurations
+ * - **`ResourceActionName<T>`**: Union type of action names for a specific resource
+ * - **`ResourceActions<T>`**: Type-safe access to a resource's actions
+ * - **`ResourceBase`**: The base interface that all resources must implement
+ *
+ * ### Migration Notes
+ * When adding new resources, ensure they are defined via module augmentation of the `Resources`
+ * interface. The `ResourceName` type will automatically include new resources without requiring
+ * code changes elsewhere. Existing code using string literals for resource names can be updated
+ * to use `ResourceName` for better type safety.
+ *
+ * @type ResourceName
+ * @public
+ * @since 1.0.0
+ * @see {@link Resources} - The global interface defining all resource configurations
+ * @see {@link ResourceConfig} - How to access individual resource configurations
+ * @see {@link ResourceActionName} - Action names for specific resources
+ * @example
+ * ```typescript
+ * // Complete example of using ResourceName for type safety
+ * import "reslib";
+ *
+ * declare module "reslib" {
+ *   interface Resources {
+ *     users: {
+ *       actions: {
+ *         read: { label: "Read User" };
+ *         create: { label: "Create User" };
+ *         update: { label: "Update User" };
+ *         delete: { label: "Delete User" };
+ *       };
+ *       permissions: {
+ *         adminOnly: string[];
+ *         publicAccess: string[];
+ *       };
+ *     };
+ *
+ *     posts: {
+ *       actions: {
+ *         read: { label: "Read Post" };
+ *         create: { label: "Create Post" };
+ *         publish: { label: "Publish Post" };
+ *         archive: { label: "Archive Post" };
+ *       };
+ *       categories: string[];
+ *     };
+ *
+ *     products: {
+ *       actions: {
+ *         read: { label: "View Product" };
+ *         create: { label: "Add Product" };
+ *         update: { label: "Edit Product" };
+ *         discontinue: { label: "Discontinue Product" };
+ *       };
+ *       pricing: {
+ *         currency: string;
+ *         taxRate: number;
+ *       };
+ *     };
+ *   }
+ * }
+ *
+ * // ResourceName is automatically: "users" | "posts" | "products"
+ * type AvailableResources = ResourceName;
+ *
+ * // Type-safe resource operations
+ * function processResource<T extends ResourceName>(name: T) {
+ *   console.log(`Processing resource: ${name}`);
+ *
+ *   // TypeScript knows the exact configuration available
+ *   const config = {} as ResourceConfig<T>;
+ *
+ *   // TypeScript knows the exact actions available
+ *   const actions = [] as ResourceActionName<T>[];
+ *
+ *   return { name, config, actions };
+ * }
+ *
+ * // Usage with full type safety
+ * const userProcessor = processResource("users");
+ * // userProcessor.name: "users"
+ * // userProcessor.config: ResourceConfig<"users">
+ * // userProcessor.actions: ResourceActionName<"users">[]
+ *
+ * const postProcessor = processResource("posts");
+ * // postProcessor.name: "posts"
+ * // postProcessor.config: ResourceConfig<"posts">
+ * // postProcessor.actions: ResourceActionName<"posts">[]
+ *
+ * // Invalid usage (TypeScript errors)
+ * // processResource("invalidResource"); // ✗ Error: not in ResourceName
  * ```
  */
-export type GetResource<ResourceName extends IResourceName> =
-  ValidatedResourceRegistry[ResourceName];
+export type ResourceName = keyof ValidatedResources;
 
-export type IResourceName = keyof ValidatedResourceRegistry;
+/**
+ * ## ResourceConfig Type
+ *
+ * A type-safe accessor for individual resource configurations from the global Resources interface.
+ * This type provides compile-time guarantees that resource configurations conform to the expected structure
+ * and enables type-safe operations on specific resources throughout the application.
+ *
+ * ### Purpose
+ * The `ResourceConfig` type serves as a bridge between the global `Resources` interface and individual
+ * resource operations. It ensures that when you reference a specific resource by name, you get the
+ * exact configuration defined for that resource, with full type safety and IntelliSense support.
+ *
+ * ### How It Works
+ * This type uses TypeScript's indexed access types to extract the configuration for a specific resource:
+ *
+ * 1. **Type Validation**: Leverages `ValidatedResources` to ensure the resource configuration
+ *    implements the `ResourceBase` interface
+ * 2. **Indexed Access**: Uses `ValidatedResources[TResourceName]` to extract the specific resource config
+ * 3. **Type Safety**: Provides compile-time guarantees about the structure and available actions
+ * 4. **Extensibility**: Automatically reflects changes when new resources are added via module augmentation
+ *
+ * ### Template Parameters
+ * - **TResourceName**: The name of the resource (must be a key of the Resources interface).
+ *   This parameter is constrained to `ResourceName`, ensuring only defined resources can be accessed.
+ *
+ * ### Type Construction
+ * ```typescript
+ * ResourceConfig<TResourceName> = ValidatedResources[TResourceName]
+ * ```
+ *
+ * Where `ValidatedResources` ensures each resource configuration extends `ResourceBase`.
+ *
+ * ### Examples
+ *
+ * #### Basic Resource Access
+ * ```typescript
+ * // After defining resources via module augmentation
+ * declare module "reslib" {
+ *   interface Resources {
+ *     users: {
+ *       actions: {
+ *         read: { label: "Read User" };
+ *         create: { label: "Create User" };
+ *         update: { label: "Update User" };
+ *       }
+ *     };
+ *     posts: {
+ *       actions: {
+ *         read: { label: "Read Post" };
+ *         create: { label: "Create Post" };
+ *         publish: { label: "Publish Post" };
+ *       }
+ *     };
+ *   }
+ * }
+ *
+ * // Type-safe access to resource configurations
+ * type UserConfig = ResourceConfig<"users">;
+ * // Result: The complete configuration object for the users resource
+ *
+ * type PostConfig = ResourceConfig<"posts">;
+ * // Result: The complete configuration object for the posts resource
+ * ```
+ *
+ * #### Type-Safe Resource Operations
+ * ```typescript
+ * // Function that works with any resource configuration
+ * function createResourceHandler<TResourceName extends ResourceName>(
+ *   resourceName: TResourceName,
+ *   config: ResourceConfig<TResourceName>
+ * ) {
+ *   console.log(`Setting up handlers for ${resourceName}`);
+ *
+ *   // TypeScript knows the exact actions available for this resource
+ *   for (const actionName in config.actions) {
+ *     console.log(`Action: ${actionName}`);
+ *     // actionName is typed as keyof config.actions
+ *   }
+ *
+ *   return {
+ *     getConfig: (): ResourceConfig<TResourceName> => config,
+ *     getActionNames: (): (keyof ResourceConfig<TResourceName>['actions'])[] => {
+ *       return Object.keys(config.actions) as (keyof ResourceConfig<TResourceName>['actions'])[];
+ *     }
+ *   };
+ * }
+ *
+ * // Usage with type safety
+ * const userHandler = createResourceHandler("users", {
+ *   actions: {
+ *     read: { label: "Read User" },
+ *     create: { label: "Create User" },
+ *     update: { label: "Update User" }
+ *   }
+ * });
+ *
+ * // TypeScript ensures only valid user actions are used
+ * const userActions = userHandler.getActionNames();
+ * // Result: ("read" | "create" | "update")[]
+ * ```
+ *
+ * #### Resource Registry with Type Safety
+ * ```typescript
+ * // Type-safe resource registry
+ * class ResourceRegistry {
+ *   private resources = new Map<ResourceName, ResourceConfig<ResourceName>>();
+ *
+ *   register<TResourceName extends ResourceName>(
+ *     name: TResourceName,
+ *     config: ResourceConfig<TResourceName>
+ *   ) {
+ *     this.resources.set(name, config);
+ *   }
+ *
+ *   get<TResourceName extends ResourceName>(
+ *     name: TResourceName
+ *   ): ResourceConfig<TResourceName> | undefined {
+ *     return this.resources.get(name) as ResourceConfig<TResourceName> | undefined;
+ *   }
+ *
+ *   getAllActions<TResourceName extends ResourceName>(
+ *     name: TResourceName
+ *   ): ResourceConfig<TResourceName>['actions'] {
+ *     const resource = this.get(name);
+ *     if (!resource) throw new Error(`Resource ${name} not found`);
+ *     return resource.actions;
+ *   }
+ * }
+ *
+ * // Usage
+ * const registry = new ResourceRegistry();
+ *
+ * registry.register("users", {
+ *   actions: {
+ *     read: { label: "Read User" },
+ *     create: { label: "Create User" },
+ *     update: { label: "Update User" }
+ *   }
+ * });
+ *
+ * const userConfig = registry.get("users");
+ * // TypeScript knows this is ResourceConfig<"users">
+ *
+ * const userActions = registry.getAllActions("users");
+ * // TypeScript knows this contains only user actions
+ * ```
+ *
+ * #### Advanced Configuration with Custom Properties
+ * ```typescript
+ * // Resources with additional configuration properties
+ * declare module "reslib" {
+ *   interface Resources {
+ *     users: {
+ *       actions: {
+ *         read: { label: "Read User" };
+ *         create: { label: "Create User" };
+ *         update: { label: "Update User" };
+ *       };
+ *       // Custom properties
+ *       permissions: {
+ *         adminOnly: string[];
+ *         publicAccess: string[];
+ *       };
+ *       validationRules: {
+ *         passwordMinLength: number;
+ *         requireEmailVerification: boolean;
+ *       };
+ *     };
+ *   }
+ * }
+ *
+ * // Type-safe access to custom properties
+ * function configureUserResource(config: ResourceConfig<"users">) {
+ *   // TypeScript knows about custom properties
+ *   console.log("Admin actions:", config.permissions.adminOnly);
+ *   console.log("Password min length:", config.validationRules.passwordMinLength);
+ *
+ *   // Standard actions are still available
+ *   const actions = config.actions;
+ *   // actions is typed with user-specific actions
+ * }
+ *
+ * const userConfig: ResourceConfig<"users"> = {
+ *   actions: {
+ *     read: { label: "Read User" },
+ *     create: { label: "Create User" },
+ *     update: { label: "Update User" }
+ *   },
+ *   permissions: {
+ *     adminOnly: ["delete", "ban"],
+ *     publicAccess: ["read", "create"]
+ *   },
+ *   validationRules: {
+ *     passwordMinLength: 8,
+ *     requireEmailVerification: true
+ *   }
+ * };
+ *
+ * configureUserResource(userConfig);
+ * ```
+ *
+ * #### Generic Resource Processing
+ * ```typescript
+ * // Generic function that processes any resource
+ * function processResource<TResourceName extends ResourceName>(
+ *   name: TResourceName,
+ *   config: ResourceConfig<TResourceName>,
+ *   processor: (config: ResourceConfig<TResourceName>) => void
+ * ) {
+ *   console.log(`Processing resource: ${name}`);
+ *   processor(config);
+ * }
+ *
+ * // Usage with different resources
+ * processResource("users", userConfig, (config) => {
+ *   // config is typed as ResourceConfig<"users">
+ *   console.log("User actions:", Object.keys(config.actions));
+ * });
+ *
+ * processResource("posts", postConfig, (config) => {
+ *   // config is typed as ResourceConfig<"posts">
+ *   console.log("Post actions:", Object.keys(config.actions));
+ * });
+ * ```
+ *
+ * ### Best Practices
+ * - **Type Constraints**: Always use `TResourceName extends ResourceName` to constrain resource names
+ * - **Generic Functions**: Use generics to create reusable functions that work with any resource type
+ * - **Module Augmentation**: Define resources via module augmentation for better organization
+ * - **Type Safety**: Leverage TypeScript's inference to avoid manual type assertions
+ * - **Consistent Naming**: Use lowercase, plural resource names (e.g., "users", "products")
+ * - **Documentation**: Document custom resource properties for team members
+ *
+ * ### Integration with Other Types
+ * - **`Resources`**: The global interface that `ResourceConfig` accesses
+ * - **`ResourceName`**: Union type of all defined resource names
+ * - **`ResourceActions<TResourceName>`**: Type-safe access to a resource's actions
+ * - **`ResourceActionName<TResourceName>`**: Union type of action names for a specific resource
+ * - **`ResourceBase`**: The base interface that all resource configurations must implement
+ *
+ * ### Migration Notes
+ * When upgrading from direct resource object usage, replace explicit types with `ResourceConfig<TResourceName>`
+ * to gain type safety and automatic updates when resource definitions change. The type provides the same
+ * runtime behavior while adding compile-time guarantees.
+ *
+ * @type ResourceConfig
+ * @template TResourceName - The name of the resource (must be a key of Resources)
+ * @public
+ * @since 1.0.0
+ * @see {@link Resources} - The global interface defining all resource configurations
+ * @see {@link ResourceName} - Union type of all defined resource names
+ * @see {@link ResourceActions} - How to access resource actions with type safety
+ * @see {@link ResourceBase} - The base interface that resource definitions must implement
+ * @example
+ * ```typescript
+ * // Complete example of using ResourceConfig
+ * import "reslib";
+ *
+ * declare module "reslib" {
+ *   interface Resources {
+ *     users: {
+ *       actions: {
+ *         read: { label: "Read User" };
+ *         create: { label: "Create User" };
+ *         update: { label: "Update User" };
+ *         delete: { label: "Delete User" };
+ *       };
+ *       permissions: {
+ *         adminOnly: string[];
+ *         publicAccess: string[];
+ *       };
+ *     };
+ *
+ *     products: {
+ *       actions: {
+ *         read: { label: "View Product" };
+ *         create: { label: "Add Product" };
+ *         update: { label: "Edit Product" };
+ *         discontinue: { label: "Discontinue Product" };
+ *       };
+ *       categories: string[];
+ *       pricing: {
+ *         currency: string;
+ *         taxRate: number;
+ *       };
+ *     };
+ *   }
+ * }
+ *
+ * // Type-safe resource configuration access
+ * type UserConfig = ResourceConfig<"users">;
+ * type ProductConfig = ResourceConfig<"products">;
+ *
+ * // Function that works with any resource configuration
+ * function setupResource<TResourceName extends ResourceName>(
+ *   name: TResourceName,
+ *   config: ResourceConfig<TResourceName>
+ * ) {
+ *   console.log(`Setting up ${name} resource`);
+ *
+ *   // Access standard properties
+ *   const actions = Object.keys(config.actions);
+ *   console.log(`Available actions: ${actions.join(', ')}`);
+ *
+ *   // Access resource-specific properties with type safety
+ *   if (name === "users") {
+ *     const userConfig = config as ResourceConfig<"users">;
+ *     console.log(`Admin actions: ${userConfig.permissions.adminOnly.join(', ')}`);
+ *   } else if (name === "products") {
+ *     const productConfig = config as ResourceConfig<"products">;
+ *     console.log(`Categories: ${productConfig.categories.join(', ')}`);
+ *     console.log(`Currency: ${productConfig.pricing.currency}`);
+ *   }
+ * }
+ *
+ * // Usage examples
+ * const userResource: ResourceConfig<"users"> = {
+ *   actions: {
+ *     read: { label: "Read User" },
+ *     create: { label: "Create User" },
+ *     update: { label: "Update User" },
+ *     delete: { label: "Delete User" }
+ *   },
+ *   permissions: {
+ *     adminOnly: ["delete"],
+ *     publicAccess: ["read", "create"]
+ *   }
+ * };
+ *
+ * const productResource: ResourceConfig<"products"> = {
+ *   actions: {
+ *     read: { label: "View Product" },
+ *     create: { label: "Add Product" },
+ *     update: { label: "Edit Product" },
+ *     discontinue: { label: "Discontinue Product" }
+ *   },
+ *   categories: ["electronics", "clothing", "books"],
+ *   pricing: {
+ *     currency: "USD",
+ *     taxRate: 0.08
+ *   }
+ * };
+ *
+ * setupResource("users", userResource);
+ * setupResource("products", productResource);
+ * ```
+ */
+export type ResourceConfig<TResourceName extends ResourceName> =
+  ValidatedResources[TResourceName];
 
 /**
  * Type representing the action names for a specific resource.
@@ -556,8 +2034,8 @@ export type IResourceName = keyof ValidatedResourceRegistry;
  * for a specific resource can be used. It preserves literal types, enabling better
  * autocomplete and error detection.
  *
- * @type IResourceActionName
- * @template ResourceName - The name of the resource (optional, defaults to all resources)
+ * @type ResourceActionName
+ * @template TResourceName - The name of the resource (optional, defaults to all resources)
  *
  * @example
  * ```typescript
@@ -565,7 +2043,7 @@ export type IResourceName = keyof ValidatedResourceRegistry;
  * import "reslib";
  *
  * declare module "reslib" {
- *   interface IResources {
+ *   interface Resources {
  *     users: {
  *       actions: {
  *         read: { label: "Read User" };
@@ -578,7 +2056,7 @@ export type IResourceName = keyof ValidatedResourceRegistry;
  * }
  *
  * // Type-safe action names for users resource
- * type UserActionName = IResourceActionName<"users">;
+ * type UserActionName = ResourceActionName<"users">;
  * // Result: "read" | "create" | "update" | "archive"
  *
  * function performUserAction(action: UserActionName) {
@@ -593,13 +2071,13 @@ export type IResourceName = keyof ValidatedResourceRegistry;
  * @example
  * ```typescript
  * // Generic function with resource-specific actions
- * function createActionHandler<ResourceName extends IResourceName>(
- *   resourceName: ResourceName,
- *   actionName: IResourceActionName<ResourceName>
+ * function createActionHandler<TResourceName extends ResourceName>(
+ *   resourceName: TResourceName,
+ *   actionName: ResourceActionName<TResourceName>
  * ) {
  *   return {
  *     execute: () => console.log(`Executing ${actionName} on ${resourceName}`),
- *     getActionName: (): IResourceActionName<ResourceName> => actionName
+ *     getActionName: (): ResourceActionName<TResourceName> => actionName
  *   };
  * }
  *
@@ -612,24 +2090,24 @@ export type IResourceName = keyof ValidatedResourceRegistry;
  *
  * // This would cause a TypeScript error:
  * // const invalidHandler = createActionHandler("users", "delete");
- * // Error: "delete" is not assignable to IResourceActionName<"users">
+ * // Error: "delete" is not assignable to ResourceActionName<"users">
  * ```
  *
  * @example
  * ```typescript
  * // Runtime action validation
- * function isValidAction<ResourceName extends IResourceName>(
- *   resourceName: ResourceName,
+ * function isValidAction<TResourceName extends ResourceName>(
+ *   resourceName: TResourceName,
  *   actionName: string
- * ): actionName is IResourceActionName<ResourceName> {
+ * ): actionName is ResourceActionName<TResourceName> {
  *   // This would typically check against the resource's defined actions
  *   const validActions = getResourceActions(resourceName);
- *   return validActions.includes(actionName as IResourceActionName<ResourceName>);
+ *   return validActions.includes(actionName as ResourceActionName<TResourceName>);
  * }
  *
  * // Usage
  * if (isValidAction("users", "read")) {
- *   // TypeScript now knows actionName is IResourceActionName<"users">
+ *   // TypeScript now knows actionName is ResourceActionName<"users">
  *   const handler = createActionHandler("users", "read");
  * }
  * ```
@@ -637,11 +2115,11 @@ export type IResourceName = keyof ValidatedResourceRegistry;
  * @example
  * ```typescript
  * // Action name arrays with type safety
- * function getAllActionNames<ResourceName extends IResourceName>(
- *   resourceName: ResourceName
- * ): IResourceActionName<ResourceName>[] {
+ * function getAllActionNames<TResourceName extends ResourceName>(
+ *   resourceName: TResourceName
+ * ): ResourceActionName<TResourceName>[] {
  *   // Implementation would return all action names for the resource
- *   return [] as IResourceActionName<ResourceName>[];
+ *   return [] as ResourceActionName<TResourceName>[];
  * }
  *
  * // Usage
@@ -649,111 +2127,109 @@ export type IResourceName = keyof ValidatedResourceRegistry;
  * // TypeScript knows userActions contains only valid user action names
  *
  * userActions.forEach(action => {
- *   // action is typed as IResourceActionName<"users">
+ *   // action is typed as ResourceActionName<"users">
  *   console.log(`User action: ${action}`);
  * });
  * ```
  */
-export type IResourceActionName<
-  ResourceName extends IResourceName = IResourceName,
-> = IResourceGetActionNames<GetResource<ResourceName>>;
+export type ResourceActionName<
+  TResourceName extends ResourceName = ResourceName,
+> = GetResourceActionNames<ResourceConfig<TResourceName>>;
 
 /**
- * @interface IResourceActionTuple
+ * @interface ResourceActionTuple
  * Represents a tuple that contains a resource name and an action name.
- * This type is a union of two possible tuple formats: `IResourceActionTupleArray` and `IResourceActionTupleObject`.
+ * This type is a union of two possible tuple formats: `ResourceActionTupleArray` and `ResourceActionTupleObject`.
  *
- * @template ResourceName - The name of the resource. Defaults to `IResourceName`.
+ * @template TResourceName - The name of the resource. Defaults to `ResourceName`.
  *
  * @example
  * ```typescript
- * // Using IResourceActionTupleArray
- * const actionTuple: IResourceActionTuple = ["users", "read"];
+ * // Using ResourceActionTupleArray
+ * const actionTuple: ResourceActionTuple = ["users", "read"];
  *
- * // Using IResourceActionTupleObject
- * const actionTuple: IResourceActionTuple = { resourceName: "users", action: "read" };
+ * // Using ResourceActionTupleObject
+ * const actionTuple: ResourceActionTuple = { resourceName: "users", action: "read" };
  * ```
  *
- * @typeParam ResourceName - The name of the resource.
- * @default IResourceName
+ * @typeParam TResourceName - The name of the resource.
+ * @default ResourceName
  *
- * @typedef {(IResourceActionTupleArray<ResourceName> | IResourceActionTupleObject<ResourceName>)} IResourceActionTuple
+ * @typedef {(ResourceActionTupleArray<TResourceName> | ResourceActionTupleObject<TResourceName>)} ResourceActionTuple
  *
- * @see {@link IResourceActionTupleArray} for the `IResourceActionTupleArray` type.
- * @see {@link IResourceActionTupleObject} for the `IResourceActionTupleObject` type.
+ * @see {@link ResourceActionTupleArray} for the `ResourceActionTupleArray` type.
+ * @see {@link ResourceActionTupleObject} for the `ResourceActionTupleObject` type.
  */
-export type IResourceActionTuple<ResourceName extends IResourceName> =
-  | IResourceActionTupleArray<ResourceName>
-  | IResourceActionTupleObject<ResourceName>;
+export type ResourceActionTuple<TResourceName extends ResourceName> =
+  | ResourceActionTupleArray<TResourceName>
+  | ResourceActionTupleObject<TResourceName>;
 
 /**
- * @interface IResourceActionTupleArray
+ * @interface ResourceActionTupleArray
  * Represents a tuple that contains a resource name and an action name in an array format.
  * This type is a tuple with two elements: the resource name and the action name.
  *
- * @template ResourceName - The name of the resource. Defaults to `IResourceName`.
+ * @template TResourceName - The name of the resource. Defaults to `ResourceName`.
  *
  * @example
  * ```typescript
- * const actionTuple: IResourceActionTupleArray = ["users", "read"];
+ * const actionTuple: ResourceActionTupleArray = ["users", "read"];
  * ```
  *
- * @typeParam ResourceName - The name of the resource.
- * @default IResourceName
+ * @typeParam TResourceName - The name of the resource.
+ * @default ResourceName
  *
- * @typedef {[ResourceName, IResourceActionName<ResourceName>]} IResourceActionTupleArray
+ * @typedef {[TResourceName, ResourceActionName<TResourceName>]} ResourceActionTupleArray
  */
-export type IResourceActionTupleArray<ResourceName extends IResourceName> = [
+export type ResourceActionTupleArray<TResourceName extends ResourceName> = [
   /**
    * The name of the resource.
    *
-   * @type {ResourceName}
+   * @type {TResourceName}
    */
-  ResourceName,
+  TResourceName,
   /**
    * The name of the action.
    *
-   * @type {IResourceActionName<ResourceName>}
+   * @type {ResourceActionName<TResourceName>}
    */
-  IResourceActionName<ResourceName>,
+  ResourceActionName<TResourceName>,
 ];
 
 /**
- * @interface IResourceActionTupleObject
+ * @interface ResourceActionTupleObject
  * Represents a tuple that contains a resource name and an action name in an object format.
  * This type is an object with two properties: `resourceName` and `action`.
  *
- * @template ResourceName - The name of the resource. Defaults to `IResourceName`.
+ * @template TResourceName - The name of the resource. Defaults to `ResourceName`.
  *
  * @example
  * ```typescript
- * const actionTuple: IResourceActionTupleObject = { resourceName: "users", action: "read" };
+ * const actionTuple: ResourceActionTupleObject = { resourceName: "users", action: "read" };
  * ```
  *
- * @typeParam ResourceName - The name of the resource.
- * @default IResourceName
+ * @typeParam TResourceName - The name of the resource.
+ * @default ResourceName
  *
- * @interface IResourceActionTupleObject
+ * @interface ResourceActionTupleObject
  */
-export interface IResourceActionTupleObject<
-  ResourceName extends IResourceName,
-> {
+export interface ResourceActionTupleObject<TResourceName extends ResourceName> {
   /**
    * The name of the resource.
    *
-   * @type {ResourceName}
+   * @type {TResourceName}
    */
-  resourceName: ResourceName;
+  resourceName: TResourceName;
 
   /**
    * The name of the action.
    *
-   * @type {IResourceActionName<ResourceName>}
+   * @type {ResourceActionName<TResourceName>}
    */
-  action: IResourceActionName<ResourceName>;
+  action: ResourceActionName<TResourceName>;
 }
 /**
- * @interface IResourceAction
+ * @interface ResourceAction
  *
  * Represents the structure of an action that can be performed on a resource within the application.
  * This interface defines the essential properties that describe the action, allowing for a
@@ -771,17 +2247,17 @@ export interface IResourceActionTupleObject<
  *
  * ### Example Usage
  *
- * Here is an example of how the `IResourceAction` interface can be utilized:
+ * Here is an example of how the `ResourceAction` interface can be utilized:
  *
  * ```typescript
  * // Define a resource action for creating a new document
- * const createDocumentAction: IResourceAction = {
+ * const createDocumentAction: ResourceAction = {
  *     label: "Create Document",
  *     title: "Click to add a new document."
  * };
  *
  * // Function to display action information
- * function displayActionInfo(action: IResourceAction) {
+ * function displayActionInfo(action: ResourceAction) {
  *     console.log(`Action: ${action.label}`);
  *     console.log(`Title: ${action.title}`);
  * }
@@ -796,19 +2272,19 @@ export interface IResourceActionTupleObject<
  *
  * ### Notes
  *
- * - The `IResourceAction` interface is designed to be flexible, allowing developers to
+ * - The `ResourceAction` interface is designed to be flexible, allowing developers to
  *   define actions with varying levels of details based on the needs of their application.
  * - By providing clear labels, titles, and tooltips, developers can enhance the user
  *   experience and make the application more intuitive.
  */
-export interface IResourceAction {
+export interface ResourceAction {
   label?: string;
   title?: string;
 }
 
-type IResourceActionsRecord<TActions> =
-  TActions extends Record<string, IResourceAction>
-    ? TActions & Partial<IResourceDefaultActions>
+type ResourceActionsRecord<TActions> =
+  TActions extends Record<string, ResourceAction>
+    ? TActions & Partial<ResourceDefaultActions>
     : never;
 
 /**
@@ -819,8 +2295,8 @@ type IResourceActionsRecord<TActions> =
  * maintaining the exact structure and types as defined in the resource's configuration.
  * It's useful when you need to work with the entire set of actions for a resource.
  *
- * @type IResourceActions
- * @template ResourceName - The name of the resource
+ * @type ResourceActions
+ * @template TResourceName - The name of the resource
  *
  * @example
  * ```typescript
@@ -828,7 +2304,7 @@ type IResourceActionsRecord<TActions> =
  * import "reslib";
  *
  * declare module "reslib" {
- *   interface IResources {
+ *   interface Resources {
  *     users: {
  *       actions: {
  *         read: { label: "Read User", title: "View user details" };
@@ -841,7 +2317,7 @@ type IResourceActionsRecord<TActions> =
  * }
  *
  * // Type-safe access to user actions
- * type UserActions = IResourceActions<"users">;
+ * type UserActions = ResourceActions<"users">;
  * // Result: The complete actions record for users resource
  *
  * const userActions: UserActions = {
@@ -855,12 +2331,12 @@ type IResourceActionsRecord<TActions> =
  * @example
  * ```typescript
  * // Function that works with resource actions
- * function validateResourceActions<ResourceName extends IResourceName>(
- *   resourceName: ResourceName,
- *   actions: IResourceActions<ResourceName>
+ * function validateResourceActions<TResourceName extends ResourceName>(
+ *   resourceName: TResourceName,
+ *   actions: ResourceActions<TResourceName>
  * ): boolean {
  *   // Check if all required actions are present
- *   const requiredActions: (keyof IResourceActions<ResourceName>)[] = ['read', 'create', 'update'];
+ *   const requiredActions: (keyof ResourceActions<TResourceName>)[] = ['read', 'create', 'update'];
  *
  *   return requiredActions.every(action =>
  *     action in actions && actions[action] !== undefined
@@ -879,16 +2355,16 @@ type IResourceActionsRecord<TActions> =
  * @example
  * ```typescript
  * // Building action handlers with type safety
- * function createActionHandlers<ResourceName extends IResourceName>(
- *   resourceName: ResourceName,
- *   actions: IResourceActions<ResourceName>
+ * function createActionHandlers<TResourceName extends ResourceName>(
+ *   resourceName: TResourceName,
+ *   actions: ResourceActions<TResourceName>
  * ) {
  *   const handlers: Record<string, () => void> = {};
  *
  *   // TypeScript knows the exact action names available
  *   for (const actionName in actions) {
  *     handlers[actionName] = () => {
- *       const action = actions[actionName as keyof IResourceActions<ResourceName>];
+ *       const action = actions[actionName as keyof ResourceActions<TResourceName>];
  *       console.log(`Executing ${action?.label} on ${resourceName}`);
  *     };
  *   }
@@ -912,20 +2388,20 @@ type IResourceActionsRecord<TActions> =
  * ```typescript
  * // Permission system based on resource actions
  * class PermissionManager {
- *   private permissions = new Map<IResourceName, Set<string>>();
+ *   private permissions = new Map<ResourceName, Set<string>>();
  *
- *   grantPermission<ResourceName extends IResourceName>(
- *     resourceName: ResourceName,
- *     actions: (keyof IResourceActions<ResourceName>)[]
+ *   grantPermission<TResourceName extends ResourceName>(
+ *     resourceName: TResourceName,
+ *     actions: (keyof ResourceActions<TResourceName>)[]
  *   ) {
  *     const current = this.permissions.get(resourceName) || new Set();
  *     actions.forEach(action => current.add(action as string));
  *     this.permissions.set(resourceName, current);
  *   }
  *
- *   hasPermission<ResourceName extends IResourceName>(
- *     resourceName: ResourceName,
- *     action: keyof IResourceActions<ResourceName>
+ *   hasPermission<TResourceName extends ResourceName>(
+ *     resourceName: TResourceName,
+ *     action: keyof ResourceActions<TResourceName>
  *   ): boolean {
  *     const resourcePerms = this.permissions.get(resourceName);
  *     return resourcePerms?.has(action as string) ?? false;
@@ -941,119 +2417,609 @@ type IResourceActionsRecord<TActions> =
  * // permManager.hasPermission("users", "invalid"); // ✗ TypeScript error
  * ```
  */
-export type IResourceActions<ResourceName extends IResourceName> =
-  IResources[ResourceName] extends { actions: Record<string, IResourceAction> }
-    ? IResourceActionsRecord<IResources[ResourceName]['actions']>
+export type ResourceActions<TResourceName extends ResourceName> =
+  Resources[TResourceName] extends { actions: Record<string, ResourceAction> }
+    ? ResourceActionsRecord<Resources[TResourceName]['actions']>
     : never;
 
+type GetResourceActionNames<
+  TResource extends { actions?: Record<string, ResourceAction> },
+> = keyof ResourceActionsRecord<TResource['actions']> & string;
+
 /**
- * Utility type to extract action names from a resource actions record.
- * This preserves the literal types of the action keys.
+ * ## ResourceDefaultActions Interface
  *
- * @template T - The actions record type
+ * A foundational interface defining the standard CRUD (Create, Read, Update, Delete) actions
+ * that can be performed on resources, plus an "all" action for comprehensive permissions.
+ * This interface serves as the base set of actions that resource configurations can extend,
+ * override, or supplement with custom actions.
+ *
+ * ### Purpose
+ * The `ResourceDefaultActions` interface establishes a consistent set of core actions that
+ * most resources will support. It provides a standardized foundation for resource management
+ * while allowing flexibility for custom actions specific to particular resources.
+ *
+ * ### How It Works
+ * - **Base Actions**: Defines the five fundamental actions (read, create, update, delete, all)
+ * - **Extensibility**: Used in `ResourceActionsRecord` to create action records that can be extended
+ * - **Type Safety**: Each action is typed as `ResourceAction`, ensuring consistent structure
+ * - **Optional Override**: Resources can override these defaults or add custom actions alongside them
+ *
+ * ### Default Actions
+ *
+ * - **`read`**: Retrieve/view resource data (GET operations)
+ * - **`create`**: Create new resource instances (POST operations)
+ * - **`update`**: Modify existing resource instances (PUT/PATCH operations)
+ * - **`delete`**: Remove resource instances (DELETE operations)
+ * - **`all`**: Perform any action on the resource (wildcard permission)
+ *
+ * ### Template Parameters
+ * This interface doesn't use generic parameters itself, but serves as a foundation for
+ * action-based type operations and resource configurations.
+ *
+ * ### Examples
+ *
+ * #### Basic Resource with Default Actions
+ * ```typescript
+ * // A simple resource using only default actions
+ * const userResource: ResourceBase = {
+ *   name: "users",
+ *   label: "Users",
+ *   actions: {
+ *     read: { label: "View Users" },
+ *     create: { label: "Create User" },
+ *     update: { label: "Update User" },
+ *     delete: { label: "Delete User" },
+ *     all: { label: "Full User Access" }
+ *   }
+ * };
+ * ```
+ *
+ * #### Resource Extending Default Actions
+ * ```typescript
+ * // Resource with default actions plus custom ones
+ * const blogResource: ResourceBase = {
+ *   name: "posts",
+ *   label: "Blog Posts",
+ *   actions: {
+ *     // Default actions
+ *     read: { label: "View Posts" },
+ *     create: { label: "Write Post" },
+ *     update: { label: "Edit Post" },
+ *     delete: { label: "Delete Post" },
+ *     all: { label: "Full Post Access" },
+ *
+ *     // Custom actions
+ *     publish: { label: "Publish Post" },
+ *     archive: { label: "Archive Post" },
+ *     feature: { label: "Feature Post" }
+ *   }
+ * };
+ * ```
+ *
+ * #### Permission System Using Default Actions
+ * ```typescript
+ * // Permission checking with default actions
+ * class PermissionManager {
+ *   private permissions = new Map<string, Set<string>>();
+ *
+ *   grantDefaultActions(resourceName: string) {
+ *     const key = `resource:${resourceName}`;
+ *     const actions = this.permissions.get(key) || new Set();
+ *
+ *     // Grant all default actions
+ *     actions.add('read');
+ *     actions.add('create');
+ *     actions.add('update');
+ *     actions.add('delete');
+ *
+ *     this.permissions.set(key, actions);
+ *   }
+ *
+ *   hasPermission(resourceName: string, action: keyof ResourceDefaultActions): boolean {
+ *     const key = `resource:${resourceName}`;
+ *     const actions = this.permissions.get(key);
+ *     return actions?.has(action) ?? false;
+ *   }
+ * }
+ *
+ * // Usage
+ * const permManager = new PermissionManager();
+ * permManager.grantDefaultActions('users');
+ *
+ * permManager.hasPermission('users', 'read');    // true
+ * permManager.hasPermission('users', 'create');  // true
+ * permManager.hasPermission('users', 'delete');  // true
+ * permManager.hasPermission('users', 'all');     // false (not granted)
+ * ```
+ *
+ * #### UI Component with Action-Based Rendering
+ * ```typescript
+ * // Component that renders different UI based on available actions
+ * interface ResourceActionButtonProps {
+ *   resourceName: string;
+ *   action: keyof ResourceDefaultActions;
+ *   onClick: () => void;
+ *   children: React.ReactNode;
+ * }
+ *
+ * function ResourceActionButton({
+ *   resourceName,
+ *   action,
+ *   onClick,
+ *   children
+ * }: ResourceActionButtonProps) {
+ *   const hasPermission = usePermission(resourceName, action);
+ *
+ *   if (!hasPermission) return null;
+ *
+ *   return (
+ *     <button onClick={onClick} data-action={action}>
+ *       {children}
+ *     </button>
+ *   );
+ * }
+ *
+ * // Usage in a resource management component
+ * function UserManagement() {
+ *   return (
+ *     <div>
+ *       <ResourceActionButton resourceName="users" action="create">
+ *         Add User
+ *       </ResourceActionButton>
+ *
+ *       <ResourceActionButton resourceName="users" action="read">
+ *         View Users
+ *       </ResourceActionButton>
+ *
+ *       <ResourceActionButton resourceName="users" action="update">
+ *         Edit User
+ *       </ResourceActionButton>
+ *
+ *       <ResourceActionButton resourceName="users" action="delete">
+ *         Delete User
+ *       </ResourceActionButton>
+ *     </div>
+ *   );
+ * }
+ * ```
+ *
+ * #### API Route Protection
+ * ```typescript
+ * // Middleware for protecting API routes based on default actions
+ * function requireAction(resourceName: string, action: keyof ResourceDefaultActions) {
+ *   return (req: Request, res: Response, next: NextFunction) => {
+ *     const user = getCurrentUser(req);
+ *     const hasPermission = checkUserPermission(user, resourceName, action);
+ *
+ *     if (!hasPermission) {
+ *       return res.status(403).json({
+ *         error: 'Forbidden',
+ *         message: `You don't have permission to ${action} ${resourceName}`
+ *       });
+ *     }
+ *
+ *     next();
+ *   };
+ * }
+ *
+ * // Usage in Express routes
+ * app.get('/api/users', requireAction('users', 'read'), getUsers);
+ * app.post('/api/users', requireAction('users', 'create'), createUser);
+ * app.put('/api/users/:id', requireAction('users', 'update'), updateUser);
+ * app.delete('/api/users/:id', requireAction('users', 'delete'), deleteUser);
+ * ```
+ *
+ * #### Form Validation Based on Actions
+ * ```typescript
+ * // Form component that adapts based on available actions
+ * interface SmartFormProps<T> {
+ *   resourceName: string;
+ *   initialData?: T;
+ *   onSubmit: (data: T) => void;
+ * }
+ *
+ * function SmartForm<T>({ resourceName, initialData, onSubmit }: SmartFormProps<T>) {
+ *   const canCreate = usePermission(resourceName, 'create');
+ *   const canUpdate = usePermission(resourceName, 'update');
+ *   const isEditing = !!initialData;
+ *
+ *   // Don't render form if no appropriate permissions
+ *   if (isEditing && !canUpdate) return { error: 'No permission to edit' };
+ *   if (!isEditing && !canCreate) return { error: 'No permission to create' };
+ *
+ *   return (
+ *     <form onSubmit={handleSubmit(onSubmit)}>
+ *       <button type="submit">
+ *         {isEditing ? 'Update' : 'Create'}
+ *       </button>
+ *     </form>
+ *   );
+ * }
+ * ```
+ *
+ * ### Best Practices
+ * - **Consistent Action Names**: Always use the standard action names (read, create, update, delete, all)
+ * - **Clear Labels**: Provide descriptive labels for each action in resource definitions
+ * - **Permission Granularity**: Use specific actions rather than relying only on "all"
+ * - **Documentation**: Document custom actions that extend beyond the defaults
+ * - **UI Consistency**: Use these actions consistently across different UI components
+ *
+ * ### Integration with Other Types
+ * - **`ResourceActions<T>`**: Uses this interface as the base for resource-specific actions
+ * - **`ResourceActionName<T>`**: Provides type-safe action names for specific resources
+ * - **`ResourceBase`**: Resources can extend or override these default actions
+ * - **`ResourceAction`**: The type definition for individual actions
+ *
+ * ### Migration Notes
+ * When upgrading from custom action definitions, map your existing actions to these standard
+ * names where possible. The "all" action can be used for comprehensive permissions that
+ * previously used different naming conventions.
+ *
+ * @interface ResourceDefaultActions
+ * @public
+ * @since 1.0.0
+ * @see {@link ResourceActions} - How these actions are used in resource configurations
+ * @see {@link ResourceAction} - The structure of individual actions
+ * @see {@link ResourceBase} - How resources define their available actions
  * @example
  * ```typescript
- * const actions = {
- *   read: { label: "Read" },
- *   create: { label: "Create" },
- *   custom: { label: "Custom" }
- * } as const;
+ * // Complete example of using ResourceDefaultActions in a resource definition
+ * import "reslib";
  *
- * type ActionNames = IResourceActionNames<typeof actions>;
- * // Result: "read" | "create" | "custom"
+ * declare module "reslib" {
+ *   interface Resources {
+ *     users: {
+ *       actions: ResourceDefaultActions & {
+ *         // Extend with custom actions
+ *         resetPassword: { label: "Reset Password" };
+ *         activate: { label: "Activate Account" };
+ *         deactivate: { label: "Deactivate Account" };
+ *       }
+ *     };
+ *
+ *     products: {
+ *       actions: ResourceDefaultActions & {
+ *         // Product-specific actions
+ *         restock: { label: "Restock Product" };
+ *         discontinue: { label: "Discontinue Product" };
+ *         feature: { label: "Feature Product" };
+ *       }
+ *     };
+ *   }
+ * }
+ *
+ * // Type-safe usage
+ * type UserActions = ResourceActions<"users">;
+ * // Includes: read, create, update, delete, all, resetPassword, activate, deactivate
+ *
+ * type ProductActions = ResourceActions<"products">;
+ * // Includes: read, create, update, delete, all, restock, discontinue, feature
+ *
+ * // Permission checking function
+ * function canPerformAction<T extends ResourceName>(
+ *   resource: T,
+ *   action: keyof ResourceActions<T>
+ * ): boolean {
+ *   // Implementation would check user permissions
+ *   return true; // Simplified for example
+ * }
+ *
+ * // Usage
+ * canPerformAction("users", "create");        // ✓ Valid - default action
+ * canPerformAction("users", "resetPassword"); // ✓ Valid - custom action
+ * canPerformAction("users", "restock");       // ✗ TypeScript error - not a user action
  * ```
  */
-export type IResourceActionNames<T extends Record<string, IResourceAction>> =
-  keyof T & string;
-
-type IResourceGetActionNames<
-  TResource extends { actions?: Record<string, IResourceAction> },
-> = keyof IResourceActionsRecord<TResource['actions']> & string;
-
-export interface IResourceDefaultActions {
+export interface ResourceDefaultActions {
   /**
    * The read action for the resource.
    * This action is used to retrieve a specific resource.
    *
-   * @type {IResourceAction}
+   * @type {ResourceAction}
    * @example
    * ```typescript
-   * const readAction: IResourceAction = {
+   * const readAction: ResourceAction = {
    *     label: "Read Resource",
    *     title: "Click to read a specific resource.",
    * };
    * ```
    */
-  read: IResourceAction;
+  read: ResourceAction;
 
   /**
    * The create action for the resource.
    * This action is used to create a new resource.
    *
-   * @type {IResourceAction}
+   * @type {ResourceAction}
    * @example
    * ```typescript
-   * const createAction: IResourceAction = {
+   * const createAction: ResourceAction = {
    *     label: "Create Resource",
    *     title: "Click to create a new resource.",
    * };
    * ```
    */
-  create: IResourceAction;
+  create: ResourceAction;
 
   /**
    * The update action for the resource.
    * This action is used to update a specific resource.
    *
-   * @type {IResourceAction}
+   * @type {ResourceAction}
    * @example
    * ```typescript
-   * const updateAction: IResourceAction = {
+   * const updateAction: ResourceAction = {
    *     label: "Update Resource",
    *     title: "Click to update a specific resource.",
    * };
    * ```
    */
-  update: IResourceAction;
+  update: ResourceAction;
 
   /**
    * The delete action for the resource.
    * This action is used to delete a specific resource.
    *
-   * @type {IResourceAction}
+   * @type {ResourceAction}
    * @example
    * ```typescript
-   * const deleteAction: IResourceAction = {
+   * const deleteAction: ResourceAction = {
    *     label: "Delete Resource",
    *     title: "Click to delete a specific resource.",
    * };
    * ```
    */
-  delete: IResourceAction;
+  delete: ResourceAction;
 
   /**
    * The all action for the resource.
    * This action is used to perform all actions on the resource.
    *
-   * @type {IResourceAction}
+   * @type {ResourceAction}
    * @example
    * ```typescript
-   * const allAction: IResourceAction = {
+   * const allAction: ResourceAction = {
    *     label: "All Actions",
    *     title: "Click to perform all actions on the resource.",
    * };
    * ```
    */
-  all: IResourceAction;
+  all: ResourceAction;
 }
 
-export interface IResource<
-  Name extends IResourceName = IResourceName,
-  DataType = unknown,
-  PrimaryKeyType extends IResourcePrimaryKey = IResourcePrimaryKey,
-  Actions extends Record<string, IResourceAction> = Record<
+/**
+ * ## ResourceBase Interface
+ *
+ * The foundational interface that defines the structure and properties required for all resources
+ * in the application. This interface serves as the base contract that all resource definitions
+ * must implement to be considered valid within the resource management system.
+ *
+ * ### Purpose
+ * The `ResourceBase` interface establishes the minimum structure that every resource must have,
+ * ensuring consistency and type safety across all resource definitions. It acts as a constraint
+ * that validates resource configurations during module augmentation, preventing invalid or
+ * incomplete resource definitions from being accepted by the type system.
+ *
+ * ### How It Works
+ * - **Module Augmentation**: Resources are defined by extending the global `Resources` interface
+ * - **Validation**: The `ValidateResource<T>` type ensures each resource implements `ResourceBase`
+ * - **Type Safety**: Only resources that conform to this interface are included in `ResourceName`
+ * - **Extensibility**: Generic parameters allow resources to specify their own action types
+ *
+ * ### Template Parameters
+ * - **TResourceName**: The specific resource name type (extends `ResourceName`)
+ * - **Actions**: The record of actions available for this resource (extends `Record<string, ResourceAction>`)
+ *
+ * ### Examples
+ *
+ * #### Basic Resource Definition
+ * ```typescript
+ * // Define a simple user resource
+ * const userResource: ResourceBase<"users"> = {
+ *   name: "users",
+ *   label: "Users",
+ *   title: "User Management",
+ *   actions: {
+ *     read: { label: "Read User" },
+ *     create: { label: "Create User" },
+ *     update: { label: "Update User" }
+ *   }
+ * };
+ * ```
+ *
+ * #### Advanced Resource with Custom Actions
+ * ```typescript
+ * // Define a product resource with custom actions
+ * const productResource: ResourceBase<"products", {
+ *   read: ResourceAction;
+ *   create: ResourceAction;
+ *   update: ResourceAction;
+ *   discontinue: ResourceAction;
+ *   restock: ResourceAction;
+ * }> = {
+ *   name: "products",
+ *   label: "Products",
+ *   title: "Product Catalog Management",
+ *   actions: {
+ *     read: { label: "View Product", title: "Display product details" },
+ *     create: { label: "Add Product", title: "Create new product entry" },
+ *     update: { label: "Edit Product", title: "Modify product information" },
+ *     discontinue: { label: "Discontinue Product", title: "Mark product as discontinued" },
+ *     restock: { label: "Restock Product", title: "Update product inventory" }
+ *   }
+ * };
+ * ```
+ *
+ * #### Module Augmentation Usage
+ * ```typescript
+ * // In your application's types file
+ * import "reslib";
+ *
+ * declare module "reslib" {
+ *   interface Resources {
+ *     // All of these must implement ResourceBase
+ *     users: {
+ *       name: "users";
+ *       label: "Users";
+ *       actions: {
+ *         read: { label: "Read User" };
+ *         create: { label: "Create User" };
+ *       };
+ *     };
+ *
+ *     posts: {
+ *       name: "posts";
+ *       label: "Posts";
+ *       title: "Blog Posts";
+ *       actions: {
+ *         read: { label: "Read Post" };
+ *         publish: { label: "Publish Post" };
+ *       };
+ *     };
+ *   }
+ * }
+ *
+ * // TypeScript will enforce ResourceBase structure
+ * // Invalid resources will cause compilation errors
+ * ```
+ *
+ * #### Type-Safe Resource Operations
+ * ```typescript
+ * // Using ResourceBase for type-safe operations
+ * function createResourceHandler<T extends ResourceBase>(
+ *   resource: T
+ * ): ResourceHandler<T> {
+ *   return {
+ *     name: resource.name,
+ *     label: resource.label,
+ *     actions: Object.keys(resource.actions),
+ *     // TypeScript knows resource has name, label, and actions
+ *   };
+ * }
+ *
+ * const userHandler = createResourceHandler(userResource);
+ * // userHandler.name: "users"
+ * // userHandler.label: "Users"
+ * // userHandler.actions: string[]
+ * ```
+ *
+ * #### Resource Validation
+ * ```typescript
+ * // Custom validation using ResourceBase structure
+ * function validateResource(resource: any): resource is ResourceBase {
+ *   return (
+ *     typeof resource === 'object' &&
+ *     typeof resource.name === 'string' &&
+ *     typeof resource.actions === 'object' &&
+ *     resource.actions !== null
+ *   );
+ * }
+ *
+ * // Usage
+ * if (validateResource(someResource)) {
+ *   // TypeScript knows this is a ResourceBase
+ *   console.log(`Valid resource: ${someResource.name}`);
+ * }
+ * ```
+ *
+ * ### Best Practices
+ * - **Consistent Naming**: Use lowercase resource names (e.g., "users", "products")
+ * - **Descriptive Labels**: Provide clear, user-friendly labels for UI display
+ * - **Comprehensive Actions**: Define all relevant actions for the resource's lifecycle
+ * - **Optional Properties**: Use `label` and `title` for better UX, but they're optional
+ * - **Type Safety**: Leverage the generic parameters for precise action typing
+ * - **Documentation**: Document custom actions and their purposes
+ *
+ * ### Integration with Other Types
+ * - **`Resources`**: Global interface where resources are defined via module augmentation
+ * - **`ResourceName`**: Union type of all valid resource names (requires ResourceBase compliance)
+ * - **`ResourceConfig<T>`**: Provides type-safe access to individual resource configurations
+ * - **`ResourceActions<T>`**: Type-safe access to a resource's actions
+ * - **`ValidateResource<T>`**: Type-level validation that checks ResourceBase implementation
+ * - **`ValidatedResources`**: Maps all resources to ensure they extend ResourceBase
+ *
+ * ### Migration Notes
+ * When adding new resources, ensure they implement all required `ResourceBase` properties.
+ * The `name` property must match the key used in the `Resources` interface. Existing
+ * resources that don't conform to this interface will cause TypeScript compilation errors
+ * after upgrading, helping catch configuration issues early.
+ *
+ * @interface ResourceBase
+ * @template TResourceName - The specific resource name type
+ * @template Actions - The record of actions for this resource
+ * @public
+ * @since 1.0.0
+ * @see {@link Resources} - Global interface for resource definitions
+ * @see {@link ResourceName} - Union of all valid resource names
+ * @see {@link ResourceConfig} - Type-safe resource configuration access
+ * @see {@link ValidateResource} - Type-level validation of resource structure
+ * @example
+ * ```typescript
+ * // Complete example of ResourceBase usage
+ * import "reslib";
+ *
+ * // Define custom action types for better type safety
+ * interface UserActions {
+ *   read: ResourceAction;
+ *   create: ResourceAction;
+ *   update: ResourceAction;
+ *   delete: ResourceAction;
+ *   activate: ResourceAction;
+ *   deactivate: ResourceAction;
+ * }
+ *
+ * // Create a fully typed resource
+ * const userResource: ResourceBase<"users", UserActions> = {
+ *   name: "users",
+ *   label: "Users",
+ *   title: "User Account Management",
+ *   actions: {
+ *     read: {
+ *       label: "Read User",
+ *       title: "View user account details"
+ *     },
+ *     create: {
+ *       label: "Create User",
+ *       title: "Add new user account"
+ *     },
+ *     update: {
+ *       label: "Update User",
+ *       title: "Modify user account information"
+ *     },
+ *     delete: {
+ *       label: "Delete User",
+ *       title: "Remove user account"
+ *     },
+ *     activate: {
+ *       label: "Activate User",
+ *       title: "Enable user account access"
+ *     },
+ *     deactivate: {
+ *       label: "Deactivate User",
+ *       title: "Disable user account access"
+ *     }
+ *   }
+ * };
+ *
+ * // Module augmentation for global availability
+ * declare module "reslib" {
+ *   interface Resources {
+ *     users: typeof userResource;
+ *   }
+ * }
+ *
+ * // Type-safe usage throughout the application
+ * type UserName = "users"; // From ResourceName union
+ * type UserConfig = ResourceConfig<"users">; // Full type safety
+ * type UserActionNames = ResourceActionName<"users">; // "read" | "create" | "update" | ...
+ * ```
+ */
+export interface ResourceBase<
+  TResourceName extends ResourceName = ResourceName,
+  Actions extends Record<string, ResourceAction> = Record<
     string,
-    IResourceAction
+    ResourceAction
   >,
 > {
   /**
@@ -1064,10 +3030,10 @@ export interface IResource<
    *
    * @example
    * ```typescript
-   * const userResource: IResource = { name: "user" };
+   * const userResource: ResourceBase = { name: "user" };
    * ```
    */
-  name?: IResourceName;
+  name: TResourceName;
 
   /**
    * A user-friendly label for the resource.
@@ -1077,7 +3043,7 @@ export interface IResource<
    *
    * @example
    * ```typescript
-   * const productResource: IResource = { label: "Product" };
+   * const productResource: ResourceBase = { label: "Product" };
    * ```
    */
   label?: string;
@@ -1090,18 +3056,18 @@ export interface IResource<
    *
    * @example
    * ```typescript
-   * const userResource: IResource = { title: "This resource manages user information." };
+   * const userResource: ResourceBase = { title: "This resource manages user information." };
    * ```
    */
   title?: string;
 
   /**
    * The actions associated with this resource.
-   * This is a well-typed record that preserves key inference while satisfying Record<string, IResourceAction>.
+   * This is a well-typed record that preserves key inference while satisfying Record<string, ResourceAction>.
    *
    * @example
    * ```typescript
-   * const userResource: IResource = {
+   * const userResource: ResourceBase = {
    *   actions: {
    *     read: { label: "Read User" },
    *     create: { label: "Create User" },
@@ -1110,24 +3076,17 @@ export interface IResource<
    * };
    *
    * // TypeScript infers: "read" | "create" | "archive"
-   * type UserActionNames = IResourceGetActionNames<typeof userResource>;
+   * type UserActionNames = GetResourceActionNames<typeof userResource>;
    *
-   * // Still compatible with generic Record<string, IResourceAction>
-   * const genericActions: Record<string, IResourceAction> = userResource.actions;
+   * // Still compatible with generic Record<string, ResourceAction>
+   * const genericActions: Record<string, ResourceAction> = userResource.actions;
    * ```
    */
-  actions: IResourceActionsRecord<Actions>;
-
-  /***
-   * The class name of the resource
-   * This information is used to identify the resource class in the application.
-   * It is retrieved from the target class passed to the @ResourceMeta decorator.
-   */
-  className?: string;
+  actions: ResourceActionsRecord<Actions>;
 }
 
 /**
- * @type IResourcePrimaryKey
+ * @type ResourcePrimaryKey
  *
  * Represents the type of primary keys that can be utilized in a resource.
  * This type is a union that provides flexibility in defining unique identifiers
@@ -1140,7 +3099,7 @@ export interface IResource<
  *   that consist of multiple fields.
  *   - **Example**:
  *     ```typescript
- *     const compositeKey: PrimaryKeyType = { userId: "user123", orderId: 456 };
+ *     const compositeKey: TPrimaryKey = { userId: "user123", orderId: 456 };
  *     // A composite key representing a user and their order
  *     ```
  *
@@ -1156,15 +3115,15 @@ export interface IResource<
  * - Handling composite keys in data structures.
  *
  * ### Related Types:
- * - Consider using `IResource` for defining the overall structure of a resource
+ * - Consider using `ResourceBase` for defining the overall structure of a resource
  *   that utilizes this primary key type.
  *
  * ### Example Usage:
- * Here’s how you might use the `IResourcePrimaryKey` type in a function that
+ * Here’s how you might use the `ResourcePrimaryKey` type in a function that
  * retrieves a resource by its primary key:
  *
  * ```typescript
- * function getResourceById(id: PrimaryKeyType): ResourceMeta {
+ * function getResourceById(id: TPrimaryKey): ResourceMeta {
  *     // Implementation to list the resource based on the provided primary key
  * }
  *
@@ -1174,15 +3133,15 @@ export interface IResource<
  * ```
  *
  * ### Summary:
- * The `IResourcePrimaryKey` type provides a versatile way to define primary keys
+ * The `ResourcePrimaryKey` type provides a versatile way to define primary keys
  * for resources, supporting simple and complex identifiers. This flexibility is
  * essential for applications that manage diverse data structures and require
  * unique identification of resources.
  */
-export type IResourcePrimaryKey = string | number | object;
+export type ResourcePrimaryKey = string | number | object;
 
 /**
- * @interface IResourceDataService
+ * @interface ResourceDataService
  *
  * Represents a data provider interface for managing resources.
  * This interface defines methods for performing CRUD (Create, Read, Update, Delete)
@@ -1191,7 +3150,7 @@ export type IResourcePrimaryKey = string | number | object;
  * @template DataType - The type of the resource data being managed. Defaults to `any`,
  * allowing for flexibility in the type of data handled by the provider.
  *
- * @template PrimaryKeyType - The type of the primary key used to identify resources.
+ * @template TPrimaryKey - The type of the primary key used to identify resources.
  *
  *
  * ### Methods:
@@ -1206,7 +3165,7 @@ export type IResourcePrimaryKey = string | number | object;
  *     const result = await dataProvider.create({ name: "New ResourceMeta" });
  *     ```
  *
- * - **update(primaryKey: PrimaryKeyType, updatedData: Partial<DataType>)**: Updates an existing resource record.
+ * - **update(primaryKey: TPrimaryKey, updatedData: Partial<DataType>)**: Updates an existing resource record.
  *   - **Parameters**:
  *     - `primaryKey`: The primary key of the resource to update.
  *     - `updatedData`: An object containing the updated data for the resource.
@@ -1217,7 +3176,7 @@ export type IResourcePrimaryKey = string | number | object;
  *     const result = await dataProvider.update("resourceId", { name: "Updated ResourceMeta" });
  *     ```
  *
- * - **delete(primaryKey: PrimaryKeyType)**: Deletes a resource record by its primary key.
+ * - **delete(primaryKey: TPrimaryKey)**: Deletes a resource record by its primary key.
  *   - **Parameters**:
  *     - `primaryKey`: The primary key of the resource to delete.
  *     indicating the success or failure of the delete operation.
@@ -1226,7 +3185,7 @@ export type IResourcePrimaryKey = string | number | object;
  *     const result = await dataProvider.delete("resourceId");
  *     ```
  *
- * - **findOne(primaryKey: PrimaryKeyType)**: Retrieves a single resource record by its primary key.
+ * - **findOne(primaryKey: TPrimaryKey)**: Retrieves a single resource record by its primary key.
  *   - **Parameters**:
  *     - `primaryKey`: The primary key of the resource to retrieve.
  *   - **Returns**: A promise that resolves to an `DataType | null`,
@@ -1236,7 +3195,7 @@ export type IResourcePrimaryKey = string | number | object;
  *     const result = await dataProvider.findOne("resourceId");
  *     ```
  *
- * - **findOneOrFail(primaryKey: PrimaryKeyType)**: Retrieves a single resource record by its primary key or throws an error if not found.
+ * - **findOneOrFail(primaryKey: TPrimaryKey)**: Retrieves a single resource record by its primary key or throws an error if not found.
  *   - **Parameters**:
  *     - `primaryKey`: The primary key of the resource to retrieve.
  *   - **Returns**: A promise that resolves to an `DataType`,
@@ -1246,20 +3205,20 @@ export type IResourcePrimaryKey = string | number | object;
  *     const result = await dataProvider.findOneOrFail("resourceId");
  *     ```
  *
- * - **find(options?: IResourceQueryOptions<DataType>)**: Retrieves multiple resource records based on query options.
+ * - **find(options?: ResourceQueryOptions<DataType>)**: Retrieves multiple resource records based on query options.
  *   - **Parameters**:
  *     - `options`: Optional query options to filter the results.
- *   - **Returns**: A promise that resolves to an `IResourcePaginatedResult<DataType>`,
+ *   - **Returns**: A promise that resolves to an `ResourcePaginatedResult<DataType>`,
  *     containing the list of resource records.
  *   - **Example**:
  *     ```typescript
  *     const result = await dataProvider.find({ limit: 10, skip: 0 });
  *     ```
  *
- * - **findAndCount(options?: IResourceQueryOptions<DataType>)**: Retrieves multiple resource records and the total count based on query options.
+ * - **findAndCount(options?: ResourceQueryOptions<DataType>)**: Retrieves multiple resource records and the total count based on query options.
  *   - **Parameters**:
  *     - `options`: Optional query options to filter the results.
- *   - **Returns**: A promise that resolves to an `IResourcePaginatedResult<DataType>`,
+ *   - **Returns**: A promise that resolves to an `ResourcePaginatedResult<DataType>`,
  *     containing the list of resource records and the total count.
  *   - **Example**:
  *     ```typescript
@@ -1276,7 +3235,7 @@ export type IResourcePrimaryKey = string | number | object;
  *     const result = await dataProvider.createMany([{ name: "ResourceMeta 1" }, { name: "ResourceMeta 2" }]);
  *     ```
  *
- * - **updateMany(data: IResourceManyCriteria<PrimaryKeyType,DataType>)**: Updates multiple resource records.
+ * - **updateMany(data: ResourceManyCriteria<TPrimaryKey,DataType>)**: Updates multiple resource records.
  *   - **Parameters**:
  *     - `data`: An object containing the updated data for the resources.
  *   - **Returns**: A promise that resolves to an `DataType[]`,
@@ -1286,7 +3245,7 @@ export type IResourcePrimaryKey = string | number | object;
  *     const result = await dataProvider.updateMany({ status: "active" });
  *     ```
  *
- * - **deleteMany(criteria: IResourceQueryOptions<DataType>)**: Deletes multiple resource records based on criteria.
+ * - **deleteMany(criteria: ResourceQueryOptions<DataType>)**: Deletes multiple resource records based on criteria.
  *   - **Parameters**:
  *     - `criteria`: The criteria to filter which resources to delete.
  *   - **Returns**: A promise that resolves to an `number`,
@@ -1296,7 +3255,7 @@ export type IResourcePrimaryKey = string | number | object;
  *     const result = await dataProvider.deleteMany({ filters: { status: "inactive" } });
  *     ```
  *
- * - **count(options?: IResourceQueryOptions<DataType>)**: Counts the total number of resource records based on query options.
+ * - **count(options?: ResourceQueryOptions<DataType>)**: Counts the total number of resource records based on query options.
  *   - **Parameters**:
  *     - `options`: Optional query options to filter the count.
  *   - **Returns**: A promise that resolves to an `number`,
@@ -1306,7 +3265,7 @@ export type IResourcePrimaryKey = string | number | object;
  *     const result = await dataProvider.count({ filters: { status: "active" } });
  *     ```
  *
- * - **exists(primaryKey: PrimaryKeyType)**: Checks if a resource record exists by its primary key.
+ * - **exists(primaryKey: TPrimaryKey)**: Checks if a resource record exists by its primary key.
  *   - **Parameters**:
  *     - `primaryKey`: The primary key of the resource to check.
  *   - **Returns**: A promise that resolves to an `boolean`,
@@ -1316,7 +3275,7 @@ export type IResourcePrimaryKey = string | number | object;
  *     const result = await dataProvider.exists("resourceId");
  *     ```
  *
- * - **distinct?(field: keyof DataType, options?: IResourceQueryOptions<DataType>)**: Retrieves distinct values for a specified field.
+ * - **distinct?(field: keyof DataType, options?: ResourceQueryOptions<DataType>)**: Retrieves distinct values for a specified field.
  *   - **Parameters**:
  *     - `field`: The field for which to retrieve distinct values.
  *     - `options`: Optional query options to filter the results.
@@ -1344,10 +3303,10 @@ export type IResourcePrimaryKey = string | number | object;
  *   for use in modern web applications.
  *
  * ### Example Usage:
- * Here’s how you might implement the `IResourceDataService` interface:
+ * Here’s how you might implement the `ResourceDataService` interface:
  *
  * ```typescript
- * class MyDataProvider implements IResourceDataService<MyResourceType> {
+ * class MyDataProvider implements ResourceDataService<MyResourceType> {
  *     async create(record: MyResourceType) {
  *         // Implementation for creating a resource
  *     }
@@ -1361,13 +3320,13 @@ export type IResourcePrimaryKey = string | number | object;
  * ```
  *
  * ### Summary:
- * The `IResourceDataService` interface defines a comprehensive set of methods
+ * The `ResourceDataService` interface defines a comprehensive set of methods
  * for managing resources, facilitating CRUD operations and ensuring a consistent
  * approach to data handling in applications.
  */
-export interface IResourceDataService<
+export interface ResourceDataService<
   DataType = unknown,
-  PrimaryKeyType extends IResourcePrimaryKey = IResourcePrimaryKey,
+  TPrimaryKey extends ResourcePrimaryKey = ResourcePrimaryKey,
 > {
   /***
    * Creates a new resource record.
@@ -1385,7 +3344,7 @@ export interface IResourceDataService<
    * Updates an existing resource record.
    * @template T - The type of the resource data being updated.
    * @param primaryKey The primary key of the resource to update.
-   * @param updatedData An object containing the updated data for the resource.
+   * @param updateData An object containing the updated data for the resource.
    * @returns A promise that resolves to an `DataType`,
    * indicating the success or failure of the update operation.
    * @example
@@ -1394,8 +3353,8 @@ export interface IResourceDataService<
    *     ```
    */
   update<T extends Partial<DataType>>(
-    primaryKey: PrimaryKeyType,
-    updatedData: T
+    primaryKey: TPrimaryKey,
+    updateData: T
   ): Promise<DataType>;
   /***
    * Deletes a resource record by its primary key.
@@ -1407,7 +3366,7 @@ export interface IResourceDataService<
    *   const result = await dataProvider.delete("resourceId");
    *     ```
    */
-  delete(primaryKey: PrimaryKeyType): Promise<boolean>;
+  delete(primaryKey: TPrimaryKey): Promise<boolean>;
   /***
    * Retrieves a single resource record by its primary key.
    * @param options The primary key or query options of the resource to retrieve.
@@ -1423,7 +3382,7 @@ export interface IResourceDataService<
    *     ```
    */
   findOne(
-    options: PrimaryKeyType | IResourceQueryOptions<DataType>
+    options: TPrimaryKey | ResourceQueryOptions<DataType>
   ): Promise<DataType | null>;
   /***
    * Retrieves a single resource record by its primary key or throws an error if not found.
@@ -1436,7 +3395,7 @@ export interface IResourceDataService<
    *     ```
    */
   findOneOrFail(
-    options: PrimaryKeyType | IResourceQueryOptions<DataType>
+    options: TPrimaryKey | ResourceQueryOptions<DataType>
   ): Promise<DataType>;
   /***
    * Retrieves multiple resource records based on query options.
@@ -1448,7 +3407,7 @@ export interface IResourceDataService<
    *   const result = await dataProvider.find({ limit: 10, skip: 0 });
    *     ```
    */
-  find(options?: IResourceQueryOptions<DataType>): Promise<DataType[]>;
+  find(options?: ResourceQueryOptions<DataType>): Promise<DataType[]>;
 
   /***
    * Retrieves multiple resource records and the total count based on query options.
@@ -1461,21 +3420,21 @@ export interface IResourceDataService<
    *     ```
    */
   findAndCount(
-    options?: IResourceQueryOptions<DataType>
+    options?: ResourceQueryOptions<DataType>
   ): Promise<[DataType[], number]>;
 
   /***
    * Retrieves multiple resource records and paginates the results.
    * @param options Optional query options to filter the results.
-   * @returns A promise that resolves to an `IResourcePaginatedResult<DataType>`,
+   * @returns A promise that resolves to an `ResourcePaginatedResult<DataType>`,
    * containing the list of resource records and the total count.
    * @example
    *   ```typescript
    *   const result = await dataProvider.findAndPaginate({ limit: 10, skip: 0 });
    */
   findAndPaginate(
-    options?: IResourceQueryOptions<DataType>
-  ): Promise<IResourcePaginatedResult<DataType>>;
+    options?: ResourceQueryOptions<DataType>
+  ): Promise<ResourcePaginatedResult<DataType>>;
 
   /***
    * Creates multiple resource records.
@@ -1502,7 +3461,7 @@ export interface IResourceDataService<
    *     ```
    */
   updateMany<T extends Partial<DataType>>(
-    criteria: IResourceManyCriteria<DataType, PrimaryKeyType>,
+    criteria: ResourceManyCriteria<DataType, TPrimaryKey>,
     data: T
   ): Promise<number>;
   /**
@@ -1516,7 +3475,7 @@ export interface IResourceDataService<
    *     ```
    */
   deleteMany(
-    criteria: IResourceManyCriteria<DataType, PrimaryKeyType>
+    criteria: ResourceManyCriteria<DataType, TPrimaryKey>
   ): Promise<number>;
   /***
    * Counts the total number of resource records based on query options.
@@ -1528,7 +3487,7 @@ export interface IResourceDataService<
    *   const result = await dataProvider.count({ filters: { status: "active" } });
    *     ```
    */
-  count(options?: IResourceQueryOptions<DataType>): Promise<number>;
+  count(options?: ResourceQueryOptions<DataType>): Promise<number>;
   /**
    *
    * @param primaryKey The primary key of the resource to check.
@@ -1539,193 +3498,37 @@ export interface IResourceDataService<
    *   const result = await dataProvider.exists("resourceId");
    *     ```
    */
-  exists(primaryKey: PrimaryKeyType): Promise<boolean>;
-
-  /**
-   * Retrieves distinct values for a specific field across all resource records.
-   *
-   * This method returns an array of unique values for the specified field from all records
-   * in the resource collection. It's useful for generating dropdown options, filtering criteria,
-   * or understanding the data distribution across a particular field.
-   *
-   * **Use Cases:**
-   * - Generating filter dropdowns (e.g., unique categories, statuses, tags)
-   * - Data analysis and reporting (e.g., unique values in a dataset)
-   * - Form validation (e.g., checking existing values)
-   * - Search suggestions and autocomplete
-   *
-   * **Query Filtering:**
-   * - The `options.where` parameter can filter which records are considered for distinct values
-   * - Other query options like `includeDeleted` affect which records are included
-   * - Results are always deduplicated regardless of the underlying data
-   *
-   * @template DataType - The resource data type for type-safe field selection
-   * @param {keyof DataType} field - The field name to get distinct values for
-   * @param {IResourceQueryOptions<DataType>} [options] - Optional query options to filter the records
-   * @returns {Promise<any[]>} Array of distinct values for the specified field
-   *
-   * @example
-   * ```typescript
-   * // Get all unique user roles
-   * interface User {
-   *   id: number;
-   *   name: string;
-   *   role: 'admin' | 'user' | 'moderator';
-   *   department: string;
-   * }
-   *
-   * const userRoles = await dataService.distinct('role');
-   * // Result: ['admin', 'user', 'moderator']
-   * ```
-   *
-   * @example
-   * ```typescript
-   * // Get distinct departments for active users only
-   * const departments = await dataService.distinct('department', {
-   *   where: { status: 'active' }
-   * });
-   * // Result: ['Engineering', 'Sales', 'Marketing'] (only from active users)
-   * ```
-   *
-   * @example
-   * ```typescript
-   * // Get unique tags from published posts
-   * interface Post {
-   *   id: number;
-   *   title: string;
-   *   tags: string[];
-   *   status: 'draft' | 'published';
-   * }
-   *
-   * const tags = await dataService.distinct('tags', {
-   *   where: { status: 'published' }
-   * });
-   * // Result: ['javascript', 'typescript', 'react', 'node.js']
-   * ```
-   *
-   * @example
-   * ```typescript
-   * // Get distinct product categories
-   * const categories = await dataService.distinct('category');
-   * // Result: ['Electronics', 'Clothing', 'Books', 'Home & Garden']
-   * ```
-   *
-   * @example
-   * ```typescript
-   * // Get unique order statuses with filtering
-   * const orderStatuses = await dataService.distinct('status', {
-   *   where: {
-   *     createdAt: { $gte: new Date('2024-01-01') } // Only recent orders
-   *   }
-   * });
-   * // Result: ['pending', 'shipped', 'delivered'] (from orders in 2024+)
-   * ```
-   *
-   * @example
-   * ```typescript
-   * // Include soft-deleted records in distinct values
-   * const allStatuses = await dataService.distinct('status', {
-   *   includeDeleted: true
-   * });
-   * // Result: ['active', 'inactive', 'suspended', 'archived'] (including deleted)
-   * ```
-   *
-   * @example
-   * ```typescript
-   * // Get distinct values for nested object fields
-   * interface User {
-   *   id: number;
-   *   profile: {
-   *     city: string;
-   *     country: string;
-   *   };
-   * }
-   *
-   * const cities = await dataService.distinct('profile.city');
-   * // Result: ['New York', 'London', 'Tokyo', 'Paris']
-   * ```
-   *
-   * @example
-   * ```typescript
-   * // Use in form validation - check if email already exists
-   * const existingEmails = await dataService.distinct('email');
-   * const isEmailTaken = existingEmails.includes('newuser@example.com');
-   * ```
-   *
-   * @example
-   * ```typescript
-   * // Generate filter options for a search interface
-   * const filterOptions = {
-   *   categories: await dataService.distinct('category'),
-   *   statuses: await dataService.distinct('status'),
-   *   priorities: await dataService.distinct('priority')
-   * };
-   * // Use these in dropdown components
-   * ```
-   *
-   * @example
-   * ```typescript
-   * // Data analysis - count frequency of values
-   * const colors = await dataService.distinct('color');
-   * const colorCounts = {};
-   * for (const color of colors) {
-   *   colorCounts[color] = await dataService.count({
-   *     where: { color }
-   *   });
-   * }
-   * // Result: { 'red': 15, 'blue': 8, 'green': 12, 'yellow': 5 }
-   * ```
-   *
-   * @remarks
-   * - Results are automatically deduplicated (no duplicate values in the array)
-   * - The order of returned values is not guaranteed (depends on database implementation)
-   * - Null and undefined values are typically excluded from results
-   * - For array fields, individual array elements become separate distinct values
-   * - The method is optional - not all data service implementations may support it
-   * - Performance may vary based on field cardinality and data size
-   * - Consider indexing the field for better performance on large datasets
-   */
-  distinct?(
-    field: keyof DataType,
-    options?: IResourceQueryOptions<DataType>
-  ): Promise<any[]>;
-
-  /**
-   * // Supports MongoDB-style aggregation pipelines
-   * Aggregates resources based on a pipeline.
-   * @param pipeline
-   */
-  aggregate?(pipeline: any[]): Promise<any[]>;
+  exists(primaryKey: TPrimaryKey): Promise<boolean>;
 }
 
 /**
- * @type IResourceManyCriteria
+ * @type ResourceManyCriteria
  *
  * Represents the criteria used for  multiple actions on a resource.
  * This type allows for flexible definitions of what constitutes an update,
  * accommodating various scenarios based on the primary key or partial data.
  *
  * ### Type Parameters
- * - **PrimaryKeyType**: The type of the primary key used to identify resources.
- *   Defaults to `IResourcePrimaryKey`, which can be a string, number, or object.
+ * - **TPrimaryKey**: The type of the primary key used to identify resources.
+ *   Defaults to `ResourcePrimaryKey`, which can be a string, number, or object.
  * - **DataType**: The type of data associated with the resource. Defaults to `Dictionary`,
  *   which is a generic dictionary type allowing for any key-value pairs.
  *
  * ### Possible Forms
- * The `IResourceManyCriteria` can take one of the following forms:
+ * The `ResourceManyCriteria` can take one of the following forms:
  *
  * 1. **Array of Primary Keys**:
  *    - An array of primary keys that uniquely identify the resources to be updated.
  *    - **Example**:
  *      ```typescript
- *      const updateCriteria: IResourceManyCriteria<string> = ["user123", "user456"];
+ *      const updateCriteria: ResourceManyCriteria<string> = ["user123", "user456"];
  *      ```
  *
  * 2. **Partial Data Object**:
  *    - An object containing partial data that represents the fields to be updated.
  *    - **Example**:
  *      ```typescript
- *      const updateCriteria: IResourceManyCriteria<string, { name: string; age: number }> = {
+ *      const updateCriteria: ResourceManyCriteria<string, { name: string; age: number }> = {
  *          name: "John Doe",
  *          age: 30
  *      };
@@ -1736,7 +3539,7 @@ export interface IResourceDataService<
  *      updates to specific fields.
  *    - **Example**:
  *      ```typescript
- *      const updateCriteria: IResourceManyCriteria<string, { name: string; age: number }> = {
+ *      const updateCriteria: ResourceManyCriteria<string, { name: string; age: number }> = {
  *          name: "Jane Doe",
  *          age: 25
  *      };
@@ -1751,11 +3554,11 @@ export interface IResourceDataService<
  *   type-safe.
  *
  * ### Example Usage
- * Here’s how you might use the `IResourceManyCriteria` type in a function that
+ * Here’s how you might use the `ResourceManyCriteria` type in a function that
  * updates resources:
  *
  * ```typescript
- * function updateResources(criteria: IResourceManyCriteria<string, { name: string; age: number }>) {
+ * function updateResources(criteria: ResourceManyCriteria<string, { name: string; age: number }>) {
  *     // Implementation to update resources based on the provided criteria
  * }
  *
@@ -1767,27 +3570,27 @@ export interface IResourceDataService<
  * ```
  * @typeParam DataType - The type of data associated with the resource.
  * @default any
- * @typeParam PrimaryKeyType - The type of the primary key used to identify resources.
- * @default IResourcePrimaryKey
- * @see {@link IResourcePrimaryKey} for the `IResourcePrimaryKey` type.
- * @see {@link IMongoQuery} for the `IMongoQuery` type.
+ * @typeParam TPrimaryKey - The type of the primary key used to identify resources.
+ * @default ResourcePrimaryKey
+ * @see {@link ResourcePrimaryKey} for the `ResourcePrimaryKey` type.
+ * @see {@link MongoQuery} for the `MongoQuery` type.
  * @example
- * // Example of using IResourceManyCriteria
- * const criteria: IResourceManyCriteria<string, { name: string; age: number }> = {
+ * // Example of using ResourceManyCriteria
+ * const criteria: ResourceManyCriteria<string, { name: string; age: number }> = {
  *   name: "John Doe",
  *   age: 30
  * };
  * @Example
- * // Example of using IResourceManyCriteria with an array of primary keys
- * const criteria: IResourceManyCriteria<string, { name: string; age: number }> = [
+ * // Example of using ResourceManyCriteria with an array of primary keys
+ * const criteria: ResourceManyCriteria<string, { name: string; age: number }> = [
  *   "user123",
  *   "user456"
  * ];
  */
-export type IResourceManyCriteria<
+export type ResourceManyCriteria<
   DataType = unknown,
-  PrimaryKeyType extends IResourcePrimaryKey = IResourcePrimaryKey,
-> = PrimaryKeyType[] | IMongoQuery<DataType>;
+  TPrimaryKey extends ResourcePrimaryKey = ResourcePrimaryKey,
+> = TPrimaryKey[] | MongoQuery<DataType>;
 
 /**
  * Interface representing options for fetching resources.
@@ -1797,8 +3600,8 @@ export type IResourceManyCriteria<
  *
  * @template DataType - The type of data being fetched. Defaults to 'any'.
  * @example
- * // Example of using IResourceQueryOptions
- * const fetchOptions: IResourceQueryOptions<MyDataType, string> = {
+ * // Example of using ResourceQueryOptions
+ * const fetchOptions: ResourceQueryOptions<MyDataType, string> = {
  *     filters: {
  *             status: { $eq: "active" }, // Filter for active resources
  *             category: { $in: ["A", "B"] } // Filter for categories A or B
@@ -1808,17 +3611,17 @@ export type IResourceManyCriteria<
  *      skip: 0 // Do not skip any results
  * };
  */
-export interface IResourceQueryOptions<DataType = unknown> {
+export interface ResourceQueryOptions<DataType = unknown> {
   /** Fields to include in the response. */
   fields?: Array<keyof DataType extends never ? string : keyof DataType>;
   relations?: string[]; // The relations to include in the response.
-  orderBy?: IResourceQueryOrderBy<DataType>; // Optional sorting criteria for the results
+  orderBy?: ResourceQueryOrderBy<DataType>; // Optional sorting criteria for the results
   limit?: number; // Optional limit on the number of results to return
   skip?: number; // Optional number of results to skip before returning
   page?: number; // Optional page number for pagination, We can use it instead of skip
 
   /** Include relationships or nested resources. */
-  include?: IResourceName[];
+  include?: ResourceName[];
 
   /** Include only distinct results or specific fields for distinct values. */
   distinct?: boolean | Array<keyof DataType>;
@@ -1837,10 +3640,10 @@ export interface IResourceQueryOptions<DataType = unknown> {
    * Resources are filtered using a MongoDB-like query syntax.
    * This allows you to specify conditions for filtering resources based on various criteria.
    *
-   * @type {IMongoQuery}
+   * @type {MongoQuery}
    * @see {@link https://www.mongodb.com/docs/manual/reference/operator/query/} for more information on MongoDB query operators.
    * @example
-   * const queryOptions: IResourceQueryOptions<{ id: number, name: string }> = {
+   * const queryOptions: ResourceQueryOptions<{ id: number, name: string }> = {
    *   where: {
    *     name : "John",
    *     surname : "Doe"
@@ -1849,9 +3652,9 @@ export interface IResourceQueryOptions<DataType = unknown> {
    *   limit: 10,
    *   skip: 0
    * };
-   * @see {@link IMongoQuery} for more information on where clauses.
+   * @see {@link MongoQuery} for more information on where clauses.
    * @example
-   * const queryOptions: IResourceQueryOptions<{ id: number, name: string }> = {
+   * const queryOptions: ResourceQueryOptions<{ id: number, name: string }> = {
    *   where: {
    *     name : "John",
    *     surname : "Doe"
@@ -1861,11 +3664,11 @@ export interface IResourceQueryOptions<DataType = unknown> {
    *   skip: 0
    * };
    */
-  where?: IMongoQuery<DataType>;
+  where?: MongoQuery<DataType>;
 }
 
 /**
- * @interface IResourcePaginatedResult
+ * @interface ResourcePaginatedResult
  *
  * Represents the result of a paginated resource list operation.
  * This interface encapsulates the data retrieved from a paginated API response,
@@ -1880,7 +3683,7 @@ export interface IResourceQueryOptions<DataType = unknown> {
  *   - **Description**: This property contains the list of resources retrieved from the API.
  *   - **Example**:
  *     ```typescript
- *     const result: IResourcePaginatedResult<User> = {
+ *     const result: ResourcePaginatedResult<User> = {
  *         data: [
  *             { id: 1, name: "John Doe" },
  *             { id: 2, name: "Jane Smith" }
@@ -1925,12 +3728,12 @@ export interface IResourceQueryOptions<DataType = unknown> {
  *       - **Example**: `"http://api.example.com/users?page=10"` or `null` if there is no last page.
  *
  * ### Example Usage:
- * Here’s how you might use the `IResourcePaginatedResult` interface in a function that fetches paginated user data:
+ * Here’s how you might use the `ResourcePaginatedResult` interface in a function that fetches paginated user data:
  *
  * ```typescript
- * async function fetchUsers(page: number): Promise<IResourcePaginatedResult<User>> {
+ * async function fetchUsers(page: number): Promise<ResourcePaginatedResult<User>> {
  *     const response = await list(`http://api.example.com/users?page=${page}`);
- *     const result: IResourcePaginatedResult<User> = await response.json();
+ *     const result: ResourcePaginatedResult<User> = await response.json();
  *     return result;
  * }
  *
@@ -1946,7 +3749,7 @@ export interface IResourceQueryOptions<DataType = unknown> {
  *   allowing clients to retrieve data in manageable chunks.
  * - The `links` property facilitates easy navigation between pages, enhancing user experience.
  */
-export interface IResourcePaginatedResult<DataType = unknown> {
+export interface ResourcePaginatedResult<DataType = unknown> {
   /** List of fetched resources. */
   data: DataType[];
 
@@ -1958,7 +3761,7 @@ export interface IResourcePaginatedResult<DataType = unknown> {
   errors?: string | Error[]; // Optional errors for the operation
 
   /** Pagination metadata. */
-  meta?: IResourcePaginationMetaData;
+  meta?: ResourcePaginationMeta;
 
   /** Links for navigation in paginated results. */
   links?: {
@@ -1974,7 +3777,7 @@ export interface IResourcePaginatedResult<DataType = unknown> {
 }
 
 /**
- * @typedef IResourcePaginationMetaData
+ * @typedef ResourcePaginationMeta
  * Represents the pagination metadata for a resource.
  *
  * This type defines the structure of the pagination metadata returned by a resource query operation.
@@ -1991,7 +3794,7 @@ export interface IResourcePaginatedResult<DataType = unknown> {
  * @property {boolean} [hasNextPage] - Whether there is a next page.
  * @property {boolean} [hasPreviousPage] - Whether there is a previous page.
  */
-export interface IResourcePaginationMetaData {
+export interface ResourcePaginationMeta {
   /** The total number of items available. */
   total: number;
   /** The current page number. */
@@ -2022,8 +3825,8 @@ export interface IResourcePaginationMetaData {
  * handled for a given resource. It's useful for event-driven architectures,
  * logging, auditing, and reactive systems.
  *
- * @type IResourceDefaultEvent
- * @template ResourceName - The name of the resource
+ * @type ResourceDefaultEvent
+ * @template TResourceName - The name of the resource
  *
  * @example
  * ```typescript
@@ -2031,7 +3834,7 @@ export interface IResourcePaginationMetaData {
  * import "reslib";
  *
  * declare module "reslib" {
- *   interface IResources {
+ *   interface Resources {
  *     users: {
  *       actions: {
  *         read: { label: "Read User" };
@@ -2044,7 +3847,7 @@ export interface IResourcePaginationMetaData {
  * }
  *
  * // All possible events for the users resource
- * type UserEvent = IResourceDefaultEvent<"users">;
+ * type UserEvent = ResourceDefaultEvent<"users">;
  * // Result: "read" | "create" | "update" | "archive" | "create" | "update" | "delete" | "findOne" | "find" | ...
  *
  * // Note: Includes both resource actions and data service methods
@@ -2053,16 +3856,16 @@ export interface IResourcePaginationMetaData {
  * @example
  * ```typescript
  * // Event-driven resource management
- * class ResourceEventEmitter<ResourceName extends IResourceName> {
- *   private listeners = new Map<IResourceDefaultEvent<ResourceName>, Function[]>();
+ * class ResourceEventEmitter<TResourceName extends ResourceName> {
+ *   private listeners = new Map<ResourceDefaultEvent<TResourceName>, Function[]>();
  *
- *   on(event: IResourceDefaultEvent<ResourceName>, listener: Function) {
+ *   on(event: ResourceDefaultEvent<TResourceName>, listener: Function) {
  *     const current = this.listeners.get(event) || [];
  *     current.push(listener);
  *     this.listeners.set(event, current);
  *   }
  *
- *   emit(event: IResourceDefaultEvent<ResourceName>, data?: any) {
+ *   emit(event: ResourceDefaultEvent<TResourceName>, data?: any) {
  *     const listeners = this.listeners.get(event) || [];
  *     listeners.forEach(listener => listener(data));
  *   }
@@ -2089,20 +3892,20 @@ export interface IResourcePaginationMetaData {
  * @example
  * ```typescript
  * // Audit logging with typed events
- * interface AuditLog<ResourceName extends IResourceName> {
- *   resource: ResourceName;
- *   event: IResourceDefaultEvent<ResourceName>;
+ * interface AuditLog<TResourceName extends ResourceName> {
+ *   resource: TResourceName;
+ *   event: ResourceDefaultEvent<TResourceName>;
  *   userId: string;
  *   timestamp: Date;
  *   data?: any;
  * }
  *
  * class ResourceAuditor {
- *   private logs: AuditLog<IResourceName>[] = [];
+ *   private logs: AuditLog<ResourceName>[] = [];
  *
- *   log<ResourceName extends IResourceName>(
- *     resource: ResourceName,
- *     event: IResourceDefaultEvent<ResourceName>,
+ *   log<TResourceName extends ResourceName>(
+ *     resource: TResourceName,
+ *     event: ResourceDefaultEvent<TResourceName>,
  *     userId: string,
  *     data?: any
  *   ) {
@@ -2115,10 +3918,10 @@ export interface IResourcePaginationMetaData {
  *     });
  *   }
  *
- *   getLogsForResource<ResourceName extends IResourceName>(
- *     resource: ResourceName
- *   ): AuditLog<ResourceName>[] {
- *     return this.logs.filter(log => log.resource === resource) as AuditLog<ResourceName>[];
+ *   getLogsForResource<TResourceName extends ResourceName>(
+ *     resource: TResourceName
+ *   ): AuditLog<TResourceName>[] {
+ *     return this.logs.filter(log => log.resource === resource) as AuditLog<TResourceName>[];
  *   }
  * }
  *
@@ -2136,9 +3939,9 @@ export interface IResourcePaginationMetaData {
  * @example
  * ```typescript
  * // Reactive resource hooks
- * function useResourceEvent<ResourceName extends IResourceName>(
- *   resource: ResourceName,
- *   event: IResourceDefaultEvent<ResourceName>,
+ * function useResourceEvent<TResourceName extends ResourceName>(
+ *   resource: TResourceName,
+ *   event: ResourceDefaultEvent<TResourceName>,
  *   callback: (data?: any) => void
  * ) {
  *   // Implementation would set up event listeners
@@ -2171,20 +3974,20 @@ export interface IResourcePaginationMetaData {
  * @example
  * ```typescript
  * // Middleware system with typed events
- * type MiddlewareFn<ResourceName extends IResourceName> = (
- *   event: IResourceDefaultEvent<ResourceName>,
+ * type MiddlewareFn<TResourceName extends ResourceName> = (
+ *   event: ResourceDefaultEvent<TResourceName>,
  *   data: any,
  *   next: () => void
  * ) => void;
  *
- * class ResourceMiddleware<ResourceName extends IResourceName> {
- *   private middlewares: MiddlewareFn<ResourceName>[] = [];
+ * class ResourceMiddleware<TResourceName extends ResourceName> {
+ *   private middlewares: MiddlewareFn<TResourceName>[] = [];
  *
- *   use(middleware: MiddlewareFn<ResourceName>) {
+ *   use(middleware: MiddlewareFn<TResourceName>) {
  *     this.middlewares.push(middleware);
  *   }
  *
- *   async execute(event: IResourceDefaultEvent<ResourceName>, data: any) {
+ *   async execute(event: ResourceDefaultEvent<TResourceName>, data: any) {
  *     let index = 0;
  *
  *     const next = () => {
@@ -2217,9 +4020,9 @@ export interface IResourcePaginationMetaData {
  * userMiddleware.execute("findOne", 123);
  * ```
  */
-export type IResourceDefaultEvent<ResourceName extends IResourceName> =
-  | IResourceActionName<ResourceName>
-  | keyof IResourceDataService;
+export type ResourceDefaultEvent<TResourceName extends ResourceName> =
+  | ResourceActionName<TResourceName>
+  | keyof ResourceDataService;
 
 /**
  * Represents contextual information about a resource for operations like translations, logging, and error handling.
@@ -2228,12 +4031,12 @@ export type IResourceDefaultEvent<ResourceName extends IResourceName> =
  * throughout the application. It's primarily used for internationalization, error messages, and
  * logging where resource-specific information is needed.
  *
- * @interface IResourceContext
+ * @interface ResourceContext
  *
  * @example
  * ```typescript
  * // Basic usage in translations
- * const context: IResourceContext = {
+ * const context: ResourceContext = {
  *   resourceName: "user",
  *   resourceLabel: "User",
  *   operation: "create",
@@ -2248,7 +4051,7 @@ export type IResourceDefaultEvent<ResourceName extends IResourceName> =
  * @example
  * ```typescript
  * // Extended with custom properties
- * const extendedContext: IResourceContext = {
+ * const extendedContext: ResourceContext = {
  *   resourceName: "product",
  *   resourceLabel: "Product",
  *   category: "electronics",
@@ -2256,16 +4059,16 @@ export type IResourceDefaultEvent<ResourceName extends IResourceName> =
  * };
  * ```
  */
-export interface IResourceContext extends Record<string, any> {
+export interface ResourceContext extends Record<string, any> {
   /** The unique programmatic name of the resource */
-  resourceName: IResourceName;
+  resourceName: ResourceName;
 
   /** The human-readable label of the resource for display purposes */
   resourceLabel: string;
 }
 
 /**
- * @interface IResourceTranslations
+ * @interface ResourceTranslations
  *
  * Represents the translation structure for resources in the application.
  * This type defines the expected structure of translations for each resource,
@@ -2275,7 +4078,7 @@ export interface IResourceContext extends Record<string, any> {
  * ```typescript
  * // resources actions translations structure :
  * // Here is an example of the structure of the translations for the "user" resource:
- * const userTranslations: IResourceTranslations = {
+ * const userTranslations: ResourceTranslations = {
  *   user: {
  *     label: "User",
  *     title: "Manage user data",
@@ -2305,19 +4108,19 @@ export interface IResourceContext extends Record<string, any> {
  * };
  * ```
  */
-export type IResourceTranslations = {
-  [Name in IResourceName]: IResourceTranslation<Name>;
-}[IResourceName];
+export type ResourceTranslations = {
+  [Name in ResourceName]: ResourceTranslation<Name>;
+}[ResourceName];
 
 /**
- * @interface IResourceTranslation
+ * @interface ResourceTranslation
  *
  * Represents the translation structure for a specific resource in the application.
  * This generic type defines the expected structure of translations for a given resource,
  * dynamically generating the translation keys based on the resource's defined actions.
  *
  * @template Name - The name of the resource for which translations are defined.
- * Must be a valid `IResourceName`.
+ * Must be a valid `ResourceName`.
  *
  * ### Structure:
  *
@@ -2348,7 +4151,7 @@ export type IResourceTranslations = {
  * @example
  * ```typescript
  * // For a resource with actions: { read: {...}, create: {...}, update: {...}, delete: {...} }
- * const userTranslations: IResourceTranslation<"user"> = {
+ * const userTranslations: ResourceTranslation<"user"> = {
  *   label: "User",
  *   title: "Manage user data",
  *   description: "User management and administration",
@@ -2399,7 +4202,7 @@ export type IResourceTranslations = {
  * - Additional properties allow for custom translations specific to the resource's needs.
  * - This type ensures type safety by tying translations directly to the resource structure.
  */
-export type IResourceTranslation<Name extends IResourceName> = {
+export type ResourceTranslation<Name extends ResourceName> = {
   /**
    * The display name of the resource (required).
    */
@@ -2420,32 +4223,32 @@ export type IResourceTranslation<Name extends IResourceName> = {
    * Error message when the resource is not found (required).
    */
   notFoundError: string;
-} & (IResources[Name] extends { actions: infer Actions }
-  ? Actions extends Record<string, IResourceAction>
+} & (Resources[Name] extends { actions: infer Actions }
+  ? Actions extends Record<string, ResourceAction>
     ? {
         [Key in keyof Actions]: {
           /**
            * The display label for the action.
            */
-          label: string;
+          label?: string;
           /**
            * The tooltip or help text for the action.
            */
-          title: string;
+          title?: string;
           /**
            * Message when no items are affected (for pluralization).
            */
-          zero: string;
+          zero?: string;
           /**
            * Message when one item is affected (for pluralization).
            */
-          one: string;
+          one?: string;
           /**
            * Message when multiple items are affected (for pluralization).
            */
-          other: string;
+          other?: string;
         };
       }[keyof Actions]
     : {}
   : {}) &
-  Record<string, any>;
+  Dictionary;

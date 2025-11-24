@@ -16,7 +16,7 @@ It is fully cross-platform—compatible with web, Node.js, React Native (includi
 - **Decorator-Driven Resource Management**: Use decorators to intuitively define and manage resources, resulting in cleaner, more expressive code.
 - **Modular Architecture**: Treat every component as a resource, promoting reusability and better organization of application logic.
 - **Extensible Framework**: Effortlessly extend core functionalities by adding custom field types, decorators, and plugins tailored to specific project needs.
-- **Customizable Field Types**: Support for various built-in field types (such as number, dropdown, selectResource) that can be customized with specific properties for flexible data handling.
+- **Customizable FieldMeta Types**: Support for various built-in field types (such as number, dropdown, selectResource) that can be customized with specific properties for flexible data handling.
 - **Type Safety**: Developed with TypeScript, ensuring robust type-checking for a reliable foundation for scalable applications.
 - **Intuitive API**: Enjoy a developer-friendly API that leverages TypeScript features for smooth auto-completion and type hints.
 - **Dynamic Ecosystem**: Easily adapt to evolving project requirements by integrating external decorators and features, allowing for a responsive and flexible development environment.
@@ -104,9 +104,9 @@ import 'reflect-metadata';
 ### Resources
 
 - **Resources** are the foundation of ResLib. Use the `@ResourceMeta` decorator to define any logical entity (models, components, etc.).
-- **Fields**: Add fields to your resources using the `@Field` decorator, specifying field types and options.
+- **Fields**: Add fields to your resources using the `@FieldMeta` decorator, specifying field types and options.
 
-### Built-In Field Types
+### Built-In FieldMeta Types
 
 - **number**: Simple number field.
 - **string**: Simple string field;
@@ -121,30 +121,30 @@ Once you have installed the necessary packages and set up TypeScript, you can st
 
 ```typescript
 import 'reflect-metadata';
-import { ResourceMeta, Field } from 'reslib';
+import { ResourceMeta, FieldMeta } from 'reslib';
 
 @ResourceMeta()
 class User {
-  @Field({ type: 'string' })
+  @FieldMeta({ type: 'string' })
   name: string;
 
-  @Field({ type: 'number' })
+  @FieldMeta({ type: 'number' })
   age: number;
 
-  @Field({ type: 'email' })
+  @FieldMeta({ type: 'email' })
   email: string;
 }
 ```
 
 ## **Examples**
 
-### **Defining Custom Field Types**
+### **Defining Custom FieldMeta Types**
 
 ```typescript
-@Field({ type: 'dropdown', options: ['Admin', 'User', 'Guest'] })
+@FieldMeta({ type: 'dropdown', options: ['Admin', 'User', 'Guest'] })
 role: string;
 
-@Field({ type: 'selectResource', resourceName: 'Product' })
+@FieldMeta({ type: 'selectResource', resourceName: 'Product' })
 favoriteProduct: string;
 ```
 
@@ -172,7 +172,7 @@ function CustomField(options: { customProp: string }) {
 
 ResLib is designed for flexibility. You can add your own custom field types or extend existing ones with full TypeScript support.
 
-### **Extending Field Types**
+### **Extending FieldMeta Types**
 
 You can easily extend the field types available in ResLib by creating custom decorators. To extend field types and register custom options (e.g., a `rating` field), use TypeScript's **declaration merging**.
 
@@ -198,13 +198,16 @@ You can create new resources and leverage the existing decorators for rich resou
 ```typescript
 @ResourceMeta()
 class Product {
-  @Field({ type: 'string' })
+  @FieldMeta({ type: 'string' })
   productName: string;
 
-  @Field({ type: 'number' })
+  @FieldMeta({ type: 'number' })
   price: number;
 
-  @Field({ type: 'string', options: { enum: ['In Stock', 'Out of Stock'] } })
+  @FieldMeta({
+    type: 'string',
+    options: { enum: ['In Stock', 'Out of Stock'] },
+  })
   availability: string;
 }
 ```
@@ -223,23 +226,23 @@ function IsPositive(target: any, propertyKey: string) {
 
 @ResourceMeta()
 class Order {
-    @Field({ type: 'number' })
+    @FieldMeta({ type: 'number' })
     @IsPositive
     totalAmount: number;
 
-    @Field({ type: 'string' })
+    @FieldMeta({ type: 'string' })
     customerName: string;
 }
 ```
 
-### **Using Extended Field Types**
+### **Using Extended FieldMeta Types**
 
 Here’s how you can use the newly defined field types in a resource:
 
 ```typescript
 @ResourceMeta()
 class EnhancedUser {
-  @Field({ type: 'string' })
+  @FieldMeta({ type: 'string' })
   name: string;
 
   @ExtendedField('colorPicker', { defaultColor: '#FF0000' })
@@ -254,18 +257,18 @@ ResLib can be extended with plugins and custom modules. Define new decorators, e
 ### Example: Custom Decorator Plugin
 
 ```typescript
-import { ResourceMeta, Field, customDecorator } from 'reslib';
+import { ResourceMeta, FieldMeta, customDecorator } from 'reslib';
 
 function LogField() {
   return customDecorator((target, key) =&gt; {
-    console.log(`Field '${key}' has been initialized.`);
+    console.log(`FieldMeta '${key}' has been initialized.`);
   });
 }
 
 @ResourceMeta
 class Product {
   @LogField()
-  @Field({ type: "number" })
+  @FieldMeta({ type: "number" })
   price: number;
 }
 ```

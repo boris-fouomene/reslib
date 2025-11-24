@@ -506,9 +506,9 @@ export class Validator {
    * console.log(separators); // { multiple: ", ", single: ", " }
    *
    * // Use separators for custom error formatting
-   * const errors = ['Field is required', 'Must be an email', 'Too short'];
+   * const errors = ['FieldMeta is required', 'Must be an email', 'Too short'];
    * const errorMessage = errors.join(separators.multiple);
-   * console.log(errorMessage); // "Field is required, Must be an email, Too short"
+   * console.log(errorMessage); // "FieldMeta is required, Must be an email, Too short"
    *
    * // Custom error message builder
    * function buildErrorMessage(fieldName: string, errors: string[]) {
@@ -2279,9 +2279,9 @@ export class Validator {
    *
    * ### Key Features
    * - **Decorator Support**: Uses @IsEmail, @IsRequired, @MinLength, etc. decorators
-   * - **Multi-Field Validation**: Validates all decorated properties in parallel
+   * - **Multi-FieldMeta Validation**: Validates all decorated properties in parallel
    * - **Error Accumulation**: Collects all field validation errors into a single result
-   * - **Field Mapping**: Maps validated data back to original structure with proper types
+   * - **FieldMeta Mapping**: Maps validated data back to original structure with proper types
    * - **Internationalization**: Supports translated property names and error messages
    * - **Custom Error Formatting**: Allows custom error message builders per field
    * - **Async Rules**: Supports both sync and async validation rules for each field
@@ -2362,7 +2362,7 @@ export class Validator {
    * }
    * ```
    *
-   * #### Complex Multi-Field Validation
+   * #### Complex Multi-FieldMeta Validation
    * ```typescript
    * class ProductForm {
    *   @IsRequired
@@ -2397,7 +2397,7 @@ export class Validator {
    * ```typescript
    * const result = await Validator.validateTarget(UserForm, data, {
    *   errorMessageBuilder: (translatedPropertyName, error, options) => {
-   *     // Custom format: "Field Name (validation rule): error message"
+   *     // Custom format: "FieldMeta Name (validation rule): error message"
    *     return `${translatedPropertyName} (${options.ruleName}): ${error}`;
    *   }
    * });
@@ -2497,7 +2497,7 @@ export class Validator {
    * // With custom error formatting
    * const result = await Validator.validateTarget(UserForm, {
    *   data: { email: \"test@example.com\", name: \"John\" },
-   *   errorMessageBuilder: (name, error) => `Field ${name}: ${error}`
+   *   errorMessageBuilder: (name, error) => `FieldMeta ${name}: ${error}`
    * });
    * ```
    *

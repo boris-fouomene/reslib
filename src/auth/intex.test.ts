@@ -2,30 +2,30 @@ import { i18n } from '../i18n';
 import { Session } from '../session';
 import '../translations';
 import { Auth } from './index';
-import { AuthUser, IAuthPerm, IAuthPerms } from './types';
+import { AuthPerm, AuthUser, IAuthPerms } from './types';
 
 declare module '../resources/types' {
-  interface IResources {
+  interface Resources {
     documents: {
       actions: {
-        test: IResourceAction;
-        publish: IResourceAction;
+        test: ResourceAction;
+        publish: ResourceAction;
       };
     };
-    articles: IResource;
-    users: IResource;
-    profile: IResource;
+    articles: ResourceBase;
+    users: ResourceBase;
+    profile: ResourceBase;
     media: {
       actions: {
         upload: {};
         edit: {};
       };
     };
-    comments: IResource;
-    admin: IResource;
-    system: IResource;
-    logs: IResource;
-    billing: IResource;
+    comments: ResourceBase;
+    admin: ResourceBase;
+    system: ResourceBase;
+    logs: ResourceBase;
+    billing: ResourceBase;
   }
 }
 
@@ -689,14 +689,14 @@ describe('Auth', () => {
       };
 
       // OR logic - any permission match grants access
-      const orPerms: IAuthPerm[] = [
+      const orPerms: AuthPerm[] = [
         { resourceName: 'documents', action: 'read' }, // true
         { resourceName: 'users', action: 'delete' }, // false
       ];
       expect(Auth.isAllowed(orPerms as any, user)).toBe(true);
 
       // All false - should deny access
-      const falsePerms: IAuthPerm[] = [
+      const falsePerms: AuthPerm[] = [
         { resourceName: 'documents', action: 'delete' }, // false
         { resourceName: 'users', action: 'delete' }, // false
       ];

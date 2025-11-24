@@ -1,7 +1,7 @@
 import {
-  IResourceActionName,
-  IResourceActionTuple,
-  IResourceName,
+  ResourceActionName,
+  ResourceActionTuple,
+  ResourceName,
 } from '@resources/types';
 import { Dictionary } from '../types/dictionary';
 /**
@@ -45,7 +45,7 @@ import { Dictionary } from '../types/dictionary';
  * };
  *
  * // Function to check if a user has permission to perform an action
- * function hasPermission(user: AuthUser , resource: IResourceName, action: IResourceActionName): boolean {
+ * function hasPermission(user: AuthUser , resource: ResourceName, action: ResourceActionName): boolean {
  *     return user.perms?.[resource]?.includes(action) ?? false;
  * }
  *
@@ -59,8 +59,8 @@ import { Dictionary } from '../types/dictionary';
  * The `hasPermission` function checks if the user has the specified
  * permission for a given resource, demonstrating how the `perms`
  * property can be utilized in permission management.
- * @see {@link IResourceName} for the `IResourceName` type.
- * @see {@link IResourceActionName} for the `IResourceActionName` type.
+ * @see {@link ResourceName} for the `ResourceName` type.
+ * @see {@link ResourceActionName} for the `ResourceActionName` type.
  * @see {@link IAuthPerms} for the `IAuthPerms` type.
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -206,20 +206,20 @@ export interface IAuthSessionStorage {
 }
 
 /**
- * @interface IAuthPerm
+ * @interface AuthPerm
  * Represents the type associated with the `perm` property, used to evaluate 
  * whether a user has access to a resource.
  * 
- * The `IAuthPerm` type can take on different forms to define permissions 
+ * The `AuthPerm` type can take on different forms to define permissions 
  * for accessing resources in an application, including a function that returns a boolean,
  * a boolean value, a single resource action tuple, or an array of resource action tuples. This flexibility allows 
  * for both simple string-based permissions and more complex logic 
  * through functions.
- * @template ResourceName - The name of the resource. Defaults to `IResourceName`.
+ * @template TResourceName - The name of the resource. Defaults to `ResourceName`.
  
  * ### Possible Values:
  * 
- * - **Function**: If `IAuthPerm` is a function, it must return a boolean 
+ * - **Function**: If `AuthPerm` is a function, it must return a boolean 
  *   value that determines whether access to the resource should be 
  *   granted to the user. This allows for dynamic permission checks 
  *   based on custom logic.
@@ -232,39 +232,39 @@ export interface IAuthSessionStorage {
  * 
  * ### Example Usage:
  * 
- * Here are some examples of how the `IAuthPerm` type can be used:
+ * Here are some examples of how the `AuthPerm` type can be used:
  * 
  * ```typescript
  * // Example of a dynamic permission check using a function
- * const dynamicPermission: IAuthPerm = (user: AuthUser) => {
+ * const dynamicPermission: AuthPerm = (user: AuthUser) => {
  *     const userRole = getUserRole(user); // Assume this function retrieves the user's role
  *     return userRole === 'admin'; // Grant access if the user is an admin
  * };
  * 
  * // Example of no permission
- * const noPermission: IAuthPerm = false;
+ * const noPermission: AuthPerm = false;
  * 
  *  * // Using a single resource action tuple
- * const perm: IAuthPerm = ["users", "read"];
+ * const perm: AuthPerm = ["users", "read"];
  * 
  * // Using an array of resource action tuples
- * const perm: IAuthPerm = [["users", "read"], ["users", "create"],{"resourceName": "users", "action": "update"}];
+ * const perm: AuthPerm = [["users", "read"], ["users", "create"],{"resourceName": "users", "action": "update"}];
  * ```
  * 
- * In these examples, the `IAuthPerm` type is used to define various 
+ * In these examples, the `AuthPerm` type is used to define various 
  * permissions for accessing resources, demonstrating its flexibility 
  * and utility in permission management.
  * ```
  * 
  * 
- * @see {@link IResourceName} for the `IResourceName` type.
- * @typedef {((user: AuthUser) => boolean) | false | IResourceActionTuple<ResourceName> | IResourceActionTuple<ResourceName>[]} IAuthPerm
+ * @see {@link ResourceName} for the `ResourceName` type.
+ * @typedef {((user: AuthUser) => boolean) | false | ResourceActionTuple<TResourceName> | ResourceActionTuple<TResourceName>[]} AuthPerm
  */
-export type IAuthPerm<ResourceName extends IResourceName = IResourceName> =
+export type AuthPerm<TResourceName extends ResourceName = ResourceName> =
   | ((user: AuthUser) => boolean)
   | false
-  | IResourceActionTuple<ResourceName>
-  | IResourceActionTuple<ResourceName>[];
+  | ResourceActionTuple<TResourceName>
+  | ResourceActionTuple<TResourceName>[];
 
 /**
  * Represents a mapping of authentication permissions for resources.
@@ -278,9 +278,9 @@ export type IAuthPerm<ResourceName extends IResourceName = IResourceName> =
  * ### Structure
  *
  * The `IAuthPerms` type is defined as a `Record` where:
- * - The keys are of type `IResourceName`, representing the names of
+ * - The keys are of type `ResourceName`, representing the names of
  *   the resources (e.g., "documents", "users").
- * - The values are arrays of `IResourceActionName`, representing the
+ * - The values are arrays of `ResourceActionName`, representing the
  *   actions that can be performed on the corresponding resource (e.g.,
  *   ["read", "create", "update"]).
  *
@@ -300,10 +300,10 @@ export type IAuthPerm<ResourceName extends IResourceName = IResourceName> =
  * In this example, the `IAuthPerms` type is used to define a permissions
  * object for a user, mapping resources to the actions they are allowed
  * to perform.
- * @typedef {Partial<{ [ResourceName in IResourceName]: Partial<IResourceActionName<ResourceName>[]> }>} IAuthPerms
+ * @typedef {Partial<{ [TResourceName in ResourceName]: Partial<ResourceActionName<TResourceName>[]> }>} IAuthPerms
  */
 export type IAuthPerms = Partial<{
-  [ResourceName in IResourceName]: Partial<IResourceActionName<ResourceName>[]>;
+  [TResourceName in ResourceName]: Partial<ResourceActionName<TResourceName>[]>;
 }>;
 
 /**

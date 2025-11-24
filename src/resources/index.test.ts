@@ -4,11 +4,11 @@ import '../translations';
 import { Resource, ResourceMeta } from './index';
 import './types';
 import {
-  IField,
-  IResource,
-  IResourceDataService,
-  IResourcePaginatedResult,
-  IResourceQueryOptions,
+  Field,
+  ResourceBase,
+  ResourceDataService,
+  ResourcePaginatedResult,
+  ResourceQueryOptions,
 } from './types';
 
 interface MockData {
@@ -19,23 +19,23 @@ interface MockData {
   updatedAt?: number;
 }
 
-class MockDataService implements IResourceDataService<MockData, string> {
+class MockDataService implements ResourceDataService<MockData, string> {
   private data: Map<string, MockData> = new Map();
   private nextId: number = 1;
 
-  find(options?: IResourceQueryOptions<MockData>): Promise<MockData[]> {
+  find(options?: ResourceQueryOptions<MockData>): Promise<MockData[]> {
     return Promise.resolve(Array.from(this.data.values()));
   }
 
   findOne(
-    options: string | IResourceQueryOptions<MockData>
+    options: string | ResourceQueryOptions<MockData>
   ): Promise<MockData | null> {
     const id = typeof options === 'string' ? options : (options as any).id;
     return Promise.resolve(this.data.get(id) || null);
   }
 
   findOneOrFail(
-    options: string | IResourceQueryOptions<MockData>
+    options: string | ResourceQueryOptions<MockData>
   ): Promise<MockData> {
     const id = typeof options === 'string' ? options : (options as any).id;
     const record = this.data.get(id);
@@ -71,15 +71,15 @@ class MockDataService implements IResourceDataService<MockData, string> {
   }
 
   findAndCount(
-    options?: IResourceQueryOptions<MockData>
+    options?: ResourceQueryOptions<MockData>
   ): Promise<[MockData[], number]> {
     const data = Array.from(this.data.values());
     return Promise.resolve([data, data.length]);
   }
 
   findAndPaginate(
-    options?: IResourceQueryOptions<MockData>
-  ): Promise<IResourcePaginatedResult<MockData>> {
+    options?: ResourceQueryOptions<MockData>
+  ): Promise<ResourcePaginatedResult<MockData>> {
     const data = Array.from(this.data.values());
     return Promise.resolve({
       data,
@@ -107,7 +107,7 @@ class MockDataService implements IResourceDataService<MockData, string> {
     return Promise.resolve(count);
   }
 
-  count(options?: IResourceQueryOptions<MockData>): Promise<number> {
+  count(options?: ResourceQueryOptions<MockData>): Promise<number> {
     return Promise.resolve(this.data.size);
   }
 
@@ -139,7 +139,7 @@ class TestUserResource extends Resource<'users', MockData, string> {
   actions: Partial<any> = {};
   private mockDataService = new MockDataService();
 
-  getDataService(): IResourceDataService<MockData, string> {
+  getDataService(): ResourceDataService<MockData, string> {
     return this.mockDataService;
   }
 
@@ -186,7 +186,7 @@ describe('Resource Class', () => {
     });
 
     it('should update metadata', () => {
-      const newMetadata: IResource = {
+      const newMetadata: ResourceBase<'users'> = {
         name: 'users',
         label: 'Updated',
         title: 'Updated',
@@ -356,7 +356,7 @@ describe('Resource Class', () => {
 
     it('should get primary keys', () => {
       resource.fields = {
-        id: { name: 'id', primaryKey: true, type: 'text' } as IField,
+        id: { name: 'id', primaryKey: true, type: 'text' } as Field,
       };
       const keys = resource.getPrimaryKeys();
       expect(keys).toHaveLength(1);
@@ -402,6 +402,6 @@ describe('Resource Class', () => {
 
 declare module './types' {
   interface IResourceMap {
-    users: IResource;
+    users: ResourceBase;
   }
 }
