@@ -1,6 +1,6 @@
-import { defaultStr } from "@/utils";
-import { IValidatorResult, IValidatorValidateOptions } from "../types";
-import { Validator } from "../validator";
+import { defaultStr } from '@/utils';
+import { IValidatorResult, IValidatorValidateOptions } from '../types';
+import { Validator } from '../validator';
 
 function _Boolean({
   value,
@@ -10,20 +10,20 @@ function _Boolean({
   ...rest
 }: IValidatorValidateOptions): IValidatorResult {
   return new Promise((resolve, reject) => {
-    const validBooleans = [true, false, 1, 0, "1", "0"];
+    const validBooleans = [true, false, 1, 0, '1', '0'];
     // Handle string Boolean values case-insensitively
     let normalizedValue = value;
-    if (typeof value === "string") {
+    if (typeof value === 'string') {
       const lowerValue = value.toLowerCase();
-      if (lowerValue === "true") normalizedValue = true;
-      else if (lowerValue === "false") normalizedValue = false;
+      if (lowerValue === 'true') normalizedValue = true;
+      else if (lowerValue === 'false') normalizedValue = false;
       else normalizedValue = value;
     }
     const isValidBoolean = validBooleans.includes(normalizedValue);
     if (isValidBoolean) {
       resolve(true);
     } else {
-      const message = i18n.t("validator.Boolean", {
+      const message = i18n.t('validator.Boolean', {
         field: defaultStr(translatedPropertyName, fieldName),
         value,
         ...rest,
@@ -60,13 +60,13 @@ function _Boolean({
  * @param options - Validation options containing value and context
  * @returns Promise resolving to true if valid, rejecting with error message if invalid
  *
- * @since 1.22.0
+ * @since 1.0.0
  * @public
  */
-export const IsBoolean = Validator.buildPropertyDecorator(["Boolean"]);
-Validator.registerRule("Boolean", _Boolean);
+export const IsBoolean = Validator.buildPropertyDecorator(['Boolean']);
+Validator.registerRule('Boolean', _Boolean);
 
-declare module "../types" {
+declare module '../types' {
   export interface IValidatorRulesMap<Context = unknown> {
     /**
      * ### Boolean Rule
@@ -110,7 +110,7 @@ declare module "../types" {
      * @param options - Validation options containing value and context
      * @returns Promise resolving to true if valid, rejecting with error message if invalid
      *
-     * @since 1.22.0
+     * @since 1.0.0
      * @public
      */
     Boolean: IValidatorRuleParams<[], Context>;

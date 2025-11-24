@@ -162,9 +162,9 @@ export interface FieldBase<
  * #### Basic Module Augmentation
  * ```typescript
  * // In your application's types file (e.g., types.ts or global.d.ts)
- * import "reslib";
+ * import "reslib/resources";
  *
- * declare module "reslib" {
+ * declare module "reslib/resources/resources" {
  *   interface FieldMap {
  *     // Define a text field type
  *     text: FieldBase<"text", string>;
@@ -180,7 +180,7 @@ export interface FieldBase<
  *
  * #### Advanced FieldMeta Configuration
  * ```typescript
- * declare module "reslib" {
+ * declare module "reslib/resources/resources" {
  *   interface FieldMap {
  *     // Text field with validation
  *     text: FieldBase<"text", string> & {
@@ -246,7 +246,7 @@ export interface FieldBase<
  *
  * #### Conditional FieldMeta Extensions
  * ```typescript
- * declare module "reslib" {
+ * declare module "reslib/resources/resources" {
  *   interface FieldMap {
  *     // Conditional field that changes behavior based on context
  *     conditional: FieldBase<"conditional", any> & {
@@ -283,7 +283,7 @@ export interface FieldBase<
  * @example
  * ```typescript
  * // Complete example of extending FieldMap
- * declare module "reslib" {
+ * declare module "reslib/resources/resources" {
  *   interface FieldMap {
  *     text: FieldBase<"text", string> & {
  *       minLength?: number;
@@ -373,9 +373,9 @@ export interface FieldMap {}
  * #### Module Augmentation for Custom Actions
  * ```typescript
  * // In your application's types file
- * import "reslib";
+ * import "reslib/resources/resources";
  *
- * declare module "reslib" {
+ * declare module "reslib/resources/resources" {
  *   interface FieldActionsMap {
  *     // Add custom action contexts
  *     import: string;      // For bulk import operations
@@ -400,7 +400,7 @@ export interface FieldMap {}
  *
  * #### Advanced FieldMeta Behavior Overrides
  * ```typescript
- * declare module "reslib" {
+ * declare module "reslib/resources/resources" {
  *   interface FieldActionsMap {
  *     bulkUpdate: string;
  *     softDelete: string;
@@ -479,7 +479,7 @@ export interface FieldMap {}
  * @example
  * ```typescript
  * // Complete example of extending FieldActionsMap
- * declare module "reslib" {
+ * declare module "reslib/resources/resources" {
  *   interface FieldActionsMap {
  *     // Standard CRUD operations
  *     create: string;
@@ -695,7 +695,7 @@ export interface FieldActionsMap {
  * #### Advanced Usage with Custom Field Types
  * ```typescript
  * // After extending FieldMap with custom types
- * declare module "reslib" {
+ * declare module "reslib/resources/resources" {
  *   interface FieldMap {
  *     richText: FieldBase<"richText", string> & {
  *       toolbar: string[];
@@ -772,9 +772,9 @@ export interface FieldActionsMap {
  * @example
  * ```typescript
  * // Complete example of field definitions with action overrides
- * import "reslib";
+ * import "reslib/resources/resources";
  *
- * declare module "reslib" {
+ * declare module "reslib/resources/resources" {
  *   interface FieldMap {
  *     text: FieldBase<"text", string> & {
  *       minLength?: number;
@@ -1073,9 +1073,9 @@ export type FieldType = keyof FieldMap;
  * #### Basic Module Augmentation
  * ```typescript
  * // In your application's types file (e.g., types.ts or global.d.ts)
- * import "reslib";
+ * import "reslib/resources";
  *
- * declare module "reslib" {
+ * declare module "reslib/resources" {
  *   interface Resources {
  *     // Define a users resource
  *     users: {
@@ -1102,7 +1102,7 @@ export type FieldType = keyof FieldMap;
  *
  * #### Advanced Resource Configuration
  * ```typescript
- * declare module "reslib" {
+ * declare module "reslib/resources" {
  *   interface Resources {
  *     // User resource with comprehensive actions
  *     users: {
@@ -1148,7 +1148,7 @@ export type FieldType = keyof FieldMap;
  * #### Using Defined Resources
  * ```typescript
  * // After augmentation, you can use type-safe resource operations
- * import { ResourceConfig, ResourceName, ResourceActions } from "reslib";
+ * import { ResourceConfig, ResourceName, ResourceActions } from "reslib/resources";
  *
  * // Type-safe resource access
  * type UserResource = ResourceConfig<"users">;
@@ -1296,7 +1296,7 @@ export type FieldType = keyof FieldMap;
  * @example
  * ```typescript
  * // Complete example of extending Resources
- * declare module "reslib" {
+ * declare module "reslib/resources" {
  *   interface Resources {
  *     // User management resource
  *     users: {
@@ -1405,7 +1405,7 @@ type ValidateResource<T> = T extends ResourceBase ? T : never;
  * #### Basic Resource Definition and Usage
  * ```typescript
  * // Define resources via module augmentation
- * declare module "reslib" {
+ * declare module "reslib/resources" {
  *   interface Resources {
  *     users: {
  *       actions: {
@@ -1601,9 +1601,9 @@ type ValidateResource<T> = T extends ResourceBase ? T : never;
  * @example
  * ```typescript
  * // Complete example of using ResourceName for type safety
- * import "reslib";
+ * import "reslib/resources";
  *
- * declare module "reslib" {
+ * declare module "reslib/resources" {
  *   interface Resources {
  *     users: {
  *       actions: {
@@ -1713,7 +1713,7 @@ export type ResourceName = keyof ValidatedResources;
  * #### Basic Resource Access
  * ```typescript
  * // After defining resources via module augmentation
- * declare module "reslib" {
+ * declare module "reslib/resources" {
  *   interface Resources {
  *     users: {
  *       actions: {
@@ -1826,7 +1826,7 @@ export type ResourceName = keyof ValidatedResources;
  * #### Advanced Configuration with Custom Properties
  * ```typescript
  * // Resources with additional configuration properties
- * declare module "reslib" {
+ * declare module "reslib/resources" {
  *   interface Resources {
  *     users: {
  *       actions: {
@@ -1932,9 +1932,9 @@ export type ResourceName = keyof ValidatedResources;
  * @example
  * ```typescript
  * // Complete example of using ResourceConfig
- * import "reslib";
+ * import "reslib/resources";
  *
- * declare module "reslib" {
+ * declare module "reslib/resources" {
  *   interface Resources {
  *     users: {
  *       actions: {
@@ -2040,9 +2040,9 @@ export type ResourceConfig<TResourceName extends ResourceName> =
  * @example
  * ```typescript
  * // Basic usage with specific resource
- * import "reslib";
+ * import "reslib/resources";
  *
- * declare module "reslib" {
+ * declare module "reslib/resources" {
  *   interface Resources {
  *     users: {
  *       actions: {
@@ -2301,9 +2301,9 @@ type ResourceActionsRecord<TActions> =
  * @example
  * ```typescript
  * // Basic usage - getting resource actions type
- * import "reslib";
+ * import "reslib/resources";
  *
- * declare module "reslib" {
+ * declare module "reslib/resources" {
  *   interface Resources {
  *     users: {
  *       actions: {
@@ -2665,9 +2665,9 @@ type GetResourceActionNames<
  * @example
  * ```typescript
  * // Complete example of using ResourceDefaultActions in a resource definition
- * import "reslib";
+ * import "reslib/resources";
  *
- * declare module "reslib" {
+ * declare module "reslib/resources" {
  *   interface Resources {
  *     users: {
  *       actions: ResourceDefaultActions & {
@@ -2854,9 +2854,9 @@ export interface ResourceDefaultActions {
  * #### Module Augmentation Usage
  * ```typescript
  * // In your application's types file
- * import "reslib";
+ * import "reslib/resources";
  *
- * declare module "reslib" {
+ * declare module "reslib/resources" {
  *   interface Resources {
  *     // All of these must implement ResourceBase
  *     users: {
@@ -2957,7 +2957,7 @@ export interface ResourceDefaultActions {
  * @example
  * ```typescript
  * // Complete example of ResourceBase usage
- * import "reslib";
+ * import "reslib/resources";
  *
  * // Define custom action types for better type safety
  * interface UserActions {
@@ -3003,7 +3003,7 @@ export interface ResourceDefaultActions {
  * };
  *
  * // Module augmentation for global availability
- * declare module "reslib" {
+ * declare module "reslib/resources" {
  *   interface Resources {
  *     users: typeof userResource;
  *   }
@@ -3831,9 +3831,9 @@ export interface ResourcePaginationMeta {
  * @example
  * ```typescript
  * // Basic usage - event type for a specific resource
- * import "reslib";
+ * import "reslib/resources";
  *
- * declare module "reslib" {
+ * declare module "reslib/resources" {
  *   interface Resources {
  *     users: {
  *       actions: {

@@ -1,8 +1,8 @@
-import { defaultStr } from "@utils/defaultStr";
-import { isNumber } from "@utils/isNumber";
-import { IValidatorResult, IValidatorValidateOptions } from "../types";
-import { Validator } from "../validator";
-import { toNumber } from "./utils";
+import { defaultStr } from '@utils/defaultStr';
+import { isNumber } from '@utils/isNumber';
+import { IValidatorResult, IValidatorValidateOptions } from '../types';
+import { Validator } from '../validator';
+import { toNumber } from './utils';
 
 /**
  * @function compareNumer
@@ -25,15 +25,24 @@ import { toNumber } from "./utils";
  *     .catch(error => console.error(error)); // Output: "Value must be less than 10"
  * ```
  */
-function compareNumer(compare: (value: any, toCompare: any) => boolean, translateKey: string, { value, ruleParams, i18n, ...rest }: IValidatorValidateOptions): IValidatorResult {
+function compareNumer(
+  compare: (value: any, toCompare: any) => boolean,
+  translateKey: string,
+  { value, ruleParams, i18n, ...rest }: IValidatorValidateOptions
+): IValidatorResult {
   ruleParams = Array.isArray(ruleParams) ? ruleParams : [];
   const rParams = ruleParams ? ruleParams : [];
   translateKey = defaultStr(translateKey);
   const message = i18n.t(translateKey, { ...rest, value, ruleParams });
   const nVal = toNumber(value);
-  value = typeof value === "number" ? value : !isNaN(nVal) ? nVal : NaN;
+  value = typeof value === 'number' ? value : !isNaN(nVal) ? nVal : NaN;
   const toCompareN = toNumber(rParams[0]);
-  const toCompare = typeof rParams[0] === "number" ? rParams[0] : isNumber(toCompareN) ? toCompareN : NaN;
+  const toCompare =
+    typeof rParams[0] === 'number'
+      ? rParams[0]
+      : isNumber(toCompareN)
+        ? toCompareN
+        : NaN;
   return new Promise((resolve, reject) => {
     if (isNaN(value) || rParams[0] === undefined) {
       return resolve(message);
@@ -53,12 +62,12 @@ function numberLessThanOrEquals(options: IValidatorValidateOptions<[number]>) {
     (value, toCompare) => {
       return value <= toCompare;
     },
-    "validator.numberLessThanOrEquals",
+    'validator.numberLessThanOrEquals',
     options
   );
 }
 
-Validator.registerRule("NumberLessThanOrEqual", numberLessThanOrEquals);
+Validator.registerRule('NumberLessThanOrEqual', numberLessThanOrEquals);
 /**
  * @decorator IsNumberLessThanOrEqual
  *
@@ -72,18 +81,20 @@ Validator.registerRule("NumberLessThanOrEqual", numberLessThanOrEquals);
  *  }
  * ```
  */
-export const IsNumberLessThanOrEqual = Validator.buildRuleDecorator<[param: number]>(numberLessThanOrEquals);
+export const IsNumberLessThanOrEqual = Validator.buildRuleDecorator<
+  [param: number]
+>(numberLessThanOrEquals);
 
 function numberLessThan(options: IValidatorValidateOptions) {
   return compareNumer(
     (value, toCompare) => {
       return value < toCompare;
     },
-    "validator.numberLessThan",
+    'validator.numberLessThan',
     options
   );
 }
-Validator.registerRule("NumberLessThan", numberLessThan);
+Validator.registerRule('NumberLessThan', numberLessThan);
 
 /**
  * @decorator IsNumberLessThan
@@ -112,18 +123,21 @@ Validator.registerRule("NumberLessThan", numberLessThan);
  * - This rule is useful for scenarios where you need to ensure that a numeric input is strictly less than a specified limit.
  * - The error message can be customized by modifying the second parameter of the `compareNumer` function.
  */
-export const IsNumberLessThan = Validator.buildRuleDecorator<[param: number]>(numberLessThan);
+export const IsNumberLessThan =
+  Validator.buildRuleDecorator<[param: number]>(numberLessThan);
 
-function numberGreaterThanOrEquals(options: IValidatorValidateOptions<[number]>) {
+function numberGreaterThanOrEquals(
+  options: IValidatorValidateOptions<[number]>
+) {
   return compareNumer(
     (value, toCompare) => {
       return value >= toCompare;
     },
-    "validator.numberGreaterThanOrEquals",
+    'validator.numberGreaterThanOrEquals',
     options
   );
 }
-Validator.registerRule("NumberGreaterThanOrEqual", numberGreaterThanOrEquals);
+Validator.registerRule('NumberGreaterThanOrEqual', numberGreaterThanOrEquals);
 
 /**
  * @decorator IsNumberGreaterThanOrEqual
@@ -152,18 +166,20 @@ Validator.registerRule("NumberGreaterThanOrEqual", numberGreaterThanOrEquals);
  * - This rule is useful for scenarios where you need to ensure that a numeric input meets or exceeds a specified limit.
  * - The error message can be customized by modifying the second parameter of the `compareNumer` function.
  */
-export const IsNumberGreaterThanOrEqual = Validator.buildRuleDecorator<[param: number]>(numberGreaterThanOrEquals);
+export const IsNumberGreaterThanOrEqual = Validator.buildRuleDecorator<
+  [param: number]
+>(numberGreaterThanOrEquals);
 
 function numberGreaterThan(options: IValidatorValidateOptions) {
   return compareNumer(
     (value, toCompare) => {
       return value > toCompare;
     },
-    "validator.numberGreaterThan",
+    'validator.numberGreaterThan',
     options
   );
 }
-Validator.registerRule("NumberGreaterThan", numberGreaterThan);
+Validator.registerRule('NumberGreaterThan', numberGreaterThan);
 
 /**
  * @decorator IsNumberGreaterThan
@@ -192,18 +208,19 @@ Validator.registerRule("NumberGreaterThan", numberGreaterThan);
  * - This rule is useful for scenarios where you need to ensure that a numeric input exceeds a specified limit.
  * - The error message can be customized by modifying the second parameter of the `compareNumer` function.
  */
-export const IsNumberGreaterThan = Validator.buildRuleDecorator<[param: number]>(numberGreaterThan);
+export const IsNumberGreaterThan =
+  Validator.buildRuleDecorator<[param: number]>(numberGreaterThan);
 
 function numberEqualsTo(options: IValidatorValidateOptions<[number]>) {
   return compareNumer(
     (value, toCompare) => {
       return value === toCompare;
     },
-    "validator.numberEquals",
+    'validator.numberEquals',
     options
   );
 }
-Validator.registerRule("NumberEqual", numberEqualsTo);
+Validator.registerRule('NumberEqual', numberEqualsTo);
 
 /**
  * @decorator  IsNumberEqual
@@ -232,18 +249,19 @@ Validator.registerRule("NumberEqual", numberEqualsTo);
  * - This rule is useful for scenarios where you need to ensure that a numeric input matches a specified value exactly.
  * - The error message can be customized by modifying the second parameter of the `compareNumer` function.
  */
-export const IsNumberEqual = Validator.buildRuleDecorator<[param: number]>(numberEqualsTo);
+export const IsNumberEqual =
+  Validator.buildRuleDecorator<[param: number]>(numberEqualsTo);
 
 function numberIsDifferentFromTo(options: IValidatorValidateOptions<[number]>) {
   return compareNumer(
     (value, toCompare) => {
       return value !== toCompare;
     },
-    "validator.numberIsDifferentFrom",
+    'validator.numberIsDifferentFrom',
     options
   );
 }
-Validator.registerRule("NumberIsDifferentFrom", numberIsDifferentFromTo);
+Validator.registerRule('NumberIsDifferentFrom', numberIsDifferentFromTo);
 
 /**
  * @decorator IsNumberDifferentFrom
@@ -259,7 +277,9 @@ Validator.registerRule("NumberIsDifferentFrom", numberIsDifferentFromTo);
  * }
  * ```
  */
-export const IsNumberDifferentFrom = Validator.buildRuleDecorator<[param: number]>(numberIsDifferentFromTo);
+export const IsNumberDifferentFrom = Validator.buildRuleDecorator<
+  [param: number]
+>(numberIsDifferentFromTo);
 
 /**
  * ## Pre-Built Validation Decorators
@@ -303,18 +323,25 @@ export const IsNumberDifferentFrom = Validator.buildRuleDecorator<[param: number
  * @see {@link IsRequired} - Often used together
  * @public
  */
-export const IsNumber = Validator.buildPropertyDecorator(["Number"]);
+export const IsNumber = Validator.buildPropertyDecorator(['Number']);
 
-Validator.registerRule("Number", function Number(options) {
+Validator.registerRule('Number', function Number(options) {
   const { value, i18n } = options;
-  return typeof value === "number" || i18n.t("validator.isNumber", options);
+  return typeof value === 'number' || i18n.t('validator.isNumber', options);
 });
 
-function NumberBetween({ value, ruleParams, fieldName, translatedPropertyName, i18n, ...rest }: IValidatorValidateOptions<[number, number]>): IValidatorResult {
+function NumberBetween({
+  value,
+  ruleParams,
+  fieldName,
+  translatedPropertyName,
+  i18n,
+  ...rest
+}: IValidatorValidateOptions<[number, number]>): IValidatorResult {
   return new Promise((resolve, reject) => {
     if (!ruleParams || ruleParams.length < 2) {
-      const message = i18n.t("validator.invalidRuleParams", {
-        rule: "NumberBetween",
+      const message = i18n.t('validator.invalidRuleParams', {
+        rule: 'NumberBetween',
         field: translatedPropertyName || fieldName,
         ruleParams,
         ...rest,
@@ -324,7 +351,7 @@ function NumberBetween({ value, ruleParams, fieldName, translatedPropertyName, i
 
     const numericValue = toNumber(value);
     if (isNaN(numericValue)) {
-      const message = i18n.t("validator.numeric", {
+      const message = i18n.t('validator.numeric', {
         field: translatedPropertyName || fieldName,
         value,
         ...rest,
@@ -335,8 +362,8 @@ function NumberBetween({ value, ruleParams, fieldName, translatedPropertyName, i
     const min = toNumber(ruleParams[0]);
     const max = toNumber(ruleParams[1]);
     if (isNaN(min) || isNaN(max)) {
-      const message = i18n.t("validator.invalidRuleParams", {
-        rule: "NumberBetween",
+      const message = i18n.t('validator.invalidRuleParams', {
+        rule: 'NumberBetween',
         field: translatedPropertyName || fieldName,
         ruleParams,
         ...rest,
@@ -346,7 +373,7 @@ function NumberBetween({ value, ruleParams, fieldName, translatedPropertyName, i
     if (numericValue >= min && numericValue <= max) {
       resolve(true);
     } else {
-      const message = i18n.t("validator.numberBetween", {
+      const message = i18n.t('validator.numberBetween', {
         field: translatedPropertyName || fieldName,
         value: numericValue,
         min,
@@ -386,17 +413,27 @@ function NumberBetween({ value, ruleParams, fieldName, translatedPropertyName, i
  * @param options.ruleParams - Array containing [min, max] values
  * @returns Promise resolving to true if valid, rejecting with error message if invalid
  *
- * @since 1.22.0
+ * @since 1.0.0
  * @public
  */
-export const IsNumberBetween = Validator.buildRuleDecorator<[min: number, max: number]>(NumberBetween);
-Validator.registerRule("NumberBetween", NumberBetween);
+export const IsNumberBetween =
+  Validator.buildRuleDecorator<[min: number, max: number]>(NumberBetween);
+Validator.registerRule('NumberBetween', NumberBetween);
 
-function DecimalPlaces({ value, ruleParams, fieldName, translatedPropertyName, i18n, ...rest }: IValidatorValidateOptions<[minDecimalPlaces: number, maxDecimalPlaces?: number]>): IValidatorResult {
+function DecimalPlaces({
+  value,
+  ruleParams,
+  fieldName,
+  translatedPropertyName,
+  i18n,
+  ...rest
+}: IValidatorValidateOptions<
+  [minDecimalPlaces: number, maxDecimalPlaces?: number]
+>): IValidatorResult {
   return new Promise((resolve, reject) => {
     if (!ruleParams || !ruleParams.length) {
-      const message = i18n.t("validator.invalidRuleParams", {
-        rule: "DecimalPlaces",
+      const message = i18n.t('validator.invalidRuleParams', {
+        rule: 'DecimalPlaces',
         field: translatedPropertyName || fieldName,
         ruleParams,
         ...rest,
@@ -406,8 +443,8 @@ function DecimalPlaces({ value, ruleParams, fieldName, translatedPropertyName, i
 
     const numericValue = toNumber(value);
     if (isNaN(numericValue)) {
-      const message = i18n.t("validator.number", {
-        rule: "DecimalPlaces",
+      const message = i18n.t('validator.number', {
+        rule: 'DecimalPlaces',
         field: translatedPropertyName || fieldName,
         value,
         ruleParams,
@@ -418,8 +455,9 @@ function DecimalPlaces({ value, ruleParams, fieldName, translatedPropertyName, i
 
     // Get decimal places from the number
     const valueStr = String(value);
-    const decimalIndex = valueStr.indexOf(".");
-    const actualDecimalPlaces = decimalIndex === -1 ? 0 : valueStr.length - decimalIndex - 1;
+    const decimalIndex = valueStr.indexOf('.');
+    const actualDecimalPlaces =
+      decimalIndex === -1 ? 0 : valueStr.length - decimalIndex - 1;
 
     let isValid = false;
 
@@ -431,15 +469,19 @@ function DecimalPlaces({ value, ruleParams, fieldName, translatedPropertyName, i
       // Range of decimal places
       const minPlaces = toNumber(ruleParams[0]);
       const maxPlaces = toNumber(ruleParams[1]);
-      isValid = !isNaN(minPlaces) && !isNaN(maxPlaces) && actualDecimalPlaces >= minPlaces && actualDecimalPlaces <= maxPlaces;
+      isValid =
+        !isNaN(minPlaces) &&
+        !isNaN(maxPlaces) &&
+        actualDecimalPlaces >= minPlaces &&
+        actualDecimalPlaces <= maxPlaces;
     }
     if (isValid) {
       resolve(true);
     } else {
-      const message = i18n.t("validator.decimalPlaces", {
+      const message = i18n.t('validator.decimalPlaces', {
         field: translatedPropertyName || fieldName,
         value,
-        places: ruleParams.join("-"),
+        places: ruleParams.join('-'),
         actualPlaces: actualDecimalPlaces,
         ...rest,
       });
@@ -448,7 +490,7 @@ function DecimalPlaces({ value, ruleParams, fieldName, translatedPropertyName, i
   });
 }
 
-Validator.registerRule("DecimalPlaces", DecimalPlaces);
+Validator.registerRule('DecimalPlaces', DecimalPlaces);
 
 /**
  * ### HasDecimalPlaces Rule
@@ -479,16 +521,25 @@ Validator.registerRule("DecimalPlaces", DecimalPlaces);
  * @param options.ruleParams - Array with decimal places specification
  * @returns Promise resolving to true if valid, rejecting with error message if invalid
  *
- * @since 1.22.0
+ * @since 1.0.0
  * @public
  */
-export const HasDecimalPlaces = Validator.buildRuleDecorator<[minDecimalPlaces: number, maxDecimalPlaces?: number]>(DecimalPlaces);
+export const HasDecimalPlaces =
+  Validator.buildRuleDecorator<
+    [minDecimalPlaces: number, maxDecimalPlaces?: number]
+  >(DecimalPlaces);
 
-function _Integer({ value, fieldName, translatedPropertyName, i18n, ...rest }: IValidatorValidateOptions): IValidatorResult {
+function _Integer({
+  value,
+  fieldName,
+  translatedPropertyName,
+  i18n,
+  ...rest
+}: IValidatorValidateOptions): IValidatorResult {
   return new Promise((resolve, reject) => {
     const numericValue = toNumber(value);
     if (isNaN(numericValue) || !Number.isInteger(numericValue)) {
-      const message = i18n.t("validator.integer", {
+      const message = i18n.t('validator.integer', {
         field: translatedPropertyName || fieldName,
         value,
         ...rest,
@@ -525,11 +576,11 @@ function _Integer({ value, fieldName, translatedPropertyName, i18n, ...rest }: I
  *
  * @returns Promise resolving to true if valid, rejecting with error message if invalid
  *
- * @since 1.22.0
+ * @since 1.0.0
  * @public
  */
-export const IsInteger = Validator.buildPropertyDecorator(["Integer"]);
-Validator.registerRule("Integer", _Integer);
+export const IsInteger = Validator.buildPropertyDecorator(['Integer']);
+Validator.registerRule('Integer', _Integer);
 
 /**
  * ### EvenNumber Rule
@@ -561,13 +612,19 @@ Validator.registerRule("Integer", _Integer);
  * @returns Promise resolving to `true` when value is an even integer,
  *          rejecting with a localized error message otherwise
  *
- * @since 1.22.0
+ * @since 1.0.0
  * @public
  */
-function EvenNumber({ value, fieldName, translatedPropertyName, i18n, ...rest }: IValidatorValidateOptions): IValidatorResult {
+function EvenNumber({
+  value,
+  fieldName,
+  translatedPropertyName,
+  i18n,
+  ...rest
+}: IValidatorValidateOptions): IValidatorResult {
   const numericValue = toNumber(value);
   if (isNaN(numericValue)) {
-    const message = i18n.t("validator.number", {
+    const message = i18n.t('validator.number', {
       field: translatedPropertyName || fieldName,
       value,
       ...rest,
@@ -575,7 +632,7 @@ function EvenNumber({ value, fieldName, translatedPropertyName, i18n, ...rest }:
     return message;
   }
   if (!Number.isInteger(numericValue)) {
-    const message = i18n.t("validator.integer", {
+    const message = i18n.t('validator.integer', {
       field: translatedPropertyName || fieldName,
       value,
       ...rest,
@@ -585,14 +642,14 @@ function EvenNumber({ value, fieldName, translatedPropertyName, i18n, ...rest }:
   if (numericValue % 2 === 0) {
     return true;
   } else {
-    return i18n.t("validator.evenNumber", {
+    return i18n.t('validator.evenNumber', {
       field: translatedPropertyName || fieldName,
       value: numericValue,
       ...rest,
     });
   }
 }
-Validator.registerRule("EvenNumber", EvenNumber);
+Validator.registerRule('EvenNumber', EvenNumber);
 
 /**
  * ### IsEvenNumber Decorator
@@ -610,7 +667,7 @@ Validator.registerRule("EvenNumber", EvenNumber);
  *
  * @public
  */
-export const IsEvenNumber = Validator.buildPropertyDecorator(["EvenNumber"]);
+export const IsEvenNumber = Validator.buildPropertyDecorator(['EvenNumber']);
 
 /**
  * ### OddNumber Rule
@@ -642,13 +699,19 @@ export const IsEvenNumber = Validator.buildPropertyDecorator(["EvenNumber"]);
  * @returns Promise resolving to `true` when value is an odd integer,
  *          rejecting with a localized error message otherwise
  *
- * @since 1.22.0
+ * @since 1.0.0
  * @public
  */
-function OddNumber({ value, fieldName, translatedPropertyName, i18n, ...rest }: IValidatorValidateOptions): IValidatorResult {
+function OddNumber({
+  value,
+  fieldName,
+  translatedPropertyName,
+  i18n,
+  ...rest
+}: IValidatorValidateOptions): IValidatorResult {
   const numericValue = toNumber(value);
   if (isNaN(numericValue)) {
-    const message = i18n.t("validator.number", {
+    const message = i18n.t('validator.number', {
       field: translatedPropertyName || fieldName,
       value,
       ...rest,
@@ -656,7 +719,7 @@ function OddNumber({ value, fieldName, translatedPropertyName, i18n, ...rest }: 
     return message;
   }
   if (!Number.isInteger(numericValue)) {
-    const message = i18n.t("validator.integer", {
+    const message = i18n.t('validator.integer', {
       field: translatedPropertyName || fieldName,
       value,
       ...rest,
@@ -666,14 +729,14 @@ function OddNumber({ value, fieldName, translatedPropertyName, i18n, ...rest }: 
   if (numericValue % 2 !== 0) {
     return true;
   } else {
-    return i18n.t("validator.oddNumber", {
+    return i18n.t('validator.oddNumber', {
       field: translatedPropertyName || fieldName,
       value: numericValue,
       ...rest,
     });
   }
 }
-Validator.registerRule("OddNumber", OddNumber);
+Validator.registerRule('OddNumber', OddNumber);
 
 /**
  * ### IsOddNumber Decorator
@@ -691,13 +754,20 @@ Validator.registerRule("OddNumber", OddNumber);
  *
  * @public
  */
-export const IsOddNumber = Validator.buildPropertyDecorator(["OddNumber"]);
+export const IsOddNumber = Validator.buildPropertyDecorator(['OddNumber']);
 
-function MultipleOf({ value, ruleParams, fieldName, translatedPropertyName, i18n, ...rest }: IValidatorValidateOptions<[number]>): IValidatorResult {
+function MultipleOf({
+  value,
+  ruleParams,
+  fieldName,
+  translatedPropertyName,
+  i18n,
+  ...rest
+}: IValidatorValidateOptions<[number]>): IValidatorResult {
   return new Promise((resolve, reject) => {
     if (!ruleParams || !ruleParams.length) {
-      const message = i18n.t("validator.invalidRuleParams", {
-        rule: "MultipleOf",
+      const message = i18n.t('validator.invalidRuleParams', {
+        rule: 'MultipleOf',
         field: translatedPropertyName || fieldName,
         ...rest,
         ruleParams,
@@ -707,7 +777,7 @@ function MultipleOf({ value, ruleParams, fieldName, translatedPropertyName, i18n
 
     const numericValue = toNumber(value);
     if (isNaN(numericValue)) {
-      const message = i18n.t("validator.number", {
+      const message = i18n.t('validator.number', {
         field: translatedPropertyName || fieldName,
         value,
         ruleParams,
@@ -717,9 +787,12 @@ function MultipleOf({ value, ruleParams, fieldName, translatedPropertyName, i18n
     }
 
     const multiple = toNumber(ruleParams[0]);
-    if (isNaN(multiple) || (multiple === 0 && String(ruleParams[0]).trim() !== "0")) {
-      const message = i18n.t("validator.invalidRuleParams", {
-        rule: "MultipleOf",
+    if (
+      isNaN(multiple) ||
+      (multiple === 0 && String(ruleParams[0]).trim() !== '0')
+    ) {
+      const message = i18n.t('validator.invalidRuleParams', {
+        rule: 'MultipleOf',
         ruleParams,
         field: translatedPropertyName || fieldName,
         ...rest,
@@ -733,7 +806,7 @@ function MultipleOf({ value, ruleParams, fieldName, translatedPropertyName, i18n
     if (isMultiple) {
       resolve(true);
     } else {
-      const message = i18n.t("validator.multipleOf", {
+      const message = i18n.t('validator.multipleOf', {
         field: translatedPropertyName || fieldName,
         value: numericValue,
         multiple,
@@ -772,12 +845,13 @@ function MultipleOf({ value, ruleParams, fieldName, translatedPropertyName, i18n
  * @param options.ruleParams - Array containing the multiple value
  * @returns Promise resolving to true if valid, rejecting with error message if invalid
  *
- * @since 1.22.0
+ * @since 1.0.0
  * @public
  */
-export const IsMultipleOf = Validator.buildRuleDecorator<[multiple: number]>(MultipleOf);
+export const IsMultipleOf =
+  Validator.buildRuleDecorator<[multiple: number]>(MultipleOf);
 
-declare module "../types" {
+declare module '../types' {
   export interface IValidatorRulesMap<Context = unknown> {
     /**
      * ### NumberBetween Rule (Numeric)
@@ -820,7 +894,7 @@ declare module "../types" {
      * @param options.ruleParams - Array containing [min, max] values
      * @returns Promise resolving to true if valid, rejecting with error message if invalid
      *
-     * @since 1.22.0
+     * @since 1.0.0
      * @public
      */
     NumberBetween: IValidatorRuleParams<[min: number, max: number], Context>;
@@ -870,10 +944,13 @@ declare module "../types" {
      * @param options.ruleParams - Array with decimal places specification
      * @returns Promise resolving to true if valid, rejecting with error message if invalid
      *
-     * @since 1.22.0
+     * @since 1.0.0
      * @public
      */
-    DecimalPlaces: IValidatorRuleParams<[minDecimalPlaces: number, maxDecimalPlaces?: number], Context>;
+    DecimalPlaces: IValidatorRuleParams<
+      [minDecimalPlaces: number, maxDecimalPlaces?: number],
+      Context
+    >;
 
     /**
      * ### Integer Rule
@@ -914,7 +991,7 @@ declare module "../types" {
      *
      * @returns Promise resolving to true if valid, rejecting with error message if invalid
      *
-     * @since 1.22.0
+     * @since 1.0.0
      * @public
      */
     Integer: IValidatorRuleParams<[], Context>;
@@ -939,7 +1016,7 @@ declare module "../types" {
      * ```
      *
      * @returns Promise resolving to true if valid, rejecting with error message if invalid
-     * @since 1.22.0
+     * @since 1.0.0
      * @public
      */
     EvenNumber: IValidatorRuleParams<[], Context>;
@@ -995,7 +1072,7 @@ declare module "../types" {
      * @param options.ruleParams - Array containing the multiple value
      * @returns Promise resolving to true if valid, rejecting with error message if invalid
      *
-     * @since 1.22.0
+     * @since 1.0.0
      * @public
      */
     MultipleOf: IValidatorRuleParams<[number], Context>;
@@ -1020,7 +1097,7 @@ declare module "../types" {
      * ```
      *
      * @returns Promise resolving to true if valid, rejecting with error message if invalid
-     * @since 1.22.0
+     * @since 1.0.0
      * @public
      */
     OddNumber: IValidatorRuleParams<[], Context>;

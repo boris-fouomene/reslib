@@ -14,11 +14,11 @@ import { Dictionary } from '../types/dictionary';
 import { isNonNullString, isObj, JsonHelper, stringify } from '../utils';
 import './types';
 import {
+  AuthEvent,
   AuthPerm,
+  AuthPerms,
+  AuthSessionStorage,
   AuthUser,
-  IAuthEvent,
-  IAuthPerms,
-  IAuthSessionStorage,
 } from './types';
 
 export * from './types';
@@ -198,7 +198,7 @@ class Session {
    *                      in session storage. If not provided, the session will be
    *                      treated as anonymous.
    *
-   * @returns An object implementing the `IAuthSessionStorage` interface, which includes
+   * @returns An object implementing the `AuthSessionStorage` interface, which includes
    *          methods for session management:
    *          - `get(key?: string): any`: Retrieves the value associated with the specified key.
    *          - `set(key?: string | Dictionary, value?: any): void`: Stores a value under the specified key.
@@ -229,7 +229,7 @@ class Session {
    * Ensure that the keys used for storing data are unique to avoid collisions with
    * other session data. Consider using a structured naming convention for keys.
    */
-  static getStorage(sessionName?: string): IAuthSessionStorage {
+  static getStorage(sessionName?: string): AuthSessionStorage {
     return {
       sessionName,
       get: (key?: string) => {
@@ -254,18 +254,18 @@ export class Auth {
    * Authentication event handler.
    * Initializes an observable event handler for authentication Auth.events.
    *
-   * This constant `events` is assigned an instance of `IObservable<IAuthEvent>`, which is used to manage
+   * This constant `events` is assigned an instance of `IObservable<AuthEvent>`, which is used to manage
    * authentication-related events in the application. The initialization checks if the global
    * `Global.eventsResourcesObservableHandler` exists and is an object. If it does, it assigns it to
-   * `events`; otherwise, it defaults to an empty object cast as `IObservable<IAuthEvent>`.
+   * `events`; otherwise, it defaults to an empty object cast as `IObservable<AuthEvent>`.
    *
    * This pattern allows for flexible handling of events, ensuring that the application can respond
    * to authentication actions such as sign-in, sign-out, and sign-up.
    *
-   * @type {IObservable<IAuthEvent>}
+   * @type {IObservable<AuthEvent>}
    *
    * @example
-   * import {Auth} from 'reslib';
+   * import {Auth} from 'reslib/auth';
    * Auth.events.on('SIGN_IN', (user) => {
    *     console.log(`User  signed in: ${user.username}`);
    * });
@@ -274,7 +274,7 @@ export class Auth {
    *     Auth.events.trigger('SIGN_IN', user);
    * }
    */
-  static events: IObservable<IAuthEvent> = observable<IAuthEvent>({});
+  static events: IObservable<AuthEvent> = observable<AuthEvent>({});
   private static localUserRef: ILocalUserRef = { current: null };
   /**
    * Checks if the user is a master admin.
@@ -586,7 +586,7 @@ export class Auth {
    * @see {@link signIn} - High-level user authentication wrapper
    * @see {@link signOut} - High-level user sign-out wrapper
    * @see {@link Auth.events} - Authentication event system for state change notifications
-   * @see {@link IAuthEvent} - Available authentication event types and payloads
+   * @see {@link AuthEvent} - Available authentication event types and payloads
    *
    * @since 1.0.0
    * @public
@@ -1016,7 +1016,7 @@ export class Auth {
    * @see {@link getSignedUser} - Check if a user is currently signed in before sign-out
    * @see {@link signIn} - Corresponding method for user authentication
    * @see {@link Auth.events} - Event system for handling sign-out notifications
-   * @see {@link IAuthEvent} - Authentication event types including 'SIGN_OUT'
+   * @see {@link AuthEvent} - Authentication event types including 'SIGN_OUT'
    * @see {@link USER_SESSION_KEY} - Storage key used for session data
    *
    * @since 1.0.0
@@ -1454,7 +1454,7 @@ export class Auth {
    * @see {@link ResourceActionName} - Valid action types for permission operations
    * @see {@link checkPermission} - Lower-level permission checking against permission objects
    * @see {@link isAllowed} - Higher-level permission checking with multiple formats
-   * @see {@link IAuthPerms} - Permission object structure and format
+   * @see {@link AuthPerms} - Permission object structure and format
    * @see {@link AuthRole} - Role object structure with embedded permissions
    *
    * @since 1.0.0
@@ -1546,7 +1546,7 @@ export class Auth {
    * @template TResourceName - The resource name type constraint extending ResourceName
    *
    * @param perms - The permission object containing resource-to-actions mappings.
-   *                Must be a valid `IAuthPerms` object where keys are resource names
+   *                Must be a valid `AuthPerms` object where keys are resource names
    *                and values are arrays of allowed actions. The object is defensively
    *                copied to prevent external mutations during processing.
    *
@@ -1569,7 +1569,7 @@ export class Auth {
    * @example
    * ```typescript
    * // Basic permission checking with explicit actions
-   * const permissions: IAuthPerms = {
+   * const permissions: AuthPerms = {
    *   documents: ["read", "create", "update"],
    *   users: ["read"],
    *   reports: ["read", "export"]
@@ -1589,7 +1589,7 @@ export class Auth {
    * @example
    * ```typescript
    * // Universal "all" permission handling
-   * const adminPermissions: IAuthPerms = {
+   * const adminPermissions: AuthPerms = {
    *   system: ["all"],
    *   documents: ["read", "create"],
    *   users: ["all"]
@@ -1608,7 +1608,7 @@ export class Auth {
    * @example
    * ```typescript
    * // Case-insensitive resource matching
-   * const permissions: IAuthPerms = {
+   * const permissions: AuthPerms = {
    *   Documents: ["read", "write"],
    *   USERS: ["read"],
    *   api_endpoints: ["access"]
@@ -1627,7 +1627,7 @@ export class Auth {
    * @example
    * ```typescript
    * // Default action parameter behavior
-   * const readOnlyPermissions: IAuthPerms = {
+   * const readOnlyPermissions: AuthPerms = {
    *   articles: ["read"],
    *   news: ["read", "comment"],
    *   profiles: ["read", "update"]
@@ -1646,8 +1646,8 @@ export class Auth {
    * @example
    * ```typescript
    * // Error handling and edge cases
-   * const validPermissions: IAuthPerms = { docs: ["read"] };
-   * const emptyPermissions: IAuthPerms = {};
+   * const validPermissions: AuthPerms = { docs: ["read"] };
+   * const emptyPermissions: AuthPerms = {};
    * const nullPermissions = null;
    *
    * // Valid permission object
@@ -1668,7 +1668,7 @@ export class Auth {
    * ```typescript
    * // Permission validation utility function
    * function validateUserAccess(
-   *   userPerms: IAuthPerms,
+   *   userPerms: AuthPerms,
    *   requiredResource: ResourceName,
    *   requiredAction: ResourceActionName
    * ): { allowed: boolean; reason: string } {
@@ -1691,7 +1691,7 @@ export class Auth {
    * }
    *
    * // Usage example
-   * const userPermissions: IAuthPerms = {
+   * const userPermissions: AuthPerms = {
    *   documents: ["read", "create"],
    *   users: ["read"]
    * };
@@ -1704,18 +1704,18 @@ export class Auth {
    * ```typescript
    * // Integration with role-based permission systems
    * class PermissionManager {
-   *   static combinePermissions(...permissionSets: IAuthPerms[]): IAuthPerms {
-   *     const combined: IAuthPerms = {};
+   *   static combinePermissions(...permissionSets: AuthPerms[]): AuthPerms {
+   *     const combined: AuthPerms = {};
    *
    *     for (const perms of permissionSets) {
    *       if (!perms) continue;
    *
    *       for (const [resource, actions] of Object.entries(perms)) {
-   *         if (!combined[resource as keyof IAuthPerms]) {
-   *           combined[resource as keyof IAuthPerms] = [];
+   *         if (!combined[resource as keyof AuthPerms]) {
+   *           combined[resource as keyof AuthPerms] = [];
    *         }
    *
-   *         const existingActions = combined[resource as keyof IAuthPerms] as ResourceActionName[];
+   *         const existingActions = combined[resource as keyof AuthPerms] as ResourceActionName[];
    *         const newActions = actions as ResourceActionName[];
    *
    *         // Merge actions, avoiding duplicates
@@ -1730,13 +1730,13 @@ export class Auth {
    *     return combined;
    *   }
    *
-   *   static hasAnyPermission(perms: IAuthPerms, checks: Array<[ResourceName, ResourceActionName]>): boolean {
+   *   static hasAnyPermission(perms: AuthPerms, checks: Array<[ResourceName, ResourceActionName]>): boolean {
    *     return checks.some(([resource, action]) =>
    *       Auth.checkPermission(perms, resource, action)
    *     );
    *   }
    *
-   *   static hasAllPermissions(perms: IAuthPerms, checks: Array<[ResourceName, ResourceActionName]>): boolean {
+   *   static hasAllPermissions(perms: AuthPerms, checks: Array<[ResourceName, ResourceActionName]>): boolean {
    *     return checks.every(([resource, action]) =>
    *       Auth.checkPermission(perms, resource, action)
    *     );
@@ -1744,14 +1744,14 @@ export class Auth {
    * }
    *
    * // Usage
-   * const userPerms: IAuthPerms = { documents: ["read"], users: ["read", "update"] };
-   * const rolePerms: IAuthPerms = { documents: ["create"], reports: ["read"] };
+   * const userPerms: AuthPerms = { documents: ["read"], users: ["read", "update"] };
+   * const rolePerms: AuthPerms = { documents: ["create"], reports: ["read"] };
    *
    * const combinedPerms = PermissionManager.combinePermissions(userPerms, rolePerms);
    * console.log(Auth.checkPermission(combinedPerms, "documents", "create")); // true
    * ```
    *
-   * @see {@link IAuthPerms} - Permission object structure and type definitions
+   * @see {@link AuthPerms} - Permission object structure and type definitions
    * @see {@link ResourceName} - Valid resource name types for permission checking
    * @see {@link ResourceActionName} - Valid action types for permission operations
    * @see {@link checkUserPermission} - Higher-level user permission checking method
@@ -1787,7 +1787,7 @@ export class Auth {
    * - Logs internal errors for debugging without exposing sensitive permission details
    */
   static checkPermission<TResourceName extends ResourceName = ResourceName>(
-    perms: IAuthPerms,
+    perms: AuthPerms,
     resource: TResourceName,
     action: ResourceActionName<TResourceName> = 'read'
   ) {
@@ -1802,9 +1802,9 @@ export class Auth {
     for (let i in perms) {
       if (
         String(i).toLowerCase().trim() === resourceStr &&
-        Array.isArray(perms[i as keyof IAuthPerms])
+        Array.isArray(perms[i as keyof AuthPerms])
       ) {
-        userActions = perms[i as keyof IAuthPerms] as ResourceActionName[];
+        userActions = perms[i as keyof AuthPerms] as ResourceActionName[];
         break;
       }
     }

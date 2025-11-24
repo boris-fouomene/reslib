@@ -1,5 +1,5 @@
-import { IValidatorResult, IValidatorValidateOptions } from "../types";
-import { Validator } from "../validator";
+import { IValidatorResult, IValidatorValidateOptions } from '../types';
+import { Validator } from '../validator';
 
 // Type definitions for file objects
 interface FileLike {
@@ -12,18 +12,18 @@ interface FileLike {
 
 function isFileLike(value: any): value is FileLike {
   try {
-    if (typeof File !== "undefined" && File && value instanceof File) {
+    if (typeof File !== 'undefined' && File && value instanceof File) {
       return true;
     }
   } catch {}
   return (
     value &&
-    typeof value === "object" &&
-    (typeof value.size === "number" ||
-      typeof value.type === "string" ||
-      typeof value.name === "string" ||
-      typeof value.mimetype === "string" ||
-      typeof value.originalname === "string")
+    typeof value === 'object' &&
+    (typeof value.size === 'number' ||
+      typeof value.type === 'string' ||
+      typeof value.name === 'string' ||
+      typeof value.mimetype === 'string' ||
+      typeof value.originalname === 'string')
   );
 }
 
@@ -38,7 +38,7 @@ function _IsFile({
     if (isFileLike(value)) {
       resolve(true);
     } else {
-      const message = i18n.t("validator.file", {
+      const message = i18n.t('validator.file', {
         field: translatedPropertyName || fieldName,
         value,
         ...rest,
@@ -47,7 +47,7 @@ function _IsFile({
     }
   });
 }
-Validator.registerRule("File", _IsFile);
+Validator.registerRule('File', _IsFile);
 
 /**
  * ### File Rule
@@ -67,10 +67,10 @@ Validator.registerRule("File", _IsFile);
  * @param options - Validation options containing value and context
  * @returns Promise resolving to true if valid, rejecting with error message if invalid
  *
- * @since 1.22.0
+ * @since 1.0.0
  * @public
  */
-export const IsFile = Validator.buildPropertyDecorator(["File"]);
+export const IsFile = Validator.buildPropertyDecorator(['File']);
 
 function _MaxFileSize({
   value,
@@ -82,7 +82,7 @@ function _MaxFileSize({
 }: IValidatorValidateOptions<[size: number]>): IValidatorResult {
   return new Promise((resolve, reject) => {
     if (!isFileLike(value)) {
-      const message = i18n.t("validator.fileSize", {
+      const message = i18n.t('validator.fileSize', {
         field: translatedPropertyName || fieldName,
         value,
         maxSize: ruleParams?.[0] || 0,
@@ -92,9 +92,9 @@ function _MaxFileSize({
     }
 
     const maxSize = ruleParams?.[0];
-    if (typeof maxSize !== "number" || maxSize < 0) {
-      const message = i18n.t("validator.invalidRuleParams", {
-        rule: "MaxFileSize",
+    if (typeof maxSize !== 'number' || maxSize < 0) {
+      const message = i18n.t('validator.invalidRuleParams', {
+        rule: 'MaxFileSize',
         field: translatedPropertyName || fieldName,
         ruleParams,
         ...rest,
@@ -106,7 +106,7 @@ function _MaxFileSize({
     if (fileSize <= maxSize) {
       resolve(true);
     } else {
-      const message = i18n.t("validator.fileSize", {
+      const message = i18n.t('validator.fileSize', {
         field: translatedPropertyName || fieldName,
         value,
         maxSize,
@@ -117,7 +117,7 @@ function _MaxFileSize({
     }
   });
 }
-Validator.registerRule("MaxFileSize", _MaxFileSize);
+Validator.registerRule('MaxFileSize', _MaxFileSize);
 
 /**
  * ### MaxFileSize Rule
@@ -140,7 +140,7 @@ Validator.registerRule("MaxFileSize", _MaxFileSize);
  * @param options.ruleParams - Array containing maximum file size in bytes
  * @returns Promise resolving to true if valid, rejecting with error message if invalid
  *
- * @since 1.22.0
+ * @since 1.0.0
  * @public
  */
 export const MaxFileSize =
@@ -156,18 +156,18 @@ function _IsFileType({
 }: IValidatorValidateOptions<string[]>): IValidatorResult {
   return new Promise((resolve, reject) => {
     if (!isFileLike(value)) {
-      const message = i18n.t("validator.fileType", {
+      const message = i18n.t('validator.fileType', {
         field: translatedPropertyName || fieldName,
         value,
-        allowedTypes: ruleParams?.join(", ") || "",
+        allowedTypes: ruleParams?.join(', ') || '',
         ...rest,
       });
       return reject(message);
     }
 
     if (!ruleParams || ruleParams.length === 0) {
-      const message = i18n.t("validator.invalidRuleParams", {
-        rule: "FileType",
+      const message = i18n.t('validator.invalidRuleParams', {
+        rule: 'FileType',
         field: translatedPropertyName || fieldName,
         ruleParams,
         ...rest,
@@ -175,21 +175,21 @@ function _IsFileType({
       return reject(message);
     }
 
-    const fileType = value.type || value.mimetype || "";
+    const fileType = value.type || value.mimetype || '';
     const allowedTypes = ruleParams.map((type) => type.toLowerCase());
     const actualType = fileType.toLowerCase();
 
     if (
       allowedTypes.some(
-        (type) => actualType === type || actualType.startsWith(type + "/")
+        (type) => actualType === type || actualType.startsWith(type + '/')
       )
     ) {
       resolve(true);
     } else {
-      const message = i18n.t("validator.fileType", {
+      const message = i18n.t('validator.fileType', {
         field: translatedPropertyName || fieldName,
         value,
-        allowedTypes: ruleParams.join(", "),
+        allowedTypes: ruleParams.join(', '),
         actualType: fileType,
         ...rest,
       });
@@ -197,7 +197,7 @@ function _IsFileType({
     }
   });
 }
-Validator.registerRule("FileType", _IsFileType);
+Validator.registerRule('FileType', _IsFileType);
 
 /**
  * ### FileType Rule
@@ -220,7 +220,7 @@ Validator.registerRule("FileType", _IsFileType);
  * @param options.ruleParams - Array of allowed MIME types
  * @returns Promise resolving to true if valid, rejecting with error message if invalid
  *
- * @since 1.22.0
+ * @since 1.0.0
  * @public
  */
 export const IsFileType = Validator.buildRuleDecorator<string[]>(_IsFileType);
@@ -234,7 +234,7 @@ function _Image({
 }: IValidatorValidateOptions): IValidatorResult {
   return new Promise((resolve, reject) => {
     if (!isFileLike(value)) {
-      const message = i18n.t("validator.image", {
+      const message = i18n.t('validator.image', {
         field: translatedPropertyName || fieldName,
         value,
         ...rest,
@@ -242,21 +242,21 @@ function _Image({
       return reject(message);
     }
 
-    const fileType = value.type || value.mimetype || "";
+    const fileType = value.type || value.mimetype || '';
     const imageTypes = [
-      "image/jpeg",
-      "image/jpg",
-      "image/png",
-      "image/gif",
-      "image/webp",
-      "image/svg+xml",
-      "image/bmp",
+      'image/jpeg',
+      'image/jpg',
+      'image/png',
+      'image/gif',
+      'image/webp',
+      'image/svg+xml',
+      'image/bmp',
     ];
 
     if (imageTypes.some((type) => fileType.toLowerCase() === type)) {
       resolve(true);
     } else {
-      const message = i18n.t("validator.image", {
+      const message = i18n.t('validator.image', {
         field: translatedPropertyName || fieldName,
         value,
         actualType: fileType,
@@ -266,7 +266,7 @@ function _Image({
     }
   });
 }
-Validator.registerRule("Image", _Image);
+Validator.registerRule('Image', _Image);
 
 /**
  * ### Image Rule
@@ -285,10 +285,10 @@ Validator.registerRule("Image", _Image);
  * @param options - Validation options containing value and context
  * @returns Promise resolving to true if valid, rejecting with error message if invalid
  *
- * @since 1.22.0
+ * @since 1.0.0
  * @public
  */
-export const IsImage = Validator.buildPropertyDecorator(["Image"]);
+export const IsImage = Validator.buildPropertyDecorator(['Image']);
 
 function _IsFileExtension({
   value,
@@ -300,18 +300,18 @@ function _IsFileExtension({
 }: IValidatorValidateOptions<string[]>): IValidatorResult {
   return new Promise((resolve, reject) => {
     if (!isFileLike(value)) {
-      const message = i18n.t("validator.fileExtension", {
+      const message = i18n.t('validator.fileExtension', {
         field: translatedPropertyName || fieldName,
         value,
-        allowedExtensions: ruleParams?.join(", ") || "",
+        allowedExtensions: ruleParams?.join(', ') || '',
         ...rest,
       });
       return reject(message);
     }
 
     if (!ruleParams || ruleParams.length === 0) {
-      const message = i18n.t("validator.invalidRuleParams", {
-        rule: "FileExtension",
+      const message = i18n.t('validator.invalidRuleParams', {
+        rule: 'FileExtension',
         field: translatedPropertyName || fieldName,
         ruleParams,
         ...rest,
@@ -319,19 +319,19 @@ function _IsFileExtension({
       return reject(message);
     }
 
-    const fileName = value.name || value.originalname || "";
-    const extension = fileName.split(".").pop()?.toLowerCase() || "";
+    const fileName = value.name || value.originalname || '';
+    const extension = fileName.split('.').pop()?.toLowerCase() || '';
     const allowedExtensions = ruleParams.map((ext) =>
-      ext.toLowerCase().replace(/^\./, "")
+      ext.toLowerCase().replace(/^\./, '')
     );
 
     if (allowedExtensions.includes(extension)) {
       resolve(true);
     } else {
-      const message = i18n.t("validator.fileExtension", {
+      const message = i18n.t('validator.fileExtension', {
         field: translatedPropertyName || fieldName,
         value,
-        allowedExtensions: ruleParams.join(", "),
+        allowedExtensions: ruleParams.join(', '),
         actualExtension: extension,
         ...rest,
       });
@@ -339,7 +339,7 @@ function _IsFileExtension({
     }
   });
 }
-Validator.registerRule("FileExtension", _IsFileExtension);
+Validator.registerRule('FileExtension', _IsFileExtension);
 
 /**
  * ### FileExtension Rule
@@ -362,7 +362,7 @@ Validator.registerRule("FileExtension", _IsFileExtension);
  * @param options.ruleParams - Array of allowed file extensions
  * @returns Promise resolving to true if valid, rejecting with error message if invalid
  *
- * @since 1.22.0
+ * @since 1.0.0
  * @public
  */
 export const IsFileExtension =
@@ -378,7 +378,7 @@ function _MinFileSize({
 }: IValidatorValidateOptions<[minSize: number]>): IValidatorResult {
   return new Promise((resolve, reject) => {
     if (!isFileLike(value)) {
-      const message = i18n.t("validator.minFileSize", {
+      const message = i18n.t('validator.minFileSize', {
         field: translatedPropertyName || fieldName,
         value,
         minSize: ruleParams?.[0] || 0,
@@ -388,9 +388,9 @@ function _MinFileSize({
     }
 
     const minSize = ruleParams?.[0];
-    if (typeof minSize !== "number" || minSize < 0) {
-      const message = i18n.t("validator.invalidRuleParams", {
-        rule: "MinFileSize",
+    if (typeof minSize !== 'number' || minSize < 0) {
+      const message = i18n.t('validator.invalidRuleParams', {
+        rule: 'MinFileSize',
         field: translatedPropertyName || fieldName,
         ruleParams,
         ...rest,
@@ -402,7 +402,7 @@ function _MinFileSize({
     if (fileSize >= minSize) {
       resolve(true);
     } else {
-      const message = i18n.t("validator.minFileSize", {
+      const message = i18n.t('validator.minFileSize', {
         field: translatedPropertyName || fieldName,
         value,
         minSize,
@@ -413,7 +413,7 @@ function _MinFileSize({
     }
   });
 }
-Validator.registerRule("MinFileSize", _MinFileSize);
+Validator.registerRule('MinFileSize', _MinFileSize);
 
 /**
  * ### MinFileSize Rule
@@ -436,13 +436,13 @@ Validator.registerRule("MinFileSize", _MinFileSize);
  * @param options.ruleParams - Array containing minimum file size in bytes
  * @returns Promise resolving to true if valid, rejecting with error message if invalid
  *
- * @since 1.22.0
+ * @since 1.0.0
  * @public
  */
 export const MinFileSize =
   Validator.buildRuleDecorator<[minSize: number]>(_MinFileSize);
 
-declare module "../types" {
+declare module '../types' {
   export interface IValidatorRulesMap<Context = unknown> {
     /**
      * ### File Rule
@@ -479,7 +479,7 @@ declare module "../types" {
      * @param options - Validation options containing value and context
      * @returns Promise resolving to true if valid, rejecting with error message if invalid
      *
-     * @since 1.22.0
+     * @since 1.0.0
      * @public
      */
     File: IValidatorRuleParams<[], Context>;
@@ -522,7 +522,7 @@ declare module "../types" {
      * @param options.ruleParams - Array containing maximum file size in bytes
      * @returns Promise resolving to true if valid, rejecting with error message if invalid
      *
-     * @since 1.22.0
+     * @since 1.0.0
      * @public
      */
     MaxFileSize: IValidatorRuleParams<[size: number], Context>;
@@ -565,7 +565,7 @@ declare module "../types" {
      * @param options.ruleParams - Array of allowed MIME types
      * @returns Promise resolving to true if valid, rejecting with error message if invalid
      *
-     * @since 1.22.0
+     * @since 1.0.0
      * @public
      */
     FileType: IValidatorRuleParams<string[], Context>;
@@ -609,7 +609,7 @@ declare module "../types" {
      * @param options - Validation options containing value and context
      * @returns Promise resolving to true if valid, rejecting with error message if invalid
      *
-     * @since 1.22.0
+     * @since 1.0.0
      * @public
      */
     Image: IValidatorRuleParams<[], Context>;
@@ -652,7 +652,7 @@ declare module "../types" {
      * @param options.ruleParams - Array of allowed file extensions
      * @returns Promise resolving to true if valid, rejecting with error message if invalid
      *
-     * @since 1.22.0
+     * @since 1.0.0
      * @public
      */
     FileExtension: IValidatorRuleParams<string[], Context>;
@@ -695,7 +695,7 @@ declare module "../types" {
      * @param options.ruleParams - Array containing minimum file size in bytes
      * @returns Promise resolving to true if valid, rejecting with error message if invalid
      *
-     * @since 1.22.0
+     * @since 1.0.0
      * @public
      */
     MinFileSize: IValidatorRuleParams<[minSize: number], Context>;

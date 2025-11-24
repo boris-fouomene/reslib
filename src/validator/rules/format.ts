@@ -1,5 +1,5 @@
 import { InputFormatter } from '@/inputFormatter';
-import { ICountryCode } from '@countries/types';
+import { CountryCode } from '@countries/types';
 import { defaultStr } from '@utils/defaultStr';
 import { isNonNullString } from '@utils/isNonNullString';
 import { isUrl } from '@utils/uri';
@@ -103,7 +103,7 @@ Validator.registerRule('Url', function Url(options) {
 });
 
 function phoneNumber(
-  options: IValidatorValidateOptions<[countryCode?: ICountryCode]>
+  options: IValidatorValidateOptions<[countryCode?: CountryCode]>
 ) {
   const { value, phoneCountryCode, i18n, ruleParams } = options;
   const message = i18n.t('validator.phoneNumber', options);
@@ -134,7 +134,7 @@ Validator.registerRule('PhoneNumber', phoneNumber);
  * ```
  */
 export const IsPhoneNumber =
-  Validator.buildRuleDecoratorOptional<[countryCode?: ICountryCode]>(
+  Validator.buildRuleDecoratorOptional<[countryCode?: CountryCode]>(
     phoneNumber
   );
 
@@ -266,7 +266,7 @@ Validator.registerRule('UUID', _UUID);
  * @param options - Validation options containing value and context
  * @returns Promise resolving to true if valid, rejecting with error message if invalid
  *
- * @since 1.22.0
+ * @since 1.0.0
  * @public
  */
 export const IsUUID = Validator.buildPropertyDecorator(['UUID']);
@@ -321,7 +321,7 @@ Validator.registerRule('JSON', _JSON);
  * @param options - Validation options containing value and context
  * @returns Promise resolving to true if valid, rejecting with error message if invalid
  *
- * @since 1.22.0
+ * @since 1.0.0
  * @public
  */
 export const IsJSON = Validator.buildPropertyDecorator(['JSON']);
@@ -377,7 +377,7 @@ Validator.registerRule('Base64', _Base64);
  * @param options - Validation options containing value and context
  * @returns Promise resolving to true if valid, rejecting with error message if invalid
  *
- * @since 1.22.0
+ * @since 1.0.0
  * @public
  */
 export const IsBase64 = Validator.buildPropertyDecorator(['Base64']);
@@ -434,7 +434,7 @@ Validator.registerRule('HexColor', _HexColor);
  * @param options - Validation options containing value and context
  * @returns Promise resolving to true if valid, rejecting with error message if invalid
  *
- * @since 1.22.0
+ * @since 1.0.0
  * @public
  */
 export const IsHexColor = Validator.buildPropertyDecorator(['HexColor']);
@@ -519,7 +519,7 @@ Validator.registerRule('CreditCard', _CreditCard);
  * @param options - Validation options containing value and context
  * @returns Promise resolving to true if valid, rejecting with error message if invalid
  *
- * @since 1.22.0
+ * @since 1.0.0
  * @public
  */
 export const IsCreditCard = Validator.buildPropertyDecorator(['CreditCard']);
@@ -606,7 +606,7 @@ Validator.registerRule('IP', _IsIP);
  * @param options.ruleParams - Array containing IP version ("4", "6", or "4/6")
  * @returns Promise resolving to true if valid, rejecting with error message if invalid
  *
- * @since 1.22.0
+ * @since 1.0.0
  * @public
  */
 export const IsIP = Validator.buildRuleDecorator<string[]>(_IsIP);
@@ -663,7 +663,7 @@ Validator.registerRule('MACAddress', _MACAddress);
  * @param options - Validation options containing value and context
  * @returns Promise resolving to true if valid, rejecting with error message if invalid
  *
- * @since 1.22.0
+ * @since 1.0.0
  * @public
  */
 export const IsMACAddress = Validator.buildPropertyDecorator(['MACAddress']);
@@ -740,7 +740,7 @@ Validator.registerRule('Matches', _Matches);
  * @param options.ruleParams[1] - Optional error message or error message translation key
  * @returns Promise resolving to true if valid, rejecting with error message if invalid
  *
- * @since 1.22.0
+ * @since 1.0.0
  * @public
  */
 export const Matches =
@@ -793,7 +793,7 @@ declare module '../types' {
      * @param options - Validation options containing value and context
      * @returns Promise resolving to true if valid, rejecting with error message if invalid
      *
-     * @since 1.22.0
+     * @since 1.0.0
      * @public
      */
     UUID: IValidatorRuleParams<[], Context>;
@@ -838,7 +838,7 @@ declare module '../types' {
      * @param options - Validation options containing value and context
      * @returns Promise resolving to true if valid, rejecting with error message if invalid
      *
-     * @since 1.22.0
+     * @since 1.0.0
      * @public
      */
     JSON: IValidatorRuleParams<[], Context>;
@@ -883,7 +883,7 @@ declare module '../types' {
      * @param options - Validation options containing value and context
      * @returns Promise resolving to true if valid, rejecting with error message if invalid
      *
-     * @since 1.22.0
+     * @since 1.0.0
      * @public
      */
     Base64: IValidatorRuleParams<[], Context>;
@@ -943,7 +943,7 @@ declare module '../types' {
      * @param options - Validation options containing value and context
      * @returns Promise resolving to true if valid, rejecting with error message if invalid
      *
-     * @since 1.22.0
+     * @since 1.0.0
      * @public
      */
     HexColor: IValidatorRuleParams<[], Context>;
@@ -993,7 +993,7 @@ declare module '../types' {
      * @param options - Validation options containing value and context
      * @returns Promise resolving to true if valid, rejecting with error message if invalid
      *
-     * @since 1.22.0
+     * @since 1.0.0
      * @public
      */
     CreditCard: IValidatorRuleParams<[], Context>;
@@ -1057,7 +1057,7 @@ declare module '../types' {
      * @param options.ruleParams - Array containing IP version ("4", "6", or "4/6")
      * @returns Promise resolving to true if valid, rejecting with error message if invalid
      *
-     * @since 1.22.0
+     * @since 1.0.0
      * @public
      */
     IP: IValidatorRuleParams<string[], Context>;
@@ -1112,7 +1112,7 @@ declare module '../types' {
      * @param options - Validation options containing value and context
      * @returns Promise resolving to true if valid, rejecting with error message if invalid
      *
-     * @since 1.22.0
+     * @since 1.0.0
      * @public
      */
     MACAddress: IValidatorRuleParams<[], Context>;
@@ -1165,7 +1165,7 @@ declare module '../types' {
      * @param options.ruleParams - Array containing regex pattern
      * @returns Promise resolving to true if valid, rejecting with error message if invalid
      *
-     * @since 1.22.0
+     * @since 1.0.0
      * @public
      */
     Matches: IValidatorRuleParams<string[], Context>;

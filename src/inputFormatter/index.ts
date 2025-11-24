@@ -1,4 +1,4 @@
-import { CountriesManager, ICountryCode } from '@countries/index';
+import { CountriesManager, CountryCode } from '@countries/index';
 import { Logger } from '@logger';
 import { DateHelper } from '@utils/date/dateHelper';
 import { defaultStr } from '@utils/defaultStr';
@@ -140,7 +140,7 @@ export class InputFormatter {
           phoneCountryCode
         );
         formattedValue = defaultStr(phoneNumber, formattedValue);
-        result.phoneCountryCode = defaultStr(phoneCountryCode) as ICountryCode;
+        result.phoneCountryCode = defaultStr(phoneCountryCode) as CountryCode;
         const parsed = InputFormatter.parsePhoneNumber(
           phoneNumber as string,
           phoneCountryCode
@@ -150,7 +150,7 @@ export class InputFormatter {
           result.phoneCountryCode = defaultStr(
             phoneUtil.getRegionCodeForNumber(parsed),
             phoneCountryCode
-          ) as ICountryCode;
+          ) as CountryCode;
         } else if (phoneCountryCode) {
           result.dialCode = InputFormatter.getCountryDialCode(phoneCountryCode);
         }
@@ -193,7 +193,7 @@ export class InputFormatter {
   /**
    * Gets the dial code for a given country code.
    *
-   * @param {ICountryCode} code The country code.
+   * @param {CountryCode} code The country code.
    * @returns {string} The dial code for the given country code, or an empty string if the country code is not found.
    *
    * @example
@@ -201,7 +201,7 @@ export class InputFormatter {
    * console.log(CountriesManager.getCountryDialCode('US')); // '+1'
    * ```
    */
-  static getCountryDialCode(countryCode: ICountryCode): string {
+  static getCountryDialCode(countryCode: CountryCode): string {
     const r = defaultStr(CountriesManager.getCountry(countryCode)?.dialCode);
     if (r) return r;
     try {
@@ -651,7 +651,7 @@ export class InputFormatter {
    */
 
   static createPhoneNumberMask(
-    countryCode: ICountryCode,
+    countryCode: CountryCode,
     format?: PhoneNumberFormat
   ): InputFormatterMaskWithValidation {
     const countryExample = CountriesManager.getPhoneNumberExample(countryCode);
@@ -705,7 +705,7 @@ export class InputFormatter {
    * @param countryCode The country code.
    * @returns {PhoneNumber|null} The phone number example for the given country code, or null if no example is found.
    */
-  static getPhoneNumberExample(countryCode: ICountryCode): PhoneNumber | null {
+  static getPhoneNumberExample(countryCode: CountryCode): PhoneNumber | null {
     if (!isNonNullString(countryCode)) {
       return null;
     }
@@ -732,12 +732,12 @@ export class InputFormatter {
     If the country code is not provided, the default country code is used. If no example number is found for the provided country code, the function returns an empty mask and a validation function that always returns false.
     
     @param {string} phoneNumberExample - The phone number example to use for the mask.
-    @param {ICountryCode} [countryCode] - The country code to use for the mask. If not provided, the default country code is used.
+    @param {CountryCode} [countryCode] - The country code to use for the mask. If not provided, the default country code is used.
     @returns {InputFormatterMaskWithValidation} An object containing the mask and a validation function.
   */
   static createPhoneNumberMaskFromExample(
     phoneNumber: string,
-    countryCode?: ICountryCode,
+    countryCode?: CountryCode,
     format?: PhoneNumberFormat
   ): InputFormatterMaskWithValidation {
     const r = genPhoneNumberMask(
@@ -816,7 +816,7 @@ export class InputFormatter {
   /***
    * Parse a phone number using the google-libphonenumber library.
    * @param {string} number - The phone number to parse.
-   * @param {ICountryCode} [countryCode] - The country code to use for parsing the phone number.
+   * @param {CountryCode} [countryCode] - The country code to use for parsing the phone number.
    * @returns {PhoneNumber | null} The parsed phone number, or null if the parsing fails.
    * @example
    * // Parse a phone number
@@ -826,7 +826,7 @@ export class InputFormatter {
    */
   static parsePhoneNumber(
     number: string,
-    countryCode?: ICountryCode
+    countryCode?: CountryCode
   ): PhoneNumber | null {
     number = defaultStr(number);
     try {
@@ -865,7 +865,7 @@ export class InputFormatter {
    * Validates a phone number using the google-libphonenumber library.
    *
    * @param {string} phoneNumber The phone number to validate.
-   * @param {ICountryCode}, The country code to use for validation. If not provided, the default country code will be used.
+   * @param {CountryCode}, The country code to use for validation. If not provided, the default country code will be used.
    * @returns True if the phone number is valid, false otherwise.
    * @throws Error if there's an issue parsing the phone number.
    * @example
@@ -876,7 +876,7 @@ export class InputFormatter {
    */
   static isValidPhoneNumber(
     phoneNumber: string,
-    countryCode?: ICountryCode
+    countryCode?: CountryCode
   ): phoneNumber is string {
     const phoneInfo = this.parsePhoneNumber(phoneNumber, countryCode);
     if (phoneInfo) {
@@ -904,13 +904,13 @@ export class InputFormatter {
    * InputFormatter.formatPhoneNumber("123", "US");
    * Formats a phone number using the google-libphonenumber library.
    * @param {string} phoneNumber - The phone number to format (can be in various formats)
-   * @param {ICountryCode}, - ISO 3166-1 alpha-2 country code to use if the phone number doesn't have a country code
+   * @param {CountryCode}, - ISO 3166-1 alpha-2 country code to use if the phone number doesn't have a country code
    * @returns The formatted international phone number or null if parsing fails
    *
    */
   static formatPhoneNumber(
     phoneNumber: string,
-    countryCode?: ICountryCode
+    countryCode?: CountryCode
   ): string | null {
     phoneNumber = defaultStr(phoneNumber);
     try {
@@ -990,7 +990,7 @@ export class InputFormatter {
    */
   static extractDialCodeFromPhoneNumber(
     phoneNumber: string,
-    countryCode?: ICountryCode
+    countryCode?: CountryCode
   ): string {
     try {
       const parsedNumber = InputFormatter.parsePhoneNumber(
@@ -1171,11 +1171,8 @@ function genPhoneNumberMask(
           dialCode,
           mask: generatePhoneNumberMaskArray(formattedNumber, dialCode),
           validate: (value: string) =>
-            InputFormatter.isValidPhoneNumber(
-              value,
-              regionCode as ICountryCode
-            ),
-          countryCode: regionCode as ICountryCode,
+            InputFormatter.isValidPhoneNumber(value, regionCode as CountryCode),
+          countryCode: regionCode as CountryCode,
         };
       }
     }

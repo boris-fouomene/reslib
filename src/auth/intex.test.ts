@@ -1,10 +1,11 @@
+import { ResourceAction, ResourceBase } from '@resources/types';
 import { i18n } from '../i18n';
 import { Session } from '../session';
 import '../translations';
 import { Auth } from './index';
-import { AuthPerm, AuthUser, IAuthPerms } from './types';
+import { AuthPerm, AuthPerms, AuthUser } from './types';
 
-declare module '../resources/types' {
+declare module '@resources/types' {
   interface Resources {
     documents: {
       actions: {
@@ -17,8 +18,8 @@ declare module '../resources/types' {
     profile: ResourceBase;
     media: {
       actions: {
-        upload: {};
-        edit: {};
+        upload: ResourceAction;
+        edit: ResourceAction;
       };
     };
     comments: ResourceBase;
@@ -759,7 +760,7 @@ describe('Auth', () => {
   });
 
   describe('checkPermission', () => {
-    const perms: IAuthPerms = {
+    const perms: AuthPerms = {
       documents: ['read', 'create', 'all'],
       users: ['read'],
     };
@@ -832,7 +833,7 @@ describe('Auth', () => {
     });
 
     it('should handle empty permission arrays', () => {
-      const emptyPerms: IAuthPerms = {
+      const emptyPerms: AuthPerms = {
         documents: [],
         users: ['read'],
       };
@@ -842,7 +843,7 @@ describe('Auth', () => {
     });
 
     it("should handle permissions with only 'all'", () => {
-      const allPerms: IAuthPerms = {
+      const allPerms: AuthPerms = {
         documents: ['all'],
         users: ['read'],
       };
@@ -870,7 +871,7 @@ describe('Auth', () => {
     });
 
     it('should create defensive copy of permissions object', () => {
-      const originalPerms: IAuthPerms = {
+      const originalPerms: AuthPerms = {
         documents: ['read', 'create'],
       };
 

@@ -1,11 +1,17 @@
-import { IValidatorValidateOptions } from "../types";
-import { Validator } from "../validator";
+import { IValidatorValidateOptions } from '../types';
+import { Validator } from '../validator';
 
-function _Array({ value, fieldName, translatedPropertyName, i18n, ...rest }: IValidatorValidateOptions): boolean | string {
+function _Array({
+  value,
+  fieldName,
+  translatedPropertyName,
+  i18n,
+  ...rest
+}: IValidatorValidateOptions): boolean | string {
   if (Array.isArray(value)) {
     return true;
   } else {
-    const message = i18n.t("validator.array", {
+    const message = i18n.t('validator.array', {
       field: translatedPropertyName || fieldName,
       fieldName,
       translatedPropertyName,
@@ -15,7 +21,7 @@ function _Array({ value, fieldName, translatedPropertyName, i18n, ...rest }: IVa
     return message;
   }
 }
-Validator.registerRule("Array", _Array);
+Validator.registerRule('Array', _Array);
 
 /**
  * ### Array Rule
@@ -35,14 +41,21 @@ Validator.registerRule("Array", _Array);
  * @param options - Validation options containing value and context
  * @returns Promise resolving to true if valid, rejecting with error message if invalid
  *
- * @since 1.35.1
+ * @since 1.0.0
  * @public
  */
-export const IsArray = Validator.buildPropertyDecorator(["Array"]);
+export const IsArray = Validator.buildPropertyDecorator(['Array']);
 
-function _ArrayMinLength({ value, ruleParams, fieldName, translatedPropertyName, i18n, ...rest }: IValidatorValidateOptions<number[]>): boolean | string {
+function _ArrayMinLength({
+  value,
+  ruleParams,
+  fieldName,
+  translatedPropertyName,
+  i18n,
+  ...rest
+}: IValidatorValidateOptions<number[]>): boolean | string {
   if (!Array.isArray(value)) {
-    const message = i18n.t("validator.array", {
+    const message = i18n.t('validator.array', {
       field: translatedPropertyName || fieldName,
       value,
       ...rest,
@@ -52,8 +65,8 @@ function _ArrayMinLength({ value, ruleParams, fieldName, translatedPropertyName,
 
   const minLength = Number(ruleParams?.[0]);
   if (isNaN(minLength) || minLength < 0) {
-    const message = i18n.t("validator.invalidRuleParams", {
-      rule: "ArrayMinLength",
+    const message = i18n.t('validator.invalidRuleParams', {
+      rule: 'ArrayMinLength',
       field: translatedPropertyName || fieldName,
       ruleParams,
       ...rest,
@@ -64,7 +77,7 @@ function _ArrayMinLength({ value, ruleParams, fieldName, translatedPropertyName,
   if (value.length >= minLength) {
     return true;
   } else {
-    const message = i18n.t("validator.arrayMinLength", {
+    const message = i18n.t('validator.arrayMinLength', {
       field: translatedPropertyName || fieldName,
       value,
       minLength,
@@ -74,7 +87,7 @@ function _ArrayMinLength({ value, ruleParams, fieldName, translatedPropertyName,
     return message;
   }
 }
-Validator.registerRule("ArrayMinLength", _ArrayMinLength);
+Validator.registerRule('ArrayMinLength', _ArrayMinLength);
 
 /**
  * ### ArrayMinLength Rule
@@ -97,14 +110,22 @@ Validator.registerRule("ArrayMinLength", _ArrayMinLength);
  * @param options.ruleParams - Array containing minimum length
  * @returns Promise resolving to true if valid, rejecting with error message if invalid
  *
- * @since 1.35.1
+ * @since 1.0.0
  * @public
  */
-export const ArrayMinLength = Validator.buildRuleDecorator<[number]>(_ArrayMinLength);
+export const ArrayMinLength =
+  Validator.buildRuleDecorator<[number]>(_ArrayMinLength);
 
-function _ArrayMaxLength({ value, ruleParams, fieldName, translatedPropertyName, i18n, ...rest }: IValidatorValidateOptions<number[]>): boolean | string {
+function _ArrayMaxLength({
+  value,
+  ruleParams,
+  fieldName,
+  translatedPropertyName,
+  i18n,
+  ...rest
+}: IValidatorValidateOptions<number[]>): boolean | string {
   if (!Array.isArray(value)) {
-    const message = i18n.t("validator.array", {
+    const message = i18n.t('validator.array', {
       field: translatedPropertyName || fieldName,
       value,
       ...rest,
@@ -114,8 +135,8 @@ function _ArrayMaxLength({ value, ruleParams, fieldName, translatedPropertyName,
 
   const maxLength = Number(ruleParams?.[0]);
   if (isNaN(maxLength) || maxLength < 0) {
-    const message = i18n.t("validator.invalidRuleParams", {
-      rule: "ArrayMaxLength",
+    const message = i18n.t('validator.invalidRuleParams', {
+      rule: 'ArrayMaxLength',
       field: translatedPropertyName || fieldName,
       ruleParams,
       ...rest,
@@ -126,7 +147,7 @@ function _ArrayMaxLength({ value, ruleParams, fieldName, translatedPropertyName,
   if (value.length <= maxLength) {
     return true;
   } else {
-    const message = i18n.t("validator.arrayMaxLength", {
+    const message = i18n.t('validator.arrayMaxLength', {
       field: translatedPropertyName || fieldName,
       value,
       maxLength,
@@ -136,7 +157,7 @@ function _ArrayMaxLength({ value, ruleParams, fieldName, translatedPropertyName,
     return message;
   }
 }
-Validator.registerRule("ArrayMaxLength", _ArrayMaxLength);
+Validator.registerRule('ArrayMaxLength', _ArrayMaxLength);
 
 /**
  * ### ArrayMaxLength Rule
@@ -159,14 +180,22 @@ Validator.registerRule("ArrayMaxLength", _ArrayMaxLength);
  * @param options.ruleParams - Array containing maximum length
  * @returns Promise resolving to true if valid, rejecting with error message if invalid
  *
- * @since 1.35.1
+ * @since 1.0.0
  * @public
  */
-export const ArrayMaxLength = Validator.buildRuleDecorator<[number]>(_ArrayMaxLength);
+export const ArrayMaxLength =
+  Validator.buildRuleDecorator<[number]>(_ArrayMaxLength);
 
-function _ArrayLength({ value, ruleParams, fieldName, translatedPropertyName, i18n, ...rest }: IValidatorValidateOptions<number[]>): boolean | string {
+function _ArrayLength({
+  value,
+  ruleParams,
+  fieldName,
+  translatedPropertyName,
+  i18n,
+  ...rest
+}: IValidatorValidateOptions<number[]>): boolean | string {
   if (!Array.isArray(value)) {
-    const message = i18n.t("validator.array", {
+    const message = i18n.t('validator.array', {
       field: translatedPropertyName || fieldName,
       value,
       ...rest,
@@ -176,8 +205,8 @@ function _ArrayLength({ value, ruleParams, fieldName, translatedPropertyName, i1
 
   const exactLength = Number(ruleParams?.[0]);
   if (isNaN(exactLength) || exactLength < 0) {
-    const message = i18n.t("validator.invalidRuleParams", {
-      rule: "ArrayLength",
+    const message = i18n.t('validator.invalidRuleParams', {
+      rule: 'ArrayLength',
       field: translatedPropertyName || fieldName,
       ruleParams,
       ...rest,
@@ -188,7 +217,7 @@ function _ArrayLength({ value, ruleParams, fieldName, translatedPropertyName, i1
   if (value.length === exactLength) {
     return true;
   } else {
-    const message = i18n.t("validator.arrayLength", {
+    const message = i18n.t('validator.arrayLength', {
       field: translatedPropertyName || fieldName,
       value,
       length: exactLength,
@@ -198,7 +227,7 @@ function _ArrayLength({ value, ruleParams, fieldName, translatedPropertyName, i1
     return message;
   }
 }
-Validator.registerRule("ArrayLength", _ArrayLength);
+Validator.registerRule('ArrayLength', _ArrayLength);
 
 /**
  * ### ArrayLength Rule
@@ -221,25 +250,32 @@ Validator.registerRule("ArrayLength", _ArrayLength);
  * @param options.ruleParams - Array containing exact length
  * @returns Promise resolving to true if valid, rejecting with error message if invalid
  *
- * @since 1.35.1
+ * @since 1.0.0
  * @public
  */
 export const ArrayLength = Validator.buildRuleDecorator<[number]>(_ArrayLength);
 
-function _ArrayContains({ value, ruleParams, fieldName, translatedPropertyName, i18n, ...rest }: IValidatorValidateOptions<any[]>): boolean | string {
+function _ArrayContains({
+  value,
+  ruleParams,
+  fieldName,
+  translatedPropertyName,
+  i18n,
+  ...rest
+}: IValidatorValidateOptions<any[]>): boolean | string {
   if (!Array.isArray(value)) {
-    const message = i18n.t("validator.arrayContains", {
+    const message = i18n.t('validator.arrayContains', {
       field: translatedPropertyName || fieldName,
       value,
-      requiredValues: ruleParams?.join(", ") || "",
+      requiredValues: ruleParams?.join(', ') || '',
       ...rest,
     });
     return message;
   }
 
   if (!ruleParams || ruleParams.length === 0) {
-    const message = i18n.t("validator.invalidRuleParams", {
-      rule: "ArrayContains",
+    const message = i18n.t('validator.invalidRuleParams', {
+      rule: 'ArrayContains',
       field: translatedPropertyName || fieldName,
       ruleParams,
       ...rest,
@@ -250,7 +286,7 @@ function _ArrayContains({ value, ruleParams, fieldName, translatedPropertyName, 
   const containsAll = ruleParams.every((requiredValue) =>
     value.some((item) => {
       // Deep equality check for objects/arrays, simple equality for primitives
-      if (typeof requiredValue === "object" && requiredValue !== null) {
+      if (typeof requiredValue === 'object' && requiredValue !== null) {
         return JSON.stringify(item) === JSON.stringify(requiredValue);
       }
       return item === requiredValue;
@@ -260,16 +296,16 @@ function _ArrayContains({ value, ruleParams, fieldName, translatedPropertyName, 
   if (containsAll) {
     return true;
   } else {
-    const message = i18n.t("validator.arrayContains", {
+    const message = i18n.t('validator.arrayContains', {
       field: translatedPropertyName || fieldName,
       value,
-      requiredValues: ruleParams.map((v) => JSON.stringify(v)).join(", "),
+      requiredValues: ruleParams.map((v) => JSON.stringify(v)).join(', '),
       ...rest,
     });
     return message;
   }
 }
-Validator.registerRule("ArrayContains", _ArrayContains);
+Validator.registerRule('ArrayContains', _ArrayContains);
 
 /**
  * ### ArrayContains Rule
@@ -292,14 +328,21 @@ Validator.registerRule("ArrayContains", _ArrayContains);
  * @param options.ruleParams - Array of values that must be contained
  * @returns Promise resolving to true if valid, rejecting with error message if invalid
  *
- * @since 1.35.1
+ * @since 1.0.0
  * @public
  */
-export const ArrayContains = Validator.buildRuleDecorator<any[]>(_ArrayContains);
+export const ArrayContains =
+  Validator.buildRuleDecorator<any[]>(_ArrayContains);
 
-function _ArrayUnique({ value, fieldName, translatedPropertyName, i18n, ...rest }: IValidatorValidateOptions): boolean | string {
+function _ArrayUnique({
+  value,
+  fieldName,
+  translatedPropertyName,
+  i18n,
+  ...rest
+}: IValidatorValidateOptions): boolean | string {
   if (!Array.isArray(value)) {
-    const message = i18n.t("validator.arrayUnique", {
+    const message = i18n.t('validator.arrayUnique', {
       field: translatedPropertyName || fieldName,
       value,
       ...rest,
@@ -311,7 +354,7 @@ function _ArrayUnique({ value, fieldName, translatedPropertyName, i18n, ...rest 
     const uniqueValues = new Set(
       value.map((item) => {
         // Convert objects/arrays to JSON strings for comparison
-        if (typeof item === "object" && item !== null) {
+        if (typeof item === 'object' && item !== null) {
           return JSON.stringify(item);
         }
         return item;
@@ -321,7 +364,7 @@ function _ArrayUnique({ value, fieldName, translatedPropertyName, i18n, ...rest 
     if (uniqueValues.size === value.length) {
       return true;
     } else {
-      const message = i18n.t("validator.arrayUnique", {
+      const message = i18n.t('validator.arrayUnique', {
         field: translatedPropertyName || fieldName,
         value,
         ...rest,
@@ -330,7 +373,7 @@ function _ArrayUnique({ value, fieldName, translatedPropertyName, i18n, ...rest 
     }
   } catch (error) {
     // JSON.stringify might fail for circular references
-    const message = i18n.t("validator.arrayUnique", {
+    const message = i18n.t('validator.arrayUnique', {
       field: translatedPropertyName || fieldName,
       value,
       ...rest,
@@ -338,7 +381,7 @@ function _ArrayUnique({ value, fieldName, translatedPropertyName, i18n, ...rest 
     return message;
   }
 }
-Validator.registerRule("ArrayUnique", _ArrayUnique);
+Validator.registerRule('ArrayUnique', _ArrayUnique);
 
 /**
  * ### ArrayUnique Rule
@@ -357,48 +400,70 @@ Validator.registerRule("ArrayUnique", _ArrayUnique);
  * @param options - Validation options containing value and context
  * @returns Promise resolving to true if valid, rejecting with error message if invalid
  *
- * @since 1.35.1
+ * @since 1.0.0
  * @public
  */
-export const ArrayUnique = Validator.buildPropertyDecorator(["ArrayUnique"]);
+export const ArrayUnique = Validator.buildPropertyDecorator(['ArrayUnique']);
 
-function _ArrayAllStrings({ value, fieldName, translatedPropertyName, i18n, ...rest }: IValidatorValidateOptions): boolean | string {
+function _ArrayAllStrings({
+  value,
+  fieldName,
+  translatedPropertyName,
+  i18n,
+  ...rest
+}: IValidatorValidateOptions): boolean | string {
   if (!Array.isArray(value)) {
-    return i18n.t("validator.array", { field: translatedPropertyName || fieldName, value, ...rest });
+    return i18n.t('validator.array', {
+      field: translatedPropertyName || fieldName,
+      value,
+      ...rest,
+    });
   }
 
-  const allStrings = value.every((item) => typeof item === "string");
+  const allStrings = value.every((item) => typeof item === 'string');
   if (allStrings) {
     return true;
   }
 
-  const message = i18n.t("validator.arrayAllStrings", {
+  const message = i18n.t('validator.arrayAllStrings', {
     field: translatedPropertyName || fieldName,
     value,
     ...rest,
   });
   return message;
 }
-Validator.registerRule("ArrayAllStrings", _ArrayAllStrings);
+Validator.registerRule('ArrayAllStrings', _ArrayAllStrings);
 
-function _ArrayAllNumbers({ value, fieldName, translatedPropertyName, i18n, ...rest }: IValidatorValidateOptions): boolean | string {
+function _ArrayAllNumbers({
+  value,
+  fieldName,
+  translatedPropertyName,
+  i18n,
+  ...rest
+}: IValidatorValidateOptions): boolean | string {
   if (!Array.isArray(value)) {
-    return i18n.t("validator.array", { field: translatedPropertyName || fieldName, value, ...rest });
+    return i18n.t('validator.array', {
+      field: translatedPropertyName || fieldName,
+      value,
+      ...rest,
+    });
   }
 
-  const allNumbers = value.every((item) => typeof item === "number" && !Number.isNaN(item));
+  const allNumbers = value.every(
+    (item) => typeof item === 'number' && !Number.isNaN(item)
+  );
   if (allNumbers) {
     return true;
   }
 
-  const message = i18n.t("validator.arrayAllNumbers", {
+  const message = i18n.t('validator.arrayAllNumbers', {
     field: translatedPropertyName || fieldName,
     value,
     ...rest,
   });
   return message;
 }
-Validator.registerRule("ArrayAllNumbers", _ArrayAllNumbers);
+Validator.registerRule('ArrayAllNumbers', _ArrayAllNumbers);
 
 /**
  * ### ArrayAllStrings Rule
@@ -423,10 +488,12 @@ Validator.registerRule("ArrayAllNumbers", _ArrayAllNumbers);
  * @param options - Validation options containing value and context
  * @returns Promise resolving to true if valid, rejecting with error message if invalid
  *
- * @since 1.35.1
+ * @since 1.0.0
  * @public
  */
-export const ArrayAllStrings = Validator.buildPropertyDecorator(["ArrayAllStrings"]);
+export const ArrayAllStrings = Validator.buildPropertyDecorator([
+  'ArrayAllStrings',
+]);
 
 /**
  * ### ArrayAllNumbers Rule
@@ -452,12 +519,14 @@ export const ArrayAllStrings = Validator.buildPropertyDecorator(["ArrayAllString
  * @param options - Validation options containing value and context
  * @returns Promise resolving to true if valid, rejecting with error message if invalid
  *
- * @since 1.35.1
+ * @since 1.0.0
  * @public
  */
-export const ArrayAllNumbers = Validator.buildPropertyDecorator(["ArrayAllNumbers"]);
+export const ArrayAllNumbers = Validator.buildPropertyDecorator([
+  'ArrayAllNumbers',
+]);
 
-declare module "../types" {
+declare module '../types' {
   export interface IValidatorRulesMap<Context = unknown> {
     /**
      * ### Array Rule
@@ -499,7 +568,7 @@ declare module "../types" {
      * @param options - Validation options containing value and context
      * @returns Promise resolving to true if valid, rejecting with error message if invalid
      *
-     * @since 1.35.1
+     * @since 1.0.0
      * @public
      */
     Array: IValidatorRuleParams<[], Context>;
@@ -547,7 +616,7 @@ declare module "../types" {
      * @param options.ruleParams - Array containing minimum length
      * @returns Promise resolving to true if valid, rejecting with error message if invalid
      *
-     * @since 1.35.1
+     * @since 1.0.0
      * @public
      */
     ArrayMinLength: IValidatorRuleParams<[minLength: number], Context>;
@@ -595,7 +664,7 @@ declare module "../types" {
      * @param options.ruleParams - Array containing maximum length
      * @returns Promise resolving to true if valid, rejecting with error message if invalid
      *
-     * @since 1.35.1
+     * @since 1.0.0
      * @public
      */
     ArrayMaxLength: IValidatorRuleParams<[maxLength: number], Context>;
@@ -648,7 +717,7 @@ declare module "../types" {
      * @param options.ruleParams - Array containing exact length
      * @returns Promise resolving to true if valid, rejecting with error message if invalid
      *
-     * @since 1.35.1
+     * @since 1.0.0
      * @public
      */
     ArrayLength: IValidatorRuleParams<[length: number], Context>;
@@ -696,7 +765,7 @@ declare module "../types" {
      * @param options.ruleParams - Array of values that must be contained
      * @returns Promise resolving to true if valid, rejecting with error message if invalid
      *
-     * @since 1.35.1
+     * @since 1.0.0
      * @public
      */
     ArrayContains: IValidatorRuleParams<any[], Context>;
@@ -745,7 +814,7 @@ declare module "../types" {
      * @param options - Validation options containing value and context
      * @returns Promise resolving to true if valid, rejecting with error message if invalid
      *
-     * @since 1.35.1
+     * @since 1.0.0
      * @public
      */
     ArrayUnique: IValidatorRuleParams<[], Context>;
@@ -770,7 +839,7 @@ declare module "../types" {
      * @param options - Validation options containing value and context
      * @returns Promise resolving to true if valid, rejecting with error message if invalid
      *
-     * @since 1.35.1
+     * @since 1.0.0
      * @public
      */
     ArrayAllStrings: IValidatorRuleParams<[], Context>;
@@ -796,7 +865,7 @@ declare module "../types" {
      * @param options - Validation options containing value and context
      * @returns Promise resolving to true if valid, rejecting with error message if invalid
      *
-     * @since 1.35.1
+     * @since 1.0.0
      * @public
      */
     ArrayAllNumbers: IValidatorRuleParams<[], Context>;

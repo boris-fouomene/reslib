@@ -1,4 +1,4 @@
-import { Validator } from "../validator";
+import { Validator } from '../validator';
 
 /**
  * ## OneOf Validation Decorator
@@ -172,7 +172,7 @@ import { Validator } from "../validator";
  * @throws {string} When all sub-rules fail, throws aggregated error messages joined with semicolons
  * @throws {string} When no sub-rules are provided, throws "invalidRule" error
  *
- * @since 1.35.0
+ * @since 1.0.0
  * @see {@link Validator.validateOneOfRule} - The underlying validation method
  * @see {@link Validator.buildMultiRuleDecorator} - Factory method that creates this decorator
  * @see {@link Validator.validateTarget} - For class-based validation using decorators
@@ -184,12 +184,12 @@ import { Validator } from "../validator";
 export const OneOf = Validator.buildMultiRuleDecorator(function OneOf(options) {
   return Validator.validateOneOfRule(options);
 });
-Validator.markRuleWithSymbol(OneOf, Symbol.for("validatorOneOfRuleMarker"));
+Validator.markRuleWithSymbol(OneOf, Symbol.for('validatorOneOfRuleMarker'));
 
 export const AllOf = Validator.buildMultiRuleDecorator(function AllOf(options) {
   return Validator.validateAllOfRule(options);
 });
-Validator.markRuleWithSymbol(AllOf, Symbol.for("validatorAllOfRuleMarker"));
+Validator.markRuleWithSymbol(AllOf, Symbol.for('validatorAllOfRuleMarker'));
 
 /**
  * ## ArrayOf Validation Decorator
@@ -202,9 +202,9 @@ Validator.markRuleWithSymbol(AllOf, Symbol.for("validatorAllOfRuleMarker"));
  *   @ArrayOf(["Email"]) emails!: string[];
  * }
  */
-export const ArrayOf = Validator.buildMultiRuleDecorator(function ArrayOf(
-  options
-) {
-  return Validator.validateArrayOfRule(options);
-});
-Validator.markRuleWithSymbol(ArrayOf, Symbol.for("validatorArrayOfRuleMarker"));
+export const ArrayOf = Validator.buildMultiRuleDecorator(
+  function ArrayOf(options) {
+    return Validator.validateArrayOfRule(options);
+  }
+);
+Validator.markRuleWithSymbol(ArrayOf, Symbol.for('validatorArrayOfRuleMarker'));

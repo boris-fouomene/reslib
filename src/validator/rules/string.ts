@@ -1,10 +1,10 @@
-import { defaultStr } from "@utils/defaultStr";
-import { isEmpty } from "@utils/isEmpty";
-import { isNonNullString } from "@utils/isNonNullString";
-import { isNumber } from "@utils/isNumber";
-import { IValidatorResult, IValidatorValidateOptions } from "../types";
-import { Validator } from "../validator";
-import { toNumber } from "./utils";
+import { defaultStr } from '@utils/defaultStr';
+import { isEmpty } from '@utils/isEmpty';
+import { isNonNullString } from '@utils/isNonNullString';
+import { isNumber } from '@utils/isNumber';
+import { IValidatorResult, IValidatorValidateOptions } from '../types';
+import { Validator } from '../validator';
+import { toNumber } from './utils';
 
 /**
  * ### IsNonNullString Decorator
@@ -47,7 +47,7 @@ import { toNumber } from "./utils";
  * @public
  */
 export const IsNonNullString = Validator.buildPropertyDecorator([
-  "NonNullString",
+  'NonNullString',
 ]);
 
 function stringLength({ value, ruleParams, i18n }: IValidatorValidateOptions) {
@@ -58,8 +58,8 @@ function stringLength({ value, ruleParams, i18n }: IValidatorValidateOptions) {
   const i18nParams = { value, minLength, maxLength, length: minLength };
   const message =
     isNumber(minLength) && isNumber(maxLength)
-      ? i18n.t("validator.lengthRange", i18nParams)
-      : i18n.t("validator.length", i18nParams);
+      ? i18n.t('validator.lengthRange', i18nParams)
+      : i18n.t('validator.length', i18nParams);
   if (isNumber(minLength) && isNumber(maxLength)) {
     return (value.length >= minLength && value.length <= maxLength) || message;
   }
@@ -69,23 +69,23 @@ function stringLength({ value, ruleParams, i18n }: IValidatorValidateOptions) {
   }
   return true;
 }
-Validator.registerRule("Length", stringLength);
+Validator.registerRule('Length', stringLength);
 
 function minLength(options: IValidatorValidateOptions) {
   let { value, ruleParams, i18n } = options;
   ruleParams = Array.isArray(ruleParams) ? ruleParams : [];
   const mLength = parseFloat(ruleParams[0]) || 0;
-  const message = i18n.t("validator.minLength", {
+  const message = i18n.t('validator.minLength', {
     ...options,
     minLength: mLength,
   });
   return (
     isEmpty(value) ||
-    (value && typeof value === "string" && String(value).length >= mLength) ||
+    (value && typeof value === 'string' && String(value).length >= mLength) ||
     message
   );
 }
-Validator.registerRule("MinLength", minLength);
+Validator.registerRule('MinLength', minLength);
 
 /**
  * @decorator  MinLength
@@ -122,17 +122,17 @@ function maxLength(options: IValidatorValidateOptions) {
   let { value, ruleParams, i18n } = options;
   ruleParams = Array.isArray(ruleParams) ? ruleParams : [];
   const mLength = parseFloat(ruleParams[0]) || 0;
-  const message = i18n.t("validator.maxLength", {
+  const message = i18n.t('validator.maxLength', {
     ...options,
     maxLength: mLength,
   });
   return (
     isEmpty(value) ||
-    (value && typeof value === "string" && String(value).length <= mLength) ||
+    (value && typeof value === 'string' && String(value).length <= mLength) ||
     message
   );
 }
-Validator.registerRule("MaxLength", maxLength);
+Validator.registerRule('MaxLength', maxLength);
 
 /**
  * @decorator  MaxLength
@@ -166,9 +166,9 @@ Validator.registerRule("MaxLength", maxLength);
 export const MaxLength =
   Validator.buildRuleDecorator<[maxLength: number]>(maxLength);
 
-Validator.registerRule("NonNullString", function NonNullString(options) {
+Validator.registerRule('NonNullString', function NonNullString(options) {
   const { value, i18n } = options;
-  return isNonNullString(value) || i18n.t("validator.isNonNullString", options);
+  return isNonNullString(value) || i18n.t('validator.isNonNullString', options);
 });
 
 /**
@@ -221,19 +221,19 @@ function _EndsWith({
   ...rest
 }: IValidatorValidateOptions<string[]>): IValidatorResult {
   return new Promise((resolve, reject) => {
-    if (typeof value !== "string") {
-      const message = i18n.t("validator.endsWithOneOf", {
+    if (typeof value !== 'string') {
+      const message = i18n.t('validator.endsWithOneOf', {
         field: translatedPropertyName || fieldName,
         value,
-        endings: ruleParams?.join(", ") || "",
+        endings: ruleParams?.join(', ') || '',
         ...rest,
       });
       return reject(message);
     }
 
     if (!ruleParams || ruleParams.length === 0) {
-      const message = i18n.t("validator.invalidRuleParams", {
-        rule: "EndsWithOneOf",
+      const message = i18n.t('validator.invalidRuleParams', {
+        rule: 'EndsWithOneOf',
         field: translatedPropertyName || fieldName,
         ruleParams,
         ...rest,
@@ -246,17 +246,17 @@ function _EndsWith({
     if (endsWithAny) {
       resolve(true);
     } else {
-      const message = i18n.t("validator.endsWithOneOf", {
+      const message = i18n.t('validator.endsWithOneOf', {
         field: translatedPropertyName || fieldName,
         value,
-        endings: ruleParams.join(", "),
+        endings: ruleParams.join(', '),
         ...rest,
       });
       reject(message);
     }
   });
 }
-Validator.registerRule("EndsWithOneOf", _EndsWith);
+Validator.registerRule('EndsWithOneOf', _EndsWith);
 
 /**
  * ### EndsWithOneOf Rule
@@ -282,7 +282,7 @@ Validator.registerRule("EndsWithOneOf", _EndsWith);
  * @param options.ruleParams - Array of valid ending values
  * @returns Promise resolving to true if valid, rejecting with error message if invalid
  *
- * @since 1.22.0
+ * @since 1.0.0
  * @public
  */
 export const EndsWithOneOf = Validator.buildRuleDecorator<string[]>(_EndsWith);
@@ -296,19 +296,19 @@ function _StartsWith({
   ...rest
 }: IValidatorValidateOptions<string[]>): IValidatorResult {
   return new Promise((resolve, reject) => {
-    if (typeof value !== "string") {
-      const message = i18n.t("validator.startsWithOneOf", {
+    if (typeof value !== 'string') {
+      const message = i18n.t('validator.startsWithOneOf', {
         field: translatedPropertyName || fieldName,
         value,
-        prefixes: ruleParams?.join(", ") || "",
+        prefixes: ruleParams?.join(', ') || '',
         ...rest,
       });
       return reject(message);
     }
 
     if (!ruleParams || ruleParams.length === 0) {
-      const message = i18n.t("validator.invalidRuleParams", {
-        rule: "StartsWithOneOf",
+      const message = i18n.t('validator.invalidRuleParams', {
+        rule: 'StartsWithOneOf',
         field: translatedPropertyName || fieldName,
         ...rest,
         ruleParams,
@@ -323,17 +323,17 @@ function _StartsWith({
     if (startsWithAny) {
       resolve(true);
     } else {
-      const message = i18n.t("validator.startsWithOneOf", {
+      const message = i18n.t('validator.startsWithOneOf', {
         field: translatedPropertyName || fieldName,
         value,
-        prefixes: ruleParams.join(", "),
+        prefixes: ruleParams.join(', '),
         ...rest,
       });
       reject(message);
     }
   });
 }
-Validator.registerRule("StartsWithOneOf", _StartsWith);
+Validator.registerRule('StartsWithOneOf', _StartsWith);
 export const StartsWithOneOf =
   Validator.buildRuleDecorator<string[]>(_StartsWith);
 
@@ -344,15 +344,15 @@ function _String({
   i18n,
   ...rest
 }: IValidatorValidateOptions): IValidatorResult {
-  return typeof value === "string"
+  return typeof value === 'string'
     ? true
-    : i18n.t("validator.string", {
+    : i18n.t('validator.string', {
         field: translatedPropertyName || fieldName,
         value,
         ...rest,
       });
 }
-Validator.registerRule("String", _String);
+Validator.registerRule('String', _String);
 
 /**
  * ### IsString Rule
@@ -376,12 +376,12 @@ Validator.registerRule("String", _String);
  * @param options - Validation options containing value and context
  * @returns Promise resolving to true if valid, rejecting with error message if invalid
  *
- * @since 1.22.0
+ * @since 1.0.0
  * @public
  */
-export const IsString = Validator.buildPropertyDecorator<[]>(["String"]);
+export const IsString = Validator.buildPropertyDecorator<[]>(['String']);
 
-declare module "../types" {
+declare module '../types' {
   export interface IValidatorRulesMap<Context = unknown> {
     /**
      * ### String Rule
@@ -433,7 +433,7 @@ declare module "../types" {
      * @param options - Validation options containing value and context
      * @returns Promise resolving to true if valid, rejecting with error message if invalid
      *
-     * @since 1.22.0
+     * @since 1.0.0
      * @public
      */
     String: IValidatorRuleParams<[], Context>;
@@ -479,7 +479,7 @@ declare module "../types" {
      * @param options.ruleParams - Array of valid starting values
      * @returns Promise resolving to true if valid, rejecting with error message if invalid
      *
-     * @since 1.22.0
+     * @since 1.0.0
      * @public
      */
     StartsWithOneOf: IValidatorRuleParams<string[], Context>;
@@ -525,7 +525,7 @@ declare module "../types" {
      * @param options.ruleParams - Array of valid ending values
      * @returns Promise resolving to true if valid, rejecting with error message if invalid
      *
-     * @since 1.22.0
+     * @since 1.0.0
      * @public
      */
     EndsWithOneOf: IValidatorRuleParams<string[], Context>;

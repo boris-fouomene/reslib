@@ -1,3 +1,4 @@
+import { Dictionary } from '@/types';
 import 'reflect-metadata';
 import { defaultStr } from '../utils/defaultStr';
 import { isNonNullString } from '../utils/isNonNullString';
@@ -6,6 +7,7 @@ import session from './session';
 import { ICurrency, ICurrencySymbol } from './types';
 import { isValidCurrency } from './utils';
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const isObj = (x: any) => x && typeof x == 'object';
 
 /**
@@ -31,10 +33,10 @@ function prepareOptions(options?: ICurrency): ICurrency {
      */
     for (let i in options) {
       if (
-        options.hasOwnProperty(i) &&
+        Object.prototype.hasOwnProperty.call(options, i) &&
         options[i as keyof ICurrency] !== undefined
       ) {
-        (object as { [key: string]: any })[i] = options[i as keyof ICurrency];
+        (object as Dictionary)[i] = options[i as keyof ICurrency];
       }
     }
   }
@@ -158,7 +160,11 @@ function checkCurrencyFormat(
  * @param {string} [decimalSeparator] The decimal separator to use (defaults to accounting.settings.number.decimalSeparator).
  * @returns {number} The unformatted float value.
  */
-const unformat = (value: any, decimalSeparator?: string): number => {
+const unformat = (
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  value: any,
+  decimalSeparator?: string
+): number => {
   /**
    * Get the current currency settings.
    */
@@ -253,6 +259,7 @@ const toFixed: (value: number, decimalDigits?: number) => string = (
         decimalDigits
       );
       return finalResult;
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (e) {
       // Fallback for cases where conversion fails
       return 'NaN';
@@ -551,7 +558,7 @@ const parseFormat: (format?: string) => ICurrency = (
     /**
      * Regular expression to match the decimal digits specification.
      */
-    const reg = /(\.)(\#{0,9}\s*$)/;
+    const reg = /(\.)(\\#{0,9}\s*$)/;
 
     /**
      * Match the decimal digits specification in the format string.

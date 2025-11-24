@@ -687,7 +687,7 @@ export class Validator {
    * @returns returns.sanitizedRules - Array of standardized, executable rule objects
    * @returns returns.invalidRules - Array of rules that couldn't be processed (unregistered)
    *
-   * @since 1.22.0
+   * @since 1.0.0
    * @see {@link parseStringRule} - Internal string rule parser
    * @see {@link parseObjectRule} - Internal object rule parser
    * @see {@link validate} - Uses this method for rule processing
@@ -773,7 +773,7 @@ export class Validator {
    * @returns returns.ruleFunction - The actual validation function
    * @returns returns.rawRuleName - The original unparsed rule string
    *
-   * @since 1.22.0
+   * @since 1.0.0
    * @see {@link parseAndValidateRules} - Public method that uses this parser
    * @private
    */
@@ -1317,7 +1317,7 @@ export class Validator {
    *   ruleParams: ["Email", "PhoneNumber"],
    * });
    * // res === true when any sub-rule succeeds
-   * @since 1.35.0
+   * @since 1.0.0
    * @see {@link validateMultiRule}
    */
   static validateOneOfRule<
@@ -1348,7 +1348,7 @@ export class Validator {
    *   ruleParams: ["String", { MinLength: [5] }],
    * });
    * // res === true only if all sub-rules succeed
-   * @since 1.35.0
+   * @since 1.0.0
    * @see {@link validateMultiRule}
    */
   static validateAllOfRule<
@@ -1383,7 +1383,7 @@ export class Validator {
    *   ruleParams: ["Email"],
    * });
    * // res === true when every item is a valid email
-   * @since 1.36.0
+   * @since 1.0.0
    */
   static async validateArrayOfRule<
     Context = unknown,
@@ -1573,7 +1573,7 @@ export class Validator {
    * - Performance: Delegates to validateTarget which validates fields in parallel
    * - Error aggregation uses nested field paths for hierarchical clarity
    *
-   * @since 1.36.0
+   * @since 1.0.0
    * @see {@link validateNested} - Factory function that creates rule functions using this method
    * @see {@link validateTarget} - The underlying class-based validation method (accepts options with data)
    * @see {@link ValidateNested} - Decorator that uses this method via the factory
@@ -1703,7 +1703,7 @@ export class Validator {
    * });
    * // resultAllOf === true
    *
-   * @since 1.35.0
+   * @since 1.0.0
    * @see {@link validateOneOfRule} - Convenience wrapper applying `OneOf` logic
    * @see {@link validateAllOfRule} - Convenience wrapper applying `AllOf` logic
    * @see {@link oneOf} - Factory to build a reusable `OneOf` rule function
@@ -1919,7 +1919,7 @@ export class Validator {
    * - Supports both built-in rules and custom validation functions
    * - Context is passed through to all sub-rule validations
    *
-   * @since 1.35.0
+   * @since 1.0.0
    * @see {@link validateOneOfRule} - The underlying validation method
    * @see {@link buildMultiRuleDecorator} - Creates decorators using this method
    * @see {@link registerRule} - Register the returned function as a named rule
@@ -1957,7 +1957,7 @@ export class Validator {
    * const strongStringRule = Validator.allOf(["String", { MinLength: [5] }]);
    * const res = await strongStringRule({ value: "hello" });
    * // res === true
-   * @since 1.35.0
+   * @since 1.0.0
    * @see {@link validateAllOfRule}
    * @see {@link buildMultiRuleDecorator}
    * @see {@link registerRule}
@@ -1993,7 +1993,7 @@ export class Validator {
    * @example
    * const emails = Validator.arrayOf(["Email"]);
    * const res = await emails({ value: ["a@b.com", "c@d.com"] }); // true
-   * @since 1.36.0
+   * @since 1.0.0
    */
   static arrayOf<
     Context = unknown,
@@ -2226,7 +2226,7 @@ export class Validator {
    * }
    * ```
    *
-   * @since 1.36.0
+   * @since 1.0.0
    * @see {@link validateNestedRule} - The underlying validation executor that delegates to validateTarget
    * @see {@link ValidateNested} - Decorator using this factory
    * @see {@link validateTarget} - Multi-field class validation (signature: validateTarget<T, Context>(target, options))
@@ -2810,7 +2810,7 @@ export class Validator {
    *
    * @returns `true` if the property has a ValidateNested rule applied, `false` otherwise
    *
-   * @since 1.36.0
+   * @since 1.0.0
    * @see {@link getTargetRules} - Get all rules for a target class
    * @see {@link validateNestedRule} - The underlying nested validation method
    * @see {@link ValidateNested} - The decorator that applies nested validation
@@ -2893,7 +2893,7 @@ export class Validator {
    *
    * @returns The nested class constructor if found, undefined otherwise
    *
-   * @since 1.36.0
+   * @since 1.0.0
    * @see {@link hasValidateNestedRule} - Check if property has ValidateNested rule
    * @see {@link getTargetRules} - Get all rules for a class
    * @public
@@ -3093,7 +3093,7 @@ export class Validator {
    *
    * @returns Decorator factory function that accepts parameters and returns a property decorator
    *
-   * @since 1.22.0
+   * @since 1.0.0
    * @see {@link buildPropertyDecorator} - Lower-level decorator creation
    * @see {@link registerRule} - Alternative way to create reusable rules
    * @public
@@ -3310,7 +3310,7 @@ export class Validator {
    *   - Attaches target-based validation to class properties
    *   - Works with class validation via validateTarget()
    *
-   * @since 1.22.0
+   * @since 1.0.0
    * @see {@link buildRuleDecorator} - General-purpose decorator factory
    * @see {@link buildPropertyDecorator} - Low-level decorator creation
    * @see {@link ValidateNested} - Example target rule decorator
@@ -3341,7 +3341,7 @@ export class Validator {
    * @param ruleFunction  The validation rule to wrap
    * @returns A decorator factory that can be invoked **with or without** parameters
    *
-   * @since 1.34.1
+   * @since 1.0.0
    * @see {@link buildRuleDecorator}
    * @public
    */
@@ -3565,7 +3565,7 @@ export class Validator {
  *
  * @returns Class decorator function that applies the validation configuration
  *
- * @since 1.22.0
+ * @since 1.0.0
  * @see {@link validateTarget} - Method that uses these options
  * @see {@link getValidateTargetOptions} - Retrieves configured options
  * @decorator

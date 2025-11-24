@@ -1,12 +1,13 @@
-import { ICurrency } from "@/currency/types";
-import countries from "./countries";
+import { ICurrency } from '@/currency/types';
+import { Dictionary } from '@/types';
+import countries from './countries';
 /****
- * @typedef ICountryCode
+ * @typedef CountryCode
  * The type of the country code.
  * example: US, FR, IN
  * @see {@link CountryCode}, for more information about the CountryCode type.
  */
-export type ICountryCode = keyof typeof countries;
+export type CountryCode = keyof typeof countries;
 
 /**
  * Interface representing a country with its associated properties.
@@ -15,7 +16,7 @@ export type ICountryCode = keyof typeof countries;
  *
  * @example
  * ```typescript
- * const country: ICountry = {
+ * const country: Country = {
  *   code: 'US',
  *   dialCode: '+1',
  *   phoneNumberExample: '(123) 456-7890',
@@ -23,14 +24,14 @@ export type ICountryCode = keyof typeof countries;
  * };
  * ```
  */
-export interface ICountry extends Record<string, any> {
+export interface Country extends Dictionary {
   /**
    * The unique code of the country.
    *
-   * @type {ICountryCode}
+   * @type {CountryCode}
    * @example 'US'
    */
-  code: ICountryCode;
+  code: CountryCode;
 
   /***
    * The name of the country.

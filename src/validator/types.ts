@@ -1,7 +1,7 @@
 import { I18n } from '@/i18n';
 import { InputFormatterResult } from '@/inputFormatter/types';
 import { ClassConstructor } from '@/types';
-import { ICountryCode } from '@countries/types';
+import { CountryCode } from '@countries/types';
 
 /**
  * ## Validation Result Type
@@ -358,7 +358,7 @@ type TupleAllowsEmpty<T extends any[]> = T extends []
 
 /**
  * Extracts keys whose rule parameter tuple is empty or fully optional.
- * This correctly captures cases like `[countryCode?: ICountryCode]`.
+ * This correctly captures cases like `[countryCode?: CountryCode]`.
  */
 type ExtractOptionalOrEmptyKeys<T> = {
   [K in keyof T]: T[K] extends any[]
@@ -1112,7 +1112,7 @@ export type IValidatorRuleName = keyof IValidatorRulesMap & string;
  * NumberEqual: IValidatorRuleParams<[number], Context>;  // "NumberEqual[42]"
  *
  * // Rules with optional parameters
- * PhoneNumber: IValidatorRuleParams<[ICountryCode?], Context>; // "PhoneNumber" or "PhoneNumber[US]"
+ * PhoneNumber: IValidatorRuleParams<[CountryCode?], Context>; // "PhoneNumber" or "PhoneNumber[US]"
  *
  * // Rules with multiple parameters
  * Length: IValidatorRuleParams<[number, number?], Context>; // "Length[5]" or "Length[5,10]"
@@ -1228,7 +1228,7 @@ export interface IValidatorRulesMap<Context = unknown> {
   /**
    * Validator rule that checks if a value is a valid phone number.
    */
-  PhoneNumber: IValidatorRuleParams<[countryCode?: ICountryCode], Context>;
+  PhoneNumber: IValidatorRuleParams<[countryCode?: CountryCode], Context>;
 
   /**
    * Validator rule that checks if a value is a valid email or phone number.

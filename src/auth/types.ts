@@ -8,11 +8,10 @@ import { Dictionary } from '../types/dictionary';
  * @interface AuthUser
  * Represents an authenticated user in the application.
  *
- * The `AuthUser ` interface defines the structure for an authenticated
- * user object, which includes an identifier, an optional timestamp
- * for when the authentication session was created, and an optional
- * permissions map that specifies the actions the user can perform
- * on various resources.
+ * The `AuthUser` interface defines the structure for an authenticated
+ * user object, which includes core user identification, optional session
+ * tracking, permissions mapping, authentication token, and role assignments.
+ * This interface extends `Dictionary` to allow for additional custom properties.
  *
  * ### Properties
  *
@@ -24,28 +23,38 @@ import { Dictionary } from '../types/dictionary';
  *   authentication session was created. This can be useful for
  *   tracking session duration or expiration.
  *
- * - `perms` (IAuthPerms , optional):
- *   An optional property that maps resource names to an array of
- *   actions that the user is permitted to perform on those resources.
- *   This allows for fine-grained control over user permissions within
- *   the application.
+ * - `perms` (AuthPerms, optional): An optional property that maps
+ *   resource names to an array of actions that the user is permitted
+ *   to perform on those resources. This allows for fine-grained control
+ *   over user permissions within the application.
+ *
+ * - `token` (string, optional): An optional authentication token
+ *   associated with the user, typically used for API authentication
+ *   or session management.
+ *
+ * - `roles` (AuthRole[], optional): An optional array of roles assigned
+ *   to the user, defining their authorization level and capabilities.
  *
  * ### Example Usage
  *
- * Here is an example of how the `AuthUser ` interface can be used:
+ * Here is an example of how the `AuthUser` interface can be used:
  *
  * ```typescript
- * const user: AuthUser  = {
+ * const user: AuthUser = {
  *     id: "user123",
  *     authSessionCreatedAt: Date.now(),
+ *     token: "jwt-token-here",
  *     perms: {
  *         documents: ["read", "create", "update"],
  *         users: ["read", "delete"]
- *     }
+ *     },
+ *     roles: [
+ *         { name: "admin", perms: { documents: ["read", "create", "update"] } }
+ *     ]
  * };
  *
  * // Function to check if a user has permission to perform an action
- * function hasPermission(user: AuthUser , resource: ResourceName, action: ResourceActionName): boolean {
+ * function hasPermission(user: AuthUser, resource: ResourceName, action: ResourceActionName): boolean {
  *     return user.perms?.[resource]?.includes(action) ?? false;
  * }
  *
@@ -54,20 +63,21 @@ import { Dictionary } from '../types/dictionary';
  * const canDeleteUsers = hasPermission(user, "users", "delete"); // true
  * ```
  *
- * In this example, the `AuthUser ` interface is used to define a user
- * object with an ID, session creation timestamp, and a permissions map.
- * The `hasPermission` function checks if the user has the specified
- * permission for a given resource, demonstrating how the `perms`
- * property can be utilized in permission management.
+ * In this example, the `AuthUser` interface is used to define a user
+ * object with an ID, session creation timestamp, authentication token,
+ * permissions map, and roles. The `hasPermission` function checks if
+ * the user has the specified permission for a given resource.
+ *
  * @see {@link ResourceName} for the `ResourceName` type.
  * @see {@link ResourceActionName} for the `ResourceActionName` type.
- * @see {@link IAuthPerms} for the `IAuthPerms` type.
+ * @see {@link AuthPerms} for the `AuthPerms` type.
+ * @see {@link AuthRole} for the `AuthRole` interface.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export interface AuthUser extends Record<string, any> {
+
+export interface AuthUser extends Dictionary {
   id: string | number;
   authSessionCreatedAt?: number;
-  perms?: IAuthPerms;
+  perms?: AuthPerms;
   /**
    * The authentication token associated with the user.
    */
@@ -77,23 +87,56 @@ export interface AuthUser extends Record<string, any> {
 }
 
 /**
- * Interface representing an authorization role.
+ * @interface AuthRole
+ * Represents an authorization role with associated permissions.
  *
- * @description This interface defines the structure of an authorization role,
- *              which consists of a name and a set of permissions.
+ * The `AuthRole` interface defines the structure of an authorization role,
+ * which consists of a unique name identifier and a comprehensive set of
+ * permissions that define what actions the role can perform on various resources.
+ * This interface extends `Record<string, any>` to allow for additional custom properties.
  *
- * @example
+ * ### Properties
+ *
+ * - `name` (string): The unique identifier of the authorization role.
+ *   This serves as the primary key for role identification and should be
+ *   descriptive and unique within the application (e.g., 'admin', 'moderator', 'user').
+ *
+ * - `perms` (AuthPerms): The permissions associated with this role.
+ *   This property defines what actions the role can perform on different resources,
+ *   enabling fine-grained access control based on role assignments.
+ *
+ * ### Example Usage
+ *
  * ```typescript
  * const adminRole: AuthRole = {
  *   name: 'admin',
  *   perms: {
- *     // permissions for the admin role
- *     "documents": ["read", "create", "update"],
- *     "users": ["read", "delete"],
- *     "posts": ["read", "create"],
+ *     documents: ["read", "create", "update", "delete"],
+ *     users: ["read", "create", "update", "delete"],
+ *     posts: ["read", "create", "update", "delete"],
  *   }
  * };
+ *
+ * const moderatorRole: AuthRole = {
+ *   name: 'moderator',
+ *   perms: {
+ *     documents: ["read", "update"],
+ *     posts: ["read", "create", "update"],
+ *   }
+ * };
+ *
+ * // Function to check if a role has permission for an action
+ * function roleHasPermission(role: AuthRole, resource: ResourceName, action: ResourceActionName): boolean {
+ *     return role.perms?.[resource]?.includes(action) ?? false;
+ * }
+ *
+ * // Example usage
+ * const canAdminDeleteUsers = roleHasPermission(adminRole, "users", "delete"); // true
+ * const canModeratorDeleteUsers = roleHasPermission(moderatorRole, "users", "delete"); // false
  * ```
+ *
+ * @see {@link AuthPerms} for the permissions structure.
+ * @see {@link AuthUser} for how roles are assigned to users.
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export interface AuthRole extends Record<string, any> {
@@ -109,10 +152,10 @@ export interface AuthRole extends Record<string, any> {
    * The set of permissions associated with the role.
    *
    * @description This property represents the permissions that are granted to the role.
-   * @see {@link IAuthPerms} for the `IAuthPerms` type.
+   * @see {@link AuthPerms} for the `AuthPerms` type.
    * @example
    * ```typescript
-   * const perms: IAuthPerms = {
+   * const perms: AuthPerms = {
    *   // permissions for the role
    *   "documents": ["read", "create", "update"],
    *   "users": ["read", "delete"],
@@ -120,13 +163,13 @@ export interface AuthRole extends Record<string, any> {
    * };
    * ```
    */
-  perms: IAuthPerms;
+  perms: AuthPerms;
 }
 /**
- * @interface IAuthSessionStorage
+ * @interface AuthSessionStorage
  * Interface for managing authentication session storage.
  *
- * The `IAuthSessionStorage` interface defines methods for storing and
+ * The `AuthSessionStorage` interface defines methods for storing and
  * retrieving session data associated with authenticated users. This
  * interface provides a structured way to manage session data, ensuring
  * that it can be easily accessed and manipulated.
@@ -165,7 +208,7 @@ export interface AuthRole extends Record<string, any> {
  *   the session manager. This can be used to identify the session
  *   context in which the storage operates.
  */
-export interface IAuthSessionStorage {
+export interface AuthSessionStorage {
   /**
    * Retrieves the value of the session associated with the specified key.
    *
@@ -206,58 +249,59 @@ export interface IAuthSessionStorage {
 }
 
 /**
- * @interface AuthPerm
- * Represents the type associated with the `perm` property, used to evaluate 
- * whether a user has access to a resource.
- * 
- * The `AuthPerm` type can take on different forms to define permissions 
- * for accessing resources in an application, including a function that returns a boolean,
- * a boolean value, a single resource action tuple, or an array of resource action tuples. This flexibility allows 
- * for both simple string-based permissions and more complex logic 
- * through functions.
- * @template TResourceName - The name of the resource. Defaults to `ResourceName`.
- 
- * ### Possible Values:
- * 
- * - **Function**: If `AuthPerm` is a function, it must return a boolean 
- *   value that determines whether access to the resource should be 
- *   granted to the user. This allows for dynamic permission checks 
- *   based on custom logic.
- * 
- * - **False**: The value `false` indicates that no permission is 
- *   granted for the resource.
- * - **Resource Action Tuple**: A resource action tuple is an array of two elements: the resource name and the action name. This tuple represents a specific action on a resource and can be used to check if a user has permission to perform that action.
- * - **Array of Resource Action Tuples**: An array of resource action tuples allows for checking if a user has permission to perform multiple actions on a resource. This can be useful when you want to check if a user has permission to perform multiple actions on a resource, such as creating, updating, or deleting a resource.
- * - **
- * 
- * ### Example Usage:
- * 
- * Here are some examples of how the `AuthPerm` type can be used:
- * 
+ * @type AuthPerm
+ * Defines a flexible permission type for evaluating user access to resources.
+ *
+ * The `AuthPerm` type supports multiple formats for defining permissions,
+ * allowing both simple boolean checks and complex resource-action based permissions.
+ * This flexibility enables various authorization patterns from simple role-based
+ * access control to dynamic, context-aware permission evaluation.
+ *
+ * @template TResourceName - The specific resource name type. Defaults to `ResourceName`.
+ *
+ * ### Permission Formats
+ *
+ * - **Function**: `(user: AuthUser) => boolean` - Dynamic permission check based on user context
+ * - **Boolean**: `false` - Explicit denial of access
+ * - **Resource Action Tuple**: `[TResourceName, ResourceActionName<TResourceName>]` - Specific resource-action permission
+ * - **Resource Action Tuples Array**: `Array<[TResourceName, ResourceActionName<TResourceName>]>` - Multiple resource-action permissions
+ *
+ * ### Example Usage
+ *
  * ```typescript
- * // Example of a dynamic permission check using a function
- * const dynamicPermission: AuthPerm = (user: AuthUser) => {
- *     const userRole = getUserRole(user); // Assume this function retrieves the user's role
- *     return userRole === 'admin'; // Grant access if the user is an admin
+ * // Dynamic permission using a function
+ * const adminOnly: AuthPerm = (user: AuthUser) => {
+ *     return user.roles?.some(role => role.name === 'admin') ?? false;
  * };
- * 
- * // Example of no permission
- * const noPermission: AuthPerm = false;
- * 
- *  * // Using a single resource action tuple
- * const perm: AuthPerm = ["users", "read"];
- * 
- * // Using an array of resource action tuples
- * const perm: AuthPerm = [["users", "read"], ["users", "create"],{"resourceName": "users", "action": "update"}];
+ *
+ * // Explicit denial
+ * const noAccess: AuthPerm = false;
+ *
+ * // Single resource-action permission
+ * const readUsers: AuthPerm = ["users", "read"];
+ *
+ * // Multiple resource-action permissions
+ * const manageUsers: AuthPerm = [
+ *     ["users", "read"],
+ *     ["users", "create"],
+ *     ["users", "update"]
+ * ];
+ *
+ * // Function to check permissions
+ * function hasPermission(user: AuthUser, perm: AuthPerm): boolean {
+ *     if (typeof perm === 'function') {
+ *         return perm(user);
+ *     }
+ *     if (perm === false) {
+ *         return false;
+ *     }
+ *     // Handle tuple/array formats (implementation would check against user perms)
+ *     return true; // Simplified for example
+ * }
  * ```
- * 
- * In these examples, the `AuthPerm` type is used to define various 
- * permissions for accessing resources, demonstrating its flexibility 
- * and utility in permission management.
- * ```
- * 
- * 
- * @see {@link ResourceName} for the `ResourceName` type.
+ *
+ * @see {@link AuthUser} for the user context passed to function permissions.
+ * @see {@link ResourceActionTuple} for the tuple format specification.
  * @typedef {((user: AuthUser) => boolean) | false | ResourceActionTuple<TResourceName> | ResourceActionTuple<TResourceName>[]} AuthPerm
  */
 export type AuthPerm<TResourceName extends ResourceName = ResourceName> =
@@ -268,7 +312,7 @@ export type AuthPerm<TResourceName extends ResourceName = ResourceName> =
 
 /**
  * Represents a mapping of authentication permissions for resources.
- * The `IAuthPerms` type defines a structure that maps resource names
+ * The `AuthPerms` type defines a structure that maps resource names
  * to an array of actions that can be performed on those resources.
  * This type is useful for managing user permissions in an application,
  * allowing for fine-grained control over what actions users can take
@@ -277,7 +321,7 @@ export type AuthPerm<TResourceName extends ResourceName = ResourceName> =
  *
  * ### Structure
  *
- * The `IAuthPerms` type is defined as a `Record` where:
+ * The `AuthPerms` type is defined as a `Record` where:
  * - The keys are of type `ResourceName`, representing the names of
  *   the resources (e.g., "documents", "users").
  * - The values are arrays of `ResourceActionName`, representing the
@@ -286,57 +330,94 @@ export type AuthPerm<TResourceName extends ResourceName = ResourceName> =
  *
  * ### Example Usage
  *
- * Here is an example of how the `IAuthPerms` type can be used:
+ * Here is an example of how the `AuthPerms` type can be used:
  *
  * ```typescript
- * // Example of defining user permissions using IAuthPerms
- * const userPermissions: IAuthPerms = {
+ * // Example of defining user permissions using AuthPerms
+ * const userPermissions: AuthPerms = {
  *     documents: ["read", "create", "update"],
  *     users: ["read", "delete"],
  *     posts: ["read", "create"]
  * };
  * ```
  *
- * In this example, the `IAuthPerms` type is used to define a permissions
+ * In this example, the `AuthPerms` type is used to define a permissions
  * object for a user, mapping resources to the actions they are allowed
  * to perform.
- * @typedef {Partial<{ [TResourceName in ResourceName]: Partial<ResourceActionName<TResourceName>[]> }>} IAuthPerms
+ * @typedef {Partial<{ [TResourceName in ResourceName]: Partial<ResourceActionName<TResourceName>[]> }>} AuthPerms
  */
-export type IAuthPerms = Partial<{
+export type AuthPerms = Partial<{
   [TResourceName in ResourceName]: Partial<ResourceActionName<TResourceName>[]>;
 }>;
 
 /**
- * Interface representing a mapping of authentication-related events.
- * 
- * This interface defines the various events that can occur during the 
- * authentication process, allowing for event-driven handling of user 
- * authentication actions.
- * 
- * @example
- * // Example of using IAuthEventMap
- * const authEvents: IAuthEventMap = {
- *     SIGN_IN: 'User  has signed in.',
- *     SIGN_OUT: 'User  has signed out.',
- *     SIGN_UP: 'User  has signed up.'
- * };
- * 
- * // Triggering an event
- * function triggerAuthEvent(event: IAuthEvent) {
- *     console.log(authEvents[event]); // Outputs the corresponding event message
- * }
- * 
- * triggerAuthEvent('SIGN_IN'); // Outputs: User has signed in.
- * @example 
- * // Example of augmenting IAuthEventMap with additional events
- * declare module "reslib" {
- *     interface IAuthEventMap {
- *         SOME_OTHER_EVENT: string;
+ * @interface AuthEventMap
+ * Defines the mapping of authentication event names to their string descriptions.
+ *
+ * This interface serves as a global registry for authentication-related events
+ * and supports TypeScript module augmentation, allowing libraries and applications
+ * to extend the available authentication events. It provides type-safe event
+ * handling and ensures consistency across the authentication system.
+ *
+ * ### Built-in Events
+ *
+ * - `SIGN_IN`: Triggered when a user successfully authenticates
+ * - `SIGN_OUT`: Triggered when a user logs out
+ * - `SIGN_UP`: Triggered when a new user registers
+ *
+ * ### Module Augmentation
+ *
+ * This interface can be extended in external modules to add custom authentication events:
+ *
+ * ```typescript
+ * // In a separate module or application
+ * declare module "reslib/auth" {
+ *     interface AuthEventMap {
+ *         PASSWORD_RESET: string;
+ *         PROFILE_UPDATE: string;
+ *         ACCOUNT_LOCKED: string;
  *     }
  * }
-   const testAuthEvent : IAuthEvent = 'SOME_OTHER_EVENT';
+ *
+ * // Now AuthEvent includes the new events
+ * const event: AuthEvent = 'PASSWORD_RESET'; // TypeScript validates this
+ * ```
+ *
+ * ### Example Usage
+ *
+ * ```typescript
+ * // Basic usage with built-in events
+ * const authEvents: AuthEventMap = {
+ *     SIGN_IN: 'User has signed in successfully.',
+ *     SIGN_OUT: 'User has signed out.',
+ *     SIGN_UP: 'New user account created.'
+ * };
+ *
+ * // Event handling with type safety
+ * function handleAuthEvent(event: AuthEvent, data?: any) {
+ *     const message = authEvents[event];
+ *     console.log(`Auth event: ${message}`, data);
+ *
+ *     switch (event) {
+ *         case 'SIGN_IN':
+ *             // Handle sign in logic
+ *             break;
+ *         case 'SIGN_OUT':
+ *             // Handle sign out logic
+ *             break;
+ *         case 'SIGN_UP':
+ *             // Handle sign up logic
+ *             break;
+ *     }
+ * }
+ *
+ * // Usage
+ * handleAuthEvent('SIGN_IN', { userId: 123 });
+ * ```
+ *
+ * @see {@link AuthEvent} for the derived event type.
  */
-export interface IAuthEventMap {
+export interface AuthEventMap {
   /**
    * Event triggered when a user signs in.
    *
@@ -384,15 +465,15 @@ export interface IAuthEventMap {
 }
 
 /**
- * Type representing the keys of the IAuthEventMap interface.
+ * Type representing the keys of the AuthEventMap interface.
  *
  * This type is a union of string literals corresponding to the event names
- * defined in the IAuthEventMap interface. It allows for type-safe handling
+ * defined in the AuthEventMap interface. It allows for type-safe handling
  * of authentication events throughout the application.
  *
  * @example
- * // Example of using IAuthEvent
- * function handleAuthEvent(event: IAuthEvent) {
+ * // Example of using AuthEvent
+ * function handleAuthEvent(event: AuthEvent) {
  *     switch (event) {
  *         case 'SIGN_IN':
  *             console.log('Handling sign-in event...');
@@ -406,4 +487,4 @@ export interface IAuthEventMap {
  *     }
  * }
  */
-export type IAuthEvent = keyof IAuthEventMap;
+export type AuthEvent = keyof AuthEventMap;

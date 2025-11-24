@@ -1,5 +1,5 @@
 import { ICurrencyFormatterKey } from '@/currency/types';
-import { ICountryCode } from '@countries/types';
+import { CountryCode } from '@countries/types';
 import { DateFormat } from '../types/date';
 
 /**
@@ -61,7 +61,7 @@ export interface InputFormatterOptions<InputType = any, ValueType = any> {
   /***
    * The phone country code, in case of formatting a phone number, type="tel"
    */
-  phoneCountryCode?: ICountryCode;
+  phoneCountryCode?: CountryCode;
 
   /***
    * Whether to abreviate the number
@@ -263,7 +263,7 @@ export interface InputFormatterNumberMaskOptions {
 export interface InputFormatterMaskWithValidation extends Record<string, any> {
   mask: InputFormatterMaskArray;
   validate: (value: string) => boolean;
-  countryCode?: ICountryCode;
+  countryCode?: CountryCode;
 }
 
 /**

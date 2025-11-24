@@ -5,10 +5,11 @@ import { isNonNullString } from '@utils/isNonNullString';
 import { extendObj, isObj } from '@utils/object';
 import 'reflect-metadata';
 import countries from './countries';
-import { ICountry, ICountryCode } from './types';
+import { Country, CountryCode } from './types';
 const countriesByDialCodes = {};
 Object.keys(countries).map((countryCode) => {
   const country = countries[countryCode as keyof typeof countries];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   (countriesByDialCodes as any)[country.dialCode] = country.code;
 });
 
@@ -32,25 +33,25 @@ export * from './types';
  */
 export class CountriesManager {
   /**
-   * A private static record of countries, where each key is a country code and each value is an ICountry object.
+   * A private static record of countries, where each key is a country code and each value is an Country object.
    *
    * @private
-   * @type {Record<ICountryCode, ICountry>}
+   * @type {Record<CountryCode, Country>}
    */
-  private static countries: Record<ICountryCode, ICountry> =
-    countries as unknown as Record<ICountryCode, ICountry>;
+  private static countries: Record<CountryCode, Country> =
+    countries as unknown as Record<CountryCode, Country>;
 
   /**
    * Checks if a given country object is valid.
    *
    * A country object is considered valid if it is an object and has a non-null string code.
    *
-   * @param {ICountry} country The country object to check.
+   * @param {Country} country The country object to check.
    * @returns {boolean} True if the country object is valid, false otherwise.
    *
    * @example
    * ```typescript
-   * const country: ICountry = {
+   * const country: Country = {
    *   code: 'US',
    *   dialCode: '+1',
    *   phoneNumberExample: '(123) 456-7890',
@@ -59,14 +60,14 @@ export class CountriesManager {
    * console.log(CountriesManager.isValid(country)); // true
    * ```
    */
-  static isValid(country: ICountry): boolean {
+  static isValid(country: Country): boolean {
     return isObj(country) && isNonNullString(country.code);
   }
 
   /**
    * Gets the phone number example for a given country code.
    *
-   * @param {ICountryCode} code The country code.
+   * @param {CountryCode} code The country code.
    * @returns {string} The phone number example for the given country code, or an empty string if the country code is not found.
    *
    * @example
@@ -74,14 +75,14 @@ export class CountriesManager {
    * console.log(CountriesManager.getPhoneNumberExample('US')); // '(123) 456-7890'
    * ```
    */
-  static getPhoneNumberExample(code: ICountryCode): string {
+  static getPhoneNumberExample(code: CountryCode): string {
     return defaultStr(this.getCountry(code)?.phoneNumberExample);
   }
 
   /**
    * Gets the flag for a given country code.
    *
-   * @param {ICountryCode} code The country code.
+   * @param {CountryCode} code The country code.
    * @returns {string} The flag for the given country code, or an empty string if the country code is not found.
    *
    * @example
@@ -89,14 +90,14 @@ export class CountriesManager {
    * console.log(CountriesManager.getFlag('US')); // '🇺🇸'
    * ```
    */
-  static getFlag(code: ICountryCode): string {
+  static getFlag(code: CountryCode): string {
     return defaultStr(this.getCountry(code)?.flag);
   }
 
   /**
    * Gets the currency for a given country code.
    *
-   * @param {ICountryCode} code The country code.
+   * @param {CountryCode} code The country code.
    * @returns {ICurrency | undefined} The currency for the given country code, or undefined if the country code is not found.
    *
    * @example
@@ -104,7 +105,7 @@ export class CountriesManager {
    * console.log(CountriesManager.getCurrency('US')); // { code: 'USD', symbol: '$' }
    * ```
    */
-  static getCurrency(code: ICountryCode): ICurrency | undefined {
+  static getCurrency(code: CountryCode): ICurrency | undefined {
     return this.getCountry(code)?.currency;
   }
 
@@ -113,7 +114,7 @@ export class CountriesManager {
    *
    * The country object must be valid (i.e., it must be an object with a non-null string code).
    *
-   * @param {ICountry} country The country object to set.
+   * @param {Country} country The country object to set.
    *
    * @example
    * ```typescript
@@ -125,7 +126,7 @@ export class CountriesManager {
    * });
    * ```
    */
-  static setCountry(country: ICountry): void {
+  static setCountry(country: Country): void {
     if (this.isValid(country)) {
       this.countries[country.code] = country;
     }
@@ -136,8 +137,8 @@ export class CountriesManager {
    *
    * If the provided code is not a non-null string, it returns undefined.
    *
-   * @param {ICountryCode} code The country code to look up.
-   * @returns {ICountry | undefined} The country object associated with the given code, or undefined if not found.
+   * @param {CountryCode} code The country code to look up.
+   * @returns {Country | undefined} The country object associated with the given code, or undefined if not found.
    *
    * @example
    * ```typescript
@@ -145,10 +146,10 @@ export class CountriesManager {
    * console.log(country); // { code: 'US', dialCode: '+1', phoneNumberExample: '(123) 456-7890', flag: '🇺🇸' }
    * ```
    */
-  static getCountry(code: ICountryCode): ICountry | undefined {
+  static getCountry(code: CountryCode): Country | undefined {
     if (!isNonNullString(code)) return undefined;
-    return extendObj<ICountry>(
-      {} as ICountry,
+    return extendObj<Country>(
+      {} as Country,
       i18n.t(`countries.${code}`),
       this.countries[code]
     );
@@ -157,7 +158,7 @@ export class CountriesManager {
   /**
    * Retrieves all countries stored in the internal record.
    *
-   * @returns {Record<ICountryCode, ICountry>} A record of all countries, where each key is a country code and each value is an ICountry object.
+   * @returns {Record<CountryCode, Country>} A record of all countries, where each key is a country code and each value is an Country object.
    *
    * @example
    * ```typescript
@@ -165,7 +166,7 @@ export class CountriesManager {
    * console.log(allCountries); // { 'US': { code: 'US', ... }, ... }
    * ```
    */
-  static getCountries(): Record<ICountryCode, ICountry> {
+  static getCountries(): Record<CountryCode, Country> {
     const countries = i18n.t('countries');
     if (isObj(countries)) {
       return extendObj({}, countries, this.countries);
@@ -180,12 +181,12 @@ export class CountriesManager {
    *
    * If the provided countries object is not an object, it returns the current internal record of countries.
    *
-   * @param {Partial<Record<ICountryCode, ICountry>>} countries A partial record of countries to set.
-   * @returns {Record<ICountryCode, ICountry>} The updated internal record of countries.
+   * @param {Partial<Record<CountryCode, Country>>} countries A partial record of countries to set.
+   * @returns {Record<CountryCode, Country>} The updated internal record of countries.
    *
    * @example
    * ```typescript
-   * Country.setCountries({
+   * CountriesManager.setCountries({
    *   'US': {
    *     code: 'US',
    *     dialCode: '+1',
@@ -202,11 +203,12 @@ export class CountriesManager {
    * ```
    */
   static setCountries(
-    countries: Partial<Record<ICountryCode, ICountry>>
-  ): Record<ICountryCode, ICountry> {
+    countries: Partial<Record<CountryCode, Country>>
+  ): Record<CountryCode, Country> {
     if (!isObj(countries)) return this.countries;
     for (const countryCode in countries) {
       const country = countries[countryCode as keyof typeof countries];
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       if (this.isValid(country as any)) {
         this.countries[countryCode as keyof typeof countries] = extendObj(
           {},

@@ -1,4 +1,4 @@
-import { ICountry, ICountryCode } from "@countries/index";
+import { Country, CountryCode } from '@countries/index';
 
 /***
  * The list of available countries in the application.
@@ -7,17 +7,17 @@ import { ICountry, ICountryCode } from "@countries/index";
 export const countries = {
   /*** example country ***/
   US: {
-    code: "US",
-    dialCode: "+1",
-    phoneNumberExample: "(123) 456-7890",
+    code: 'US',
+    dialCode: '+1',
+    phoneNumberExample: '(123) 456-7890',
     //flag: "🇺🇸",
-    name: "United States",
+    name: 'United States',
   },
   CA: {
-    code: "CA",
-    dialCode: "+1",
-    phoneNumberExample: "(123) 456-7890",
+    code: 'CA',
+    dialCode: '+1',
+    phoneNumberExample: '(123) 456-7890',
     //flag: "🇨🇦",
-    name: "Canada",
+    name: 'Canada',
   },
-} as Record<ICountryCode, ICountry>;
+} as Record<CountryCode, Country>;

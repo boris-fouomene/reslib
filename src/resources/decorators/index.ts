@@ -55,7 +55,12 @@ export function buildPropertyDecorator<
     // Update the metadata on the class
     Reflect.defineMetadata(metadataKey, allExistingMetadata, constructor);
     // Store additional metadata for this specific property if needed
-    Reflect.defineMetadata(metadataKey, metadata, target, propertyKey);
+    Reflect.defineMetadata(
+      metadataKey,
+      metadata,
+      target,
+      propertyKey as string | symbol
+    );
   };
 }
 
@@ -73,7 +78,8 @@ export function getDecoratedProperties<
   PropertyKeyType extends MetadataPropertyKey = MetadataPropertyKey,
 >(
   target: ClassConstructor,
-  metadataKey: MetadataPropertyKey
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  metadataKey: any
 ): Record<PropertyKeyType, MetaDataType> {
   return extendObj(
     {},
@@ -98,4 +104,4 @@ export function getDecoratedProperty<MetaDataType = unknown>(
   return getDecoratedProperties(target, metadataKey)[propertyKey];
 }
 
-type MetadataPropertyKey = string | symbol;
+type MetadataPropertyKey = string | symbol | number;

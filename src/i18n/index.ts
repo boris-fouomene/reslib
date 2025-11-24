@@ -262,6 +262,7 @@ export class I18n extends I18nJs implements IObservable<I18nEvent> {
    * @param target the target class
    * @returns the translation keys for the target class
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-empty-object-type
   static getTargetTanslationKeys<T extends { new (...args: any[]): {} } = any>(
     target: T
   ): Record<keyof T, string> {
