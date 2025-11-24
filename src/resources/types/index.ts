@@ -1,5 +1,5 @@
 import { IAuthPerm } from '@/auth/types';
-import { IInputFormatterOptions } from '@/inputFormatter/types';
+import { InputFormatterOptions } from '@/inputFormatter/types';
 import { UcFirst } from '@/types/dictionary';
 import { IMongoQuery, IResourceQueryOrderBy } from './filters';
 
@@ -9,7 +9,7 @@ export interface IFieldBase<
   FieldType extends IFieldType = IFieldType,
   ValueType = any,
 > extends Partial<IResourceActionTupleObject<IResourceName>>,
-    Omit<IInputFormatterOptions<FieldType, ValueType>, 'value' | 'type'> {
+    Omit<InputFormatterOptions<FieldType, ValueType>, 'value' | 'type'> {
   /**
    * The type of the field.
    *

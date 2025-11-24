@@ -17,13 +17,13 @@ import moment from 'moment';
 import 'reflect-metadata';
 import '../utils/numbers';
 import {
-  IInputFormatterMask,
-  IInputFormatterMaskArray,
-  IInputFormatterMaskOptions,
-  IInputFormatterMaskResult,
-  IInputFormatterMaskWithValidation,
-  IInputFormatterOptions,
-  IInputFormatterResult,
+  InputFormatterMask,
+  InputFormatterMaskArray,
+  InputFormatterMaskOptions,
+  InputFormatterMaskResult,
+  InputFormatterMaskWithValidation,
+  InputFormatterOptions,
+  InputFormatterResult,
 } from './types';
 
 const phoneUtil = libPhoneNumber.PhoneNumberUtil.getInstance();
@@ -37,16 +37,16 @@ export * from './types';
 export class InputFormatter {
   /**
    * @description
-   * Formats a value according to the provided options defined in the IInputFormatterOptions interface.
+   * Formats a value according to the provided options defined in the InputFormatterOptions interface.
    *
    * This function takes an input value and formats it based on the specified type, format function,
    * and other parameters. It returns an object containing the formatted value and other relevant
    * information, such as whether the value can be a decimal.
    *
-   * @param {IInputFormatterOptions} options - The options for formatting, adhering to the IInputFormatterOptions interface.
+   * @param {InputFormatterOptions} options - The options for formatting, adhering to the InputFormatterOptions interface.
    * @param {boolean} returnObject - Optional. If true, the function will return an object instead of a formatted string.
    *
-   * @returns {IInputFormatterResult} - An object containing:
+   * @returns {InputFormatterResult} - An object containing:
    *   - formattedValue: The formatted output based on the provided options.
    *   - isDecimalType: A boolean indicating if the value can be treated as a decimal.
    *   - value: The original input value.
@@ -81,12 +81,12 @@ export class InputFormatter {
     phoneCountryCode,
     abreviateNumber,
     ...rest
-  }: IInputFormatterOptions): IInputFormatterResult {
+  }: InputFormatterOptions): InputFormatterResult {
     const canValueBeDecimal =
       type &&
       ['decimal', 'numeric', 'number'].includes(String(type).toLowerCase());
     let parsedValue = value;
-    const result: Partial<IInputFormatterResult> = {};
+    const result: Partial<InputFormatterResult> = {};
     // Normalize the value: if it's undefined, null, or empty, set it to an empty string.
     value = isNullable(value) ? '' : value;
     if (!value) {
@@ -100,6 +100,7 @@ export class InputFormatter {
     }
 
     // Convert non-string values to strings.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let formattedValue: any = isPrimitive(value)
       ? String(value)
       : DateHelper.isDateObj(value)
@@ -117,7 +118,6 @@ export class InputFormatter {
       });
     } else {
       const typeText = String(type).toLowerCase();
-      let hasFoundDate = false;
       // Format dates if the value is a valid date object.
       if (dateFormat || ['time', 'date', 'datetime'].includes(typeText)) {
         dateFormat = defaultStr(
@@ -130,7 +130,6 @@ export class InputFormatter {
         );
         const parsedDate = DateHelper.parseDate(value);
         if (parsedDate) {
-          hasFoundDate = true;
           formattedValue = DateHelper.formatDate(parsedDate, dateFormat);
           result.dateValue = parsedDate;
         }
@@ -160,21 +159,21 @@ export class InputFormatter {
           result.dialCode as string
         ).replace(/\s/g, '');
       }
-      if (hasFoundDate) {
-      }
       // Format numbers based on the specified format.
-      else if (isNumber(parsedValue)) {
+      if (isNumber(parsedValue)) {
         const abreviateFnStr = `abreviate2${defaultStr(format, 'FormatNumber').trim().upperFirst()}`;
         if (
           abreviateNumber &&
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           typeof (Number.prototype as any)[abreviateFnStr] === 'function'
         ) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           formattedValue = (parsedValue as any)[abreviateFnStr]();
         } else if (
           isNonNullString(format) &&
-          typeof Number.prototype[format as keyof Number] === 'function'
+          typeof Number.prototype[format as keyof number] === 'function'
         ) {
-          formattedValue = (parsedValue as number)[format as keyof Number]();
+          formattedValue = (parsedValue as number)[format as keyof number]();
         } else {
           formattedValue = (parsedValue as number).formatNumber();
         }
@@ -213,6 +212,7 @@ export class InputFormatter {
       if (countryCallingCode !== 0) {
         return countryCallingCode.toString();
       }
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars, no-empty
     } catch (error) {}
     return '';
   }
@@ -224,7 +224,7 @@ export class InputFormatter {
    * the `formatValue` function to obtain the formatted value and then returns it
    * as a string. This is useful for scenarios where only the formatted string is needed.
    *
-   * @param options - The options for formatting, adhering to the IInputFormatterOptions interface.
+   * @param options - The options for formatting, adhering to the InputFormatterOptions interface.
    * @ param returnObject - Optional. If true, the function will return an object instead of a formatted string.
    *
    * @returns {string} - The formatted value as a string.
@@ -241,17 +241,17 @@ export class InputFormatter {
    * // Output: "123.45 formatted"
    * ```
    */
-  static formatValueAsString(options: IInputFormatterOptions): string {
-    const { formattedValue, parsedValue } = InputFormatter.formatValue(options);
+  static formatValueAsString(options: InputFormatterOptions): string {
+    const { formattedValue } = InputFormatter.formatValue(options);
     // Return the formatted value as a string.
     return formattedValue;
   }
   /***
    * Check if a given mask is valid or not
-   * @param {IInputFormatterMask}, the input mask to check
+   * @param {InputFormatterMask}, the input mask to check
    * @return {boolean} Wheather the mask is valid or not
    */
-  static isValidMask(mask?: IInputFormatterMask) {
+  static isValidMask(mask?: InputFormatterMask) {
     return Array.isArray(mask) || typeof mask === 'function';
   }
   /**
@@ -282,6 +282,7 @@ export class InputFormatter {
    * const decimal4 = parseDecimal("invalid");    // Returns: 0
    * ```
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   static parseDecimal = (value: any): number => {
     if (typeof value === 'number') return value;
     if (
@@ -303,6 +304,7 @@ export class InputFormatter {
     @param {any} value - The value to normalize
     @param {string} decimalSeparator - The decimal separator to use
   */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   static normalizeNumber(value: any, decimalSeparator: string = '.') {
     if (typeof value == 'number') {
       return value.toString();
@@ -318,6 +320,7 @@ export class InputFormatter {
    * @param {any} value - The value to Check
    * @returns {boolean} Whether the value ends with a decimal separator
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   static endsWithDecimalSeparator = (value: any): boolean => {
     const val = String(value).trim().replace(/\s/g, '');
     return val.endsWith('.') || val.endsWith(',') || val.endsWith('٫');
@@ -332,7 +335,7 @@ export class InputFormatter {
    *
    * @example
    * ```typescript
-   * const options: IInputFormatterMaskOptions = {
+   * const options: InputFormatterMaskOptions = {
    *   value: '12345',
    *   mask: ['(', /\d/, /\d/, ')', ' ', /\d/, /\d/, /\d/, /\d/, /\d/, '-', /\d/, /\d/, /\d/, /\d/],
    *   obfuscationCharacter: '*',
@@ -350,8 +353,8 @@ export class InputFormatter {
    *
    */
   static formatWithMask(
-    options: IInputFormatterMaskOptions
-  ): IInputFormatterMaskResult {
+    options: InputFormatterMaskOptions
+  ): InputFormatterMaskResult {
     options = Object.assign({}, options);
     const {
       value: customValue,
@@ -413,7 +416,7 @@ export class InputFormatter {
     let valueCharIndex = 0;
     let maskHasObfuscation = false;
     const placeholderLength = placeholder.length;
-    const nonRegexReplacedChars: IInputFormatterMaskResult['nonRegexReplacedChars'] =
+    const nonRegexReplacedChars: InputFormatterMaskResult['nonRegexReplacedChars'] =
       [];
     while (maskCharIndex < maskArray.length) {
       if (valueCharIndex >= value.length) {
@@ -421,7 +424,7 @@ export class InputFormatter {
       }
       const maskChar = maskArray[maskCharIndex];
       const valueChar = value[valueCharIndex];
-      const customNonRegexReplacedChars: IInputFormatterMaskResult['nonRegexReplacedChars'] =
+      const customNonRegexReplacedChars: InputFormatterMaskResult['nonRegexReplacedChars'] =
         [];
       let {
         isValid: customIsValid,
@@ -559,17 +562,17 @@ export class InputFormatter {
   /***
    * Creates a date mask, based on the specified moment format.
    * @param {string} momentDateFormat - The moment format string.
-   * @returns {IInputFormatterMaskWithValidation}} - An object containing the mask and a validation function.
+   * @returns {InputFormatterMaskWithValidation}} - An object containing the mask and a validation function.
    */
   static createDateMask(
     momentDateFormat: string
-  ): IInputFormatterMaskWithValidation {
+  ): InputFormatterMaskWithValidation {
     momentDateFormat = defaultStr(momentDateFormat);
 
     const maskMap = InputFormatter.MOMENT_MASKS_MAP;
     const separatorMap = InputFormatter.MOMENT_SEPARATOR_MAP;
 
-    let result: IInputFormatterMaskArray = [];
+    let result: InputFormatterMaskArray = [];
     let currentToken = '';
     let i: number = 0;
     while (i < momentDateFormat.length) {
@@ -629,6 +632,7 @@ export class InputFormatter {
           // Check if the parsed date matches the input exactly
           // This ensures that the input is not only valid but also logically correct
           return date.isValid() && date.format(momentDateFormat) === value;
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars, no-empty
         } catch (e) {}
         return false;
       },
@@ -643,13 +647,13 @@ export class InputFormatter {
    * Generates a phone number mask based on the country code.
    * @param countryCode - The country code (e.g., "US", "FR", "IN").
    * @param {PhoneNumberFormat} [format] - The format to use for the phone number mask. Defaults to PhoneNumberFormat.INTERNATIONAL.
-   * @returns {IInputFormatterMaskWithValidation} The phone number mask, an array of mask elements (strings or regexes) representing the phone number format..
+   * @returns {InputFormatterMaskWithValidation} The phone number mask, an array of mask elements (strings or regexes) representing the phone number format..
    */
 
   static createPhoneNumberMask(
     countryCode: ICountryCode,
     format?: PhoneNumberFormat
-  ): IInputFormatterMaskWithValidation {
+  ): InputFormatterMaskWithValidation {
     const countryExample = CountriesManager.getPhoneNumberExample(countryCode);
     if (isNonNullString(countryExample)) {
       const r = InputFormatter.createPhoneNumberMaskFromExample(
@@ -663,7 +667,7 @@ export class InputFormatter {
     if (!isNonNullString(countryCode)) {
       return {
         mask: [],
-        validate: (value: string) => false,
+        validate: () => false,
       };
     }
     try {
@@ -673,7 +677,7 @@ export class InputFormatter {
         //throw new Error(`No example number found for country code: ${countryCode}`);
         return {
           mask: [],
-          validate: (value: string) => false,
+          validate: () => false,
         };
       }
       const toFormat = format || PhoneNumberFormat.INTERNATIONAL;
@@ -688,10 +692,11 @@ export class InputFormatter {
           InputFormatter.isValidPhoneNumber(value, countryCode),
         countryCode,
       };
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       return {
         mask: [],
-        validate: (value: string) => false,
+        validate: () => false,
       };
     }
   }
@@ -710,6 +715,7 @@ export class InputFormatter {
     }
     try {
       return phoneUtil.getExampleNumber(countryCode);
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       return null;
     }
@@ -727,13 +733,13 @@ export class InputFormatter {
     
     @param {string} phoneNumberExample - The phone number example to use for the mask.
     @param {ICountryCode} [countryCode] - The country code to use for the mask. If not provided, the default country code is used.
-    @returns {IInputFormatterMaskWithValidation} An object containing the mask and a validation function.
+    @returns {InputFormatterMaskWithValidation} An object containing the mask and a validation function.
   */
   static createPhoneNumberMaskFromExample(
     phoneNumber: string,
     countryCode?: ICountryCode,
     format?: PhoneNumberFormat
-  ): IInputFormatterMaskWithValidation {
+  ): InputFormatterMaskWithValidation {
     const r = genPhoneNumberMask(
       InputFormatter.parsePhoneNumber(phoneNumber, countryCode),
       format
@@ -749,7 +755,7 @@ export class InputFormatter {
     }
     return {
       mask: [],
-      validate: (value: string) => false,
+      validate: () => false,
     };
   }
 
@@ -803,8 +809,8 @@ export class InputFormatter {
         /\d/,
         /\d/,
         /\d/,
-      ] as IInputFormatterMaskArray,
-      validate: (value: string) => true,
+      ] as InputFormatterMaskArray,
+      validate: () => true,
     },
   };
   /***
@@ -825,6 +831,7 @@ export class InputFormatter {
     number = defaultStr(number);
     try {
       return phoneUtil.parse(number, defaultStr(countryCode).toLowerCase());
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (err) {
       return null;
     }
@@ -909,7 +916,7 @@ export class InputFormatter {
     try {
       const formatter = new asYouTypeFormatter(
         defaultStr(countryCode).toLowerCase().trim()
-      ); // eslint-disable-line new-cap
+      );
       // Clear any previous state in the formatter
       formatter.clear();
       let formatted = '';
@@ -994,6 +1001,7 @@ export class InputFormatter {
         // Get dial code
         return parsedNumber.getCountryCode() + '';
       }
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars, no-empty
     } catch (e) {}
     return '';
   }
@@ -1035,12 +1043,13 @@ export class InputFormatter {
 const generatePhoneNumberMaskArray = (
   phoneNumber: string,
   dialCode: string
-): IInputFormatterMaskArray => {
+): InputFormatterMaskArray => {
   dialCode = defaultStr(dialCode);
   if (dialCode) {
     dialCode = '+' + dialCode.ltrim('+');
   }
   if (!InputFormatter.cleanPhoneNumber(phoneNumber).startsWith(dialCode)) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-expressions
     dialCode;
   }
   const toSplit = dialCode
@@ -1060,12 +1069,13 @@ function handleMaskAtIndex({
   valueCharIndex,
   maskCharIndex,
 }: {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   maskChar: any;
   valueCharIndex: number;
   maskCharIndex: number;
   valueChar: string;
   obfuscationCharacter?: string;
-  nonRegexReplacedChars: IInputFormatterMaskResult['nonRegexReplacedChars'];
+  nonRegexReplacedChars: InputFormatterMaskResult['nonRegexReplacedChars'];
 }) {
   let maskHasObfuscation = false,
     isValid = true;
@@ -1113,6 +1123,7 @@ function handleMaskAtIndex({
           });
         }
       }
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars, no-empty
     } catch (e) {}
   } else if (isNonNullString(maskChar)) {
     // it's a fixed maskChar: add to maskedResult and advance on mask index
@@ -1145,7 +1156,7 @@ function handleMaskAtIndex({
 function genPhoneNumberMask(
   parsedNumber: PhoneNumber | null,
   format?: PhoneNumberFormat
-): IInputFormatterMaskWithValidation {
+): InputFormatterMaskWithValidation {
   try {
     // Parse the phone number
     if (parsedNumber) {
@@ -1168,6 +1179,7 @@ function genPhoneNumberMask(
         };
       }
     }
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars, no-empty
   } catch (error) {}
   return {
     mask: [],

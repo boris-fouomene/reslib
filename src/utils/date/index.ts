@@ -1,5 +1,5 @@
-import { IDateFormat } from "../../types";
-import { DateHelper } from "./dateHelper";
+import { DateFormat } from '../../types';
+import { DateHelper } from './dateHelper';
 
 export { DateHelper };
 /**
@@ -223,7 +223,7 @@ declare global {
      * console.log(date.toFormat("YYYY-MM-DD HH:mm:ss")); // Output: Formatted date string
      * ```
      */
-    toFormat: (format?: IDateFormat) => string;
+    toFormat: (format?: DateFormat) => string;
   }
 }
 
@@ -363,7 +363,7 @@ Date.prototype.resetHours2Minutes2Seconds = function () {
  * console.log(date.toFormat("YYYY-MM-DD HH:mm:ss")); // Output: Formatted date string
  * ```
  */
-Date.prototype.toFormat = function (format?: IDateFormat) {
+Date.prototype.toFormat = function (format?: DateFormat) {
   return DateHelper.formatDate(this, format);
 };
 

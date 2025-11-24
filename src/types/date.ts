@@ -1,5 +1,5 @@
 /**
- * @type IDateFormat
+ * @type DateFormat
  * @description
  * A comprehensive type representing all valid Moment.js format strings.
  * This type serves as a unified reference for various date/time formatting options,
@@ -41,4 +41,4 @@
  *
  * @see https://momentjs.com/docs/#/displaying/format for more information about the supported tokens.
  */
-export type IDateFormat = string;
+export type DateFormat = string;

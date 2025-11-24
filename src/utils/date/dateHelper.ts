@@ -1,11 +1,11 @@
-import { I18n } from "@/i18n";
-import { IDateFormat } from "@/types";
-import { defaultStr } from "@utils/defaultStr";
-import { isEmpty } from "@utils/isEmpty";
-import { isNonNullString } from "@utils/isNonNullString";
-import { isNumber } from "@utils/isNumber";
-import moment from "moment";
-import { isDateObj } from "./isDateObj";
+import { I18n } from '@/i18n';
+import { DateFormat } from '@/types';
+import { defaultStr } from '@utils/defaultStr';
+import { isEmpty } from '@utils/isEmpty';
+import { isNonNullString } from '@utils/isNonNullString';
+import { isNumber } from '@utils/isNumber';
+import moment from 'moment';
+import { isDateObj } from './isDateObj';
 /**
  * Result object returned by the date parser
  */
@@ -26,99 +26,99 @@ export class DateHelper {
    */
   static DATE_FORMATS: Array<string> = [
     /** ISO 8601 formats */
-    "YYYY-MM-DD",
-    "YYYY-MM-DDTHH:mm:ss",
-    "YYYY-MM-DDTHH:mm:ssZ",
-    "YYYY-MM-DDTHH:mm:ss.SSSZ",
-    "YYYY-MM-DDTHH:mm:ss[Z]",
-    "YYYY-MM-DDTHH:mm:ss.SSS[Z]",
-    "YYYY-MM-DDTHH:mm:ss.SSSZ ",
-    "YYYY-MM-DDTHH:mm:ss.SSS",
-    "YYYY-MM-DD HH:mm:ss",
-    "YYYY-MM-DD HH:mm:ss.SSSZ",
-    "YYYY-MM-DDTHH:mm:ss.SSS[Z]",
-    "YYYY-MM-DD HH:mm:ssZ",
-    "YYYY-MM-DD HH:mmZ",
+    'YYYY-MM-DD',
+    'YYYY-MM-DDTHH:mm:ss',
+    'YYYY-MM-DDTHH:mm:ssZ',
+    'YYYY-MM-DDTHH:mm:ss.SSSZ',
+    'YYYY-MM-DDTHH:mm:ss[Z]',
+    'YYYY-MM-DDTHH:mm:ss.SSS[Z]',
+    'YYYY-MM-DDTHH:mm:ss.SSSZ ',
+    'YYYY-MM-DDTHH:mm:ss.SSS',
+    'YYYY-MM-DD HH:mm:ss',
+    'YYYY-MM-DD HH:mm:ss.SSSZ',
+    'YYYY-MM-DDTHH:mm:ss.SSS[Z]',
+    'YYYY-MM-DD HH:mm:ssZ',
+    'YYYY-MM-DD HH:mmZ',
 
     /** US formats */
-    "MM/DD/YYYY",
-    "MM-DD-YYYY",
-    "MM.DD.YYYY",
-    "MM/DD/YY",
-    "MMMM DD, YYYY",
-    "MMM DD, YYYY",
+    'MM/DD/YYYY',
+    'MM-DD-YYYY',
+    'MM.DD.YYYY',
+    'MM/DD/YY',
+    'MMMM DD, YYYY',
+    'MMM DD, YYYY',
     /** European formats */
-    "DD/MM/YYYY",
-    "DD-MM-YYYY",
-    "DD.MM.YYYY",
-    "DD/MM/YY",
-    "DD MMMM YYYY",
-    "DD MMM YYYY",
+    'DD/MM/YYYY',
+    'DD-MM-YYYY',
+    'DD.MM.YYYY',
+    'DD/MM/YY',
+    'DD MMMM YYYY',
+    'DD MMM YYYY',
     /** Time formats */
-    "HH:mm:ss.SSSZ",
-    "HH:mm:ssZ",
-    "HH:mmZ",
-    "YYYYMMDD", //20250225
-    "YYYYMMDDTHHMM", //20250225T1230
-    "YYYYMMDDTHHMMSS", //20250225T123045
-    "HH:mm:ss",
-    "HH:mm",
-    "hh:mm A",
-    "h:mm A",
-    "HH:mm:ss.SSS",
+    'HH:mm:ss.SSSZ',
+    'HH:mm:ssZ',
+    'HH:mmZ',
+    'YYYYMMDD', //20250225
+    'YYYYMMDDTHHMM', //20250225T1230
+    'YYYYMMDDTHHMMSS', //20250225T123045
+    'HH:mm:ss',
+    'HH:mm',
+    'hh:mm A',
+    'h:mm A',
+    'HH:mm:ss.SSS',
     /** Relative formats */
-    "YYYY-DDD",
-    "YYYY-Www",
-    "YYYY-Www-D",
+    'YYYY-DDD',
+    'YYYY-Www',
+    'YYYY-Www-D',
 
     // Common Date Formats
-    "YYYY/MM/DD", // "2024/02/20"
-    "YYYY.MM.DD", // "2024.02.20"
-    "MMM D, YYYY", // "Feb 20, 2024"
-    "MMMM D, YYYY", // "February 20, 2024"
-    "D MMM YYYY", // "20 Feb 2024"
-    "D MMMM YYYY", // "20 February 2024"
-    "MMM D YYYY", // "Feb 20 2024"
+    'YYYY/MM/DD', // "2024/02/20"
+    'YYYY.MM.DD', // "2024.02.20"
+    'MMM D, YYYY', // "Feb 20, 2024"
+    'MMMM D, YYYY', // "February 20, 2024"
+    'D MMM YYYY', // "20 Feb 2024"
+    'D MMMM YYYY', // "20 February 2024"
+    'MMM D YYYY', // "Feb 20 2024"
 
     // RFC 2822 Formats
-    "ddd, DD MMM YYYY HH:mm:ss ZZ", // "Tue, 20 Feb 2024 15:30:00 +0000"
-    "ddd, DD MMM YYYY HH:mm:ss", // "Tue, 20 Feb 2024 15:30:00"
-    "dddd, MMMM D, YYYY", // "Tuesday, February 20, 2024"
-    "dddd, D MMMM YYYY", // "Tuesday, 20 February 2024"
+    'ddd, DD MMM YYYY HH:mm:ss ZZ', // "Tue, 20 Feb 2024 15:30:00 +0000"
+    'ddd, DD MMM YYYY HH:mm:ss', // "Tue, 20 Feb 2024 15:30:00"
+    'dddd, MMMM D, YYYY', // "Tuesday, February 20, 2024"
+    'dddd, D MMMM YYYY', // "Tuesday, 20 February 2024"
 
     // Time Formats
-    "hh:mm:ss A", // "03:30:45 PM"
-    "H:mm:ss", // "15:30:45"
+    'hh:mm:ss A', // "03:30:45 PM"
+    'H:mm:ss', // "15:30:45"
 
     // Week-based Date Formats
-    "YYYY-[W]WW", // "2024-W08"
-    "YYYY-[W]WW-E", // "2024-W08-2"
+    'YYYY-[W]WW', // "2024-W08"
+    'YYYY-[W]WW-E', // "2024-W08-2"
 
     // Custom Date Formats
-    "YYYY-MM-DDTHH:mm:ss.SSS", // "2024-02-20T15:30:00.000"
-    "DD-MM-YYYY HH:mm:ss", // "20-02-2024 15:30:00"
-    "YYYY/MM/DD HH:mm:ss", // "2024/02/20 15:30:00"
-    "YYYY.MM.DD HH:mm:ss", // "2024.02.20 15:30:00"
-    "DD/MM/YYYY HH:mm:ss", // "20/02/2024 15:30:00"
+    'YYYY-MM-DDTHH:mm:ss.SSS', // "2024-02-20T15:30:00.000"
+    'DD-MM-YYYY HH:mm:ss', // "20-02-2024 15:30:00"
+    'YYYY/MM/DD HH:mm:ss', // "2024/02/20 15:30:00"
+    'YYYY.MM.DD HH:mm:ss', // "2024.02.20 15:30:00"
+    'DD/MM/YYYY HH:mm:ss', // "20/02/2024 15:30:00"
 
     // Natural language and loose formats
-    "MMM D YYYY, h:mm a", // "Feb 20 2024, 3:30 pm"
-    "MMMM D YYYY, h:mm a", // "February 20 2024, 3:30 pm"
-    "h:mm A MMM D, YYYY", // "3:30 PM Feb 20, 2024"
-    "MMMM D, YYYY", // "February 20, 2024"
+    'MMM D YYYY, h:mm a', // "Feb 20 2024, 3:30 pm"
+    'MMMM D YYYY, h:mm a', // "February 20 2024, 3:30 pm"
+    'h:mm A MMM D, YYYY', // "3:30 PM Feb 20, 2024"
+    'MMMM D, YYYY', // "February 20, 2024"
 
     // Short Year Formats
-    "YY-MM-DD", // "24-02-20"
-    "DD-MM-YY", // "20-02-24"
-    "MM/DD/YY", // "02/20/24"
+    'YY-MM-DD', // "24-02-20"
+    'DD-MM-YY', // "20-02-24"
+    'MM/DD/YY', // "02/20/24"
 
     // Additional variations
-    "MMM DD, YY", // "Feb 20, 24"
-    "D MMM YY", // "20 Feb 24"
-    "D MMMM YY", // "20 February 24"
-    "YYYY MMM D", // "2024 Feb 20"
-    "YYYY-MM-DD HH:mm", // "2024-02-20 15:30"
-    "YYYY-MM-DD HH:mm:ss.SSS", // "2024-02-20 15:30:00.000"
+    'MMM DD, YY', // "Feb 20, 24"
+    'D MMM YY', // "20 Feb 24"
+    'D MMMM YY', // "20 February 24"
+    'YYYY MMM D', // "2024 Feb 20"
+    'YYYY-MM-DD HH:mm', // "2024-02-20 15:30"
+    'YYYY-MM-DD HH:mm:ss.SSS', // "2024-02-20 15:30:00.000"
   ];
   /**
    * Parses a date string using an exhaustive list of commonly used date formats.
@@ -191,7 +191,7 @@ export class DateHelper {
         date: null,
         matchedFormat: null,
         isValid: false,
-        error: "Unable to parse date string with any known format",
+        error: 'Unable to parse date string with any known format',
       };
     } catch (error) {
       return {
@@ -201,7 +201,7 @@ export class DateHelper {
         error:
           error instanceof Error
             ? error.message
-            : "Unknown error occurred while parsing date",
+            : 'Unknown error occurred while parsing date',
       };
     }
   }
@@ -214,7 +214,7 @@ export class DateHelper {
    */
   static toIsoString(localDate?: Date): string {
     const date = !localDate ? new Date() : DateHelper.parseDate(localDate);
-    if (!date) return "";
+    if (!date) return '';
     return date.toISOString();
   }
 
@@ -235,7 +235,7 @@ export class DateHelper {
    * @param {string} [format] The format of the date, using Moment.js format. See https://momentjs.com/docs/#/parsing/string-format/
    * @returns {Date|null} The parsed date, or null if the input is not a valid date.
    */
-  static parseDate(date: any, format?: IDateFormat): Date | null {
+  static parseDate(date: any, format?: DateFormat): Date | null {
     /**
      * If the date is already a Date object, return it as is.
      */
@@ -268,9 +268,9 @@ export class DateHelper {
     } catch (error) {
       console.error(
         error,
-        " parsing date with moment : ",
+        ' parsing date with moment : ',
         date,
-        " format is : ",
+        ' format is : ',
         format
       );
     }
@@ -297,7 +297,7 @@ export class DateHelper {
      * This check ensures that the function returns a consistent result for invalid inputs.
      */
     if (!DateHelper.isDateObj(datetime)) {
-      return "";
+      return '';
     }
 
     /**
@@ -306,11 +306,11 @@ export class DateHelper {
      * These values are used to construct the SQL datetime string.
      */
     const year = datetime.getFullYear();
-    const month = String(datetime.getMonth() + 1).padStart(2, "0");
-    const day = String(datetime.getDate()).padStart(2, "0");
-    const hours = String(datetime.getHours()).padStart(2, "0");
-    const minutes = String(datetime.getMinutes()).padStart(2, "0");
-    const seconds = String(datetime.getSeconds()).padStart(2, "0");
+    const month = String(datetime.getMonth() + 1).padStart(2, '0');
+    const day = String(datetime.getDate()).padStart(2, '0');
+    const hours = String(datetime.getHours()).padStart(2, '0');
+    const minutes = String(datetime.getMinutes()).padStart(2, '0');
+    const seconds = String(datetime.getSeconds()).padStart(2, '0');
 
     /**
      * Format the date as a SQL datetime string.
@@ -329,11 +329,11 @@ export class DateHelper {
    * @description The format used to represent dates and times by default, as defined by the Moment.js library.
    * @see https://momentjs.com/docs/#/parsing/string-format/
    */
-  static getDefaultDateTimeFormat(i18n?: I18n): IDateFormat {
+  static getDefaultDateTimeFormat(i18n?: I18n): DateFormat {
     return defaultStr(
-      this.getI18n(i18n).getNestedTranslation("dates.defaultDateTimeFormat"),
-      "YYYY-MM-DD HH:mm"
-    ) as unknown as IDateFormat;
+      this.getI18n(i18n).getNestedTranslation('dates.defaultDateTimeFormat'),
+      'YYYY-MM-DD HH:mm'
+    ) as unknown as DateFormat;
   }
   /**
    * Get the default date format.
@@ -341,11 +341,11 @@ export class DateHelper {
    *
    * @description The format used to represent dates by default.
    */
-  static getDefaultDateFormat(i18n?: I18n): IDateFormat {
+  static getDefaultDateFormat(i18n?: I18n): DateFormat {
     return defaultStr(
-      this.getI18n(i18n).getNestedTranslation("dates.defaultDateFormat"),
-      "YYYY-MM-DD"
-    ) as unknown as IDateFormat;
+      this.getI18n(i18n).getNestedTranslation('dates.defaultDateFormat'),
+      'YYYY-MM-DD'
+    ) as unknown as DateFormat;
   }
   /**
    * Converts a date to SQL date format.
@@ -366,7 +366,7 @@ export class DateHelper {
      *
      * This check ensures that the function returns a consistent result for invalid inputs.
      */
-    if (!DateHelper.isDateObj(datetime)) return "";
+    if (!DateHelper.isDateObj(datetime)) return '';
 
     /**
      * Extract the year, month, and day from the date object.
@@ -374,8 +374,8 @@ export class DateHelper {
      * These values are used to construct the SQL date string.
      */
     const year = datetime.getFullYear();
-    const month = String(datetime.getMonth() + 1).padStart(2, "0");
-    const day = String(datetime.getDate()).padStart(2, "0");
+    const month = String(datetime.getMonth() + 1).padStart(2, '0');
+    const day = String(datetime.getDate()).padStart(2, '0');
 
     /**
      * Format the date as a SQL date string.
@@ -403,16 +403,16 @@ export class DateHelper {
      *
      * This check ensures that the function returns a consistent result for invalid inputs.
      */
-    if (!DateHelper.isDateObj(datetime)) return "";
+    if (!DateHelper.isDateObj(datetime)) return '';
 
     /**
      * Extract the hours, minutes, and seconds from the date object.
      *
      * These values are used to construct the SQL time string.
      */
-    const hours = String(datetime.getHours()).padStart(2, "0");
-    const minutes = String(datetime.getMinutes()).padStart(2, "0");
-    const seconds = String(datetime.getSeconds()).padStart(2, "0");
+    const hours = String(datetime.getHours()).padStart(2, '0');
+    const minutes = String(datetime.getMinutes()).padStart(2, '0');
+    const seconds = String(datetime.getSeconds()).padStart(2, '0');
 
     /**
      * Format the date as a SQL time string.
@@ -429,11 +429,11 @@ export class DateHelper {
    * @description The format used to represent times by default, as defined by the Moment.js library.
    * @see https://momentjs.com/docs/#/parsing/string-format/
    */
-  static getDefaultTimeFormat(i18n?: I18n): IDateFormat {
+  static getDefaultTimeFormat(i18n?: I18n): DateFormat {
     return defaultStr(
-      this.getI18n(i18n).getNestedTranslation("dates.defaultTimeFormat"),
-      "HH:mm"
-    ) as unknown as IDateFormat;
+      this.getI18n(i18n).getNestedTranslation('dates.defaultTimeFormat'),
+      'HH:mm'
+    ) as unknown as DateFormat;
   }
 
   /**
@@ -443,12 +443,12 @@ export class DateHelper {
    * @param {string} [format] The format of the date, using Moment.js format. See https://momentjs.com/docs/#/parsing/string-format/
    * @returns {boolean} True if the date is valid, false otherwise.
    */
-  static isValidDate(sDate: any, format?: IDateFormat): boolean {
+  static isValidDate(sDate: any, format?: DateFormat): boolean {
     if (sDate === null || sDate === undefined) return false;
     /**
      * If the input is a boolean, it's not a valid date.
      */
-    if (typeof sDate === "boolean") return false;
+    if (typeof sDate === 'boolean') return false;
 
     /**
      * If the input is already a Date object, it's a valid date.
@@ -490,7 +490,7 @@ export class DateHelper {
    * @description The format used to represent dates in SQL, as defined by the Moment.js library.
    * @see https://momentjs.com/docs/#/parsing/string-format/
    */
-  static SQL_DATE_FORMAT: IDateFormat = "YYYY-MM-DD";
+  static SQL_DATE_FORMAT: DateFormat = 'YYYY-MM-DD';
 
   /**
    * The SQL datetime format, according to the Moment.js library.
@@ -498,7 +498,7 @@ export class DateHelper {
    * @description The format used to represent dates and times in SQL, as defined by the Moment.js library.
    * @see https://momentjs.com/docs/#/parsing/
    */
-  static SQL_DATE_TIME_FORMAT: IDateFormat = "YYYY-MM-DD HH:mm:ss";
+  static SQL_DATE_TIME_FORMAT: DateFormat = 'YYYY-MM-DD HH:mm:ss';
 
   /**
    * The SQL time format, according to the Moment.js library.
@@ -506,7 +506,7 @@ export class DateHelper {
    * @description The format used to represent times in SQL, as defined by the Moment.js library.
    * @see https://momentjs.com/docs/#/parsing/string-format/
    */
-  static SQL_TIME_FORMAT: IDateFormat = "HH:mm:ss";
+  static SQL_TIME_FORMAT: DateFormat = 'HH:mm:ss';
 
   /**
    * Adds days to a date.
@@ -538,11 +538,11 @@ export class DateHelper {
     }
     if (
       isNonNullString(setFunction) &&
-      typeof (date as any)["set" + setFunction] === "function" &&
-      typeof (date as any)["get" + setFunction] === "function"
+      typeof (date as any)['set' + setFunction] === 'function' &&
+      typeof (date as any)['get' + setFunction] === 'function'
     ) {
-      const set = "set" + setFunction;
-      const get = "get" + setFunction;
+      const set = 'set' + setFunction;
+      const get = 'get' + setFunction;
       date = new Date((date as any)[set]((date as any)[get]() + days));
     }
     return date as Date;
@@ -556,7 +556,7 @@ export class DateHelper {
    * @returns {Date} The updated date.
    */
   static addDays(days: number, date?: any): Date {
-    return DateHelper.addToDate(days, date, "Date");
+    return DateHelper.addToDate(days, date, 'Date');
   }
 
   /**
@@ -639,8 +639,8 @@ export class DateHelper {
    * @param {Date|string} [date] The date object to add months to. If not provided, the current date is used.
    * @returns {Date|string} The updated date, either as a Date object or a string in the specified format.
    */
-  static addMonths(months: number, date?: Date, format?: IDateFormat): Date {
-    return DateHelper.addToDate(months, date, "Month");
+  static addMonths(months: number, date?: Date, format?: DateFormat): Date {
+    return DateHelper.addToDate(months, date, 'Month');
   }
 
   /**
@@ -652,7 +652,7 @@ export class DateHelper {
    */
   static addWeeks(weeks: number, date?: Date): Date {
     weeks = (!isNumber(weeks) ? 0 : weeks) * 7;
-    return DateHelper.addToDate(weeks, date, "Date");
+    return DateHelper.addToDate(weeks, date, 'Date');
   }
 
   /**
@@ -865,7 +865,7 @@ export class DateHelper {
    * console.log(formatDate("2022-01-15", "YYYY-MM-DD")); // Output: Formatted date in YYYY-MM-DD format
    * ```
    */
-  static formatDate(date?: Date, format?: IDateFormat): string {
+  static formatDate(date?: Date, format?: DateFormat): string {
     try {
       const parsedDate = moment(date);
       if (parsedDate.isValid()) {
@@ -873,11 +873,11 @@ export class DateHelper {
           defaultStr(
             format,
             DateHelper.getDefaultDateTimeFormat()
-          ) as unknown as IDateFormat
+          ) as unknown as DateFormat
         );
       }
     } catch (error) {}
-    return defaultStr(DateHelper.isValidDate(date) ? date?.toString() : "");
+    return defaultStr(DateHelper.isValidDate(date) ? date?.toString() : '');
   }
   static isDateObj = isDateObj;
 
@@ -943,14 +943,14 @@ export class DateHelper {
       year: m.year(),
       day: m.day(),
       month: m.month(),
-      monthString: m.format("MM"),
+      monthString: m.format('MM'),
       hours: m.hours(),
       date: m.date(),
       minutes: m.minutes(),
       seconds: m.seconds(),
-      monthName: m.format("MMMM"),
-      dayName: m.format("dddd"),
-      dayNameShort: m.format("ddd"),
+      monthName: m.format('MMMM'),
+      dayName: m.format('dddd'),
+      dayNameShort: m.format('ddd'),
     };
   }
 }
