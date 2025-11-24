@@ -1,27 +1,27 @@
 import { isImageSrc } from '@utils/image';
 import '../string';
-import { isValidEmail } from './index';
+import { isEmail } from './index';
 
 describe('Validator Utils', () => {
-  describe('isValidEmail', () => {
+  describe('isEmail', () => {
     it('should return true for valid email addresses', () => {
-      expect(isValidEmail('test.name@example.com')).toBe(true);
-      expect(isValidEmail('test+name@example.co.uk')).toBe(true);
-      expect(isValidEmail('test_name@sub.example.com')).toBe(true);
+      expect(isEmail('test.name@example.com')).toBe(true);
+      expect(isEmail('test+name@example.co.uk')).toBe(true);
+      expect(isEmail('test_name@sub.example.com')).toBe(true);
     });
 
     it('should return false for invalid email addresses', () => {
-      expect(isValidEmail('test@.com')).toBe(false);
-      expect(isValidEmail('@example.com')).toBe(false);
-      expect(isValidEmail('test@example')).toBe(false);
-      expect(isValidEmail('test@.')).toBe(false);
+      expect(isEmail('test@.com')).toBe(false);
+      expect(isEmail('@example.com')).toBe(false);
+      expect(isEmail('test@example')).toBe(false);
+      expect(isEmail('test@.')).toBe(false);
     });
 
     it('should return false for non-string inputs', () => {
-      expect(isValidEmail(null)).toBe(false);
-      expect(isValidEmail(undefined)).toBe(false);
-      expect(isValidEmail(123)).toBe(false);
-      expect(isValidEmail({})).toBe(false);
+      expect(isEmail(null)).toBe(false);
+      expect(isEmail(undefined)).toBe(false);
+      expect(isEmail(123)).toBe(false);
+      expect(isEmail({})).toBe(false);
     });
   });
 

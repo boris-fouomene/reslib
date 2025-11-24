@@ -3,7 +3,7 @@ import { CountryCode } from '@countries/types';
 import { defaultStr } from '@utils/defaultStr';
 import { isNonNullString } from '@utils/isNonNullString';
 import { isUrl } from '@utils/uri';
-import { isValidEmail } from '@utils/validators/isValidEmail';
+import { isEmail } from '@utils/validators/isEmail';
 import { IValidatorResult, IValidatorValidateOptions } from '../types';
 import { Validator } from '../validator';
 
@@ -52,7 +52,7 @@ Validator.registerRule('Email', function Email(options) {
   if (!isNonNullString(value)) {
     return message;
   }
-  return isValidEmail(value) || message;
+  return isEmail(value) || message;
 });
 
 /**
@@ -141,7 +141,7 @@ export const IsPhoneNumber =
 function emailOrPhoneNumber(options: IValidatorValidateOptions) {
   const { value, phoneCountryCode, i18n } = options;
   return (
-    isValidEmail(value) ||
+    isEmail(value) ||
     InputFormatter.isValidPhoneNumber(value, phoneCountryCode) ||
     i18n.t('validator.emailOrPhoneNumber', options)
   );

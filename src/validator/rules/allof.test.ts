@@ -64,7 +64,7 @@ describe('AllOf Validation Rules', () => {
       @Translate('auth.register.dto.phoneNumber')
       phoneNumber?: string;
     }
-    it.only('should validate single email or array of emails', async () => {
+    it('should validate single email or array of emails', async () => {
       const result = await Validator.validateTarget(RegisterDto, {
         data: {
           email: 'borisfouomen14@gmail.com',
@@ -398,7 +398,7 @@ describe('AllOf Validation Rules', () => {
         const result = await Validator.validateAllOfRule({
           ruleParams: [
             ({ value }) => typeof value === 'object' && value !== null,
-            ({ value }) => value.hasOwnProperty('key'),
+            ({ value }) => Object.prototype.hasOwnProperty.call(value, 'key'),
           ],
           value: { key: 'value' },
           i18n,

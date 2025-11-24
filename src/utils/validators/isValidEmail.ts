@@ -1,7 +1,6 @@
-import isEmail, { IsEmailOptions } from "validator/lib/isEmail";
-import { isNonNullString } from "../isNonNullString";
+import { isNonNullString } from '../isNonNullString';
 /**
- * @function isValidEmail
+ * @function isEmail
  *
  * Validates whether a given value is a valid email address format.
  * This function checks if the input is a non-null string and then applies a regular expression
@@ -18,8 +17,8 @@ import { isNonNullString } from "../isNonNullString";
  * const email1 = "test@example.com";
  * const email2 = "invalid-email@.com";
  *
- * console.log(isValidEmail(email1)); // Output: true
- * console.log(isValidEmail(email2)); // Output: false
+ * console.log(isEmail(email1)); // Output: true
+ * console.log(isEmail(email2)); // Output: false
  * ```
  *
  * ### Notes:
@@ -27,9 +26,15 @@ import { isNonNullString } from "../isNonNullString";
  * - The regular expression used in this function checks for a variety of valid email formats, including those with special characters and domain specifications.
  * - This function is useful for form validation where email input is required, ensuring that users provide a correctly formatted email address.
  */
-export function isValidEmail(value: any, options?: IsEmailOptions): boolean {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function isEmail(value: any): boolean {
   if (!isNonNullString(value)) {
     return false;
   }
-  return isEmail(value, options);
+  return value.match(
+    // eslint-disable-next-line no-useless-escape
+    /^(")?(?:[^\."])(?:(?:[\.])?(?:[\w\-!#$%&'*+\/=?\^_`{|}~]))*\1@(\w[\-\w]*\.){1,5}([A-Za-z]){2,6}$/
+  )
+    ? true
+    : false;
 }
