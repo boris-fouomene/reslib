@@ -2,6 +2,40 @@
 import { isNonNullString } from './isNonNullString';
 
 /**
+ * Options for configuring email validation constraints.
+ * All lengths are in characters and follow RFC 5321/5322 specifications.
+ */
+export interface IsEmailOptions {
+  /**
+   * Maximum total length of the email address (local part + @ + domain).
+   * RFC 5321 recommends a maximum of 320 characters for SMTP.
+   * @default 320
+   */
+  maxTotalLength?: number;
+
+  /**
+   * Maximum length of the local part (before @).
+   * RFC 5321 specifies a maximum of 64 characters for the local part.
+   * @default 64
+   */
+  maxLocalPartLength?: number;
+
+  /**
+   * Maximum length of the domain part (after @).
+   * RFC 1035 specifies a maximum of 255 characters for domain names.
+   * @default 255
+   */
+  maxDomainLength?: number;
+
+  /**
+   * Maximum length of individual domain labels (parts separated by dots).
+   * RFC 1035 specifies a maximum of 63 characters per label.
+   * @default 63
+   */
+  maxDomainLabelLength?: number;
+}
+
+/**
  * Validates whether a given string is a valid email address.
  *
  * This function performs comprehensive email validation according to RFC 5322 standards,
@@ -11,10 +45,11 @@ import { isNonNullString } from './isNonNullString';
  * - Domain validation: proper domain structure with valid TLD
  * - IP address domains: [IPv4] and [IPv6] formats
  * - International domains: IDN (Internationalized Domain Names)
- * - Length constraints: local part ≤ 64 chars, domain ≤ 255 chars, total ≤ 320 chars
+ * - Configurable length constraints with sensible defaults
  * - Edge cases: consecutive dots, leading/trailing dots, escaped characters
  *
  * @param email - The string to validate as an email address
+ * @param options - Optional configuration for validation constraints
  * @returns true if the string is a valid email address, false otherwise
  *
  * @example
@@ -22,8 +57,19 @@ import { isNonNullString } from './isNonNullString';
  * isEmail("user.name+tag@example.co.uk") // true
  * isEmail("invalid@") // false
  * isEmail("@invalid.com") // false
+ *
+ * // Custom length limits
+ * isEmail("very.long.email@domain.com", { maxTotalLength: 100 }) // true if under 100 chars
  */
-export function isEmail(email: string): boolean {
+export function isEmail(email: string, options: IsEmailOptions = {}): boolean {
+  // Set default options
+  const {
+    maxTotalLength = 320,
+    maxLocalPartLength = 64,
+    maxDomainLength = 255,
+    maxDomainLabelLength = 63,
+  } = Object.assign({}, options);
+
   // Null/undefined/empty check
   if (!isNonNullString(email)) {
     return false;
@@ -34,9 +80,9 @@ export function isEmail(email: string): boolean {
 
   /**
    * Length constraints (RFC 5321)
-   *https://www.rfc-editor.org/rfc/rfc3696
+   * https://www.rfc-editor.org/rfc/rfc3696
    */
-  if (email.length > 320) {
+  if (email.length > maxTotalLength) {
     return false;
   }
 
@@ -50,12 +96,12 @@ export function isEmail(email: string): boolean {
   const domain = email.substring(atIndex + 1);
 
   // Validate local part length
-  if (localPart.length === 0 || localPart.length > 64) {
+  if (localPart.length === 0 || localPart.length > maxLocalPartLength) {
     return false;
   }
 
   // Validate domain length
-  if (domain.length === 0 || domain.length > 255) {
+  if (domain.length === 0 || domain.length > maxDomainLength) {
     return false;
   }
 
@@ -65,7 +111,7 @@ export function isEmail(email: string): boolean {
   }
 
   // Validate domain
-  if (!isValidDomain(domain)) {
+  if (!isValidDomain(domain, maxDomainLabelLength)) {
     return false;
   }
 
@@ -132,7 +178,7 @@ function isValidQuotedString(quoted: string): boolean {
 /**
  * Validates the domain part (after @) of an email address
  */
-function isValidDomain(domain: string): boolean {
+function isValidDomain(domain: string, maxDomainLabelLength: number): boolean {
   // Check for IP address format [IPv4] or [IPv6]
   if (domain.startsWith('[') && domain.endsWith(']')) {
     return isValidIPAddress(domain.slice(1, -1));
@@ -148,7 +194,7 @@ function isValidDomain(domain: string): boolean {
 
   // Each label must be valid
   for (const label of labels) {
-    if (!isValidDomainLabel(label)) {
+    if (!isValidDomainLabel(label, maxDomainLabelLength)) {
       return false;
     }
   }
@@ -165,9 +211,12 @@ function isValidDomain(domain: string): boolean {
 /**
  * Validates a single domain label
  */
-function isValidDomainLabel(label: string): boolean {
+function isValidDomainLabel(
+  label: string,
+  maxDomainLabelLength: number
+): boolean {
   // Label length constraints
-  if (label.length === 0 || label.length > 63) {
+  if (label.length === 0 || label.length > maxDomainLabelLength) {
     return false;
   }
 
