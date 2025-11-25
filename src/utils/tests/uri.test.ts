@@ -592,6 +592,10 @@ describe('URI Utils', () => {
       expect(isUrl('http://example.com')).toBe(true);
       expect(isUrl('https://localhost:3000')).toBe(true);
       expect(isUrl('ftp://files.example.com')).toBe(true);
+      expect(isUrl('https://example.com')).toBe(true);
+      expect(isUrl('http://localhost:3000')).toBe(true);
+      expect(isUrl('https://sub.domain.example.co.uk/path')).toBe(true);
+      expect(isUrl('ftp://example.com')).toBe(true);
     });
 
     it('should return false for invalid URLs', () => {
@@ -606,13 +610,6 @@ describe('URI Utils', () => {
       expect(isUrl('')).toBe(false);
       expect(isUrl(null as any)).toBe(false);
       expect(isUrl(undefined as any)).toBe(false);
-    });
-
-    it('should return true for valid URLs', () => {
-      expect(isUrl('https://example.com')).toBe(true);
-      expect(isUrl('http://localhost:3000')).toBe(true);
-      expect(isUrl('https://sub.domain.example.co.uk/path')).toBe(true);
-      expect(isUrl('ftp://example.com')).toBe(true);
     });
 
     // Test Suite 1: Valid HTTP/HTTPS URLs (default behavior)
@@ -1373,6 +1370,29 @@ describe('URI Utils', () => {
 });
 
 describe('isDataUrl', () => {
+  it('should return true for valid data URLs', () => {
+    expect(
+      isDataUrl('data:image/jpeg;base64,abc123', { validateBase64: true })
+    ).toBe(false);
+    expect(
+      isDataUrl('data:text/plain,Hello%20World', { validateBase64: true })
+    ).toBe(true);
+    expect(
+      isDataUrl('data:application/json;base64,eyJhIjoxfQ==', {
+        validateBase64: true,
+      })
+    ).toBe(true);
+  });
+
+  it('should return false for invalid data URLs', () => {
+    expect(isDataUrl('data:')).toBe(false);
+    expect(
+      isDataUrl('data:image/x-icon;base64,abc123', { validateBase64: true })
+    ).toBe(false);
+    expect(isDataUrl('https://example.com/image.jpg')).toBe(false);
+    expect(isDataUrl('')).toBe(false);
+  });
+
   // Test Suite 1: Valid Data URLs - Basic formats
   describe('Valid Data URLs - Basic formats', () => {
     it('should return true for simple text Data URL', () => {
@@ -1612,29 +1632,5 @@ describe('isDataUrl', () => {
       const longData = 'A'.repeat(10000);
       expect(isDataUrl(`data:text/plain;base64,${longData}`)).toBe(true);
     });
-  });
-});
-describe('isDataUrl', () => {
-  it('should return true for valid data URLs', () => {
-    expect(
-      isDataUrl('data:image/jpeg;base64,abc123', { validateBase64: true })
-    ).toBe(false);
-    expect(
-      isDataUrl('data:text/plain,Hello%20World', { validateBase64: true })
-    ).toBe(true);
-    expect(
-      isDataUrl('data:application/json;base64,eyJhIjoxfQ==', {
-        validateBase64: true,
-      })
-    ).toBe(true);
-  });
-
-  it('should return false for invalid data URLs', () => {
-    expect(isDataUrl('data:')).toBe(false);
-    expect(
-      isDataUrl('data:image/x-icon;base64,abc123', { validateBase64: true })
-    ).toBe(false);
-    expect(isDataUrl('https://example.com/image.jpg')).toBe(false);
-    expect(isDataUrl('')).toBe(false);
   });
 });

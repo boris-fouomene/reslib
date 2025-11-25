@@ -3,12 +3,14 @@ import '../types';
 import { FieldMeta, getFieldsFromTarget } from './index';
 
 declare module '../types' {
+  // eslint-disable-next-line jest/no-export
   export interface FieldMap {
     text: FieldBase<'text'>;
     number: FieldBase<'number'>;
     boolean: FieldBase<'boolean'>;
     date: FieldBase<'date'>;
   }
+  // eslint-disable-next-line jest/no-export
   export interface FieldBase {
     label?: string;
   }

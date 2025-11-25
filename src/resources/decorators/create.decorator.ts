@@ -17,9 +17,13 @@
  * }
  * ```
  */
-export function createDecorator<ValueType = unknown, KeyType = unknown>(key: KeyType): (value: ValueType) => (target: Object, propertyKey: string | symbol) => void {
+export function createDecorator<ValueType = unknown, KeyType = unknown>(
+  key: KeyType
+): (
+  value: ValueType
+) => (target: object, propertyKey: string | symbol) => void {
   return (value: ValueType) => {
-    return (target: Object, propertyKey: string | symbol) => {
+    return (target: object, propertyKey: string | symbol) => {
       Reflect.defineMetadata(key, value, target, propertyKey);
     };
   };

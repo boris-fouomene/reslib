@@ -11,13 +11,14 @@
  * console.log(DateHelper.DateHelper.isDateObj("2022-01-01")); // Output: false
  * ```
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function isDateObj(dateObj: any): dateObj is Date {
   /**
    * If the object is null or not an object, return false.
    *
    * This is the first check to quickly eliminate invalid inputs.
    */
-  if (!dateObj || typeof dateObj !== "object") return false;
+  if (!dateObj || typeof dateObj !== 'object') return false;
 
   /**
    * If the object is an instance of the Date class, return true.
@@ -31,12 +32,15 @@ export function isDateObj(dateObj: any): dateObj is Date {
    *
    * The getTime method is a key method for date objects, so its absence is a strong indication that the object is not a date object.
    */
-  if (typeof dateObj.getTime !== "function") return false;
+  if (typeof dateObj.getTime !== 'function') return false;
 
   /**
    * Check if the object's toString method returns '[object Date]' and if its getTime method returns a valid number.
    *
    * This final check verifies that the object has the correct toString representation and that its getTime method returns a valid timestamp.
    */
-  return !(Object.prototype.toString.call(dateObj) !== "[object Date]" || isNaN(dateObj.getTime()));
+  return !(
+    Object.prototype.toString.call(dateObj) !== '[object Date]' ||
+    isNaN(dateObj.getTime())
+  );
 }

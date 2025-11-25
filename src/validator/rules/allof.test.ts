@@ -575,28 +575,28 @@ describe('AllOf Validation Rules', () => {
     });
 
     describe('Factory Rule Registration', () => {
-      /* it("should create rule that can be registered", async () => {
-        const strictContactRule = Validator.allOf(["Required", "Email"]);
-        Validator.registerRule("StrictContact", strictContactRule);
+      it('should create rule that can be registered', async () => {
+        const strictContactRule = Validator.allOf(['Required', 'Email']);
+        Validator.registerRule('StrictContact' as any, strictContactRule);
 
         const result = await Validator.validate({
-          value: "test@example.com",
-          rules: ["StrictContact"],
+          value: 'test@example.com',
+          rules: ['StrictContact' as any],
         });
 
         expect(result.success).toBe(true);
-      }); */
-      /* it("should work with registered rule in validation", async () => {
-        const strictIdRule = Validator.allOf(["Required", "UUID"]);
-        Validator.registerRule("StrictID", strictIdRule);
+      });
+      it('should work with registered rule in validation', async () => {
+        const strictIdRule = Validator.allOf(['Required', 'UUID']);
+        Validator.registerRule('StrictID' as any, strictIdRule);
 
         const result = await Validator.validate({
-          value: "550e8400-e29b-41d4-a716-446655440000",
-          rules: ["StrictID"],
+          value: '550e8400-e29b-41d4-a716-446655440000',
+          rules: ['StrictID' as any],
         });
 
         expect(result.success).toBe(true);
-      }); */
+      });
     });
 
     describe('Factory Immutability', () => {

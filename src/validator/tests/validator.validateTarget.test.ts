@@ -1,3 +1,4 @@
+/* eslint-disable jest/no-conditional-expect */
 import { Validator } from '@/validator';
 import 'reflect-metadata';
 import { i18n } from '../../i18n';
@@ -856,7 +857,7 @@ describe('Validator.validateTarget() - Class Validation with Either Pattern', ()
     });
   });
 
-  describe('Response Consistency', () => {
+  describe('Response Consistency with Either Pattern', () => {
     it('should always return Either pattern result', async () => {
       class Model {
         field: string = '';

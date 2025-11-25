@@ -1,3 +1,4 @@
+// eslint-disable-next-line no-undef
 module.exports = {
   parser: '@typescript-eslint/parser',
   extends: [
@@ -20,5 +21,5 @@ module.exports = {
     '@typescript-eslint/explicit-module-boundary-types': 'off',
     '@typescript-eslint/no-explicit-any': 'warn',
   },
-  ignorePatterns: ['build/', 'lib/', 'node_modules/', '*.js'],
+  ignorePatterns: ['build/','dist/', 'lib/', 'node_modules/', '*.js'],
 };

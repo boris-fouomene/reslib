@@ -1,5 +1,6 @@
 import { isEmpty } from '@utils/isEmpty';
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const toNumber = (value: any): number => {
   if (isEmpty(value)) return NaN;
   if (typeof value === 'number') return value;

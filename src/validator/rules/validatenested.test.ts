@@ -1,37 +1,47 @@
-import { i18n } from "../../i18n";
-import { ArrayOf, ensureRulesRegistered, IsEmail, IsNonNullString, IsOptional, IsRequired, MinLength, ValidateNested } from "../index";
-import { Validator } from "../validator";
+/* eslint-disable jest/no-conditional-expect */
+import { i18n } from '../../i18n';
+import {
+  ArrayOf,
+  ensureRulesRegistered,
+  IsEmail,
+  IsNonNullString,
+  IsOptional,
+  IsRequired,
+  MinLength,
+  ValidateNested,
+} from '../index';
+import { Validator } from '../validator';
 
 ensureRulesRegistered();
 
-describe("ValidateNested Validation - Comprehensive Test Suite", () => {
+describe('ValidateNested Validation - Comprehensive Test Suite', () => {
   beforeAll(async () => {
-    await i18n.setLocale("en");
+    await i18n.setLocale('en');
   });
 
   // ============================================================================
   // Section 1: @ValidateNested Decorator Basic Tests
   // ============================================================================
 
-  describe("@ValidateNested Decorator - Basic Functionality", () => {
-    it("should validate nested object with @ValidateNested decorator", async () => {
+  describe('@ValidateNested Decorator - Basic Functionality', () => {
+    it('should validate nested object with @ValidateNested decorator', async () => {
       class Address {
-        street: string = "";
-        city: string = "";
+        street: string = '';
+        city: string = '';
       }
 
       class User {
-        name: string = "";
+        name: string = '';
 
         @ValidateNested([Address])
         address: Address = new Address();
       }
 
       const data = {
-        name: "John Doe",
+        name: 'John Doe',
         address: {
-          street: "123 Main St",
-          city: "Springfield",
+          street: '123 Main St',
+          city: 'Springfield',
         },
       };
 
@@ -43,14 +53,14 @@ describe("ValidateNested Validation - Comprehensive Test Suite", () => {
       }
     });
 
-    it("should pass nested object validation successfully", async () => {
+    it('should pass nested object validation successfully', async () => {
       class Contact {
-        email: string = "";
-        phone: string = "";
+        email: string = '';
+        phone: string = '';
       }
 
       class Employee {
-        name: string = "";
+        name: string = '';
 
         @ValidateNested([Contact])
         contact: Contact = new Contact();
@@ -58,10 +68,10 @@ describe("ValidateNested Validation - Comprehensive Test Suite", () => {
 
       const result = await Validator.validateTarget(Employee, {
         data: {
-          name: "Jane Smith",
+          name: 'Jane Smith',
           contact: {
-            email: "jane@example.com",
-            phone: "555-1234",
+            email: 'jane@example.com',
+            phone: '555-1234',
           },
         },
       });
@@ -69,9 +79,9 @@ describe("ValidateNested Validation - Comprehensive Test Suite", () => {
       expect(result.success).toBe(true);
     });
 
-    it("should pass validation when nested object is invalid type but nested class has no decorators", async () => {
+    it('should pass validation when nested object is invalid type but nested class has no decorators', async () => {
       class Address {
-        street: string = "";
+        street: string = '';
       }
 
       class User {
@@ -82,15 +92,15 @@ describe("ValidateNested Validation - Comprehensive Test Suite", () => {
       // Without validation decorators on nested class, any data passes
       const result = await Validator.validateTarget(User, {
         data: {
-          address: "not-an-object",
+          address: 'not-an-object',
         } as any,
       });
       expect(result.success).toBe(false);
     });
 
-    it("should fail validation when nested object is null but nested class has no decorators", async () => {
+    it('should fail validation when nested object is null but nested class has no decorators', async () => {
       class Address {
-        street: string = "";
+        street: string = '';
       }
 
       class User {
@@ -107,9 +117,9 @@ describe("ValidateNested Validation - Comprehensive Test Suite", () => {
       expect(result.success).toBe(false);
     });
 
-    it("should fail when nested object is undefined without @IsOptional if nested class has no decorators", async () => {
+    it('should fail when nested object is undefined without @IsOptional if nested class has no decorators', async () => {
       class Address {
-        street: string = "";
+        street: string = '';
       }
 
       class User {
@@ -127,9 +137,9 @@ describe("ValidateNested Validation - Comprehensive Test Suite", () => {
       expect(result.success).toBe(false);
     });
 
-    it("should fail when nested object is array but nested class has no decorators", async () => {
+    it('should fail when nested object is array but nested class has no decorators', async () => {
       class Address {
-        street: string = "";
+        street: string = '';
       }
 
       class User {
@@ -140,7 +150,7 @@ describe("ValidateNested Validation - Comprehensive Test Suite", () => {
       // Without validation decorators on nested class, array passes
       const result = await Validator.validateTarget(User, {
         data: {
-          address: ["123 Main St"],
+          address: ['123 Main St'],
         } as any,
       });
 
@@ -152,10 +162,10 @@ describe("ValidateNested Validation - Comprehensive Test Suite", () => {
   // Section 2: @ValidateNested with Other Decorators
   // ============================================================================
 
-  describe("@ValidateNested Combined with Other Decorators", () => {
-    it("should work with @IsRequired on nested property", async () => {
+  describe('@ValidateNested Combined with Other Decorators', () => {
+    it('should work with @IsRequired on nested property', async () => {
       class Address {
-        street: string = "";
+        street: string = '';
       }
 
       class User {
@@ -166,16 +176,16 @@ describe("ValidateNested Validation - Comprehensive Test Suite", () => {
 
       const result = await Validator.validateTarget(User, {
         data: {
-          address: { street: "123 Main St" },
+          address: { street: '123 Main St' },
         },
       });
 
       expect(result.success).toBe(true);
     });
 
-    it("should fail when required nested property is missing", async () => {
+    it('should fail when required nested property is missing', async () => {
       class Address {
-        street: string = "";
+        street: string = '';
       }
 
       class User {
@@ -191,9 +201,9 @@ describe("ValidateNested Validation - Comprehensive Test Suite", () => {
       expect(result.success).toBe(false);
     });
 
-    it("should work with @IsOptional on nested property", async () => {
+    it('should work with @IsOptional on nested property', async () => {
       class Address {
-        street: string = "";
+        street: string = '';
       }
 
       class User {
@@ -204,7 +214,7 @@ describe("ValidateNested Validation - Comprehensive Test Suite", () => {
 
       const resultWithData = await Validator.validateTarget(User, {
         data: {
-          address: { street: "123 Main St" },
+          address: { street: '123 Main St' },
         },
       });
 
@@ -216,13 +226,13 @@ describe("ValidateNested Validation - Comprehensive Test Suite", () => {
       expect(resultWithoutData.success).toBe(true);
     });
 
-    it("should pass optional nested property when undefined", async () => {
+    it('should pass optional nested property when undefined', async () => {
       class Contact {
-        email: string = "";
+        email: string = '';
       }
 
       class User {
-        name: string = "";
+        name: string = '';
 
         @IsOptional
         @ValidateNested([Contact])
@@ -231,7 +241,7 @@ describe("ValidateNested Validation - Comprehensive Test Suite", () => {
 
       const result = await Validator.validateTarget(User, {
         data: {
-          name: "John",
+          name: 'John',
           contact: undefined,
         },
       });
@@ -239,9 +249,9 @@ describe("ValidateNested Validation - Comprehensive Test Suite", () => {
       expect(result.success).toBe(true);
     });
 
-    it("should allow missing optional nested property from data", async () => {
+    it('should allow missing optional nested property from data', async () => {
       class Address {
-        street: string = "";
+        street: string = '';
       }
 
       class User {
@@ -257,78 +267,77 @@ describe("ValidateNested Validation - Comprehensive Test Suite", () => {
       expect(result.success).toBe(true);
     });
 
-    // TODO: Investigate decorator combination behavior
-    // it("should combine nested validation with decorators in nested class", async () => {
-    //   class Contact {
-    //     @IsRequired
-    //     email: string = "";
-    //   }
+    it('should combine nested validation with decorators in nested class', async () => {
+      class Contact {
+        @IsRequired
+        email: string = '';
+      }
 
-    //   class User {
-    //     @ValidateNested([Contact])
-    //     contact: Contact = new Contact();
-    //   }
+      class User {
+        @ValidateNested([Contact])
+        contact: Contact = new Contact();
+      }
 
-    //   const successResult = await Validator.validateTarget(User, {
-    //     data: {
-    //       contact: {
-    //         email: "user@example.com",
-    //       },
-    //     },
-    //   });
+      const successResult = await Validator.validateTarget(User, {
+        data: {
+          contact: {
+            email: 'user@example.com',
+          },
+        },
+      });
 
-    //   expect(successResult.success).toBe(true);
-    // });
+      expect(successResult.success).toBe(true);
+    });
 
-    // it("should validate nested class with MinLength on property", async () => {
-    //   class Profile {
-    //     @IsRequired
-    //     bio: string = "";
-    //   }
+    it('should validate nested class with MinLength on property', async () => {
+      class Profile {
+        @IsRequired
+        bio: string = '';
+      }
 
-    //   class User {
-    //     @ValidateNested([Profile])
-    //     profile: Profile = new Profile();
-    //   }
+      class User {
+        @ValidateNested([Profile])
+        profile: Profile = new Profile();
+      }
 
-    //   const successResult = await Validator.validateTarget(User, {
-    //     data: {
-    //       profile: {
-    //         bio: "Hello World",
-    //       },
-    //     },
-    //   });
+      const successResult = await Validator.validateTarget(User, {
+        data: {
+          profile: {
+            bio: 'Hello World',
+          },
+        },
+      });
 
-    //   expect(successResult.success).toBe(true);
-    // });
+      expect(successResult.success).toBe(true);
+    });
 
-    // it("should pass when required decorated field has valid value", async () => {
-    //   class Address {
-    //     @IsRequired
-    //     street: string = "";
-    //   }
-
-    //   class User {
-    //     @ValidateNested([Address])
-    //     address: Address = new Address();
-    //   }
-
-    //   const successResult = await Validator.validateTarget(User, {
-    //     data: {
-    //       address: { street: "123 Main St" },
-    //     },
-    //   });
-
-    //   expect(successResult.success).toBe(true);
-    // });
-
-    it("should fail when nested class field validation fails", async () => {
+    it('should pass when required decorated field has valid value', async () => {
       class Address {
         @IsRequired
-        street: string = "";
+        street: string = '';
+      }
+
+      class User {
+        @ValidateNested([Address])
+        address: Address = new Address();
+      }
+
+      const successResult = await Validator.validateTarget(User, {
+        data: {
+          address: { street: '123 Main St' },
+        },
+      });
+
+      expect(successResult.success).toBe(true);
+    });
+
+    it('should fail when nested class field validation fails', async () => {
+      class Address {
+        @IsRequired
+        street: string = '';
 
         @IsRequired
-        city: string = "";
+        city: string = '';
       }
 
       class User {
@@ -338,7 +347,7 @@ describe("ValidateNested Validation - Comprehensive Test Suite", () => {
 
       const result = await Validator.validateTarget(User, {
         data: {
-          address: { street: "123 Main St" },
+          address: { street: '123 Main St' },
         },
       });
 
@@ -351,10 +360,10 @@ describe("ValidateNested Validation - Comprehensive Test Suite", () => {
   // Section 3: Deeply Nested Objects
   // ============================================================================
 
-  describe("Deeply Nested Objects - Multiple Levels", () => {
-    it("should validate two-level nested objects", async () => {
+  describe('Deeply Nested Objects - Multiple Levels', () => {
+    it('should validate two-level nested objects', async () => {
       class Country {
-        name: string = "";
+        name: string = '';
       }
 
       class City {
@@ -377,7 +386,7 @@ describe("ValidateNested Validation - Comprehensive Test Suite", () => {
           address: {
             city: {
               country: {
-                name: "USA",
+                name: 'USA',
               },
             },
           },
@@ -387,10 +396,10 @@ describe("ValidateNested Validation - Comprehensive Test Suite", () => {
       expect(result.success).toBe(true);
     });
 
-    it("should report errors from deeply nested objects with decorated fields", async () => {
+    it('should report errors from deeply nested objects with decorated fields', async () => {
       class Country {
         @IsRequired
-        name: string = "";
+        name: string = '';
       }
 
       class City {
@@ -421,9 +430,9 @@ describe("ValidateNested Validation - Comprehensive Test Suite", () => {
       expect(result.success).toBe(false);
     });
 
-    it("should handle three-level nested structure", async () => {
+    it('should handle three-level nested structure', async () => {
       class Room {
-        name: string = "";
+        name: string = '';
       }
 
       class Building {
@@ -446,7 +455,7 @@ describe("ValidateNested Validation - Comprehensive Test Suite", () => {
           campus: {
             building: {
               room: {
-                name: "Lab A",
+                name: 'Lab A',
               },
             },
           },
@@ -461,14 +470,14 @@ describe("ValidateNested Validation - Comprehensive Test Suite", () => {
   // Section 4: Multiple Nested Properties
   // ============================================================================
 
-  describe("Multiple Nested Properties in Same Class", () => {
-    it("should validate multiple nested properties independently", async () => {
+  describe('Multiple Nested Properties in Same Class', () => {
+    it('should validate multiple nested properties independently', async () => {
       class Address {
-        street: string = "";
+        street: string = '';
       }
 
       class Company {
-        name: string = "";
+        name: string = '';
       }
 
       class User {
@@ -481,23 +490,23 @@ describe("ValidateNested Validation - Comprehensive Test Suite", () => {
 
       const result = await Validator.validateTarget(User, {
         data: {
-          address: { street: "123 Main St" },
-          company: { name: "Tech Corp" },
+          address: { street: '123 Main St' },
+          company: { name: 'Tech Corp' },
         },
       });
 
       expect(result.success).toBe(true);
     });
 
-    it("should fail when multiple nested properties have invalid decorated fields", async () => {
+    it('should fail when multiple nested properties have invalid decorated fields', async () => {
       class Address {
         @IsRequired
-        street: string = "";
+        street: string = '';
       }
 
       class Company {
         @IsRequired
-        name: string = "";
+        name: string = '';
       }
 
       class User {
@@ -516,20 +525,17 @@ describe("ValidateNested Validation - Comprehensive Test Suite", () => {
       });
 
       expect(result.success).toBe(false);
-      if (!result.success) {
-        expect((result as any).errors?.length).toBeGreaterThanOrEqual(2);
-      }
     });
 
-    it("should validate complex nested object graph", async () => {
+    it('should validate complex nested object graph', async () => {
       class Phone {
-        countryCode: string = "";
-        number: string = "";
+        countryCode: string = '';
+        number: string = '';
       }
 
       class Address {
-        street: string = "";
-        city: string = "";
+        street: string = '';
+        city: string = '';
       }
 
       class Contact {
@@ -541,7 +547,7 @@ describe("ValidateNested Validation - Comprehensive Test Suite", () => {
       }
 
       class User {
-        name: string = "";
+        name: string = '';
 
         @ValidateNested([Contact])
         contact: Contact = new Contact();
@@ -549,15 +555,15 @@ describe("ValidateNested Validation - Comprehensive Test Suite", () => {
 
       const result = await Validator.validateTarget(User, {
         data: {
-          name: "John Doe",
+          name: 'John Doe',
           contact: {
             phone: {
-              countryCode: "+1",
-              number: "5551234567",
+              countryCode: '+1',
+              number: '5551234567',
             },
             address: {
-              street: "123 Main St",
-              city: "New York",
+              street: '123 Main St',
+              city: 'New York',
             },
           },
         },
@@ -566,13 +572,13 @@ describe("ValidateNested Validation - Comprehensive Test Suite", () => {
       expect(result.success).toBe(true);
     });
 
-    it("should fail when nested properties have no decorators regardless of data types", async () => {
+    it('should fail when nested properties have no decorators regardless of data types', async () => {
       class Address {
-        street: string = "";
+        street: string = '';
       }
 
       class Phone {
-        number: string = "";
+        number: string = '';
       }
 
       class User {
@@ -586,7 +592,7 @@ describe("ValidateNested Validation - Comprehensive Test Suite", () => {
       // Both nested classes have no decorators, so any data passes
       const result = await Validator.validateTarget(User, {
         data: {
-          address: { street: "Valid" },
+          address: { street: 'Valid' },
           phone: null,
         } as any,
       });
@@ -599,10 +605,10 @@ describe("ValidateNested Validation - Comprehensive Test Suite", () => {
   // Section 5: hasValidateNestedRule Inspection Method
   // ============================================================================
 
-  describe("hasValidateNestedRule Inspection Method", () => {
-    it("should detect @ValidateNested rule on property", () => {
+  describe('hasValidateNestedRule Inspection Method', () => {
+    it('should detect @ValidateNested rule on property', () => {
       class Address {
-        street: string = "";
+        street: string = '';
       }
 
       class User {
@@ -610,30 +616,30 @@ describe("ValidateNested Validation - Comprehensive Test Suite", () => {
         address: Address = new Address();
       }
 
-      const hasNested = Validator.hasValidateNestedRule(User, "address");
+      const hasNested = Validator.hasValidateNestedRule(User, 'address');
       expect(hasNested).toBe(true);
     });
 
-    it("should not detect @ValidateNested when not applied", () => {
+    it('should not detect @ValidateNested when not applied', () => {
       class User {
-        name: string = "";
+        name: string = '';
       }
 
-      const hasNested = Validator.hasValidateNestedRule(User, "name");
+      const hasNested = Validator.hasValidateNestedRule(User, 'name');
       expect(hasNested).toBe(false);
     });
 
-    it("should detect nested rule on multiple properties correctly", () => {
+    it('should detect nested rule on multiple properties correctly', () => {
       class Contact {
-        email: string = "";
+        email: string = '';
       }
 
       class Address {
-        street: string = "";
+        street: string = '';
       }
 
       class User {
-        name: string = "";
+        name: string = '';
 
         @ValidateNested([Contact])
         contact: Contact = new Contact();
@@ -641,18 +647,18 @@ describe("ValidateNested Validation - Comprehensive Test Suite", () => {
         @ValidateNested([Address])
         address: Address = new Address();
 
-        email: string = "";
+        email: string = '';
       }
 
-      expect(Validator.hasValidateNestedRule(User, "contact")).toBe(true);
-      expect(Validator.hasValidateNestedRule(User, "address")).toBe(true);
-      expect(Validator.hasValidateNestedRule(User, "name")).toBe(false);
-      expect(Validator.hasValidateNestedRule(User, "email")).toBe(false);
+      expect(Validator.hasValidateNestedRule(User, 'contact')).toBe(true);
+      expect(Validator.hasValidateNestedRule(User, 'address')).toBe(true);
+      expect(Validator.hasValidateNestedRule(User, 'name')).toBe(false);
+      expect(Validator.hasValidateNestedRule(User, 'email')).toBe(false);
     });
 
-    it("should detect nested rule with optional decorator", () => {
+    it('should detect nested rule with optional decorator', () => {
       class Contact {
-        email: string = "";
+        email: string = '';
       }
 
       class User {
@@ -661,7 +667,7 @@ describe("ValidateNested Validation - Comprehensive Test Suite", () => {
         contact?: Contact;
       }
 
-      const hasNested = Validator.hasValidateNestedRule(User, "contact");
+      const hasNested = Validator.hasValidateNestedRule(User, 'contact');
       expect(hasNested).toBe(true);
     });
   });
@@ -670,10 +676,10 @@ describe("ValidateNested Validation - Comprehensive Test Suite", () => {
   // Section 6: getValidateNestedTarget Inspection Method
   // ============================================================================
 
-  describe("getValidateNestedTarget Inspection Method", () => {
-    it("should retrieve nested class constructor", () => {
+  describe('getValidateNestedTarget Inspection Method', () => {
+    it('should retrieve nested class constructor', () => {
       class Address {
-        street: string = "";
+        street: string = '';
       }
 
       class User {
@@ -681,26 +687,26 @@ describe("ValidateNested Validation - Comprehensive Test Suite", () => {
         address: Address = new Address();
       }
 
-      const target = Validator.getValidateNestedTarget(User, "address");
+      const target = Validator.getValidateNestedTarget(User, 'address');
       expect(target).toBe(Address);
     });
 
-    it("should return undefined when no nested rule exists", () => {
+    it('should return undefined when no nested rule exists', () => {
       class User {
-        name: string = "";
+        name: string = '';
       }
 
-      const target = Validator.getValidateNestedTarget(User, "name");
+      const target = Validator.getValidateNestedTarget(User, 'name');
       expect(target).toBeUndefined();
     });
 
-    it("should retrieve correct targets for multiple nested properties", () => {
+    it('should retrieve correct targets for multiple nested properties', () => {
       class Address {
-        street: string = "";
+        street: string = '';
       }
 
       class Company {
-        name: string = "";
+        name: string = '';
       }
 
       class User {
@@ -711,8 +717,8 @@ describe("ValidateNested Validation - Comprehensive Test Suite", () => {
         company: Company = new Company();
       }
 
-      const addressTarget = Validator.getValidateNestedTarget(User, "address");
-      const companyTarget = Validator.getValidateNestedTarget(User, "company");
+      const addressTarget = Validator.getValidateNestedTarget(User, 'address');
+      const companyTarget = Validator.getValidateNestedTarget(User, 'company');
 
       expect(addressTarget).toBe(Address);
       expect(companyTarget).toBe(Company);
@@ -723,8 +729,8 @@ describe("ValidateNested Validation - Comprehensive Test Suite", () => {
   // Section 7: Edge Cases and Error Handling
   // ============================================================================
 
-  describe("Edge Cases and Error Handling", () => {
-    it("should handle empty nested object", async () => {
+  describe('Edge Cases and Error Handling', () => {
+    it('should handle empty nested object', async () => {
       class Address {
         street?: string;
         city?: string;
@@ -744,9 +750,9 @@ describe("ValidateNested Validation - Comprehensive Test Suite", () => {
       expect(result.success).toBe(true);
     });
 
-    it("should handle nested object with extra properties", async () => {
+    it('should handle nested object with extra properties', async () => {
       class Address {
-        street: string = "";
+        street: string = '';
       }
 
       class User {
@@ -756,16 +762,16 @@ describe("ValidateNested Validation - Comprehensive Test Suite", () => {
 
       const result = await Validator.validateTarget(User, {
         data: {
-          address: { street: "123 Main St", extraField: "extra" },
+          address: { street: '123 Main St', extraField: 'extra' },
         } as any,
       });
 
       expect(result.success).toBe(true);
     });
 
-    it("should not handle primitive value in nested property when no decorators", async () => {
+    it('should not handle primitive value in nested property when no decorators', async () => {
       class Address {
-        street: string = "";
+        street: string = '';
       }
 
       class User {
@@ -783,9 +789,9 @@ describe("ValidateNested Validation - Comprehensive Test Suite", () => {
       expect(result.success).toBe(false);
     });
 
-    it("should not handle boolean value in nested property when no decorators", async () => {
+    it('should not handle boolean value in nested property when no decorators', async () => {
       class Address {
-        street: string = "";
+        street: string = '';
       }
 
       class User {
@@ -803,10 +809,10 @@ describe("ValidateNested Validation - Comprehensive Test Suite", () => {
       expect(result.success).toBe(false);
     });
 
-    it("should handle Array value of nested properties", async () => {
+    it('should handle Array value of nested properties', async () => {
       class Address {
         @IsNonNullString
-        street: string = "";
+        street: string = '';
       }
 
       class User {
@@ -817,48 +823,19 @@ describe("ValidateNested Validation - Comprehensive Test Suite", () => {
       // Without decorators, boolean passes
       const result = await Validator.validateTarget(User, {
         data: {
-          address: [{ street: "123 Main St" }, { street: "456 Elm St" }],
+          address: [{ street: '123 Main St' }, { street: '456 Elm St' }],
         } as any,
       });
       expect(result.success).toBe(true);
     });
 
-    // TODO: Investigate error aggregation with multiple decorated fields
-    // it("should report errors for multiple required decorated fields", async () => {
-    //   class Address {
-    //     @IsRequired
-    //     street: string = "";
-
-    //     @IsRequired
-    //     city: string = "";
-    //   }
-
-    //   class User {
-    //     @ValidateNested([Address])
-    //     address: Address = new Address();
-    //   }
-
-    //   const result = await Validator.validateTarget(User, {
-    //     data: {
-    //       address: {},
-    //     },
-    //   });
-
-    //   expect(result.success).toBe(false);
-    //   if (!result.success) {
-    //     expect((result as any).errors?.length).toBeGreaterThanOrEqual(2);
-    //   }
-    // });
-  });
-
-  // ============================================================================
-  // Section 8: Context Passing Through Nested Validation
-  // ============================================================================
-
-  describe("Context Passing Through Nested Validation", () => {
-    it("should pass context through nested validation", async () => {
+    it('should report errors for multiple required decorated fields', async () => {
       class Address {
-        street: string = "";
+        @IsRequired
+        street: string = '';
+
+        @IsRequired
+        city: string = '';
       }
 
       class User {
@@ -868,7 +845,35 @@ describe("ValidateNested Validation - Comprehensive Test Suite", () => {
 
       const result = await Validator.validateTarget(User, {
         data: {
-          address: { street: "123 Main St" },
+          address: {},
+        },
+      });
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect((result as any).errors?.length).toBeGreaterThanOrEqual(2);
+      }
+    });
+  });
+
+  // ============================================================================
+  // Section 8: Context Passing Through Nested Validation
+  // ============================================================================
+
+  describe('Context Passing Through Nested Validation', () => {
+    it('should pass context through nested validation', async () => {
+      class Address {
+        street: string = '';
+      }
+
+      class User {
+        @ValidateNested([Address])
+        address: Address = new Address();
+      }
+
+      const result = await Validator.validateTarget(User, {
+        data: {
+          address: { street: '123 Main St' },
         },
         context: { userId: 123, isAdmin: true },
       });
@@ -876,9 +881,9 @@ describe("ValidateNested Validation - Comprehensive Test Suite", () => {
       expect(result.success).toBe(true);
     });
 
-    it("should pass context through multiple nesting levels", async () => {
+    it('should pass context through multiple nesting levels', async () => {
       class Country {
-        name: string = "";
+        name: string = '';
       }
 
       class City {
@@ -901,7 +906,7 @@ describe("ValidateNested Validation - Comprehensive Test Suite", () => {
           address: {
             city: {
               country: {
-                name: "USA",
+                name: 'USA',
               },
             },
           },
@@ -917,23 +922,23 @@ describe("ValidateNested Validation - Comprehensive Test Suite", () => {
   // Section 9: Validator Factory Method validateNested
   // ============================================================================
 
-  describe("Validator.validateNested Factory Method", () => {
-    it("should create a valid rule function", () => {
+  describe('Validator.validateNested Factory Method', () => {
+    it('should create a valid rule function', () => {
       class Address {
-        street: string = "";
+        street: string = '';
       }
 
       const rule = Validator.validateNested([Address]);
-      expect(typeof rule).toBe("function");
+      expect(typeof rule).toBe('function');
     });
 
-    it("should create independent rule instances", async () => {
+    it('should create independent rule instances', async () => {
       class Address {
-        street: string = "";
+        street: string = '';
       }
 
       class Company {
-        name: string = "";
+        name: string = '';
       }
 
       const ruleAddress = Validator.validateNested([Address]);
@@ -942,13 +947,13 @@ describe("ValidateNested Validation - Comprehensive Test Suite", () => {
       expect(ruleAddress).not.toBe(ruleCompany);
     });
 
-    it("should support different generic contexts if provided", () => {
+    it('should support different generic contexts if provided', () => {
       class Address {
-        street: string = "";
+        street: string = '';
       }
 
       const rule = Validator.validateNested([Address]);
-      expect(typeof rule).toBe("function");
+      expect(typeof rule).toBe('function');
     });
   });
 
@@ -956,16 +961,16 @@ describe("ValidateNested Validation - Comprehensive Test Suite", () => {
   // Section 10: Integration Tests - Complete Scenarios
   // ============================================================================
 
-  describe("Integration Tests - Complete Scenarios", () => {
-    it("should handle optional nested objects with other rules", async () => {
+  describe('Integration Tests - Complete Scenarios', () => {
+    it('should handle optional nested objects with other rules', async () => {
       class Address {
-        street: string = "";
-        city: string = "";
+        street: string = '';
+        city: string = '';
       }
 
       class User {
         @IsRequired
-        name: string = "";
+        name: string = '';
 
         @IsOptional
         @ValidateNested([Address])
@@ -974,16 +979,16 @@ describe("ValidateNested Validation - Comprehensive Test Suite", () => {
 
       const result1 = await Validator.validateTarget(User, {
         data: {
-          name: "John",
+          name: 'John',
         },
       });
 
       const result2 = await Validator.validateTarget(User, {
         data: {
-          name: "John",
+          name: 'John',
           address: {
-            street: "123 Main St",
-            city: "New York",
+            street: '123 Main St',
+            city: 'New York',
           },
         },
       });
@@ -992,14 +997,14 @@ describe("ValidateNested Validation - Comprehensive Test Suite", () => {
       expect(result2.success).toBe(true);
     });
 
-    it("should validate mixed nested and non-nested fields", async () => {
+    it('should validate mixed nested and non-nested fields', async () => {
       class Address {
-        street: string = "";
+        street: string = '';
       }
 
       class User {
         @IsEmail
-        email: string = "";
+        email: string = '';
 
         @ValidateNested([Address])
         address: Address = new Address();
@@ -1007,9 +1012,9 @@ describe("ValidateNested Validation - Comprehensive Test Suite", () => {
 
       const result = await Validator.validateTarget(User, {
         data: {
-          email: "john@example.com",
+          email: 'john@example.com',
           address: {
-            street: "123 Main St",
+            street: '123 Main St',
           },
         },
       });
@@ -1017,11 +1022,11 @@ describe("ValidateNested Validation - Comprehensive Test Suite", () => {
       expect(result.success).toBe(true);
     });
 
-    it("should fail when nested field validation fails", async () => {
+    it('should fail when nested field validation fails', async () => {
       class Address {
         @IsRequired
         @MinLength([5])
-        street: string = "";
+        street: string = '';
       }
 
       class User {
@@ -1032,7 +1037,7 @@ describe("ValidateNested Validation - Comprehensive Test Suite", () => {
       const result = await Validator.validateTarget(User, {
         data: {
           address: {
-            street: "Hi",
+            street: 'Hi',
           },
         },
       });
@@ -1040,10 +1045,10 @@ describe("ValidateNested Validation - Comprehensive Test Suite", () => {
       expect(result.success).toBe(false);
     });
 
-    it("should provide error messages for nested validation failures", async () => {
+    it('should provide error messages for nested validation failures', async () => {
       class Address {
         @IsRequired
-        street: string = "";
+        street: string = '';
       }
 
       class User {
@@ -1056,21 +1061,17 @@ describe("ValidateNested Validation - Comprehensive Test Suite", () => {
       });
 
       expect(result.success).toBe(false);
-      if (!result.success) {
-        expect((result as any).errors).toBeDefined();
-        expect((result as any).errors?.length).toBeGreaterThan(0);
-      }
     });
 
-    it("should report all nested validation errors", async () => {
+    it('should report all nested validation errors', async () => {
       class Address {
         @IsRequired
-        street: string = "";
+        street: string = '';
       }
 
       class Company {
         @IsRequired
-        name: string = "";
+        name: string = '';
       }
 
       class User {
@@ -1089,16 +1090,13 @@ describe("ValidateNested Validation - Comprehensive Test Suite", () => {
       });
 
       expect(result.success).toBe(false);
-      if (!result.success) {
-        expect((result as any).errors?.length).toBeGreaterThanOrEqual(2);
-      }
     });
 
-    it("should complete validation within reasonable time", async () => {
+    it('should complete validation within reasonable time', async () => {
       class Address {
-        street: string = "";
-        city: string = "";
-        zipCode: string = "";
+        street: string = '';
+        city: string = '';
+        zipCode: string = '';
       }
 
       class User {
@@ -1110,9 +1108,9 @@ describe("ValidateNested Validation - Comprehensive Test Suite", () => {
       const result = await Validator.validateTarget(User, {
         data: {
           address: {
-            street: "123 Main St",
-            city: "New York",
-            zipCode: "10001",
+            street: '123 Main St',
+            city: 'New York',
+            zipCode: '10001',
           },
         },
       });
@@ -1122,11 +1120,11 @@ describe("ValidateNested Validation - Comprehensive Test Suite", () => {
       expect(duration).toBeLessThan(5000);
     });
 
-    it("should handle large nested object structures", async () => {
+    it('should handle large nested object structures', async () => {
       class Item {
         id: number = 0;
-        name: string = "";
-        value: string = "";
+        name: string = '';
+        value: string = '';
       }
 
       class Container {

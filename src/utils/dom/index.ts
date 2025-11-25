@@ -1,4 +1,4 @@
-import { isDOMElement } from "./isDOMElement";
+import { isDOMElement } from './isDOMElement';
 
 /**
  * Returns the maximum z-index value of all elements in the document body.
@@ -10,13 +10,25 @@ import { isDOMElement } from "./isDOMElement";
  * @returns The maximum z-index value of all elements in the document body.
  */
 export function getMaxZindex(): number {
-  if (typeof document === "undefined" || !document) {
+  if (
+    typeof document === 'undefined' ||
+    !document ||
+    typeof window === 'undefined' ||
+    !window ||
+    typeof window?.getComputedStyle !== 'function'
+  ) {
     return 1000; // Default fallback value if document is not available
   }
   let highestZIndex = 0;
 
   // later, potentially repeatedly
-  highestZIndex = Math.max(highestZIndex, ...Array.from(document.querySelectorAll("body *:not([data-highest]):not(.yetHigher)"), (elem) => parseFloat(getComputedStyle(elem).zIndex)).filter((zIndex) => !isNaN(zIndex)));
+  highestZIndex = Math.max(
+    highestZIndex,
+    ...Array.from(
+      document.querySelectorAll('body *:not([data-highest]):not(.yetHigher)'),
+      (elem) => parseFloat(window.getComputedStyle(elem).zIndex)
+    ).filter((zIndex) => !isNaN(zIndex))
+  );
   return highestZIndex;
 }
 /**
@@ -36,6 +48,7 @@ export function getMaxZindex(): number {
  * console.log(hasClassName(element, "active")); // Output: true or false
  * ```
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function hasClassName(elem: any, className?: string | null): boolean {
   /**
    * Check if the element is a valid DOM element and if the class name is provided.
@@ -47,7 +60,7 @@ export function hasClassName(elem: any, className?: string | null): boolean {
    *
    * The regular expression is wrapped in spaces to ensure that the class name is matched as a whole word.
    */
-  return new RegExp(" " + className + " ").test(" " + elem.className + " ");
+  return new RegExp(' ' + className + ' ').test(' ' + elem.className + ' ');
 }
 /**
  * Adds one or more class names to an HTML element.
@@ -65,12 +78,13 @@ export function hasClassName(elem: any, className?: string | null): boolean {
  * console.log(elem.className); // Output: "class1 class2 class3"
  * ```
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function addClassName(elem: any, ...args: string[]): void {
   if (!isDOMElement(elem)) return;
   for (let i = 0; i < args.length; i++) {
     const className = args[i];
     if (className && !hasClassName(elem, className)) {
-      elem.className += " " + className;
+      elem.className += ' ' + className;
     }
   }
 }
@@ -91,14 +105,15 @@ export function addClassName(elem: any, ...args: string[]): void {
  * console.log(elem.className); // Output: "class1 class3"
  * ```
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function removeClassName(elem: any, ...args: string[]): void {
   if (!elem || !isDOMElement(elem)) return;
   for (let i = 0; i < args.length; i++) {
     const className = args[i];
-    if (className && elem.className && typeof elem.className === "string") {
-      const reg = new RegExp("(\\s|^)" + className + "(\\s|$)");
-      elem.className = elem.className.replace(reg, " ");
-      elem.className = elem.className.replace(className, "");
+    if (className && elem.className && typeof elem.className === 'string') {
+      const reg = new RegExp('(\\s|^)' + className + '(\\s|$)');
+      elem.className = elem.className.replace(reg, ' ');
+      elem.className = elem.className.replace(className, '');
     }
   }
 }

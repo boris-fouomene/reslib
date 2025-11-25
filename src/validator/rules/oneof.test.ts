@@ -12,10 +12,6 @@ describe('OneOf Validation Rules', () => {
     await i18n.setLocale('en');
   });
 
-  // ============================================================================
-  // Section 1: validateOneOfRule Method Tests
-  // ============================================================================
-
   describe('validateOneOfRule Method', () => {
     describe('Basic Functionality', () => {
       it('should return true when first rule passes', async () => {
@@ -510,28 +506,28 @@ describe('OneOf Validation Rules', () => {
     });
 
     describe('Factory Rule Registration', () => {
-      /* it("should create rule that can be registered", async () => {
-        const contactRule = Validator.oneOf(["Email", "PhoneNumber"]);
-        Validator.registerRule("ContactInfo", contactRule);
+      it('should create rule that can be registered', async () => {
+        const contactRule = Validator.oneOf(['Email', 'PhoneNumber']);
+        Validator.registerRule('ContactInfo' as any, contactRule);
 
         const result = await Validator.validate({
-          value: "test@example.com",
-          rules: ["ContactInfo"],
+          value: 'test@example.com',
+          rules: ['ContactInfo' as any],
         });
 
         expect(result.success).toBe(true);
-      }); */
-      /* t("should work with registered rule in validation", async () => {
-        const idRule = Validator.oneOf(["UUID", "Number"]);
-        Validator.registerRule("FlexibleID", idRule);
+      });
+      it('should work with registered rule in validation', async () => {
+        const idRule = Validator.oneOf(['UUID', 'Number']);
+        Validator.registerRule('FlexibleID' as any, idRule);
 
         const result = await Validator.validate({
           value: 123,
-          rules: ["FlexibleID"],
+          rules: ['FlexibleID' as any],
         });
 
         expect(result.success).toBe(true);
-      }); */
+      });
     });
 
     describe('Factory Immutability', () => {

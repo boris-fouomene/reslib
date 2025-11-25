@@ -15,18 +15,19 @@
  * console.log(isEmpty([1, 2, 3])); // Output: false
  * ```
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function isEmpty(value: any): boolean {
   /**
    * Check if the value is null or undefined.
    */
-  if (value === null || value === undefined || typeof value == "undefined") {
+  if (value === null || value === undefined || typeof value == 'undefined') {
     return true;
   }
 
   /**
    * Check if the value is an empty string.
    */
-  if (typeof value === "string" && value === "") {
+  if (typeof value === 'string' && value === '') {
     return true;
   }
 

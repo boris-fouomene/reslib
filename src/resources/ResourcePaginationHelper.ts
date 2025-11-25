@@ -668,7 +668,8 @@ export class ResourcePaginationHelper {
     }
     const include = defaultArray(xFilters.include);
     if (include.length) {
-      result.include = include;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (result as any).include = include;
     }
     const cache = xFilters.cache;
     if (cache !== undefined) {

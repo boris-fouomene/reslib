@@ -102,11 +102,10 @@ describe('Validator', () => {
       });
 
       expect(result.success).toBe(true);
-      if (result.success) {
-        expect(result.value).toBe(4);
-        expect(result.validatedAt).toBeDefined();
-        expect(result.duration).toBeDefined();
-      }
+
+      expect(result.value).toBe(4);
+      expect(result.validatedAt).toBeDefined();
+      expect(result.duration).toBeDefined();
     });
 
     it('should return success when no rules are provided', async () => {
@@ -532,12 +531,10 @@ describe('Validator', () => {
       });
 
       // Result will depend on whether decorators are applied
-      if (!result.success) {
-        expect(result.errors).toBeDefined();
-        expect(Array.isArray(result.errors)).toBe(true);
-        expect(result.failureCount).toBe(result.errors.length);
-        expect(result.status).toBe('error');
-      }
+      expect((result as any).errors).toBeDefined();
+      expect(Array.isArray((result as any).errors)).toBe(true);
+      expect((result as any).failureCount).toBe((result as any).errors.length);
+      expect((result as any).status).toBe('error');
     });
 
     it('should include failure metadata', async () => {
@@ -549,11 +546,9 @@ describe('Validator', () => {
         data: { email: 'invalid' },
       });
 
-      if (!result.success) {
-        expect(result.failedAt).toBeDefined();
-        expect(result.duration).toBeDefined();
-        expect(result.message).toBeDefined();
-      }
+      expect((result as any).failedAt).toBeDefined();
+      expect((result as any).duration).toBeDefined();
+      expect((result as any).message).toBeDefined();
     });
   });
 
@@ -650,14 +645,14 @@ describe('Validator', () => {
       // FileName might pass for paths, depends on implementation
     });
 
-    /* it("should validate PhoneNumber rule", async () => {
+    it('should validate PhoneNumber rule', async () => {
       const pass = await Validator.validate({
         rules: [],
-        value: "+16505550123",
+        value: '+16505550123',
       });
 
       expect(pass.success).toBe(true);
-    }); */
+    });
 
     it('should validate EmailOrPhoneNumber rule', async () => {
       const email = await Validator.validate({

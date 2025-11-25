@@ -1187,7 +1187,7 @@ export class ResourcesManager {
     metaData.name = isNonNullString(metaData?.name)
       ? metaData.name
       : resourceName;
-    allOptions[resourceName] = metaData;
+    (allOptions as any)[resourceName] = metaData;
     Reflect.defineMetadata(resourcesMetaDataKey, allOptions, ResourcesManager);
   }
   /**

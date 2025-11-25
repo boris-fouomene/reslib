@@ -1,6 +1,7 @@
 import js from '@eslint/js';
 import tseslint from '@typescript-eslint/eslint-plugin';
 import tsparser from '@typescript-eslint/parser';
+import jest from 'eslint-plugin-jest';
 
 export default [
   js.configs.recommended,
@@ -38,7 +39,8 @@ export default [
     },
   },
   {
-    files: ['src/**/*.test.{ts,tsx}', 'src/**/tests/**/*.{ts,tsx}'],
+    files: ['src/**/*.test.{ts,tsx,js}', 'src/**/tests/**/*.{ts,tsx,js}'],
+    ...jest.configs['flat/recommended'],
     languageOptions: {
       parser: tsparser,
       parserOptions: {
@@ -46,15 +48,7 @@ export default [
         sourceType: 'module',
       },
       globals: {
-        describe: 'readonly',
-        it: 'readonly',
-        test: 'readonly',
-        expect: 'readonly',
-        beforeAll: 'readonly',
-        beforeEach: 'readonly',
-        afterAll: 'readonly',
-        afterEach: 'readonly',
-        jest: 'readonly',
+        ...jest.configs['flat/recommended'].languageOptions?.globals,
         window: 'readonly',
         document: 'readonly',
         console: 'readonly',
@@ -72,13 +66,17 @@ export default [
       },
     },
     plugins: {
+      ...jest.configs['flat/recommended'].plugins,
       '@typescript-eslint': tseslint,
     },
     rules: {
+      ...jest.configs['flat/recommended'].rules,
       ...tseslint.configs.recommended.rules,
       // Relax rules for tests
       '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-unused-vars': 'off',
+      // Jest plugin handles unused vars in test contexts
+      'no-unused-vars': 'off',
     },
   },
   {
