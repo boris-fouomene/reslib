@@ -28,6 +28,7 @@ import {
   ValidatorRules,
   ValidatorSanitizedRuleObject,
   ValidatorSanitizedRules,
+  ValidatorTupleAllowsEmpty,
   ValidatorValidateFailure,
   ValidatorValidateMultiRuleOptions,
   ValidatorValidateOptions,
@@ -3134,19 +3135,35 @@ export class Validator {
    * @see {@link registerRule} - Alternative way to create reusable rules
    * @public
    */
+  /**
+   * ## Helper: Normalize Rule Parameters
+   * Ensures rule parameters are always in array format for consistent processing
+   * @private
+   */
+  private static normalizeRuleParams<TRuleParams extends ValidatorRuleParams>(
+    params: TRuleParams
+  ): TRuleParams {
+    return (Array.isArray(params) ? params : [params]) as TRuleParams;
+  }
+
   static buildRuleDecorator<
     TRuleParams extends ValidatorRuleParams = ValidatorRuleParams,
     Context = unknown,
   >(ruleFunction: ValidatorRuleFunction<TRuleParams, Context>) {
-    return function (ruleParameters: TRuleParams) {
+    return function (
+      ruleParameters: ValidatorTupleAllowsEmpty<TRuleParams> extends true
+        ? TRuleParams
+        : TRuleParams
+    ) {
+      const finalRuleParameters =
+        ruleParameters ?? ([] as unknown as TRuleParams);
       const enhancedValidatorFunction: ValidatorRuleFunction<
         TRuleParams,
         Context
       > = function (validationOptions) {
         const enhancedOptions = Object.assign({}, validationOptions);
-        enhancedOptions.ruleParams = (
-          Array.isArray(ruleParameters) ? ruleParameters : [ruleParameters]
-        ) as TRuleParams;
+        enhancedOptions.ruleParams =
+          Validator.normalizeRuleParams(finalRuleParameters);
         return ruleFunction(enhancedOptions);
       };
 
@@ -3158,9 +3175,8 @@ export class Validator {
 
         // Store the rule parameters so they can be retrieved by inspection methods
         // This is particularly important for ValidateNested to access the target class
-        const normalizedParams = (
-          Array.isArray(ruleParameters) ? ruleParameters : [ruleParameters]
-        ) as TRuleParams;
+        const normalizedParams =
+          Validator.normalizeRuleParams(finalRuleParameters);
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (enhancedValidatorFunction as any)[VALIDATOR_NESTED_RULE_PARAMS] =
           normalizedParams;
