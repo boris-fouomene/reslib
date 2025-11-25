@@ -203,7 +203,11 @@ describe('isEmail', () => {
     });
 
     test('should handle maximum domain length (255 chars)', () => {
-      const domain = 'a'.repeat(240) + '.com';
+      // Create a domain with multiple labels, each ≤ 63 chars, total approaching 255 chars
+      const label = 'a'.repeat(60); // 60 chars per label to stay under 255 total
+      const domain = `${label}.${label}.${label}.${label}.com`;
+      // Total length: 60*4 + 3 dots + 4 (.com) = 240 + 3 + 4 = 247 chars
+      expect(domain.length).toBeLessThanOrEqual(255);
       expect(isEmail(`user@${domain}`)).toBe(true);
     });
 
