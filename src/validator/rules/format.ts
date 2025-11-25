@@ -4,7 +4,7 @@ import { defaultStr } from '@utils/defaultStr';
 import { isEmail } from '@utils/isEmail';
 import { isNonNullString } from '@utils/isNonNullString';
 import { isUrl } from '@utils/uri';
-import { IValidatorResult, IValidatorValidateOptions } from '../types';
+import { ValidatorResult, ValidatorValidateOptions } from '../types';
 import { Validator } from '../validator';
 
 /**
@@ -103,7 +103,7 @@ Validator.registerRule('Url', function Url(options) {
 });
 
 function phoneNumber(
-  options: IValidatorValidateOptions<[countryCode?: CountryCode]>
+  options: ValidatorValidateOptions<[countryCode?: CountryCode]>
 ) {
   const { value, phoneCountryCode, i18n, ruleParams } = options;
   const message = i18n.t('validator.phoneNumber', options);
@@ -138,7 +138,7 @@ export const IsPhoneNumber =
     phoneNumber
   );
 
-function emailOrPhoneNumber(options: IValidatorValidateOptions) {
+function emailOrPhoneNumber(options: ValidatorValidateOptions) {
   const { value, phoneCountryCode, i18n } = options;
   return (
     isEmail(value) ||
@@ -219,7 +219,7 @@ function _UUID({
   translatedPropertyName,
   i18n,
   ...rest
-}: IValidatorValidateOptions): IValidatorResult {
+}: ValidatorValidateOptions): ValidatorResult {
   return new Promise((resolve, reject) => {
     if (typeof value !== 'string') {
       const message = i18n.t('validator.uuid', {
@@ -277,7 +277,7 @@ function _JSON({
   translatedPropertyName,
   i18n,
   ...rest
-}: IValidatorValidateOptions): IValidatorResult {
+}: ValidatorValidateOptions): ValidatorResult {
   return new Promise((resolve, reject) => {
     if (typeof value !== 'string') {
       const message = i18n.t('validator.json', {
@@ -333,7 +333,7 @@ function _Base64({
   translatedPropertyName,
   i18n,
   ...rest
-}: IValidatorValidateOptions): IValidatorResult {
+}: ValidatorValidateOptions): ValidatorResult {
   return new Promise((resolve, reject) => {
     if (typeof value !== 'string') {
       const message = i18n.t('validator.base64', {
@@ -389,7 +389,7 @@ function _HexColor({
   translatedPropertyName,
   i18n,
   ...rest
-}: IValidatorValidateOptions): IValidatorResult {
+}: ValidatorValidateOptions): ValidatorResult {
   return new Promise((resolve, reject) => {
     if (typeof value !== 'string') {
       const message = i18n.t('validator.hexColor', {
@@ -446,7 +446,7 @@ function _CreditCard({
   translatedPropertyName,
   i18n,
   ...rest
-}: IValidatorValidateOptions): IValidatorResult {
+}: ValidatorValidateOptions): ValidatorResult {
   return new Promise((resolve, reject) => {
     if (typeof value !== 'string') {
       const message = i18n.t('validator.creditCard', {
@@ -532,7 +532,7 @@ function _IsIP({
   translatedPropertyName,
   i18n,
   ...rest
-}: IValidatorValidateOptions<string[]>): IValidatorResult {
+}: ValidatorValidateOptions<string[]>): ValidatorResult {
   return new Promise((resolve, reject) => {
     if (typeof value !== 'string') {
       const message = i18n.t('validator.ip', {
@@ -620,7 +620,7 @@ function _MACAddress({
   translatedPropertyName,
   i18n,
   ...rest
-}: IValidatorValidateOptions): IValidatorResult {
+}: ValidatorValidateOptions): ValidatorResult {
   return new Promise((resolve, reject) => {
     if (typeof value !== 'string') {
       const message = i18n.t('validator.macAddress', {
@@ -678,9 +678,9 @@ function _Matches({
   translatedPropertyName,
   i18n,
   ...rest
-}: IValidatorValidateOptions<
+}: ValidatorValidateOptions<
   [rule: RegExp, errorMessage?: string]
->): IValidatorResult {
+>): ValidatorResult {
   if (typeof value !== 'string') {
     const message = i18n.t('validator.regex', {
       field: translatedPropertyName || fieldName,
@@ -751,7 +751,7 @@ export const Matches =
   Validator.buildRuleDecorator<[rule: RegExp, errorMessage?: string]>(_Matches);
 
 declare module '../types' {
-  export interface IValidatorRulesMap<Context = unknown> {
+  export interface ValidatorRuleParamTypes {
     /**
      * ### UUID Rule
      *
@@ -800,7 +800,7 @@ declare module '../types' {
      *
      * @public
      */
-    UUID: IValidatorRuleParams<[], Context>;
+    UUID: ValidatorRuleParams<[]>;
 
     /**
      * ### JSON Rule
@@ -845,7 +845,7 @@ declare module '../types' {
      *
      * @public
      */
-    JSON: IValidatorRuleParams<[], Context>;
+    JSON: ValidatorRuleParams<[]>;
 
     /**
      * ### Base64 Rule
@@ -890,7 +890,7 @@ declare module '../types' {
      *
      * @public
      */
-    Base64: IValidatorRuleParams<[], Context>;
+    Base64: ValidatorRuleParams<[]>;
 
     /**
      * ### HexColor Rule
@@ -950,7 +950,7 @@ declare module '../types' {
      *
      * @public
      */
-    HexColor: IValidatorRuleParams<[], Context>;
+    HexColor: ValidatorRuleParams<[]>;
 
     /**
      * ### CreditCard Rule
@@ -1000,7 +1000,7 @@ declare module '../types' {
      *
      * @public
      */
-    CreditCard: IValidatorRuleParams<[], Context>;
+    CreditCard: ValidatorRuleParams<[]>;
 
     /**
      * ### IP Rule
@@ -1064,7 +1064,7 @@ declare module '../types' {
      *
      * @public
      */
-    IP: IValidatorRuleParams<string[], Context>;
+    IP: ValidatorRuleParams<string[]>;
 
     /**
      * ### MACAddress Rule
@@ -1119,7 +1119,7 @@ declare module '../types' {
      *
      * @public
      */
-    MACAddress: IValidatorRuleParams<[], Context>;
+    MACAddress: ValidatorRuleParams<[]>;
 
     /**
      * ### Matches Rule
@@ -1172,6 +1172,6 @@ declare module '../types' {
      *
      * @public
      */
-    Matches: IValidatorRuleParams<string[], Context>;
+    Matches: ValidatorRuleParams<string[]>;
   }
 }

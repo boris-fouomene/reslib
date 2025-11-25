@@ -1,4 +1,5 @@
-import { IValidatorValidateOptions } from '../types';
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import { ValidatorValidateOptions } from '../types';
 import { Validator } from '../validator';
 
 function _Array({
@@ -7,7 +8,7 @@ function _Array({
   translatedPropertyName,
   i18n,
   ...rest
-}: IValidatorValidateOptions): boolean | string {
+}: ValidatorValidateOptions): boolean | string {
   if (Array.isArray(value)) {
     return true;
   } else {
@@ -53,7 +54,7 @@ function _ArrayMinLength({
   translatedPropertyName,
   i18n,
   ...rest
-}: IValidatorValidateOptions<number[]>): boolean | string {
+}: ValidatorValidateOptions<number[]>): boolean | string {
   if (!Array.isArray(value)) {
     const message = i18n.t('validator.array', {
       field: translatedPropertyName || fieldName,
@@ -123,7 +124,7 @@ function _ArrayMaxLength({
   translatedPropertyName,
   i18n,
   ...rest
-}: IValidatorValidateOptions<number[]>): boolean | string {
+}: ValidatorValidateOptions<number[]>): boolean | string {
   if (!Array.isArray(value)) {
     const message = i18n.t('validator.array', {
       field: translatedPropertyName || fieldName,
@@ -193,7 +194,7 @@ function _ArrayLength({
   translatedPropertyName,
   i18n,
   ...rest
-}: IValidatorValidateOptions<number[]>): boolean | string {
+}: ValidatorValidateOptions<number[]>): boolean | string {
   if (!Array.isArray(value)) {
     const message = i18n.t('validator.array', {
       field: translatedPropertyName || fieldName,
@@ -262,7 +263,8 @@ function _ArrayContains({
   translatedPropertyName,
   i18n,
   ...rest
-}: IValidatorValidateOptions<any[]>): boolean | string {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+}: ValidatorValidateOptions<any[]>): boolean | string {
   if (!Array.isArray(value)) {
     const message = i18n.t('validator.arrayContains', {
       field: translatedPropertyName || fieldName,
@@ -332,6 +334,7 @@ Validator.registerRule('ArrayContains', _ArrayContains);
  * @public
  */
 export const ArrayContains =
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   Validator.buildRuleDecorator<any[]>(_ArrayContains);
 
 function _ArrayUnique({
@@ -340,7 +343,7 @@ function _ArrayUnique({
   translatedPropertyName,
   i18n,
   ...rest
-}: IValidatorValidateOptions): boolean | string {
+}: ValidatorValidateOptions): boolean | string {
   if (!Array.isArray(value)) {
     const message = i18n.t('validator.arrayUnique', {
       field: translatedPropertyName || fieldName,
@@ -411,7 +414,7 @@ function _ArrayAllStrings({
   translatedPropertyName,
   i18n,
   ...rest
-}: IValidatorValidateOptions): boolean | string {
+}: ValidatorValidateOptions): boolean | string {
   if (!Array.isArray(value)) {
     return i18n.t('validator.array', {
       field: translatedPropertyName || fieldName,
@@ -440,7 +443,7 @@ function _ArrayAllNumbers({
   translatedPropertyName,
   i18n,
   ...rest
-}: IValidatorValidateOptions): boolean | string {
+}: ValidatorValidateOptions): boolean | string {
   if (!Array.isArray(value)) {
     return i18n.t('validator.array', {
       field: translatedPropertyName || fieldName,
@@ -527,7 +530,7 @@ export const ArrayAllNumbers = Validator.buildPropertyDecorator([
 ]);
 
 declare module '../types' {
-  export interface IValidatorRulesMap<Context = unknown> {
+  export interface ValidatorRuleParamTypes {
     /**
      * ### Array Rule
      *
@@ -571,7 +574,7 @@ declare module '../types' {
      *
      * @public
      */
-    Array: IValidatorRuleParams<[], Context>;
+    Array: ValidatorRuleParams<[]>;
 
     /**
      * ### ArrayMinLength Rule
@@ -619,7 +622,7 @@ declare module '../types' {
      *
      * @public
      */
-    ArrayMinLength: IValidatorRuleParams<[minLength: number], Context>;
+    ArrayMinLength: ValidatorRuleParams<[minLength: number]>;
 
     /**
      * ### ArrayMaxLength Rule
@@ -667,7 +670,7 @@ declare module '../types' {
      *
      * @public
      */
-    ArrayMaxLength: IValidatorRuleParams<[maxLength: number], Context>;
+    ArrayMaxLength: ValidatorRuleParams<[maxLength: number]>;
 
     /**
      * ### ArrayLength Rule
@@ -720,7 +723,7 @@ declare module '../types' {
      *
      * @public
      */
-    ArrayLength: IValidatorRuleParams<[length: number], Context>;
+    ArrayLength: ValidatorRuleParams<[length: number]>;
 
     /**
      * ### ArrayContains Rule
@@ -768,7 +771,7 @@ declare module '../types' {
      *
      * @public
      */
-    ArrayContains: IValidatorRuleParams<any[], Context>;
+    ArrayContains: ValidatorRuleParams<any[]>;
 
     /**
      * ### ArrayUnique Rule
@@ -817,7 +820,7 @@ declare module '../types' {
      *
      * @public
      */
-    ArrayUnique: IValidatorRuleParams<[], Context>;
+    ArrayUnique: ValidatorRuleParams<[]>;
 
     /**
      * ### ArrayAllStrings Rule
@@ -842,7 +845,7 @@ declare module '../types' {
      *
      * @public
      */
-    ArrayAllStrings: IValidatorRuleParams<[], Context>;
+    ArrayAllStrings: ValidatorRuleParams<[]>;
 
     /**
      * ### ArrayAllNumbers Rule
@@ -868,6 +871,6 @@ declare module '../types' {
      *
      * @public
      */
-    ArrayAllNumbers: IValidatorRuleParams<[], Context>;
+    ArrayAllNumbers: ValidatorRuleParams<[]>;
   }
 }

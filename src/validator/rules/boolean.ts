@@ -1,5 +1,5 @@
 import { defaultStr } from '@/utils';
-import { IValidatorResult, IValidatorValidateOptions } from '../types';
+import { ValidatorResult, ValidatorValidateOptions } from '../types';
 import { Validator } from '../validator';
 
 function _Boolean({
@@ -8,7 +8,7 @@ function _Boolean({
   translatedPropertyName,
   i18n,
   ...rest
-}: IValidatorValidateOptions): IValidatorResult {
+}: ValidatorValidateOptions): ValidatorResult {
   return new Promise((resolve, reject) => {
     const validBooleans = [true, false, 1, 0, '1', '0'];
     // Handle string Boolean values case-insensitively
@@ -67,7 +67,7 @@ export const IsBoolean = Validator.buildPropertyDecorator(['Boolean']);
 Validator.registerRule('Boolean', _Boolean);
 
 declare module '../types' {
-  export interface IValidatorRulesMap<Context = unknown> {
+  export interface ValidatorRuleParamTypes {
     /**
      * ### Boolean Rule
      *
@@ -113,6 +113,6 @@ declare module '../types' {
      *
      * @public
      */
-    Boolean: IValidatorRuleParams<[], Context>;
+    Boolean: ValidatorRuleParams<[]>;
   }
 }

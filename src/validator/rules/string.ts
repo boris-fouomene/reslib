@@ -2,7 +2,7 @@ import { defaultStr } from '@utils/defaultStr';
 import { isEmpty } from '@utils/isEmpty';
 import { isNonNullString } from '@utils/isNonNullString';
 import { isNumber } from '@utils/isNumber';
-import { IValidatorResult, IValidatorValidateOptions } from '../types';
+import { ValidatorResult, ValidatorValidateOptions } from '../types';
 import { Validator } from '../validator';
 import { toNumber } from './utils';
 
@@ -50,7 +50,7 @@ export const IsNonNullString = Validator.buildPropertyDecorator([
   'NonNullString',
 ]);
 
-function stringLength({ value, ruleParams, i18n }: IValidatorValidateOptions) {
+function stringLength({ value, ruleParams, i18n }: ValidatorValidateOptions) {
   ruleParams = Array.isArray(ruleParams) ? ruleParams : [];
   value = defaultStr(value);
   const minLength = toNumber(ruleParams[0]);
@@ -71,7 +71,7 @@ function stringLength({ value, ruleParams, i18n }: IValidatorValidateOptions) {
 }
 Validator.registerRule('Length', stringLength);
 
-function minLength(options: IValidatorValidateOptions) {
+function minLength(options: ValidatorValidateOptions) {
   let { value, ruleParams, i18n } = options;
   ruleParams = Array.isArray(ruleParams) ? ruleParams : [];
   const mLength = parseFloat(ruleParams[0]) || 0;
@@ -94,7 +94,7 @@ Validator.registerRule('MinLength', minLength);
  * This rule ensures that the input string has at least the specified number of characters.
  *
  * ### Parameters:
- * - **options**: `IValidatorValidateOptions` - An object containing:
+ * - **options**: `ValidatorValidateOptions` - An object containing:
  *   - `value`: The string value to validate.
  *   - `ruleParams`: An array where the first element specifies the minimum length required.
  *
@@ -118,7 +118,7 @@ Validator.registerRule('MinLength', minLength);
 export const MinLength =
   Validator.buildRuleDecorator<[minLength: number]>(minLength);
 
-function maxLength(options: IValidatorValidateOptions) {
+function maxLength(options: ValidatorValidateOptions) {
   let { value, ruleParams, i18n } = options;
   ruleParams = Array.isArray(ruleParams) ? ruleParams : [];
   const mLength = parseFloat(ruleParams[0]) || 0;
@@ -141,7 +141,7 @@ Validator.registerRule('MaxLength', maxLength);
  * This rule ensures that the input string has at most the specified number of characters.
  * 
  * ### Parameters:
- * - **options**: `IValidatorValidateOptions` - An object containing:
+ * - **options**: `ValidatorValidateOptions` - An object containing:
  *   - `value`: The string value to validate.
  *   - `ruleParams`: An array where the first element specifies the maximum length allowed.
  * 
@@ -178,7 +178,7 @@ Validator.registerRule('NonNullString', function NonNullString(options) {
  * falls within a specified range or matches a specific length.
  *
  * ### Parameters:
- * - **options**: `IValidatorValidateOptions` - An object containing:
+ * - **options**: `ValidatorValidateOptions` - An object containing:
  *   - `value`: The string value to validate.
  *   - `ruleParams`: An array where:
  *     - The first element specifies the minimum length (optional).
@@ -219,7 +219,7 @@ function _EndsWith({
   translatedPropertyName,
   i18n,
   ...rest
-}: IValidatorValidateOptions<string[]>): IValidatorResult {
+}: ValidatorValidateOptions<string[]>): ValidatorResult {
   return new Promise((resolve, reject) => {
     if (typeof value !== 'string') {
       const message = i18n.t('validator.endsWithOneOf', {
@@ -294,7 +294,7 @@ function _StartsWith({
   translatedPropertyName,
   i18n,
   ...rest
-}: IValidatorValidateOptions<string[]>): IValidatorResult {
+}: ValidatorValidateOptions<string[]>): ValidatorResult {
   return new Promise((resolve, reject) => {
     if (typeof value !== 'string') {
       const message = i18n.t('validator.startsWithOneOf', {
@@ -343,7 +343,7 @@ function _String({
   translatedPropertyName,
   i18n,
   ...rest
-}: IValidatorValidateOptions): IValidatorResult {
+}: ValidatorValidateOptions): ValidatorResult {
   return typeof value === 'string'
     ? true
     : i18n.t('validator.string', {
@@ -382,7 +382,7 @@ Validator.registerRule('String', _String);
 export const IsString = Validator.buildPropertyDecorator<[]>(['String']);
 
 declare module '../types' {
-  export interface IValidatorRulesMap<Context = unknown> {
+  export interface ValidatorRuleParamTypes {
     /**
      * ### String Rule
      *
@@ -436,7 +436,7 @@ declare module '../types' {
      *
      * @public
      */
-    String: IValidatorRuleParams<[], Context>;
+    String: ValidatorRuleParams<[]>;
 
     /**
      * ### StartsWithOneOf Rule
@@ -482,7 +482,7 @@ declare module '../types' {
      *
      * @public
      */
-    StartsWithOneOf: IValidatorRuleParams<string[], Context>;
+    StartsWithOneOf: ValidatorRuleParams<string[]>;
 
     /**
      * ### Ends With Rule
@@ -528,6 +528,6 @@ declare module '../types' {
      *
      * @public
      */
-    EndsWithOneOf: IValidatorRuleParams<string[], Context>;
+    EndsWithOneOf: ValidatorRuleParams<string[]>;
   }
 }

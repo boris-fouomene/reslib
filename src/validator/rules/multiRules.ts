@@ -176,7 +176,7 @@ import { Validator } from '../validator';
  * @see {@link Validator.validateOneOfRule} - The underlying validation method
  * @see {@link Validator.buildMultiRuleDecorator} - Factory method that creates this decorator
  * @see {@link Validator.validateTarget} - For class-based validation using decorators
- * @see {@link IValidatorValidateMultiRuleOptions} - Type definition for validation options
+ * @see {@link ValidatorValidateMultiRuleOptions} - Type definition for validation options
  *
  * @public
  * @decorator

@@ -9,7 +9,7 @@ import {
   MaxLength,
   MinLength,
 } from '../index';
-import { IValidatorRule } from '../types';
+import { ValidatorRule } from '../types';
 
 import { Validator } from '../validator';
 import { AllOf } from './multiRules';
@@ -601,7 +601,7 @@ describe('AllOf Validation Rules', () => {
 
     describe('Factory Immutability', () => {
       it('should not modify original rule params', async () => {
-        const originalRules: IValidatorRule[] = ['Required', 'Email'];
+        const originalRules: ValidatorRule[] = ['Required', 'Email'];
         const rule = Validator.allOf(originalRules);
 
         await rule({

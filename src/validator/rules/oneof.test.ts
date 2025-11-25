@@ -1,6 +1,6 @@
 import { i18n } from '../../i18n';
 import { ensureRulesRegistered } from '../index';
-import { IValidatorRule } from '../types';
+import { ValidatorRule } from '../types';
 
 import { Validator } from '../validator';
 import { OneOf } from './multiRules';
@@ -536,7 +536,7 @@ describe('OneOf Validation Rules', () => {
 
     describe('Factory Immutability', () => {
       it('should not modify original rule params', async () => {
-        const originalRules: IValidatorRule[] = ['Email', 'PhoneNumber'];
+        const originalRules: ValidatorRule[] = ['Email', 'PhoneNumber'];
         const rule = Validator.oneOf(originalRules);
 
         await rule({

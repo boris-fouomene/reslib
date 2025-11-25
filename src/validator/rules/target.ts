@@ -1,4 +1,4 @@
-import { Validator } from "../validator";
+import { Validator } from '../validator';
 
 /**
  * ValidateNested Decorator - Property decorator for validating nested class objects
@@ -85,7 +85,7 @@ import { Validator } from "../validator";
  * @param options - Configuration object containing the target class constructor
  *   The nested class must have validation decorators to be useful
  *
- * @returns Promise<IValidatorValidateTargetResult> containing:
+ * @returns Promise<ValidatorValidateTargetResult> containing:
  *   - isValid: boolean indicating if validation passed
  *   - errors: object mapping field names to error arrays (includes nested path info)
  *   - data: the original validated data on success
@@ -142,7 +142,7 @@ const validateNestedFunction = function ValidateNested(options: any) {
 };
 
 // Mark it with a symbol so it can be reliably identified even in minified code
-(validateNestedFunction as any)[Symbol.for("validatorNestedRuleMarker")] = true;
+(validateNestedFunction as any)[Symbol.for('validatorNestedRuleMarker')] = true;
 
 // Create a wrapper decorator that captures the target class
 export const ValidateNested = Validator.buildTargetRuleDecorator(

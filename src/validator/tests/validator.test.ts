@@ -1,6 +1,6 @@
 import { i18n } from '../../i18n';
 import { Validator } from '../index';
-import { IValidatorRuleFunction, IValidatorRuleName } from '../types';
+import { ValidatorRuleFunction, ValidatorRuleName } from '../types';
 
 describe('Validator', () => {
   beforeAll(async () => {
@@ -10,20 +10,20 @@ describe('Validator', () => {
   describe('registerRule', () => {
     it('should register a new validation rule', () => {
       const ruleName = 'isEven';
-      const ruleFunction: IValidatorRuleFunction = ({ value }) =>
+      const ruleFunction: ValidatorRuleFunction = ({ value }) =>
         value % 2 === 0 || 'The number must be even.';
 
-      Validator.registerRule(ruleName as IValidatorRuleName, ruleFunction);
+      Validator.registerRule(ruleName as ValidatorRuleName, ruleFunction);
 
       const rules = Validator.getRules();
-      expect(rules[ruleName as IValidatorRuleName]).toBe(ruleFunction);
+      expect(rules[ruleName as ValidatorRuleName]).toBe(ruleFunction);
     });
   });
 
   describe('getRule', () => {
     it('should retrieve a registered validation rule by name', () => {
-      const ruleName = 'isEven' as IValidatorRuleName;
-      const ruleFunction: IValidatorRuleFunction = ({ value }) =>
+      const ruleName = 'isEven' as ValidatorRuleName;
+      const ruleFunction: ValidatorRuleFunction = ({ value }) =>
         value % 2 === 0 || 'The number must be even.';
 
       Validator.registerRule(ruleName, ruleFunction);
@@ -34,7 +34,7 @@ describe('Validator', () => {
 
     it('should return undefined for a non-existent rule', () => {
       const retrievedRule = Validator.findRegisteredRule(
-        'nonExistentRule' as IValidatorRuleName
+        'nonExistentRule' as ValidatorRuleName
       );
       expect(retrievedRule).toBeUndefined();
     });
@@ -73,7 +73,7 @@ describe('Validator', () => {
     });
 
     it('should sanitize a function rule', () => {
-      const ruleFunction: IValidatorRuleFunction = ({ value }) =>
+      const ruleFunction: ValidatorRuleFunction = ({ value }) =>
         value !== null || 'Value cannot be null';
       const sanitizedRules = Validator.parseAndValidateRules([ruleFunction]);
       expect(sanitizedRules).toEqual({
@@ -92,9 +92,9 @@ describe('Validator', () => {
   describe('validate - Either Pattern (Success Cases)', () => {
     it('should return success result for valid custom rule', async () => {
       const ruleName = 'isEven';
-      const ruleFunction: IValidatorRuleFunction = ({ value }) =>
+      const ruleFunction: ValidatorRuleFunction = ({ value }) =>
         value % 2 === 0 || 'The number must be even.';
-      Validator.registerRule(ruleName as IValidatorRuleName, ruleFunction);
+      Validator.registerRule(ruleName as ValidatorRuleName, ruleFunction);
 
       const result = await Validator.validate({
         rules: ['isEven' as any],

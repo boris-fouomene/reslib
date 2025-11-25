@@ -1,5 +1,5 @@
 import { Primitive } from '@/types';
-import { IValidatorResult, IValidatorValidateOptions } from '../types';
+import { ValidatorResult, ValidatorValidateOptions } from '../types';
 import { Validator } from '../validator';
 
 function _IsEnum<T extends Primitive = Primitive>({
@@ -9,7 +9,7 @@ function _IsEnum<T extends Primitive = Primitive>({
   translatedPropertyName,
   i18n,
   ...rest
-}: IValidatorValidateOptions<Array<T>>): IValidatorResult {
+}: ValidatorValidateOptions<Array<T>>): ValidatorResult {
   if (!ruleParams || !ruleParams.length) {
     const message = i18n.t('validator.invalidRuleParams', {
       rule: 'Enum',
@@ -33,7 +33,7 @@ function _IsEnum<T extends Primitive = Primitive>({
 export const IsEnum = Validator.buildRuleDecorator<Array<Primitive>>(_IsEnum);
 Validator.registerRule('Enum', _IsEnum);
 declare module '../types' {
-  export interface IValidatorRulesMap<Context = unknown> {
+  export interface ValidatorRuleParamTypes {
     /**
      * ### Enum Rule
      *
@@ -46,7 +46,7 @@ declare module '../types' {
      *
      * @public
      */
-    Enum: IValidatorRuleParams<Array<Primitive>, Context>;
+    Enum: ValidatorRuleParams<Array<Primitive>>;
   }
 }
 

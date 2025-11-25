@@ -1,4 +1,4 @@
-import { IValidatorResult, IValidatorValidateOptions } from '../types';
+import { ValidatorResult, ValidatorValidateOptions } from '../types';
 import { Validator } from '../validator';
 
 function _Date({
@@ -7,7 +7,7 @@ function _Date({
   translatedPropertyName,
   i18n,
   ...rest
-}: IValidatorValidateOptions): IValidatorResult {
+}: ValidatorValidateOptions): ValidatorResult {
   return new Promise((resolve, reject) => {
     if (value instanceof Date && !isNaN(value.getTime())) {
       resolve(true);
@@ -65,7 +65,7 @@ function _DateAfter({
   translatedPropertyName,
   i18n,
   ...rest
-}: IValidatorValidateOptions<[string | Date]>): IValidatorResult {
+}: ValidatorValidateOptions<[string | Date]>): ValidatorResult {
   return new Promise((resolve, reject) => {
     if (
       !value ||
@@ -164,7 +164,7 @@ function _DateBefore({
   translatedPropertyName,
   i18n,
   ...rest
-}: IValidatorValidateOptions<[string | Date]>): IValidatorResult {
+}: ValidatorValidateOptions<[string | Date]>): ValidatorResult {
   return new Promise((resolve, reject) => {
     if (
       !value ||
@@ -263,9 +263,7 @@ function _DateBetween({
   translatedPropertyName,
   i18n,
   ...rest
-}: IValidatorValidateOptions<
-  [string | Date, string | Date]
->): IValidatorResult {
+}: ValidatorValidateOptions<[string | Date, string | Date]>): ValidatorResult {
   return new Promise((resolve, reject) => {
     if (
       !value ||
@@ -373,7 +371,7 @@ function _IsSameDate({
   translatedPropertyName,
   i18n,
   ...rest
-}: IValidatorValidateOptions<[string | Date]>): IValidatorResult {
+}: ValidatorValidateOptions<[string | Date]>): ValidatorResult {
   return new Promise((resolve, reject) => {
     if (
       !value ||
@@ -483,7 +481,7 @@ function _IsFutureDate({
   translatedPropertyName,
   i18n,
   ...rest
-}: IValidatorValidateOptions<[]>): IValidatorResult {
+}: ValidatorValidateOptions<[]>): ValidatorResult {
   return new Promise((resolve, reject) => {
     if (
       !value ||
@@ -554,7 +552,7 @@ function _IsPassDate({
   translatedPropertyName,
   i18n,
   ...rest
-}: IValidatorValidateOptions<[]>): IValidatorResult {
+}: ValidatorValidateOptions<[]>): ValidatorResult {
   return new Promise((resolve, reject) => {
     if (
       !value ||
@@ -618,7 +616,7 @@ Validator.registerRule('PastDate', _IsPassDate);
 export const IsPastDate = Validator.buildPropertyDecorator<[]>(['PastDate']);
 
 declare module '../types' {
-  export interface IValidatorRulesMap<Context = unknown> {
+  export interface ValidatorRuleParamTypes {
     /**
      * ### Date Rule
      *
@@ -667,7 +665,7 @@ declare module '../types' {
      *
      * @public
      */
-    Date: IValidatorRuleParams<[], Context>;
+    Date: ValidatorRuleParams<[]>;
 
     /**
      * ### DateAfter Rule
@@ -715,7 +713,7 @@ declare module '../types' {
      *
      * @public
      */
-    DateAfter: IValidatorRuleParams<[date: string | Date], Context>;
+    DateAfter: ValidatorRuleParams<[date: string | Date]>;
 
     /**
      * ### DateBefore Rule
@@ -763,7 +761,7 @@ declare module '../types' {
      *
      * @public
      */
-    DateBefore: IValidatorRuleParams<[date: string | Date], Context>;
+    DateBefore: ValidatorRuleParams<[date: string | Date]>;
 
     /**
      * ### DateBetween Rule
@@ -812,9 +810,8 @@ declare module '../types' {
      *
      * @public
      */
-    DateBetween: IValidatorRuleParams<
-      [minDate: string | Date, maxDate: string | Date],
-      Context
+    DateBetween: ValidatorRuleParams<
+      [minDate: string | Date, maxDate: string | Date]
     >;
 
     /**
@@ -863,7 +860,7 @@ declare module '../types' {
      *
      * @public
      */
-    SameDate: IValidatorRuleParams<[date: string | Date], Context>;
+    SameDate: ValidatorRuleParams<[date: string | Date]>;
 
     /**
      * ### FutureDate Rule
@@ -907,7 +904,7 @@ declare module '../types' {
      *
      * @public
      */
-    FutureDate: IValidatorRuleParams<[], Context>;
+    FutureDate: ValidatorRuleParams<[]>;
 
     /**
      * ### PastDate Rule
@@ -951,6 +948,6 @@ declare module '../types' {
      *
      * @public
      */
-    PastDate: IValidatorRuleParams<[], Context>;
+    PastDate: ValidatorRuleParams<[]>;
   }
 }

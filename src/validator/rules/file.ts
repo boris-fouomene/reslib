@@ -1,4 +1,4 @@
-import { IValidatorResult, IValidatorValidateOptions } from '../types';
+import { ValidatorResult, ValidatorValidateOptions } from '../types';
 import { Validator } from '../validator';
 
 // Type definitions for file objects
@@ -33,7 +33,7 @@ function _IsFile({
   translatedPropertyName,
   i18n,
   ...rest
-}: IValidatorValidateOptions): IValidatorResult {
+}: ValidatorValidateOptions): ValidatorResult {
   return new Promise((resolve, reject) => {
     if (isFileLike(value)) {
       resolve(true);
@@ -79,7 +79,7 @@ function _MaxFileSize({
   translatedPropertyName,
   i18n,
   ...rest
-}: IValidatorValidateOptions<[size: number]>): IValidatorResult {
+}: ValidatorValidateOptions<[size: number]>): ValidatorResult {
   return new Promise((resolve, reject) => {
     if (!isFileLike(value)) {
       const message = i18n.t('validator.fileSize', {
@@ -153,7 +153,7 @@ function _IsFileType({
   translatedPropertyName,
   i18n,
   ...rest
-}: IValidatorValidateOptions<string[]>): IValidatorResult {
+}: ValidatorValidateOptions<string[]>): ValidatorResult {
   return new Promise((resolve, reject) => {
     if (!isFileLike(value)) {
       const message = i18n.t('validator.fileType', {
@@ -231,7 +231,7 @@ function _Image({
   translatedPropertyName,
   i18n,
   ...rest
-}: IValidatorValidateOptions): IValidatorResult {
+}: ValidatorValidateOptions): ValidatorResult {
   return new Promise((resolve, reject) => {
     if (!isFileLike(value)) {
       const message = i18n.t('validator.image', {
@@ -297,7 +297,7 @@ function _IsFileExtension({
   translatedPropertyName,
   i18n,
   ...rest
-}: IValidatorValidateOptions<string[]>): IValidatorResult {
+}: ValidatorValidateOptions<string[]>): ValidatorResult {
   return new Promise((resolve, reject) => {
     if (!isFileLike(value)) {
       const message = i18n.t('validator.fileExtension', {
@@ -375,7 +375,7 @@ function _MinFileSize({
   translatedPropertyName,
   i18n,
   ...rest
-}: IValidatorValidateOptions<[minSize: number]>): IValidatorResult {
+}: ValidatorValidateOptions<[minSize: number]>): ValidatorResult {
   return new Promise((resolve, reject) => {
     if (!isFileLike(value)) {
       const message = i18n.t('validator.minFileSize', {
@@ -443,7 +443,7 @@ export const MinFileSize =
   Validator.buildRuleDecorator<[minSize: number]>(_MinFileSize);
 
 declare module '../types' {
-  export interface IValidatorRulesMap<Context = unknown> {
+  export interface ValidatorRuleParamTypes {
     /**
      * ### File Rule
      *
@@ -482,7 +482,7 @@ declare module '../types' {
      *
      * @public
      */
-    File: IValidatorRuleParams<[], Context>;
+    File: ValidatorRuleParams<[]>;
 
     /**
      * ### MaxFileSize Rule
@@ -525,7 +525,7 @@ declare module '../types' {
      *
      * @public
      */
-    MaxFileSize: IValidatorRuleParams<[size: number], Context>;
+    MaxFileSize: ValidatorRuleParams<[size: number]>;
 
     /**
      * ### FileType Rule
@@ -568,7 +568,7 @@ declare module '../types' {
      *
      * @public
      */
-    FileType: IValidatorRuleParams<string[], Context>;
+    FileType: ValidatorRuleParams<string[]>;
 
     /**
      * ### Image Rule
@@ -612,7 +612,7 @@ declare module '../types' {
      *
      * @public
      */
-    Image: IValidatorRuleParams<[], Context>;
+    Image: ValidatorRuleParams<[]>;
 
     /**
      * ### FileExtension Rule
@@ -655,7 +655,7 @@ declare module '../types' {
      *
      * @public
      */
-    FileExtension: IValidatorRuleParams<string[], Context>;
+    FileExtension: ValidatorRuleParams<string[]>;
 
     /**
      * ### MinFileSize Rule
@@ -698,6 +698,6 @@ declare module '../types' {
      *
      * @public
      */
-    MinFileSize: IValidatorRuleParams<[minSize: number], Context>;
+    MinFileSize: ValidatorRuleParams<[minSize: number]>;
   }
 }
