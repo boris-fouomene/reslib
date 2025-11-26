@@ -6,9 +6,9 @@ import {
   IsNonNullString,
   IsNullable,
   IsNumber,
-  IsNumberDifferentFrom,
-  IsNumberGreaterThan,
-  IsNumberLessThan,
+  IsNumberGT,
+  IsNumberLT,
+  IsNumberNE,
   IsOptional,
   IsRequired,
   IsUrl,
@@ -23,7 +23,7 @@ describe('Validator Rules', () => {
 
   describe('numberLessThanOrEquals 5, and 10', () => {
     it('should validate if the number 5 is less than  or equal to the specified value 10', async () => {
-      const result = await Validator.getRules().NumberLessThanOrEqual({
+      const result = await Validator.getRules().NumberLTE({
         value: 5,
         ruleParams: [10],
         i18n,
@@ -34,7 +34,7 @@ describe('Validator Rules', () => {
 
   describe('numberLessThan', () => {
     it('should validate if the number is less than the specified value', async () => {
-      const result = await Validator.getRules().NumberLessThan({
+      const result = await Validator.getRules().NumberLT({
         value: 5,
         ruleParams: [10],
         i18n,
@@ -43,9 +43,9 @@ describe('Validator Rules', () => {
     });
   });
 
-  describe('NumberGreaterThanOrEqual', () => {
+  describe('NumberGTE', () => {
     it('should validate if the number is greater than or equal to the specified value', async () => {
-      const result = await Validator.getRules().NumberGreaterThanOrEqual({
+      const result = await Validator.getRules().NumberGTE({
         value: 10,
         ruleParams: [5],
         i18n,
@@ -54,9 +54,9 @@ describe('Validator Rules', () => {
     });
   });
 
-  describe('NumberGreaterThan', () => {
+  describe('NumberGT', () => {
     it('should validate if the number is greater than the specified value', async () => {
-      const result = await Validator.getRules().NumberGreaterThan({
+      const result = await Validator.getRules().NumberGT({
         value: 15,
         ruleParams: [10],
         i18n,
@@ -67,7 +67,7 @@ describe('Validator Rules', () => {
 
   describe('numberEquals', () => {
     it('should validate if the number is equal to the specified value', async () => {
-      const result = await Validator.getRules().NumberEqual({
+      const result = await Validator.getRules().NumberEQ({
         value: 10,
         ruleParams: [10],
         i18n,
@@ -78,7 +78,7 @@ describe('Validator Rules', () => {
 
   describe('numberIsDifferentFrom', () => {
     it('should validate if the number is not equal to the specified value', async () => {
-      const result = await Validator.getRules().NumberIsDifferentFrom({
+      const result = await Validator.getRules().NumberNE({
         value: 5,
         ruleParams: [10],
         i18n,
@@ -283,7 +283,7 @@ describe('Validator Rules', () => {
       }
       @IsNumber()
       @Translate('validator.tests.entity.id')
-      @IsNumberDifferentFrom([10])
+      @IsNumberNE([10])
       id?: number;
 
       @IsRequired()
@@ -301,8 +301,8 @@ describe('Validator Rules', () => {
       url?: string;
 
       @IsRequired()
-      @IsNumberLessThan([10])
-      @IsNumberGreaterThan([5])
+      @IsNumberLT([10])
+      @IsNumberGT([5])
       @Translate('validator.tests.entity.note')
       note?: number;
 

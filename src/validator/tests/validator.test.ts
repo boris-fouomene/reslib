@@ -168,9 +168,9 @@ describe('Validator', () => {
       expect(result.value).toBe('https://example.com');
     });
 
-    it('should return success for NumberGreaterThan rule when value is valid', async () => {
+    it('should return success for NumberGT rule when value is valid', async () => {
       const result = await Validator.validate({
-        rules: [{ NumberGreaterThan: [5] }],
+        rules: [{ NumberGT: [5] }],
         value: 10,
       });
 
@@ -178,9 +178,9 @@ describe('Validator', () => {
       expect(result.value).toBe(10);
     });
 
-    it('should return success for NumberLessThan rule when value is valid', async () => {
+    it('should return success for NumberLT rule when value is valid', async () => {
       const result = await Validator.validate({
-        rules: [{ NumberLessThan: [10] }],
+        rules: [{ NumberLT: [10] }],
         value: 5,
       });
 
@@ -293,34 +293,34 @@ describe('Validator', () => {
       expect(result.error?.ruleName).toBe('Url');
     });
 
-    it('should return failure for NumberGreaterThan when value is too small', async () => {
+    it('should return failure for NumberGT when value is too small', async () => {
       const result = await Validator.validate({
-        rules: [{ NumberGreaterThan: [10] }],
+        rules: [{ NumberGT: [10] }],
         value: 5,
       });
 
       expect(result.success).toBe(false);
-      expect(result.error?.ruleName).toBe('NumberGreaterThan');
+      expect(result.error?.ruleName).toBe('NumberGT');
     });
 
-    it('should return failure for NumberLessThan when value is too large', async () => {
+    it('should return failure for NumberLT when value is too large', async () => {
       const result = await Validator.validate({
-        rules: [{ NumberLessThan: [10] }],
+        rules: [{ NumberLT: [10] }],
         value: 15,
       });
 
       expect(result.success).toBe(false);
-      expect(result.error?.ruleName).toBe('NumberLessThan');
+      expect(result.error?.ruleName).toBe('NumberLT');
     });
 
-    it("should return failure for NumberEqual when value doesn't match", async () => {
+    it("should return failure for NumberEQ when value doesn't match", async () => {
       const result = await Validator.validate({
-        rules: [{ NumberEqual: [10] }],
+        rules: [{ NumberEQ: [10] }],
         value: 5,
       });
 
       expect(result.success).toBe(false);
-      expect(result.error?.ruleName).toBe('NumberEqual');
+      expect(result.error?.ruleName).toBe('NumberEQ');
     });
 
     it('should stop at first failing rule in multiple rules', async () => {
@@ -554,14 +554,14 @@ describe('Validator', () => {
   });
 
   describe('validate - Number Rules', () => {
-    it('should validate NumberGreaterThanOrEqual', async () => {
+    it('should validate NumberGTE', async () => {
       const pass = await Validator.validate({
-        rules: [{ NumberGreaterThanOrEqual: [10] }],
+        rules: [{ NumberGTE: [10] }],
         value: 10,
       });
 
       const fail = await Validator.validate({
-        rules: [{ NumberGreaterThanOrEqual: [10] }],
+        rules: [{ NumberGTE: [10] }],
         value: 9,
       });
 
@@ -569,14 +569,14 @@ describe('Validator', () => {
       expect(fail.success).toBe(false);
     });
 
-    it('should validate NumberLessThanOrEqual', async () => {
+    it('should validate NumberLTE', async () => {
       const pass = await Validator.validate({
-        rules: [{ NumberLessThanOrEqual: [10] }],
+        rules: [{ NumberLTE: [10] }],
         value: 10,
       });
 
       const fail = await Validator.validate({
-        rules: [{ NumberLessThanOrEqual: [10] }],
+        rules: [{ NumberLTE: [10] }],
         value: 11,
       });
 
@@ -584,14 +584,14 @@ describe('Validator', () => {
       expect(fail.success).toBe(false);
     });
 
-    it('should validate NumberIsDifferentFrom', async () => {
+    it('should validate NumberNE', async () => {
       const pass = await Validator.validate({
-        rules: [{ NumberIsDifferentFrom: [10] }],
+        rules: [{ NumberNE: [10] }],
         value: 5,
       });
 
       const fail = await Validator.validate({
-        rules: [{ NumberIsDifferentFrom: [10] }],
+        rules: [{ NumberNE: [10] }],
         value: 10,
       });
 

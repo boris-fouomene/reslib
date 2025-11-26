@@ -154,7 +154,7 @@ export const IsDateAfter = Validator.buildRuleDecorator<
     });
     return message;
   }
-});
+}, 'DateAfter');
 
 /**
  * @summary A validation decorator that ensures a date property occurs before a specified reference date.
@@ -251,7 +251,7 @@ export const IsDateBefore = Validator.buildRuleDecorator<
     });
     return message;
   }
-});
+}, 'DateBefore');
 
 /**
  * @summary A validation decorator that ensures a date property falls within a specified date range.
@@ -356,7 +356,7 @@ export const IsDateBetween = Validator.buildRuleDecorator<
     });
     return message;
   }
-});
+}, 'DateBetween');
 
 /**
  * @summary A validation decorator that ensures a date property matches a specific date (ignoring time).
@@ -466,7 +466,7 @@ export const IsSameDate = Validator.buildRuleDecorator<
     });
     return message;
   }
-});
+}, 'SameDate');
 
 /**
  * @summary A validation decorator that ensures a date property is in the future.

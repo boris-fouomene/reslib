@@ -55,18 +55,18 @@ describe('Validator.validate() - Either Pattern Tests', () => {
       expect(result.success).toBe(true);
     });
 
-    it('should pass NumberGreaterThan when value is larger', async () => {
+    it('should pass NumberGT when value is larger', async () => {
       const result = await Validator.validate({
-        rules: [{ NumberGreaterThan: [5] }],
+        rules: [{ NumberGT: [5] }],
         value: 10,
       });
 
       expect(result.success).toBe(true);
     });
 
-    it('should pass NumberLessThan when value is smaller', async () => {
+    it('should pass NumberLT when value is smaller', async () => {
       const result = await Validator.validate({
-        rules: [{ NumberLessThan: [10] }],
+        rules: [{ NumberLT: [10] }],
         value: 5,
       });
 
@@ -118,27 +118,27 @@ describe('Validator.validate() - Either Pattern Tests', () => {
       expect(result.success).toBe(true);
     });
 
-    it('should pass NumberEqual when values match', async () => {
+    it('should pass NumberEQ when values match', async () => {
       const result = await Validator.validate({
-        rules: [{ NumberEqual: [42] }],
+        rules: [{ NumberEQ: [42] }],
         value: 42,
       });
 
       expect(result.success).toBe(true);
     });
 
-    it('should pass NumberGreaterThanOrEqual at boundary', async () => {
+    it('should pass NumberGTE at boundary', async () => {
       const result = await Validator.validate({
-        rules: [{ NumberGreaterThanOrEqual: [10] }],
+        rules: [{ NumberGTE: [10] }],
         value: 10,
       });
 
       expect(result.success).toBe(true);
     });
 
-    it('should pass NumberLessThanOrEqual at boundary', async () => {
+    it('should pass NumberLTE at boundary', async () => {
       const result = await Validator.validate({
-        rules: [{ NumberLessThanOrEqual: [10] }],
+        rules: [{ NumberLTE: [10] }],
         value: 10,
       });
 
@@ -239,34 +239,34 @@ describe('Validator.validate() - Either Pattern Tests', () => {
       expect(result.error?.ruleName).toBe('Url');
     });
 
-    it('should fail NumberGreaterThan when value is too small', async () => {
+    it('should fail NumberGT when value is too small', async () => {
       const result = await Validator.validate({
-        rules: [{ NumberGreaterThan: [10] }],
+        rules: [{ NumberGT: [10] }],
         value: 5,
       });
 
       expect(result.success).toBe(false);
-      expect(result.error?.ruleName).toBe('NumberGreaterThan');
+      expect(result.error?.ruleName).toBe('NumberGT');
     });
 
-    it('should fail NumberLessThan when value is too large', async () => {
+    it('should fail NumberLT when value is too large', async () => {
       const result = await Validator.validate({
-        rules: [{ NumberLessThan: [10] }],
+        rules: [{ NumberLT: [10] }],
         value: 15,
       });
 
       expect(result.success).toBe(false);
-      expect(result.error?.ruleName).toBe('NumberLessThan');
+      expect(result.error?.ruleName).toBe('NumberLT');
     });
 
-    it("should fail NumberEqual when values don't match", async () => {
+    it("should fail NumberEQ when values don't match", async () => {
       const result = await Validator.validate({
-        rules: [{ NumberEqual: [42] }],
+        rules: [{ NumberEQ: [42] }],
         value: 10,
       });
 
       expect(result.success).toBe(false);
-      expect(result.error?.ruleName).toBe('NumberEqual');
+      expect(result.error?.ruleName).toBe('NumberEQ');
     });
 
     it('should fail with invalid rule name', async () => {
@@ -299,18 +299,18 @@ describe('Validator.validate() - Either Pattern Tests', () => {
       expect(result.error?.ruleName).toBe('MinLength');
     });
 
-    it('should fail NumberGreaterThanOrEqual at boundary minus one', async () => {
+    it('should fail NumberGTE at boundary minus one', async () => {
       const result = await Validator.validate({
-        rules: [{ NumberGreaterThanOrEqual: [10] }],
+        rules: [{ NumberGTE: [10] }],
         value: 9,
       });
 
       expect(result.success).toBe(false);
     });
 
-    it('should fail NumberLessThanOrEqual at boundary plus one', async () => {
+    it('should fail NumberLTE at boundary plus one', async () => {
       const result = await Validator.validate({
-        rules: [{ NumberLessThanOrEqual: [10] }],
+        rules: [{ NumberLTE: [10] }],
         value: 11,
       });
 
@@ -408,19 +408,19 @@ describe('Validator.validate() - Either Pattern Tests', () => {
       expect(result.error?.message).toContain('Async rejection');
     });
 
-    it('should fail NumberIsDifferentFrom when values are equal', async () => {
+    it('should fail NumberNE when values are equal', async () => {
       const result = await Validator.validate({
-        rules: [{ NumberIsDifferentFrom: [42] }],
+        rules: [{ NumberNE: [42] }],
         value: 42,
       });
 
       expect(result.success).toBe(false);
-      expect(result.error?.ruleName).toBe('NumberIsDifferentFrom');
+      expect(result.error?.ruleName).toBe('NumberNE');
     });
 
-    it('should pass NumberIsDifferentFrom when values are different', async () => {
+    it('should pass NumberNE when values are different', async () => {
       const result = await Validator.validate({
-        rules: [{ NumberIsDifferentFrom: [42] }],
+        rules: [{ NumberNE: [42] }],
         value: 10,
       });
 
@@ -494,7 +494,7 @@ describe('Validator.validate() - Either Pattern Tests', () => {
 
     it('should validate number range with multiple rules', async () => {
       const result = await Validator.validate({
-        rules: [{ NumberGreaterThan: [0] }, { NumberLessThan: [100] }],
+        rules: [{ NumberGT: [0] }, { NumberLT: [100] }],
         value: 50,
       });
 
@@ -503,7 +503,7 @@ describe('Validator.validate() - Either Pattern Tests', () => {
 
     it('should fail on number range outside lower bound', async () => {
       const result = await Validator.validate({
-        rules: [{ NumberGreaterThan: [0] }, { NumberLessThan: [100] }],
+        rules: [{ NumberGT: [0] }, { NumberLT: [100] }],
         value: -5,
       });
 
@@ -512,7 +512,7 @@ describe('Validator.validate() - Either Pattern Tests', () => {
 
     it('should fail on number range outside upper bound', async () => {
       const result = await Validator.validate({
-        rules: [{ NumberGreaterThan: [0] }, { NumberLessThan: [100] }],
+        rules: [{ NumberGT: [0] }, { NumberLT: [100] }],
         value: 150,
       });
 

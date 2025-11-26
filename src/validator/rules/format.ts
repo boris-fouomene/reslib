@@ -2398,7 +2398,7 @@ export const Matches = Validator.buildRuleDecorator<
     // eslint-disable-next-line no-empty, @typescript-eslint/no-unused-vars
   } catch (error) {}
   return message;
-});
+}, 'Matches');
 
 declare module '../types' {
   export interface ValidatorRuleParamTypes {

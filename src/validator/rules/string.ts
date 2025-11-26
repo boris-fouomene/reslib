@@ -57,7 +57,7 @@ export const MinLength = Validator.buildRuleDecorator<
     (value && typeof value === 'string' && String(value).length >= mLength) ||
     message
   );
-});
+}, 'MinLength');
 
 /**
  * @decorator  MaxLength
@@ -103,7 +103,7 @@ export const MaxLength = Validator.buildRuleDecorator<
     (value && typeof value === 'string' && String(value).length <= mLength) ||
     message
   );
-});
+}, 'MaxLength');
 
 /**
  * ### IsNonNullString Decorator
@@ -209,7 +209,7 @@ export const Length = Validator.buildRuleDecorator<
     return String(value).trim().length == minLength || message;
   }
   return true;
-});
+}, 'Length');
 
 /**
  * ### EndsWithOneOf Rule
@@ -239,7 +239,7 @@ export const Length = Validator.buildRuleDecorator<
  * @public
  */
 export const EndsWithOneOf = Validator.buildRuleDecorator<(string | number)[]>(
-  function _EndsWith({
+  function EndsWithOneOf({
     value,
     ruleParams,
     fieldName,
@@ -282,7 +282,8 @@ export const EndsWithOneOf = Validator.buildRuleDecorator<(string | number)[]>(
         reject(message);
       }
     });
-  }
+  },
+  'EndsWithOneOf'
 );
 
 /**
@@ -379,7 +380,7 @@ export const EndsWithOneOf = Validator.buildRuleDecorator<(string | number)[]>(
  */
 export const StartsWithOneOf = Validator.buildRuleDecorator<
   ValidatorRuleParamTypes['StartsWithOneOf']
->(function _StartsWith({
+>(function StartsWithOneOf({
   value,
   ruleParams,
   fieldName,
@@ -423,7 +424,7 @@ export const StartsWithOneOf = Validator.buildRuleDecorator<
       reject(message);
     }
   });
-});
+}, 'StartsWithOneOf');
 
 /**
  * ### IsString Rule
@@ -452,7 +453,7 @@ export const StartsWithOneOf = Validator.buildRuleDecorator<
  */
 export const IsString = Validator.buildRuleDecorator<
   ValidatorRuleParamTypes['String']
->(function _String({
+>(function String({
   value,
   fieldName,
   translatedPropertyName,

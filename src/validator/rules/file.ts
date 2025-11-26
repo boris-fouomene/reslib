@@ -119,7 +119,7 @@ export const MaxFileSize = Validator.buildRuleDecorator<
     });
     return message;
   }
-});
+}, 'MaxFileSize');
 
 /**
  * @summary A validation decorator that ensures a file has an allowed MIME type.
@@ -195,7 +195,7 @@ export const IsFileType = Validator.buildRuleDecorator<
     });
     return message;
   }
-});
+}, 'FileType');
 
 /**
  * @summary A validation decorator that ensures a file is an image.
@@ -334,7 +334,7 @@ export const IsFileExtension = Validator.buildRuleDecorator<
     });
     return message;
   }
-});
+}, 'FileExtension');
 
 /**
  * @summary A validation decorator that ensures a file meets a minimum size requirement.
@@ -403,7 +403,7 @@ export const MinFileSize = Validator.buildRuleDecorator<
     });
     return message;
   }
-});
+}, 'MinFileSize');
 
 declare module '../types' {
   export interface ValidatorRuleParamTypes {

@@ -18,7 +18,6 @@ import {
   ValidatorMultiRuleFunction,
   ValidatorMultiRuleNames,
   ValidatorNestedRuleFunctionOptions,
-  ValidatorOptionalOrEmptyRuleNames,
   ValidatorResult,
   ValidatorRule,
   ValidatorRuleFunction,
@@ -191,7 +190,7 @@ export class Validator {
     TParams extends ValidatorDefaultArray = ValidatorDefaultArray,
     Context = unknown,
   >(
-    ruleName: ValidatorOptionalOrEmptyRuleNames,
+    ruleName: ValidatorRuleName,
     ruleHandler: ValidatorRuleFunction<TParams, Context>
   ): void {
     if (!isNonNullString(ruleName)) {
@@ -2737,7 +2736,7 @@ export class Validator {
    *
    *   @IsRequired()
    *   @IsNumber()
-   *   @NumberGreaterThan(0)
+   *   @NumberGT(0)
    *   price: number;
    *
    *   @IsEmpty() // Product description can be empty
@@ -3851,7 +3850,6 @@ export class Validator {
    *
    * @param ruleFunction - The validation rule function to be wrapped in a decorator factory.
    * @param ruleName - Optional rule name for automatic registration with `Validator.registerRule()`.
-   *   **Only available for rules where parameters are fully optional** (i.e., rules that can be called without arguments).
    *   This parameter is typed as `ValidatorOptionalOrEmptyRuleNames`, which is a union of rule names
    *   where `ValidatorTupleAllowsEmpty<TRuleParams>` extends `true`. This includes rules like:
    *   - `"Required"` - No parameters needed
@@ -3931,7 +3929,7 @@ export class Validator {
     Context = unknown,
   >(
     ruleFunction: ValidatorRuleFunction<TRuleParams, Context>,
-    ruleName?: ValidatorOptionalOrEmptyRuleNames,
+    ruleName?: ValidatorRuleName,
 
     symbolMarker?: symbol
   ): (...ruleParameters: TRuleParams) => PropertyDecorator {

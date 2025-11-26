@@ -21,7 +21,7 @@ import { Validator } from '../validator';
  *   @IsRequired()
  *   name: string;
  *
- *   @ValidateNested([Address])
+ *   @ValidateNested(Address)
  *   address: Address;
  * }
  *
@@ -47,7 +47,7 @@ import { Validator } from '../validator';
  *
  * class Location {
  *   @IsRequired()
- *   @ValidateNested([Coordinates])
+ *   @ValidateNested(Coordinates)
  *   coordinates: Coordinates;
  * }
  *
@@ -55,7 +55,7 @@ import { Validator } from '../validator';
  *   @IsRequired()
  *   name: string;
  *
- *   @ValidateNested([Location])
+ *   @ValidateNested(Location)
  *   location: Location;
  * }
  * ```
@@ -73,7 +73,7 @@ import { Validator } from '../validator';
  *   name: string;
  *
  *   @IsOptional()
- *   @ValidateNested([Contact])
+ *   @ValidateNested(Contact)
  *   contact?: Contact;
  * }
  *
@@ -136,17 +136,9 @@ import { Validator } from '../validator';
  * @see Validator.buildTargetRuleDecorator - Decorator factory
  * @public
  */
-// Create the base ValidateNested function
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const validateNestedFunction = function ValidateNested(options: any) {
-  return Validator.validateNestedRule(options);
-};
-
-// Mark it with a symbol so it can be reliably identified even in minified code
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-(validateNestedFunction as any)[Symbol.for('validatorNestedRuleMarker')] = true;
-
-// Create a wrapper decorator that captures the target class
 export const ValidateNested = Validator.buildTargetRuleDecorator(
-  validateNestedFunction
+  function ValidateNested(options) {
+    return Validator.validateNestedRule(options);
+  },
+  Symbol.for('validatorNestedRuleMarker')
 );

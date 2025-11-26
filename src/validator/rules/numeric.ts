@@ -42,7 +42,7 @@ function compareNumer(
 }
 
 /**
- * ### IsNumberLessThanOrEqual Decorator
+ * ### IsNumberLTE Decorator
  *
  * Validates that a numeric field has a value less than or equal to a specified maximum.
  * This decorator ensures that input values do not exceed a defined upper limit.
@@ -74,7 +74,7 @@ function compareNumer(
  * #### Basic Usage - Age Validation
  * ```typescript
  * class Person {
- *   @IsNumberLessThanOrEqual(120)
+ *   @IsNumberLTE(120)
  *   age: number; // Must be ≤ 120 years
  * }
  *
@@ -85,10 +85,10 @@ function compareNumer(
  * #### Quantity Limits
  * ```typescript
  * class Order {
- *   @IsNumberLessThanOrEqual(1000)
+ *   @IsNumberLTE(1000)
  *   quantity: number; // Maximum 1000 units per order
  *
- *   @IsNumberLessThanOrEqual(100)
+ *   @IsNumberLTE(100)
  *   discountPercent: number; // Max 100% discount
  * }
  * ```
@@ -96,10 +96,10 @@ function compareNumer(
  * #### Score Validation
  * ```typescript
  * class Exam {
- *   @IsNumberLessThanOrEqual(100)
+ *   @IsNumberLTE(100)
  *   score: number; // Test scores out of 100
  *
- *   @IsNumberLessThanOrEqual(50)
+ *   @IsNumberLTE(50)
  *   bonusPoints: number; // Max 50 bonus points
  * }
  * ```
@@ -107,10 +107,10 @@ function compareNumer(
  * #### Price Ceilings
  * ```typescript
  * class Product {
- *   @IsNumberLessThanOrEqual(999.99)
+ *   @IsNumberLTE(999.99)
  *   price: number; // Maximum retail price
  *
- *   @IsNumberLessThanOrEqual(100)
+ *   @IsNumberLTE(100)
  *   markupPercent: number; // Max 100% markup
  * }
  * ```
@@ -130,9 +130,9 @@ function compareNumer(
  * - Minimal memory allocation
  *
  * ### Related Decorators
- * - {@link IsNumberGreaterThanOrEqual}: Opposite validation (minimum values)
- * - {@link IsNumberLessThan}: Strict less than validation
- * - {@link IsNumberGreaterThan}: Strict greater than validation
+ * - {@link IsNumberGTE}: Opposite validation (minimum values)
+ * - {@link IsNumberLT}: Strict less than validation
+ * - {@link IsNumberGT}: Strict greater than validation
  * - {@link IsNumberBetween}: Range validation
  *
  * ### Implementation Details
@@ -143,8 +143,8 @@ function compareNumer(
  * @decorator
  * @public
  */
-export const IsNumberLessThanOrEqual = Validator.buildRuleDecorator<
-  ValidatorRuleParamTypes['NumberLessThanOrEqual']
+export const IsNumberLTE = Validator.buildRuleDecorator<
+  ValidatorRuleParamTypes['NumberLTE']
 >(function numberLessThanOrEquals(options: ValidatorValidateOptions<[number]>) {
   return compareNumer(
     (value, toCompare) => {
@@ -153,10 +153,10 @@ export const IsNumberLessThanOrEqual = Validator.buildRuleDecorator<
     'validator.numberLessThanOrEquals',
     options
   );
-});
+}, 'NumberLTE');
 
 /**
- * @decorator IsNumberLessThan
+ * @decorator IsNumberLT
  *
  * Validator rule that checks if a given number is less than a specified value.
  * This rule utilizes the `compareNumer` function to perform the comparison and return the result.
@@ -173,7 +173,7 @@ export const IsNumberLessThanOrEqual = Validator.buildRuleDecorator<
  * ### Example Usage:
  * ```typescript
  * class MyClass {
- *     @IsNumberLessThan(10)
+ *     @IsNumberLT(10)
  *     myNumber: number;
  * }
  * ```
@@ -182,8 +182,8 @@ export const IsNumberLessThanOrEqual = Validator.buildRuleDecorator<
  * - This rule is useful for scenarios where you need to ensure that a numeric input is strictly less than a specified limit.
  * - The error message can be customized by modifying the second parameter of the `compareNumer` function.
  */
-export const IsNumberLessThan = Validator.buildRuleDecorator<
-  ValidatorRuleParamTypes['NumberLessThan']
+export const IsNumberLT = Validator.buildRuleDecorator<
+  ValidatorRuleParamTypes['NumberLT']
 >(function numberLessThan(options: ValidatorValidateOptions) {
   return compareNumer(
     (value, toCompare) => {
@@ -192,10 +192,10 @@ export const IsNumberLessThan = Validator.buildRuleDecorator<
     'validator.numberLessThan',
     options
   );
-});
+}, 'NumberLT');
 
 /**
- * @decorator IsNumberGreaterThanOrEqual
+ * @decorator IsNumberGTE
  *
  * Validator rule that checks if a given number is greater than or equal to a specified value.
  * This rule utilizes the `compareNumer` function to perform the comparison and return the result.
@@ -212,7 +212,7 @@ export const IsNumberLessThan = Validator.buildRuleDecorator<
  * ### Example Usage:
  * ```typescript
  * class MyClass {
- *     @IsNumberGreaterThanOrEqual(5)
+ *     @IsNumberGTE(5)
  *     myNumber: number;
  * }
  * ```
@@ -221,8 +221,8 @@ export const IsNumberLessThan = Validator.buildRuleDecorator<
  * - This rule is useful for scenarios where you need to ensure that a numeric input meets or exceeds a specified limit.
  * - The error message can be customized by modifying the second parameter of the `compareNumer` function.
  */
-export const IsNumberGreaterThanOrEqual = Validator.buildRuleDecorator<
-  ValidatorRuleParamTypes['NumberGreaterThanOrEqual']
+export const IsNumberGTE = Validator.buildRuleDecorator<
+  ValidatorRuleParamTypes['NumberGTE']
 >(function numberGreaterThanOrEquals(
   options: ValidatorValidateOptions<[number]>
 ) {
@@ -233,10 +233,10 @@ export const IsNumberGreaterThanOrEqual = Validator.buildRuleDecorator<
     'validator.numberGreaterThanOrEquals',
     options
   );
-});
+}, 'NumberGTE');
 
 /**
- * @decorator IsNumberGreaterThan
+ * @decorator IsNumberGT
  *
  * Validator rule that checks if a given number is greater than a specified value.
  * This rule utilizes the `compareNumer` function to perform the comparison and return the result.
@@ -253,7 +253,7 @@ export const IsNumberGreaterThanOrEqual = Validator.buildRuleDecorator<
  * ### Example Usage:
  * ```typescript
  * class MyClass {
- *     @IsNumberGreaterThan([10])
+ *     @IsNumberGT([10])
  *     myNumber: number;
  * }
  * ```
@@ -262,8 +262,8 @@ export const IsNumberGreaterThanOrEqual = Validator.buildRuleDecorator<
  * - This rule is useful for scenarios where you need to ensure that a numeric input exceeds a specified limit.
  * - The error message can be customized by modifying the second parameter of the `compareNumer` function.
  */
-export const IsNumberGreaterThan = Validator.buildRuleDecorator<
-  ValidatorRuleParamTypes['NumberGreaterThan']
+export const IsNumberGT = Validator.buildRuleDecorator<
+  ValidatorRuleParamTypes['NumberGT']
 >(function numberGreaterThan(options: ValidatorValidateOptions) {
   return compareNumer(
     (value, toCompare) => {
@@ -272,10 +272,10 @@ export const IsNumberGreaterThan = Validator.buildRuleDecorator<
     'validator.numberGreaterThan',
     options
   );
-});
+}, 'NumberGT');
 
 /**
- * @decorator  IsNumberEqual
+ * @decorator  IsNumberEQ
  *
  * Validator rule that checks if a given number is equal to a specified value.
  * This rule utilizes the `compareNumer` function to perform the comparison and return the result.
@@ -292,7 +292,7 @@ export const IsNumberGreaterThan = Validator.buildRuleDecorator<
  * ### Example Usage:
  * ```typescript
  * class MyClass {
- *     @ IsNumberEqual([10])
+ *     @ IsNumberEQ([10])
  *     myNumber: number;
  * }
  * ```
@@ -301,8 +301,8 @@ export const IsNumberGreaterThan = Validator.buildRuleDecorator<
  * - This rule is useful for scenarios where you need to ensure that a numeric input matches a specified value exactly.
  * - The error message can be customized by modifying the second parameter of the `compareNumer` function.
  */
-export const IsNumberEqual = Validator.buildRuleDecorator<
-  ValidatorRuleParamTypes['NumberEqual']
+export const IsNumberEQ = Validator.buildRuleDecorator<
+  ValidatorRuleParamTypes['NumberEQ']
 >(function numberEqualsTo(options: ValidatorValidateOptions<[number]>) {
   return compareNumer(
     (value, toCompare) => {
@@ -311,10 +311,10 @@ export const IsNumberEqual = Validator.buildRuleDecorator<
     'validator.numberEquals',
     options
   );
-});
+}, 'NumberEQ');
 
 /**
- * @decorator IsNumberDifferentFrom
+ * @decorator IsNumberNE
  *
  * Validator rule that checks if a given number is not equal to a specified value.
  * This rule utilizes the `compareNumer` function to perform the comparison and return the result.
@@ -322,13 +322,13 @@ export const IsNumberEqual = Validator.buildRuleDecorator<
  * ### Example Usage:
  * ```typescript
  * class MyClass {
- *     @IsNumberDifferentFrom([10])
+ *     @IsNumberNE([10])
  *     myNumber: number;
  * }
  * ```
  */
-export const IsNumberDifferentFrom = Validator.buildRuleDecorator<
-  ValidatorRuleParamTypes['NumberIsDifferentFrom']
+export const IsNumberNE = Validator.buildRuleDecorator<
+  ValidatorRuleParamTypes['NumberNE']
 >(function numberIsDifferentFromTo(
   options: ValidatorValidateOptions<[number]>
 ) {
@@ -339,7 +339,7 @@ export const IsNumberDifferentFrom = Validator.buildRuleDecorator<
     'validator.numberIsDifferentFrom',
     options
   );
-});
+}, 'NumberNE');
 
 /**
  * ## Pre-Built Validation Decorators
@@ -388,7 +388,7 @@ export const IsNumber = Validator.buildRuleDecorator<
 >(function Number(options) {
   const { value, i18n } = options;
   return typeof value === 'number' || i18n.t('validator.isNumber', options);
-});
+}, 'Number');
 
 /**
  * ### IsNumberBetween Rule (Numeric)
@@ -477,7 +477,7 @@ export const IsNumberBetween = Validator.buildRuleDecorator<
       reject(message);
     }
   });
-});
+}, 'NumberBetween');
 
 /**
  * ### HasDecimalPlaces Rule
@@ -581,7 +581,7 @@ export const HasDecimalPlaces = Validator.buildRuleDecorator<
       reject(message);
     }
   });
-});
+}, 'DecimalPlaces');
 
 /**
  * ### IsInteger Rule
@@ -872,7 +872,7 @@ export const IsMultipleOf = Validator.buildRuleDecorator<
       reject(message);
     }
   });
-});
+}, 'MultipleOf');
 
 declare module '../types' {
   export interface ValidatorRuleParamTypes {
@@ -939,7 +939,7 @@ declare module '../types' {
     Number: ValidatorRuleParams<[]>;
 
     /**
-     * ### NumberLessThanOrEqual Rule
+     * ### NumberLTE Rule
      *
      * Validates that the field under validation has a numeric value less than or equal to
      * a specified maximum value. This rule ensures that input values do not exceed
@@ -953,34 +953,34 @@ declare module '../types' {
      * // Age limit validation
      * await Validator.validate({
      *   value: 25,
-     *   rules: [{NumberLessThanOrEqual: [120]}]
+     *   rules: [{NumberLTE: [120]}]
      * }); // ✓ Valid (age ≤ 120)
      *
      * await Validator.validate({
      *   value: 120,
-     *   rules: [{NumberLessThanOrEqual: [120]}]
+     *   rules: [{NumberLTE: [120]}]
      * }); // ✓ Valid (exactly 120)
      *
      * // Quantity limit validation
      * await Validator.validate({
      *   value: 500,
-     *   rules: [{NumberLessThanOrEqual: [1000]}]
+     *   rules: [{NumberLTE: [1000]}]
      * }); // ✓ Valid (quantity ≤ 1000)
      *
      * // Invalid examples
      * await Validator.validate({
      *   value: 150,
-     *   rules: [{NumberLessThanOrEqual: [120]}]
+     *   rules: [{NumberLTE: [120]}]
      * }); // ✗ Invalid (age > 120)
      *
      * // Class validation
      * class Person {
-     *   @IsNumberLessThanOrEqual(120)
+     *   @IsNumberLTE(120)
      *   age: number; // Must be ≤ 120 years
      * }
      *
      * class Order {
-     *   @IsNumberLessThanOrEqual(1000)
+     *   @IsNumberLTE(1000)
      *   quantity: number; // Maximum 1000 units
      * }
      * ```
@@ -992,10 +992,10 @@ declare module '../types' {
      *
      * @public
      */
-    NumberLessThanOrEqual: ValidatorRuleParams<[number]>;
+    NumberLTE: ValidatorRuleParams<[number]>;
 
     /**
-     * ### NumberLessThan Rule
+     * ### NumberLT Rule
      *
      * Validates that the field under validation has a numeric value strictly less than
      * a specified maximum value. This rule ensures that input values stay below
@@ -1009,39 +1009,39 @@ declare module '../types' {
      * // Age limit validation (must be under 18 for minors)
      * await Validator.validate({
      *   value: 17,
-     *   rules: [{NumberLessThan: [18]}]
+     *   rules: [{NumberLT: [18]}]
      * }); // ✓ Valid (age < 18)
      *
      * await Validator.validate({
      *   value: 17.9,
-     *   rules: [{NumberLessThan: [18]}]
+     *   rules: [{NumberLT: [18]}]
      * }); // ✓ Valid (still < 18)
      *
      * // Discount limit validation
      * await Validator.validate({
      *   value: 49.99,
-     *   rules: [{NumberLessThan: [50]}]
+     *   rules: [{NumberLT: [50]}]
      * }); // ✓ Valid (discount < 50%)
      *
      * // Invalid examples
      * await Validator.validate({
      *   value: 18,
-     *   rules: [{NumberLessThan: [18]}]
+     *   rules: [{NumberLT: [18]}]
      * }); // ✗ Invalid (18 is not < 18)
      *
      * await Validator.validate({
      *   value: 25,
-     *   rules: [{NumberLessThan: [18]}]
+     *   rules: [{NumberLT: [18]}]
      * }); // ✗ Invalid (25 > 18)
      *
      * // Class validation
      * class Minor {
-     *   @IsNumberLessThan(18)
+     *   @IsNumberLT(18)
      *   age: number; // Must be < 18 years
      * }
      *
      * class Discount {
-     *   @IsNumberLessThan(50)
+     *   @IsNumberLT(50)
      *   percentage: number; // Must be < 50%
      * }
      * ```
@@ -1053,10 +1053,10 @@ declare module '../types' {
      *
      * @public
      */
-    NumberLessThan: ValidatorRuleParams<[number]>;
+    NumberLT: ValidatorRuleParams<[number]>;
 
     /**
-     * ### NumberGreaterThanOrEqual Rule
+     * ### NumberGTE Rule
      *
      * Validates that the field under validation has a numeric value greater than or equal to
      * a specified minimum value. This rule ensures that input values meet or exceed
@@ -1070,39 +1070,39 @@ declare module '../types' {
      * // Age requirement validation (must be 18 or older)
      * await Validator.validate({
      *   value: 18,
-     *   rules: [{NumberGreaterThanOrEqual: [18]}]
+     *   rules: [{NumberGTE: [18]}]
      * }); // ✓ Valid (age ≥ 18)
      *
      * await Validator.validate({
      *   value: 25,
-     *   rules: [{NumberGreaterThanOrEqual: [18]}]
+     *   rules: [{NumberGTE: [18]}]
      * }); // ✓ Valid (age > 18)
      *
      * // Minimum balance validation
      * await Validator.validate({
      *   value: 100.00,
-     *   rules: [{NumberGreaterThanOrEqual: [50.00]}]
+     *   rules: [{NumberGTE: [50.00]}]
      * }); // ✓ Valid (balance ≥ $50)
      *
      * // Invalid examples
      * await Validator.validate({
      *   value: 17,
-     *   rules: [{NumberGreaterThanOrEqual: [18]}]
+     *   rules: [{NumberGTE: [18]}]
      * }); // ✗ Invalid (17 < 18)
      *
      * await Validator.validate({
      *   value: 17.9,
-     *   rules: [{NumberGreaterThanOrEqual: [18]}]
+     *   rules: [{NumberGTE: [18]}]
      * }); // ✗ Invalid (17.9 < 18)
      *
      * // Class validation
      * class Adult {
-     *   @IsNumberGreaterThanOrEqual(18)
+     *   @IsNumberGTE(18)
      *   age: number; // Must be ≥ 18 years
      * }
      *
      * class Account {
-     *   @IsNumberGreaterThanOrEqual(0)
+     *   @IsNumberGTE(0)
      *   balance: number; // Must be ≥ $0
      * }
      * ```
@@ -1114,10 +1114,10 @@ declare module '../types' {
      *
      * @public
      */
-    NumberGreaterThanOrEqual: ValidatorRuleParams<[number]>;
+    NumberGTE: ValidatorRuleParams<[number]>;
 
     /**
-     * ### NumberGreaterThan Rule
+     * ### NumberGT Rule
      *
      * Validates that the field under validation has a numeric value strictly greater than
      * a specified minimum value. This rule ensures that input values exceed
@@ -1131,39 +1131,39 @@ declare module '../types' {
      * // Age requirement validation (must be over 18)
      * await Validator.validate({
      *   value: 19,
-     *   rules: [{NumberGreaterThan: [18]}]
+     *   rules: [{NumberGT: [18]}]
      * }); // ✓ Valid (age > 18)
      *
      * await Validator.validate({
      *   value: 18.1,
-     *   rules: [{NumberGreaterThan: [18]}]
+     *   rules: [{NumberGT: [18]}]
      * }); // ✓ Valid (age > 18)
      *
      * // Minimum purchase validation
      * await Validator.validate({
      *   value: 100.01,
-     *   rules: [{NumberGreaterThan: [100]}]
+     *   rules: [{NumberGT: [100]}]
      * }); // ✓ Valid (amount > $100)
      *
      * // Invalid examples
      * await Validator.validate({
      *   value: 18,
-     *   rules: [{NumberGreaterThan: [18]}]
+     *   rules: [{NumberGT: [18]}]
      * }); // ✗ Invalid (18 is not > 18)
      *
      * await Validator.validate({
      *   value: 15,
-     *   rules: [{NumberGreaterThan: [18]}]
+     *   rules: [{NumberGT: [18]}]
      * }); // ✗ Invalid (15 < 18)
      *
      * // Class validation
      * class Senior {
-     *   @IsNumberGreaterThan(65)
+     *   @IsNumberGT(65)
      *   age: number; // Must be > 65 years
      * }
      *
      * class Premium {
-     *   @IsNumberGreaterThan(1000)
+     *   @IsNumberGT(1000)
      *   purchaseAmount: number; // Must be > $1000
      * }
      * ```
@@ -1175,10 +1175,10 @@ declare module '../types' {
      *
      * @public
      */
-    NumberGreaterThan: ValidatorRuleParams<[number]>;
+    NumberGT: ValidatorRuleParams<[number]>;
 
     /**
-     * ### NumberEqual Rule
+     * ### NumberEQ Rule
      *
      * Validates that the field under validation has a numeric value exactly equal to
      * a specified target value. This rule ensures that input values match
@@ -1192,40 +1192,40 @@ declare module '../types' {
      * // PIN code validation (must be exactly 1234)
      * await Validator.validate({
      *   value: 1234,
-     *   rules: [{NumberEqual: [1234]}]
+     *   rules: [{NumberEQ: [1234]}]
      * }); // ✓ Valid (exact match)
      *
      * // Magic number validation
      * await Validator.validate({
      *   value: 42,
-     *   rules: [{NumberEqual: [42]}]
+     *   rules: [{NumberEQ: [42]}]
      * }); // ✓ Valid (exact match)
      *
      * // Version number validation
      * await Validator.validate({
      *   value: 1.0,
-     *   rules: [{NumberEqual: [1.0]}]
+     *   rules: [{NumberEQ: [1.0]}]
      * }); // ✓ Valid (exact match)
      *
      * // Invalid examples
      * await Validator.validate({
      *   value: 1235,
-     *   rules: [{NumberEqual: [1234]}]
+     *   rules: [{NumberEQ: [1234]}]
      * }); // ✗ Invalid (not equal)
      *
      * await Validator.validate({
      *   value: 41.9,
-     *   rules: [{NumberEqual: [42]}]
+     *   rules: [{NumberEQ: [42]}]
      * }); // ✗ Invalid (not equal)
      *
      * // Class validation
      * class AccessCode {
-     *   @IsNumberEqual(1234)
+     *   @IsNumberEQ(1234)
      *   pinCode: number; // Must be exactly 1234
      * }
      *
      * class Version {
-     *   @IsNumberEqual(1.0)
+     *   @IsNumberEQ(1.0)
      *   versionNumber: number; // Must be exactly 1.0
      * }
      * ```
@@ -1237,10 +1237,10 @@ declare module '../types' {
      *
      * @public
      */
-    NumberEqual: ValidatorRuleParams<[number]>;
+    NumberEQ: ValidatorRuleParams<[number]>;
 
     /**
-     * ### NumberIsDifferentFrom Rule
+     * ### NumberNE Rule
      *
      * Validates that the field under validation has a numeric value different from
      * a specified forbidden value. This rule ensures that input values do not match
@@ -1254,39 +1254,39 @@ declare module '../types' {
      * // Reserved number validation (cannot be 0)
      * await Validator.validate({
      *   value: 5,
-     *   rules: [{NumberIsDifferentFrom: [0]}]
+     *   rules: [{NumberNE: [0]}]
      * }); // ✓ Valid (not 0)
      *
      * await Validator.validate({
      *   value: -1,
-     *   rules: [{NumberIsDifferentFrom: [0]}]
+     *   rules: [{NumberNE: [0]}]
      * }); // ✓ Valid (not 0)
      *
      * // Forbidden ID validation
      * await Validator.validate({
      *   value: 123,
-     *   rules: [{NumberIsDifferentFrom: [999]}]
+     *   rules: [{NumberNE: [999]}]
      * }); // ✓ Valid (not 999)
      *
      * // Invalid examples
      * await Validator.validate({
      *   value: 0,
-     *   rules: [{NumberIsDifferentFrom: [0]}]
+     *   rules: [{NumberNE: [0]}]
      * }); // ✗ Invalid (equals forbidden value)
      *
      * await Validator.validate({
      *   value: 999,
-     *   rules: [{NumberIsDifferentFrom: [999]}]
+     *   rules: [{NumberNE: [999]}]
      * }); // ✗ Invalid (equals forbidden value)
      *
      * // Class validation
      * class User {
-     *   @IsNumberDifferentFrom(0)
+     *   @IsNumberNE(0)
      *   userId: number; // Cannot be 0 (reserved)
      * }
      *
      * class Product {
-     *   @IsNumberDifferentFrom(999)
+     *   @IsNumberNE(999)
      *   sku: number; // Cannot be 999 (test value)
      * }
      * ```
@@ -1298,7 +1298,7 @@ declare module '../types' {
      *
      * @public
      */
-    NumberIsDifferentFrom: ValidatorRuleParams<[number]>;
+    NumberNE: ValidatorRuleParams<[number]>;
 
     /**
      * ### NumberBetween Rule (Numeric)

@@ -328,7 +328,7 @@ export type ValidatorRule<
  * │  ✔  "Email"                // Array<[]>                                │
  * │  ✔  "PhoneNumber"          // Array<[countryCode?: string]>            │
  * │  ✘  "Length"               // Array<[number, number?]>        │
- * │  ✘  "NumberLessThan"       // Array<[number]>                          │
+ * │  ✘  "NumberLT"       // Array<[number]>                          │
  * └-------------------------------------------------------------------------┘
  *
  * The type is built in two steps:
@@ -1168,12 +1168,12 @@ export type ValidatorRuleName = keyof ValidatorRuleParamTypes & string;
  * - **FileName**: Valid file name format
  *
  * #### Numeric Validation
- * - **NumberGreaterThan**: Value must be greater than specified number
- * - **NumberGreaterThanOrEqual**: Value must be >= specified number
- * - **NumberLessThan**: Value must be less than specified number
- * - **NumberLessThanOrEqual**: Value must be <= specified number
- * - **NumberEqual**: Value must equal specified number
- * - **NumberIsDifferentFrom**: Value must differ from specified number
+ * - **NumberGT**: Value must be greater than specified number
+ * - **NumberGTE**: Value must be >= specified number
+ * - **NumberLT**: Value must be less than specified number
+ * - **NumberLTE**: Value must be <= specified number
+ * - **NumberEQ**: Value must equal specified number
+ * - **NumberNE**: Value must differ from specified number
  *
  * #### Format Validation
  * - **Email**: Valid email address format
@@ -1189,7 +1189,7 @@ export type ValidatorRuleName = keyof ValidatorRuleParamTypes & string;
  *
  * // Rules with single parameters
  * MinLength: ValidatorRuleParams<[number]>;    // "MinLength[5]"
- * NumberEqual: ValidatorRuleParams<[number]>;  // "NumberEqual[42]"
+ * NumberEQ: ValidatorRuleParams<[number]>;  // "NumberEQ[42]"
  *
  * // Rules with optional parameters
  * PhoneNumber: ValidatorRuleParams<[CountryCode?]>; // "PhoneNumber" or "PhoneNumber[US]"
@@ -1343,7 +1343,7 @@ export interface ValidatorValidateOptions<
    * The raw rule name as originally specified (before parsing)
    *
    * The unparsed rule name including any parameters in brackets.
-   * For example, "MinLength[5]" or "NumberGreaterThan[0]" before the name
+   * For example, "MinLength[5]" or "NumberGT[0]" before the name
    * and parameters are extracted into `ruleName` and `ruleParams`.
    *
    * @type {string}

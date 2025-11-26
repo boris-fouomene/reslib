@@ -134,7 +134,7 @@ export const ArrayMinLength = Validator.buildRuleDecorator<
     });
     return message;
   }
-});
+}, 'ArrayMaxLength');
 
 /**
  * ## ArrayMaxLength Decorator
@@ -213,7 +213,7 @@ export const ArrayMaxLength = Validator.buildRuleDecorator<
     });
     return message;
   }
-});
+}, 'ArrayMaxLength');
 
 /**
  * ## ArrayLength Decorator
@@ -293,7 +293,7 @@ export const ArrayLength = Validator.buildRuleDecorator<
     });
     return message;
   }
-});
+}, 'ArrayLength');
 
 /**
  * ## ArrayContains Decorator
@@ -381,7 +381,7 @@ export const ArrayContains = Validator.buildRuleDecorator<
     });
     return message;
   }
-});
+}, 'ArrayContains');
 
 /**
  * ## ArrayUnique Decorator
@@ -1160,7 +1160,7 @@ declare module '../types' {
      * - **ArrayAllStrings**: For string arrays
      * - **ArrayUnique**: For unique number arrays
      * - **ArrayMinLength/ArrayMaxLength**: For size constraints
-     * - **NumberGreaterThan/NumberLessThan**: For individual number validation
+     * - **NumberGT/NumberLT**: For individual number validation
      *
      * ### Important Considerations
      * - **NaN handling**: `NaN` values are considered valid numbers
