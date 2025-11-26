@@ -3,23 +3,26 @@ import { ValidatorResult, ValidatorRuleParamTypes } from '../types';
 import { Validator } from '../validator';
 
 /**
- * ### Date Rule
- *
- * Validates that the field under validation is a valid date.
+ * @summary A validation decorator that ensures a property contains a valid date value.
+ * @description
+ * Validates that the decorated property represents a date that can be parsed into a JavaScript Date object.
+ * Accepts Date instances, ISO date strings, and numeric timestamps as valid inputs.
  *
  * @example
  * ```typescript
- * // Class validation
  * class Event {
- *   @IsRequired()
  *   @IsDate()
  *   eventDate: Date;
  * }
+ *
+ * const event = new Event();
+ * event.eventDate = new Date(); // ✓ Valid
+ * event.eventDate = '2024-01-01'; // ✓ Valid
+ * event.eventDate = 1640995200000; // ✓ Valid (timestamp)
+ * event.eventDate = 'invalid'; // ✗ Invalid
  * ```
  *
- * @param options - Validation options containing value and context
- * @returns Promise resolving to true if valid, rejecting with error message if invalid
- *
+ * @returns A property decorator function for date validation.
  *
  * @public
  */
@@ -57,26 +60,28 @@ export const IsDate = Validator.buildRuleDecorator<
 }, 'Date');
 
 /**
- * ### DateAfter Rule
+ * @summary A validation decorator that ensures a date property occurs after a specified reference date.
+ * @description
+ * Validates that the decorated property's date value is strictly greater than the provided comparison date.
+ * Useful for ensuring events or deadlines occur after a minimum date.
  *
- * Validates that the date is after the specified date.
- *
- * #### Parameters
- * - Date to compare against (Date object, ISO string, or timestamp)
+ * @param date - The reference date to compare against. Accepts Date object, ISO string, or timestamp.
  *
  * @example
  * ```typescript
- * // Class validation
  * class Event {
  *   @IsDateAfter(new Date('2024-01-01'))
  *   eventDate: Date;
  * }
+ *
+ * const event = new Event();
+ * event.eventDate = new Date('2024-01-02'); // ✓ Valid (after reference)
+ * event.eventDate = '2024-06-15'; // ✓ Valid
+ * event.eventDate = new Date('2023-12-31'); // ✗ Invalid (before reference)
+ * event.eventDate = '2024-01-01'; // ✗ Invalid (same date, not after)
  * ```
  *
- * @param options - Validation options with rule parameters
- * @param options.ruleParams - Array containing the date to compare against
- * @returns Promise resolving to true if valid, rejecting with error message if invalid
- *
+ * @returns A property decorator function for date-after validation.
  *
  * @public
  */
@@ -152,26 +157,28 @@ export const IsDateAfter = Validator.buildRuleDecorator<
 });
 
 /**
- * ### DateBefore Rule
+ * @summary A validation decorator that ensures a date property occurs before a specified reference date.
+ * @description
+ * Validates that the decorated property's date value is strictly less than the provided comparison date.
+ * Useful for ensuring submissions or events occur before a maximum deadline.
  *
- * Validates that the date is before the specified date.
- *
- * #### Parameters
- * - Date to compare against (Date object, ISO string, or timestamp)
+ * @param date - The reference date to compare against. Accepts Date object, ISO string, or timestamp.
  *
  * @example
  * ```typescript
- * // Class validation
  * class Deadline {
  *   @IsDateBefore(new Date('2024-12-31'))
  *   submissionDate: Date;
  * }
+ *
+ * const deadline = new Deadline();
+ * deadline.submissionDate = new Date('2024-12-30'); // ✓ Valid (before reference)
+ * deadline.submissionDate = '2024-06-15'; // ✓ Valid
+ * deadline.submissionDate = new Date('2025-01-01'); // ✗ Invalid (after reference)
+ * deadline.submissionDate = '2024-12-31'; // ✗ Invalid (same date, not before)
  * ```
  *
- * @param options - Validation options with rule parameters
- * @param options.ruleParams - Array containing the date to compare against
- * @returns Promise resolving to true if valid, rejecting with error message if invalid
- *
+ * @returns A property decorator function for date-before validation.
  *
  * @public
  */
@@ -247,27 +254,30 @@ export const IsDateBefore = Validator.buildRuleDecorator<
 });
 
 /**
- * ### DateBetween Rule
+ * @summary A validation decorator that ensures a date property falls within a specified date range.
+ * @description
+ * Validates that the decorated property's date value is between the start and end dates (inclusive).
+ * Useful for restricting dates to specific periods like vacation seasons or business quarters.
  *
- * Validates that the date is between the specified start and end dates (inclusive).
- *
- * #### Parameters
- * - Start date (Date object, ISO string, or timestamp)
- * - End date (Date object, ISO string, or timestamp)
+ * @param minDate - The earliest allowed date in the range. Accepts Date object, ISO string, or timestamp.
+ * @param maxDate - The latest allowed date in the range. Accepts Date object, ISO string, or timestamp.
  *
  * @example
  * ```typescript
- * // Class validation
  * class Vacation {
  *   @IsDateBetween(new Date('2024-01-01'), new Date('2024-12-31'))
  *   vacationDate: Date;
  * }
+ *
+ * const vacation = new Vacation();
+ * vacation.vacationDate = new Date('2024-06-15'); // ✓ Valid (within range)
+ * vacation.vacationDate = '2024-01-01'; // ✓ Valid (inclusive start)
+ * vacation.vacationDate = '2024-12-31'; // ✓ Valid (inclusive end)
+ * vacation.vacationDate = new Date('2023-12-31'); // ✗ Invalid (before range)
+ * vacation.vacationDate = '2025-01-01'; // ✗ Invalid (after range)
  * ```
  *
- * @param options - Validation options with rule parameters
- * @param options.ruleParams - Array containing start date and end date
- * @returns Promise resolving to true if valid, rejecting with error message if invalid
- *
+ * @returns A property decorator function for date-between validation.
  *
  * @public
  */
@@ -349,26 +359,29 @@ export const IsDateBetween = Validator.buildRuleDecorator<
 });
 
 /**
- * ### SameDate Rule
+ * @summary A validation decorator that ensures a date property matches a specific date (ignoring time).
+ * @description
+ * Validates that the decorated property's date value matches the reference date, comparing only
+ * year, month, and day components while ignoring hours, minutes, seconds, and milliseconds.
+ * Useful for date-only equality checks like birthdays or anniversaries.
  *
- * Validates that the date equals the specified date (compares date part only, ignores time).
- *
- * #### Parameters
- * - Date to compare against (Date object, ISO string, or timestamp)
+ * @param date - The reference date to match against. Accepts Date object, ISO string, or timestamp.
  *
  * @example
  * ```typescript
- * // Class validation
  * class Birthday {
  *   @IsSameDate(new Date('1990-01-01'))
  *   birthDate: Date;
  * }
+ *
+ * const birthday = new Birthday();
+ * birthday.birthDate = new Date('1990-01-01T10:30:00Z'); // ✓ Valid (time ignored)
+ * birthday.birthDate = '1990-01-01'; // ✓ Valid
+ * birthday.birthDate = new Date('1990-01-02T00:00:00Z'); // ✗ Invalid (different date)
+ * birthday.birthDate = '1990-01-02'; // ✗ Invalid
  * ```
  *
- * @param options - Validation options with rule parameters
- * @param options.ruleParams - Array containing the date to compare against
- * @returns Promise resolving to true if valid, rejecting with error message if invalid
- *
+ * @returns A property decorator function for same-date validation.
  *
  * @public
  */
@@ -456,22 +469,26 @@ export const IsSameDate = Validator.buildRuleDecorator<
 });
 
 /**
- * ### IsFutureDate Rule
- *
- * Validates that the date is in the future.
+ * @summary A validation decorator that ensures a date property is in the future.
+ * @description
+ * Validates that the decorated property's date value occurs after the current moment.
+ * Useful for validating future events, appointments, or deadlines that haven't passed yet.
  *
  * @example
  * ```typescript
- * // Class validation
  * class Appointment {
- *   @IsFutureDate
+ *   @IsFutureDate()
  *   appointmentDate: Date;
  * }
+ *
+ * const appointment = new Appointment();
+ * appointment.appointmentDate = new Date(Date.now() + 86400000); // Tomorrow - ✓ Valid
+ * appointment.appointmentDate = '2025-01-01'; // ✓ Valid
+ * appointment.appointmentDate = new Date(Date.now() - 86400000); // Yesterday - ✗ Invalid
+ * appointment.appointmentDate = new Date(); // Now - ✗ Invalid (not strictly future)
  * ```
  *
- * @param options - Validation options containing value and context
- * @returns Promise resolving to true if valid, rejecting with error message if invalid
- *
+ * @returns A property decorator function for future-date validation.
  *
  * @public
  */
@@ -521,22 +538,26 @@ export const IsFutureDate = Validator.buildRuleDecorator<
 }, 'FutureDate');
 
 /**
- * ### PastDate Rule
- *
- * Validates that the date is in the past.
+ * @summary A validation decorator that ensures a date property is in the past.
+ * @description
+ * Validates that the decorated property's date value occurs before the current moment.
+ * Useful for validating historical events, past occurrences, or completed deadlines.
  *
  * @example
  * ```typescript
- * // Class validation
  * class HistoricalEvent {
- *   @IsPastDate
+ *   @IsPastDate()
  *   eventDate: Date;
  * }
+ *
+ * const event = new HistoricalEvent();
+ * event.eventDate = new Date(Date.now() - 86400000); // Yesterday - ✓ Valid
+ * event.eventDate = '2020-01-01'; // ✓ Valid
+ * event.eventDate = new Date(Date.now() + 86400000); // Tomorrow - ✗ Invalid
+ * event.eventDate = new Date(); // Now - ✗ Invalid (not strictly past)
  * ```
  *
- * @param options - Validation options containing value and context
- * @returns Promise resolving to true if valid, rejecting with error message if invalid
- *
+ * @returns A property decorator function for past-date validation.
  *
  * @public
  */
