@@ -1,6 +1,5 @@
-import { ensureRulesRegistered } from '.';
 import { i18n } from '../../i18n';
-import { Validator } from '../validator';
+import { ensureRulesRegistered } from '../index';
 import {
   EndsWithOneOf,
   IsNonNullString,
@@ -9,7 +8,8 @@ import {
   MaxLength,
   MinLength,
   StartsWithOneOf,
-} from './string';
+} from '../rules/string';
+import { Validator } from '../validator';
 ensureRulesRegistered();
 describe('String Validation Rules', () => {
   beforeAll(async () => {

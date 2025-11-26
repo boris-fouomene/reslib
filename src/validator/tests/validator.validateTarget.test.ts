@@ -520,7 +520,7 @@ describe('Validator.validateTarget() - Class Validation with Either Pattern', ()
       class User {
         name: string = '';
 
-        @ValidateNested([Address])
+        @ValidateNested(Address)
         address: Address = new Address();
       }
 
@@ -552,7 +552,7 @@ describe('Validator.validateTarget() - Class Validation with Either Pattern', ()
       class User {
         name: string = '';
 
-        @ValidateNested([Address])
+        @ValidateNested(Address)
         address: Address = new Address();
       }
 
@@ -575,7 +575,7 @@ describe('Validator.validateTarget() - Class Validation with Either Pattern', ()
       class Person {
         name: string = '';
 
-        @ValidateNested([Contact])
+        @ValidateNested(Contact)
         contact: Contact = new Contact();
       }
 
@@ -602,7 +602,7 @@ describe('Validator.validateTarget() - Class Validation with Either Pattern', ()
       class User {
         email: string = '';
 
-        @ValidateNested([Address])
+        @ValidateNested(Address)
         address: Address = new Address();
       }
 
@@ -638,7 +638,7 @@ describe('Validator.validateTarget() - Class Validation with Either Pattern', ()
       class User {
         name: string = '';
 
-        @ValidateNested([Address])
+        @ValidateNested(Address)
         address: Address = new Address();
       }
 
@@ -662,14 +662,14 @@ describe('Validator.validateTarget() - Class Validation with Either Pattern', ()
       class Location {
         name: string = '';
 
-        @ValidateNested([Coordinates])
+        @ValidateNested(Coordinates)
         coordinates: Coordinates = new Coordinates();
       }
 
       class Event {
         title: string = '';
 
-        @ValidateNested([Location])
+        @ValidateNested(Location)
         location: Location = new Location();
       }
 
@@ -717,7 +717,7 @@ describe('Validator.validateTarget() - Class Validation with Either Pattern', ()
       class Person {
         name: string = '';
 
-        @ValidateNested([Contact])
+        @ValidateNested(Contact)
         contact: Contact = new Contact();
       }
 
@@ -749,7 +749,7 @@ describe('Validator.validateTarget() - Class Validation with Either Pattern', ()
       class User {
         name: string = '';
 
-        @ValidateNested([Address])
+        @ValidateNested(Address)
         address: Address = new Address();
       }
 
@@ -772,7 +772,7 @@ describe('Validator.validateTarget() - Class Validation with Either Pattern', ()
       class User {
         name: string = '';
 
-        @ValidateNested([SimpleAddress])
+        @ValidateNested(SimpleAddress)
         address: SimpleAddress = new SimpleAddress();
       }
 
@@ -801,7 +801,7 @@ describe('Validator.validateTarget() - Class Validation with Either Pattern', ()
       class Document {
         title: string = '';
 
-        @ValidateNested([Metadata])
+        @ValidateNested(Metadata)
         meta: Metadata = new Metadata();
       }
 

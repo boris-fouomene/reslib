@@ -1,16 +1,16 @@
-import { Validator } from "../validator";
+import { Validator } from '../validator';
 
-export * from "./array";
-export * from "./boolean";
-export * from "./date";
-export * from "./default";
-export * from "./enum";
-export * from "./file";
-export * from "./format";
-export * from "./multiRules";
-export * from "./numeric";
-export * from "./string";
-export * from "./target";
+export * from './array';
+export * from './boolean';
+export * from './date';
+export * from './default';
+export * from './enum';
+export * from './file';
+export * from './format';
+export * from './multiRules';
+export * from './numeric';
+export * from './string';
+export * from './target';
 
 /**
  * Ensures that all validation rules are registered.

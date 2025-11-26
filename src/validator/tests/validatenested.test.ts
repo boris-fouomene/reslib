@@ -33,7 +33,7 @@ describe('ValidateNested Validation - Comprehensive Test Suite', () => {
       class User {
         name: string = '';
 
-        @ValidateNested([Address])
+        @ValidateNested(Address)
         address: Address = new Address();
       }
 
@@ -62,7 +62,7 @@ describe('ValidateNested Validation - Comprehensive Test Suite', () => {
       class Employee {
         name: string = '';
 
-        @ValidateNested([Contact])
+        @ValidateNested(Contact)
         contact: Contact = new Contact();
       }
 
@@ -85,7 +85,7 @@ describe('ValidateNested Validation - Comprehensive Test Suite', () => {
       }
 
       class User {
-        @ValidateNested([Address])
+        @ValidateNested(Address)
         address: Address = new Address();
       }
 
@@ -104,7 +104,7 @@ describe('ValidateNested Validation - Comprehensive Test Suite', () => {
       }
 
       class User {
-        @ValidateNested([Address])
+        @ValidateNested(Address)
         address: Address = new Address();
       }
 
@@ -123,7 +123,7 @@ describe('ValidateNested Validation - Comprehensive Test Suite', () => {
       }
 
       class User {
-        @ValidateNested([Address])
+        @ValidateNested(Address)
         address: Address = new Address();
       }
 
@@ -143,7 +143,7 @@ describe('ValidateNested Validation - Comprehensive Test Suite', () => {
       }
 
       class User {
-        @ValidateNested([Address])
+        @ValidateNested(Address)
         address: Address = new Address();
       }
 
@@ -170,7 +170,7 @@ describe('ValidateNested Validation - Comprehensive Test Suite', () => {
 
       class User {
         @IsRequired()
-        @ValidateNested([Address])
+        @ValidateNested(Address)
         address: Address = new Address();
       }
 
@@ -190,7 +190,7 @@ describe('ValidateNested Validation - Comprehensive Test Suite', () => {
 
       class User {
         @IsRequired()
-        @ValidateNested([Address])
+        @ValidateNested(Address)
         address: Address = new Address();
       }
 
@@ -208,7 +208,7 @@ describe('ValidateNested Validation - Comprehensive Test Suite', () => {
 
       class User {
         @IsOptional()
-        @ValidateNested([Address])
+        @ValidateNested(Address)
         address?: Address;
       }
 
@@ -235,7 +235,7 @@ describe('ValidateNested Validation - Comprehensive Test Suite', () => {
         name: string = '';
 
         @IsOptional()
-        @ValidateNested([Contact])
+        @ValidateNested(Contact)
         contact?: Contact;
       }
 
@@ -256,7 +256,7 @@ describe('ValidateNested Validation - Comprehensive Test Suite', () => {
 
       class User {
         @IsOptional()
-        @ValidateNested([Address])
+        @ValidateNested(Address)
         address?: Address;
       }
 
@@ -274,7 +274,7 @@ describe('ValidateNested Validation - Comprehensive Test Suite', () => {
       }
 
       class User {
-        @ValidateNested([Contact])
+        @ValidateNested(Contact)
         contact: Contact = new Contact();
       }
 
@@ -296,7 +296,7 @@ describe('ValidateNested Validation - Comprehensive Test Suite', () => {
       }
 
       class User {
-        @ValidateNested([Profile])
+        @ValidateNested(Profile)
         profile: Profile = new Profile();
       }
 
@@ -318,7 +318,7 @@ describe('ValidateNested Validation - Comprehensive Test Suite', () => {
       }
 
       class User {
-        @ValidateNested([Address])
+        @ValidateNested(Address)
         address: Address = new Address();
       }
 
@@ -341,7 +341,7 @@ describe('ValidateNested Validation - Comprehensive Test Suite', () => {
       }
 
       class User {
-        @ValidateNested([Address])
+        @ValidateNested(Address)
         address: Address = new Address();
       }
 
@@ -367,17 +367,17 @@ describe('ValidateNested Validation - Comprehensive Test Suite', () => {
       }
 
       class City {
-        @ValidateNested([Country])
+        @ValidateNested(Country)
         country: Country = new Country();
       }
 
       class Address {
-        @ValidateNested([City])
+        @ValidateNested(City)
         city: City = new City();
       }
 
       class User {
-        @ValidateNested([Address])
+        @ValidateNested(Address)
         address: Address = new Address();
       }
 
@@ -403,17 +403,17 @@ describe('ValidateNested Validation - Comprehensive Test Suite', () => {
       }
 
       class City {
-        @ValidateNested([Country])
+        @ValidateNested(Country)
         country: Country = new Country();
       }
 
       class Address {
-        @ValidateNested([City])
+        @ValidateNested(City)
         city: City = new City();
       }
 
       class User {
-        @ValidateNested([Address])
+        @ValidateNested(Address)
         address: Address = new Address();
       }
 
@@ -436,17 +436,17 @@ describe('ValidateNested Validation - Comprehensive Test Suite', () => {
       }
 
       class Building {
-        @ValidateNested([Room])
+        @ValidateNested(Room)
         room: Room = new Room();
       }
 
       class Campus {
-        @ValidateNested([Building])
+        @ValidateNested(Building)
         building: Building = new Building();
       }
 
       class University {
-        @ValidateNested([Campus])
+        @ValidateNested(Campus)
         campus: Campus = new Campus();
       }
 
@@ -481,10 +481,10 @@ describe('ValidateNested Validation - Comprehensive Test Suite', () => {
       }
 
       class User {
-        @ValidateNested([Address])
+        @ValidateNested(Address)
         address: Address = new Address();
 
-        @ValidateNested([Company])
+        @ValidateNested(Company)
         company: Company = new Company();
       }
 
@@ -510,10 +510,10 @@ describe('ValidateNested Validation - Comprehensive Test Suite', () => {
       }
 
       class User {
-        @ValidateNested([Address])
+        @ValidateNested(Address)
         address: Address = new Address();
 
-        @ValidateNested([Company])
+        @ValidateNested(Company)
         company: Company = new Company();
       }
 
@@ -539,17 +539,17 @@ describe('ValidateNested Validation - Comprehensive Test Suite', () => {
       }
 
       class Contact {
-        @ValidateNested([Phone])
+        @ValidateNested(Phone)
         phone: Phone = new Phone();
 
-        @ValidateNested([Address])
+        @ValidateNested(Address)
         address: Address = new Address();
       }
 
       class User {
         name: string = '';
 
-        @ValidateNested([Contact])
+        @ValidateNested(Contact)
         contact: Contact = new Contact();
       }
 
@@ -582,10 +582,10 @@ describe('ValidateNested Validation - Comprehensive Test Suite', () => {
       }
 
       class User {
-        @ValidateNested([Address])
+        @ValidateNested(Address)
         address: Address = new Address();
 
-        @ValidateNested([Phone])
+        @ValidateNested(Phone)
         phone: Phone = new Phone();
       }
 
@@ -612,7 +612,7 @@ describe('ValidateNested Validation - Comprehensive Test Suite', () => {
       }
 
       class User {
-        @ValidateNested([Address])
+        @ValidateNested(Address)
         address: Address = new Address();
       }
 
@@ -641,10 +641,10 @@ describe('ValidateNested Validation - Comprehensive Test Suite', () => {
       class User {
         name: string = '';
 
-        @ValidateNested([Contact])
+        @ValidateNested(Contact)
         contact: Contact = new Contact();
 
-        @ValidateNested([Address])
+        @ValidateNested(Address)
         address: Address = new Address();
 
         email: string = '';
@@ -663,7 +663,7 @@ describe('ValidateNested Validation - Comprehensive Test Suite', () => {
 
       class User {
         @IsOptional()
-        @ValidateNested([Contact])
+        @ValidateNested(Contact)
         contact?: Contact;
       }
 
@@ -683,7 +683,7 @@ describe('ValidateNested Validation - Comprehensive Test Suite', () => {
       }
 
       class User {
-        @ValidateNested([Address])
+        @ValidateNested(Address)
         address: Address = new Address();
       }
 
@@ -710,10 +710,10 @@ describe('ValidateNested Validation - Comprehensive Test Suite', () => {
       }
 
       class User {
-        @ValidateNested([Address])
+        @ValidateNested(Address)
         address: Address = new Address();
 
-        @ValidateNested([Company])
+        @ValidateNested(Company)
         company: Company = new Company();
       }
 
@@ -737,7 +737,7 @@ describe('ValidateNested Validation - Comprehensive Test Suite', () => {
       }
 
       class User {
-        @ValidateNested([Address])
+        @ValidateNested(Address)
         address: Address = new Address();
       }
 
@@ -756,7 +756,7 @@ describe('ValidateNested Validation - Comprehensive Test Suite', () => {
       }
 
       class User {
-        @ValidateNested([Address])
+        @ValidateNested(Address)
         address: Address = new Address();
       }
 
@@ -775,7 +775,7 @@ describe('ValidateNested Validation - Comprehensive Test Suite', () => {
       }
 
       class User {
-        @ValidateNested([Address])
+        @ValidateNested(Address)
         address: Address = new Address();
       }
 
@@ -795,7 +795,7 @@ describe('ValidateNested Validation - Comprehensive Test Suite', () => {
       }
 
       class User {
-        @ValidateNested([Address])
+        @ValidateNested(Address)
         address: Address = new Address();
       }
 
@@ -816,7 +816,7 @@ describe('ValidateNested Validation - Comprehensive Test Suite', () => {
       }
 
       class User {
-        @ArrayOf([Validator.validateNested([Address])])
+        @ArrayOf(Validator.validateNested(Address))
         address: Address = new Address();
       }
 
@@ -839,7 +839,7 @@ describe('ValidateNested Validation - Comprehensive Test Suite', () => {
       }
 
       class User {
-        @ValidateNested([Address])
+        @ValidateNested(Address)
         address: Address = new Address();
       }
 
@@ -865,7 +865,7 @@ describe('ValidateNested Validation - Comprehensive Test Suite', () => {
       }
 
       class User {
-        @ValidateNested([Address])
+        @ValidateNested(Address)
         address: Address = new Address();
       }
 
@@ -885,17 +885,17 @@ describe('ValidateNested Validation - Comprehensive Test Suite', () => {
       }
 
       class City {
-        @ValidateNested([Country])
+        @ValidateNested(Country)
         country: Country = new Country();
       }
 
       class Address {
-        @ValidateNested([City])
+        @ValidateNested(City)
         city: City = new City();
       }
 
       class User {
-        @ValidateNested([Address])
+        @ValidateNested(Address)
         address: Address = new Address();
       }
 
@@ -926,7 +926,7 @@ describe('ValidateNested Validation - Comprehensive Test Suite', () => {
         street: string = '';
       }
 
-      const rule = Validator.validateNested([Address]);
+      const rule = Validator.validateNested(Address);
       expect(typeof rule).toBe('function');
     });
 
@@ -939,8 +939,8 @@ describe('ValidateNested Validation - Comprehensive Test Suite', () => {
         name: string = '';
       }
 
-      const ruleAddress = Validator.validateNested([Address]);
-      const ruleCompany = Validator.validateNested([Company]);
+      const ruleAddress = Validator.validateNested(Address);
+      const ruleCompany = Validator.validateNested(Company);
 
       expect(ruleAddress).not.toBe(ruleCompany);
     });
@@ -950,7 +950,7 @@ describe('ValidateNested Validation - Comprehensive Test Suite', () => {
         street: string = '';
       }
 
-      const rule = Validator.validateNested([Address]);
+      const rule = Validator.validateNested(Address);
       expect(typeof rule).toBe('function');
     });
   });
@@ -971,7 +971,7 @@ describe('ValidateNested Validation - Comprehensive Test Suite', () => {
         name: string = '';
 
         @IsOptional()
-        @ValidateNested([Address])
+        @ValidateNested(Address)
         address?: Address;
       }
 
@@ -1004,7 +1004,7 @@ describe('ValidateNested Validation - Comprehensive Test Suite', () => {
         @IsEmail()
         email: string = '';
 
-        @ValidateNested([Address])
+        @ValidateNested(Address)
         address: Address = new Address();
       }
 
@@ -1050,7 +1050,7 @@ describe('ValidateNested Validation - Comprehensive Test Suite', () => {
       }
 
       class User {
-        @ValidateNested([Address])
+        @ValidateNested(Address)
         address: Address = new Address();
       }
 
@@ -1073,10 +1073,10 @@ describe('ValidateNested Validation - Comprehensive Test Suite', () => {
       }
 
       class User {
-        @ValidateNested([Address])
+        @ValidateNested(Address)
         address: Address = new Address();
 
-        @ValidateNested([Company])
+        @ValidateNested(Company)
         company: Company = new Company();
       }
 
@@ -1098,7 +1098,7 @@ describe('ValidateNested Validation - Comprehensive Test Suite', () => {
       }
 
       class User {
-        @ValidateNested([Address])
+        @ValidateNested(Address)
         address: Address = new Address();
       }
 
@@ -1130,7 +1130,7 @@ describe('ValidateNested Validation - Comprehensive Test Suite', () => {
       }
 
       class Root {
-        @ValidateNested([Container])
+        @ValidateNested(Container)
         container: Container = new Container();
       }
 

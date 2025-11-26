@@ -28,7 +28,7 @@ import { Validator } from '../validator';
  */
 export const IsDate = Validator.buildRuleDecorator<
   ValidatorRuleParamTypes['Date']
->(function _Date({
+>(function IsDate({
   value,
   fieldName,
   translatedPropertyName,

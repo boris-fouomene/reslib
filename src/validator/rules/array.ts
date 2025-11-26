@@ -134,7 +134,7 @@ export const ArrayMinLength = Validator.buildRuleDecorator<
     });
     return message;
   }
-}, 'ArrayMaxLength');
+}, 'ArrayMinLength');
 
 /**
  * ## ArrayMaxLength Decorator

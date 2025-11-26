@@ -2,8 +2,8 @@ import { i18n } from '../../i18n';
 import { ensureRulesRegistered } from '../index';
 import { ValidatorRule } from '../types';
 
+import { OneOf } from '../rules/multiRules';
 import { Validator } from '../validator';
-import { OneOf } from './multiRules';
 
 ensureRulesRegistered();
 
@@ -380,12 +380,12 @@ describe('OneOf Validation Rules', () => {
   describe('oneOf Factory Method', () => {
     describe('Basic Factory Creation', () => {
       it('should create a valid rule function', () => {
-        const rule = Validator.oneOf(['Email', 'PhoneNumber']);
+        const rule = Validator.oneOf('Email', 'PhoneNumber');
         expect(typeof rule).toBe('function');
       });
 
       it('should create rule that returns validation result', async () => {
-        const rule = Validator.oneOf(['Email', 'PhoneNumber']);
+        const rule = Validator.oneOf('Email', 'PhoneNumber');
         const result = await rule({
           value: 'user@example.com',
           ruleParams: ['Email', 'PhoneNumber'],
@@ -395,12 +395,12 @@ describe('OneOf Validation Rules', () => {
       });
 
       it('should create rule from empty array', () => {
-        const rule = Validator.oneOf([]);
+        const rule = Validator.oneOf();
         expect(typeof rule).toBe('function');
       });
 
       it('should create rule with single item', async () => {
-        const rule = Validator.oneOf(['Email']);
+        const rule = Validator.oneOf('Email');
         const result = await rule({
           value: 'test@example.com',
           ruleParams: ['Email'],
@@ -410,12 +410,7 @@ describe('OneOf Validation Rules', () => {
       });
 
       it('should create rule with multiple items', async () => {
-        const rule = Validator.oneOf([
-          'Email',
-          'PhoneNumber',
-          'UUID',
-          'Number',
-        ]);
+        const rule = Validator.oneOf('Email', 'PhoneNumber', 'UUID', 'Number');
         const result = await rule({
           value: 'test@example.com',
           ruleParams: ['Email', 'PhoneNumber', 'UUID', 'Number'],
@@ -427,7 +422,7 @@ describe('OneOf Validation Rules', () => {
 
     describe('Factory with Different Rule Types', () => {
       it('should create rule from string rules only', async () => {
-        const rule = Validator.oneOf(['Email', 'PhoneNumber']);
+        const rule = Validator.oneOf('Email', 'PhoneNumber');
         const result = await rule({
           value: 'test@example.com',
           ruleParams: ['Email', 'PhoneNumber'],
@@ -437,7 +432,7 @@ describe('OneOf Validation Rules', () => {
       });
 
       it('should create rule from object rules only', async () => {
-        const rule = Validator.oneOf([{ MinLength: [3] }, { MaxLength: [5] }]);
+        const rule = Validator.oneOf({ MinLength: [3] }, { MaxLength: [5] });
         const result = await rule({
           value: 'test',
           ruleParams: [{ MinLength: [3] }, { MaxLength: [5] }],
@@ -447,10 +442,10 @@ describe('OneOf Validation Rules', () => {
       });
 
       it('should create rule from function rules only', async () => {
-        const rule = Validator.oneOf([
+        const rule = Validator.oneOf(
           ({ value }: any) => value > 10,
-          ({ value }: any) => value < 5,
-        ]);
+          ({ value }: any) => value < 5
+        );
         const result = await rule({
           value: 3,
           ruleParams: [
@@ -465,7 +460,7 @@ describe('OneOf Validation Rules', () => {
       it('should create rule from mixed rule types', async () => {
         const customRule = ({ value }: any) => typeof value === 'string';
 
-        const rule = Validator.oneOf(['Email', { MinLength: [5] }, customRule]);
+        const rule = Validator.oneOf('Email', { MinLength: [5] }, customRule);
         const result = await rule({
           value: 'test@example.com',
           ruleParams: ['Email', { MinLength: [5] }, customRule],
@@ -482,10 +477,10 @@ describe('OneOf Validation Rules', () => {
           isAdmin: boolean;
         }
 
-        const rule = Validator.oneOf<MyContext>([
+        const rule = Validator.oneOf<MyContext>(
           'Email',
-          ({ value, context }) => (context?.isAdmin ? true : 'Not admin'),
-        ]);
+          ({ value, context }) => (context?.isAdmin ? true : 'Not admin')
+        );
 
         const result = await rule({
           value: 'anything',
@@ -507,7 +502,7 @@ describe('OneOf Validation Rules', () => {
 
     describe('Factory Rule Registration', () => {
       it('should create rule that can be registered', async () => {
-        const contactRule = Validator.oneOf(['Email', 'PhoneNumber']);
+        const contactRule = Validator.oneOf('Email', 'PhoneNumber');
         Validator.registerRule('ContactInfo' as any, contactRule);
 
         const result = await Validator.validate({
@@ -518,7 +513,7 @@ describe('OneOf Validation Rules', () => {
         expect(result.success).toBe(true);
       });
       it('should work with registered rule in validation', async () => {
-        const idRule = Validator.oneOf(['UUID', 'Number']);
+        const idRule = Validator.oneOf('UUID', 'Number');
         Validator.registerRule('FlexibleID' as any, idRule);
 
         const result = await Validator.validate({
@@ -533,7 +528,7 @@ describe('OneOf Validation Rules', () => {
     describe('Factory Immutability', () => {
       it('should not modify original rule params', async () => {
         const originalRules: ValidatorRule[] = ['Email', 'PhoneNumber'];
-        const rule = Validator.oneOf(originalRules);
+        const rule = Validator.oneOf(...originalRules);
 
         await rule({
           value: 'test@example.com',
@@ -545,8 +540,8 @@ describe('OneOf Validation Rules', () => {
       });
 
       it('should create independent rule instances', async () => {
-        const rule1 = Validator.oneOf(['Email']);
-        const rule2 = Validator.oneOf(['Email', 'PhoneNumber']);
+        const rule1 = Validator.oneOf('Email');
+        const rule2 = Validator.oneOf('Email', 'PhoneNumber');
 
         const result1 = await rule1({
           value: 'test@example.com',
@@ -587,7 +582,7 @@ describe('OneOf Validation Rules', () => {
             return Validator.validateOneOfRule(options);
           }
         );
-        const decorator = decoratorFactory(['Email', 'PhoneNumber']);
+        const decorator = decoratorFactory('Email', 'PhoneNumber');
         expect(typeof decorator).toBe('function');
       });
 
@@ -599,7 +594,7 @@ describe('OneOf Validation Rules', () => {
         );
 
         class TestEntity {
-          @CustomDecorator(['Email', 'PhoneNumber'])
+          @CustomDecorator('Email', 'PhoneNumber')
           contact: string = '';
         }
 
@@ -617,7 +612,7 @@ describe('OneOf Validation Rules', () => {
         );
 
         class TestEntity {
-          @StringRuleDecorator(['Email', 'PhoneNumber'])
+          @StringRuleDecorator('Email', 'PhoneNumber')
           field: string = '';
         }
 
@@ -636,7 +631,7 @@ describe('OneOf Validation Rules', () => {
         );
 
         class TestEntity {
-          @ObjectRuleDecorator([{ MinLength: [5] }, { MaxLength: [3] }])
+          @ObjectRuleDecorator({ MinLength: [5] }, { MaxLength: [3] })
           field: string = '';
         }
 
@@ -653,7 +648,7 @@ describe('OneOf Validation Rules', () => {
         const customRule = ({ value }: any) => typeof value === 'string';
 
         class TestEntity {
-          @FunctionRuleDecorator([customRule, 'Email'])
+          @FunctionRuleDecorator(customRule, 'Email')
           field: string = '';
         }
 
@@ -675,7 +670,7 @@ describe('OneOf Validation Rules', () => {
           });
 
         class TestEntity {
-          @ContextAwareDecorator(['Email'])
+          @ContextAwareDecorator('Email')
           field: string = '';
         }
 
@@ -692,7 +687,7 @@ describe('OneOf Validation Rules', () => {
         );
 
         class User {
-          @TestDecorator(['Email', 'PhoneNumber'])
+          @TestDecorator('Email', 'PhoneNumber')
           contact: string = '';
         }
 
@@ -712,7 +707,7 @@ describe('OneOf Validation Rules', () => {
         );
 
         class User {
-          @TestDecorator(['Email', 'PhoneNumber'])
+          @TestDecorator('Email', 'PhoneNumber')
           contact: string = '';
         }
 
@@ -734,10 +729,10 @@ describe('OneOf Validation Rules', () => {
         );
 
         class Form {
-          @TestDecorator(['Email'])
+          @TestDecorator('Email')
           email: string = '';
 
-          @TestDecorator(['PhoneNumber', 'Number'])
+          @TestDecorator('PhoneNumber', 'Number')
           phone: string | number = '';
         }
 
@@ -756,10 +751,10 @@ describe('OneOf Validation Rules', () => {
         );
 
         class Form {
-          @TestDecorator(['Email'])
+          @TestDecorator('Email')
           email: string = '';
 
-          @TestDecorator(['PhoneNumber'])
+          @TestDecorator('PhoneNumber')
           phone: string = '';
         }
 
@@ -781,7 +776,7 @@ describe('OneOf Validation Rules', () => {
     describe('Decorator Application', () => {
       it('should apply OneOf decorator to property', () => {
         class User {
-          @OneOf(['Email', 'PhoneNumber'])
+          @OneOf('Email', 'PhoneNumber')
           contact: string = '';
         }
 
@@ -791,7 +786,7 @@ describe('OneOf Validation Rules', () => {
 
       it('should validate decorated property', async () => {
         class User {
-          @OneOf(['Email', 'PhoneNumber'])
+          @OneOf('Email', 'PhoneNumber')
           contact: string = '';
         }
 
@@ -805,7 +800,7 @@ describe('OneOf Validation Rules', () => {
 
       it('should fail when OneOf validation fails', async () => {
         class User {
-          @OneOf(['Email', 'PhoneNumber'])
+          @OneOf('Email', 'PhoneNumber')
           contact: string = '';
         }
 
@@ -820,7 +815,7 @@ describe('OneOf Validation Rules', () => {
     describe('OneOf with String Rules', () => {
       it('should validate email or phone number', async () => {
         class Contact {
-          @OneOf(['Email', 'PhoneNumber'])
+          @OneOf('Email', 'PhoneNumber')
           info: string = '';
         }
 
@@ -838,7 +833,7 @@ describe('OneOf Validation Rules', () => {
 
       it('should accept UUID or IsNumber', async () => {
         class Identifier {
-          @OneOf(['UUID', 'Number'])
+          @OneOf('UUID', 'Number')
           id: string | number = '';
         }
 
@@ -858,7 +853,7 @@ describe('OneOf Validation Rules', () => {
     describe('OneOf with Object Rules', () => {
       it('should validate with MinLength or MaxLength', async () => {
         class FieldMeta {
-          @OneOf([{ MinLength: [10] }, { MaxLength: [3] }])
+          @OneOf({ MinLength: [10] }, { MaxLength: [3] })
           value: string = '';
         }
 
@@ -878,7 +873,7 @@ describe('OneOf Validation Rules', () => {
     describe('OneOf with Function Rules', () => {
       it('should validate with custom function rules', async () => {
         class CustomField {
-          @OneOf([({ value }) => value.startsWith('ADMIN-'), 'Email'])
+          @OneOf(({ value }) => value.startsWith('ADMIN-'), 'Email')
           field: string = '';
         }
 
@@ -898,11 +893,9 @@ describe('OneOf Validation Rules', () => {
     describe('OneOf with Mixed Rule Types', () => {
       it('should validate with mixed string, object, and function rules', async () => {
         class MixedRules {
-          @OneOf([
-            'Email',
-            { MinLength: [8] },
-            ({ value }) => value.includes('@'),
-          ])
+          @OneOf('Email', { MinLength: [8] }, ({ value }) =>
+            value.includes('@')
+          )
           value: string = '';
         }
 
@@ -928,7 +921,7 @@ describe('OneOf Validation Rules', () => {
       it('should work with IsRequired decorator', async () => {
         // Assuming IsRequired exists
         class RequiredOneOf {
-          @OneOf(['Email', 'PhoneNumber'])
+          @OneOf('Email', 'PhoneNumber')
           contact: string = '';
         }
 
@@ -943,7 +936,7 @@ describe('OneOf Validation Rules', () => {
     describe('OneOf Error Messages', () => {
       it('should provide meaningful error when all rules fail', async () => {
         class ErrorTest {
-          @OneOf(['Email', 'UUID'])
+          @OneOf('Email', 'UUID')
           value: string = '';
         }
 
@@ -958,7 +951,7 @@ describe('OneOf Validation Rules', () => {
 
       it('should include multiple error messages in aggregation', async () => {
         class MultiError {
-          @OneOf(['Email', 'PhoneNumber', 'UUID'])
+          @OneOf('Email', 'PhoneNumber', 'UUID')
           value: string = '';
         }
 
@@ -976,7 +969,7 @@ describe('OneOf Validation Rules', () => {
     describe('OneOf with Empty Rules Array', () => {
       it('should fail validation with empty rules', async () => {
         class EmptyRules {
-          @OneOf([])
+          @OneOf()
           value: string = '';
         }
 
@@ -991,7 +984,7 @@ describe('OneOf Validation Rules', () => {
     describe('OneOf with Single Rule', () => {
       it('should validate with single rule', async () => {
         class SingleRule {
-          @OneOf(['Email'])
+          @OneOf('Email')
           email: string = '';
         }
 
@@ -1004,7 +997,7 @@ describe('OneOf Validation Rules', () => {
 
       it("should fail with single rule when it doesn't match", async () => {
         class SingleRule {
-          @OneOf(['Email'])
+          @OneOf('Email')
           email: string = '';
         }
 
@@ -1019,13 +1012,13 @@ describe('OneOf Validation Rules', () => {
     describe('OneOf with Multiple Properties', () => {
       it('should validate multiple OneOf decorated properties', async () => {
         class MultiProperty {
-          @OneOf(['Email', 'PhoneNumber'])
+          @OneOf('Email', 'PhoneNumber')
           contact: string = '';
 
-          @OneOf(['UUID', 'Number'])
+          @OneOf('UUID', 'Number')
           id: string | number = '';
 
-          @OneOf([{ MinLength: [5] }, 'Number'])
+          @OneOf({ MinLength: [5] }, 'Number')
           flexField: string | number = '';
         }
 
@@ -1041,10 +1034,10 @@ describe('OneOf Validation Rules', () => {
 
       it('should track individual field errors', async () => {
         class MultiProperty {
-          @OneOf(['Email'])
+          @OneOf('Email')
           contact: string = '';
 
-          @OneOf(['UUID'])
+          @OneOf('UUID')
           id: string = '';
         }
 
@@ -1068,7 +1061,7 @@ describe('OneOf Validation Rules', () => {
     describe('OneOf with Different Data Types', () => {
       it('should validate numeric values', async () => {
         class NumericOneOf {
-          @OneOf(['Email', 'Number'])
+          @OneOf('Email', 'Number')
           value: string | number = '';
         }
 
@@ -1082,7 +1075,7 @@ describe('OneOf Validation Rules', () => {
 
       it('should validate boolean values', async () => {
         class BooleanOneOf {
-          @OneOf(['Email', ({ value }) => typeof value === 'boolean'])
+          @OneOf('Email', ({ value }) => typeof value === 'boolean')
           value: string | boolean = '';
         }
 
@@ -1095,7 +1088,7 @@ describe('OneOf Validation Rules', () => {
 
       it('should validate array values', async () => {
         class ArrayOneOf {
-          @OneOf(['Email', 'Array'])
+          @OneOf('Email', 'Array')
           value: string | any[] = '';
         }
 
@@ -1110,7 +1103,7 @@ describe('OneOf Validation Rules', () => {
     describe('OneOf with Null and Undefined', () => {
       it('should handle null value', async () => {
         class NullTest {
-          @OneOf(['Email', 'PhoneNumber'])
+          @OneOf('Email', 'PhoneNumber')
           value: string | null = '';
         }
 
@@ -1123,7 +1116,7 @@ describe('OneOf Validation Rules', () => {
 
       it('should handle undefined value', async () => {
         class UndefinedTest {
-          @OneOf(['Email', 'PhoneNumber'])
+          @OneOf('Email', 'PhoneNumber')
           value?: string = '';
         }
 
@@ -1138,7 +1131,7 @@ describe('OneOf Validation Rules', () => {
     describe('OneOf with Empty String', () => {
       it('should handle empty string value', async () => {
         class EmptyStringTest {
-          @OneOf(['Email', ({ value }) => value === ''])
+          @OneOf('Email', ({ value }) => value === '')
           value: string = '';
         }
 
@@ -1157,13 +1150,10 @@ describe('OneOf Validation Rules', () => {
         }
 
         class AdminField {
-          @OneOf([
-            'Email',
-            ({ value, context }) => {
-              const ctx = context as AdminContext;
-              return ctx?.isAdmin || 'Admin only';
-            },
-          ])
+          @OneOf('Email', ({ value, context }) => {
+            const ctx = context as AdminContext;
+            return ctx?.isAdmin || 'Admin only';
+          })
           field: string = '';
         }
 
@@ -1202,13 +1192,13 @@ describe('OneOf Validation Rules', () => {
     describe('Complex Validation Scenarios', () => {
       it('should handle deeply nested OneOf rules', async () => {
         class ComplexEntity {
-          @OneOf([
+          @OneOf(
             'Email',
             'PhoneNumber',
             'UUID',
             'Number',
-            ({ value }) => typeof value === 'string' && value.length > 0,
-          ])
+            ({ value }) => typeof value === 'string' && value.length > 0
+          )
           multiField: string | number = '';
         }
 
@@ -1230,10 +1220,10 @@ describe('OneOf Validation Rules', () => {
 
       it('should handle OneOf with both required and optional fields', async () => {
         class UserProfile {
-          @OneOf(['Email', 'PhoneNumber'])
+          @OneOf('Email', 'PhoneNumber')
           contact: string = '';
 
-          @OneOf([{ MinLength: [3] }, 'Number'])
+          @OneOf({ MinLength: [3] }, 'Number')
           identifier?: string | number;
         }
 
@@ -1253,7 +1243,7 @@ describe('OneOf Validation Rules', () => {
     describe('Error Handling and Recovery', () => {
       it('should provide useful error messages for debugging', async () => {
         class DebugEntity {
-          @OneOf(['Email', { MinLength: [20] }, 'UUID'])
+          @OneOf('Email', { MinLength: [20] }, 'UUID')
           field: string = '';
         }
 
@@ -1270,7 +1260,7 @@ describe('OneOf Validation Rules', () => {
 
       it('should correctly report which rules failed', async () => {
         class ErrorReporting {
-          @OneOf(['Email', 'PhoneNumber', 'UUID'])
+          @OneOf('Email', 'PhoneNumber', 'UUID')
           value: string = '';
         }
 
@@ -1288,7 +1278,7 @@ describe('OneOf Validation Rules', () => {
     describe('Performance and Optimization', () => {
       it('should complete validation within reasonable time', async () => {
         class Performance {
-          @OneOf(['Email', 'PhoneNumber', 'UUID', 'Number', 'Array'])
+          @OneOf('Email', 'PhoneNumber', 'UUID', 'Number', 'Array')
           value: string | number | any[] = '';
         }
 
@@ -1310,7 +1300,7 @@ describe('OneOf Validation Rules', () => {
         manyRules[0] = 'Email'; // Make sure one rule can pass
 
         class LargeRuleSet {
-          @OneOf(manyRules)
+          @OneOf(...manyRules)
           value: string = '';
         }
 

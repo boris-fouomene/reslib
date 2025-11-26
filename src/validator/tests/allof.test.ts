@@ -67,6 +67,7 @@ describe('AllOf Validation Rules', () => {
           password: '1',
         },
       });
+      console.log(result, ' is result');
       expect(result.message).toContain('failed for one field');
     });
   });

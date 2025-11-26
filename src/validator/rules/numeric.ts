@@ -27,18 +27,16 @@ function compareNumer(
       : isNumber(toCompareN)
         ? toCompareN
         : NaN;
-  return new Promise((resolve, reject) => {
-    if (isNaN(value) || rParams[0] === undefined) {
-      return resolve(message);
-    }
-    if (isNaN(toCompare)) {
-      return reject(message);
-    }
-    if (compare(value, toCompare)) {
-      return resolve(true);
-    }
-    reject(message);
-  });
+  if (isNaN(value) || rParams[0] === undefined) {
+    return message;
+  }
+  if (isNaN(toCompare)) {
+    return message;
+  }
+  if (compare(value, toCompare)) {
+    return true;
+  }
+  return message;
 }
 
 /**
@@ -145,7 +143,7 @@ function compareNumer(
  */
 export const IsNumberLTE = Validator.buildRuleDecorator<
   ValidatorRuleParamTypes['NumberLTE']
->(function numberLessThanOrEquals(options: ValidatorValidateOptions<[number]>) {
+>(function NumberLTE(options: ValidatorValidateOptions<[number]>) {
   return compareNumer(
     (value, toCompare) => {
       return value <= toCompare;
@@ -184,7 +182,7 @@ export const IsNumberLTE = Validator.buildRuleDecorator<
  */
 export const IsNumberLT = Validator.buildRuleDecorator<
   ValidatorRuleParamTypes['NumberLT']
->(function numberLessThan(options: ValidatorValidateOptions) {
+>(function NumberLT(options: ValidatorValidateOptions) {
   return compareNumer(
     (value, toCompare) => {
       return value < toCompare;
@@ -223,9 +221,7 @@ export const IsNumberLT = Validator.buildRuleDecorator<
  */
 export const IsNumberGTE = Validator.buildRuleDecorator<
   ValidatorRuleParamTypes['NumberGTE']
->(function numberGreaterThanOrEquals(
-  options: ValidatorValidateOptions<[number]>
-) {
+>(function NumberGTE(options: ValidatorValidateOptions<[number]>) {
   return compareNumer(
     (value, toCompare) => {
       return value >= toCompare;
@@ -264,7 +260,7 @@ export const IsNumberGTE = Validator.buildRuleDecorator<
  */
 export const IsNumberGT = Validator.buildRuleDecorator<
   ValidatorRuleParamTypes['NumberGT']
->(function numberGreaterThan(options: ValidatorValidateOptions) {
+>(function NumberGT(options: ValidatorValidateOptions) {
   return compareNumer(
     (value, toCompare) => {
       return value > toCompare;
@@ -303,7 +299,7 @@ export const IsNumberGT = Validator.buildRuleDecorator<
  */
 export const IsNumberEQ = Validator.buildRuleDecorator<
   ValidatorRuleParamTypes['NumberEQ']
->(function numberEqualsTo(options: ValidatorValidateOptions<[number]>) {
+>(function NumberEQ(options: ValidatorValidateOptions<[number]>) {
   return compareNumer(
     (value, toCompare) => {
       return value === toCompare;
@@ -329,9 +325,7 @@ export const IsNumberEQ = Validator.buildRuleDecorator<
  */
 export const IsNumberNE = Validator.buildRuleDecorator<
   ValidatorRuleParamTypes['NumberNE']
->(function numberIsDifferentFromTo(
-  options: ValidatorValidateOptions<[number]>
-) {
+>(function NumberNE(options: ValidatorValidateOptions<[number]>) {
   return compareNumer(
     (value, toCompare) => {
       return value !== toCompare;
@@ -387,7 +381,7 @@ export const IsNumber = Validator.buildRuleDecorator<
   ValidatorRuleParamTypes['Number']
 >(function Number(options) {
   const { value, i18n } = options;
-  return typeof value === 'number' || i18n.t('validator.isNumber', options);
+  return isNumber(value) || i18n.t('validator.isNumber', options);
 }, 'Number');
 
 /**
@@ -417,7 +411,7 @@ export const IsNumber = Validator.buildRuleDecorator<
  *
  * @param options - Validation options with rule parameters
  * @param options.ruleParams - Array containing [min, max] values
- * @returns Promise resolving to true if valid, rejecting with error message if invalid
+ * @returns true if valid, rejecting with error message if invalid
  *
  *
  * @public
@@ -432,51 +426,49 @@ export const IsNumberBetween = Validator.buildRuleDecorator<
   i18n,
   ...rest
 }: ValidatorValidateOptions<[number, number]>): ValidatorResult {
-  return new Promise((resolve, reject) => {
-    if (!ruleParams || ruleParams.length < 2) {
-      const message = i18n.t('validator.invalidRuleParams', {
-        rule: 'NumberBetween',
-        field: translatedPropertyName || fieldName,
-        ruleParams,
-        ...rest,
-      });
-      return reject(message);
-    }
+  if (!ruleParams || ruleParams.length < 2) {
+    const message = i18n.t('validator.invalidRuleParams', {
+      rule: 'NumberBetween',
+      field: translatedPropertyName || fieldName,
+      ruleParams,
+      ...rest,
+    });
+    return message;
+  }
 
-    const numericValue = toNumber(value);
-    if (isNaN(numericValue)) {
-      const message = i18n.t('validator.numeric', {
-        field: translatedPropertyName || fieldName,
-        value,
-        ...rest,
-      });
-      return reject(message);
-    }
+  const numericValue = toNumber(value);
+  if (isNaN(numericValue)) {
+    const message = i18n.t('validator.numeric', {
+      field: translatedPropertyName || fieldName,
+      value,
+      ...rest,
+    });
+    return message;
+  }
 
-    const min = toNumber(ruleParams[0]);
-    const max = toNumber(ruleParams[1]);
-    if (isNaN(min) || isNaN(max)) {
-      const message = i18n.t('validator.invalidRuleParams', {
-        rule: 'NumberBetween',
-        field: translatedPropertyName || fieldName,
-        ruleParams,
-        ...rest,
-      });
-      return reject(message);
-    }
-    if (numericValue >= min && numericValue <= max) {
-      resolve(true);
-    } else {
-      const message = i18n.t('validator.numberBetween', {
-        field: translatedPropertyName || fieldName,
-        value: numericValue,
-        min,
-        max,
-        ...rest,
-      });
-      reject(message);
-    }
-  });
+  const min = toNumber(ruleParams[0]);
+  const max = toNumber(ruleParams[1]);
+  if (isNaN(min) || isNaN(max)) {
+    const message = i18n.t('validator.invalidRuleParams', {
+      rule: 'NumberBetween',
+      field: translatedPropertyName || fieldName,
+      ruleParams,
+      ...rest,
+    });
+    return message;
+  }
+  if (numericValue >= min && numericValue <= max) {
+    return true;
+  } else {
+    const message = i18n.t('validator.numberBetween', {
+      field: translatedPropertyName || fieldName,
+      value: numericValue,
+      min,
+      max,
+      ...rest,
+    });
+    return message;
+  }
 }, 'NumberBetween');
 
 /**
@@ -506,7 +498,7 @@ export const IsNumberBetween = Validator.buildRuleDecorator<
  *
  * @param options - Validation options with rule parameters
  * @param options.ruleParams - Array with decimal places specification
- * @returns Promise resolving to true if valid, rejecting with error message if invalid
+ * @returns true if valid, rejecting with error message if invalid
  *
  *
  * @public
@@ -520,67 +512,63 @@ export const HasDecimalPlaces = Validator.buildRuleDecorator<
   translatedPropertyName,
   i18n,
   ...rest
-}: ValidatorValidateOptions<
-  [minDecimalPlaces: number, maxDecimalPlaces?: number]
->): ValidatorResult {
-  return new Promise((resolve, reject) => {
-    if (!ruleParams || !ruleParams.length) {
-      const message = i18n.t('validator.invalidRuleParams', {
-        rule: 'DecimalPlaces',
-        field: translatedPropertyName || fieldName,
-        ruleParams,
-        ...rest,
-      });
-      return reject(message);
-    }
+}): ValidatorResult {
+  if (!Array.isArray(ruleParams) || !ruleParams.length) {
+    const message = i18n.t('validator.invalidRuleParams', {
+      rule: 'DecimalPlaces',
+      field: translatedPropertyName || fieldName,
+      ruleParams,
+      ...rest,
+    });
+    return message;
+  }
 
-    const numericValue = toNumber(value);
-    if (isNaN(numericValue)) {
-      const message = i18n.t('validator.number', {
-        rule: 'DecimalPlaces',
-        field: translatedPropertyName || fieldName,
-        value,
-        ruleParams,
-        ...rest,
-      });
-      return reject(message);
-    }
+  const numericValue = toNumber(value);
+  if (isNaN(numericValue)) {
+    const message = i18n.t('validator.number', {
+      rule: 'DecimalPlaces',
+      field: translatedPropertyName || fieldName,
+      value,
+      ruleParams,
+      ...rest,
+    });
+    return message;
+  }
 
-    // Get decimal places from the number
-    const valueStr = String(value);
-    const decimalIndex = valueStr.indexOf('.');
-    const actualDecimalPlaces =
-      decimalIndex === -1 ? 0 : valueStr.length - decimalIndex - 1;
+  // Get decimal places from the number
+  const valueStr = String(value);
+  const decimalIndex = valueStr.indexOf('.');
+  const actualDecimalPlaces =
+    decimalIndex === -1 ? 0 : valueStr.length - decimalIndex - 1;
 
-    let isValid = false;
+  let isValid = false;
 
-    if (ruleParams.length === 1) {
-      // Exact decimal places
-      const requiredPlaces = toNumber(ruleParams[0]);
-      isValid = actualDecimalPlaces === requiredPlaces;
-    } else if (ruleParams.length === 2) {
-      // Range of decimal places
-      const minPlaces = toNumber(ruleParams[0]);
-      const maxPlaces = toNumber(ruleParams[1]);
-      isValid =
-        !isNaN(minPlaces) &&
-        !isNaN(maxPlaces) &&
-        actualDecimalPlaces >= minPlaces &&
-        actualDecimalPlaces <= maxPlaces;
-    }
-    if (isValid) {
-      resolve(true);
-    } else {
-      const message = i18n.t('validator.decimalPlaces', {
-        field: translatedPropertyName || fieldName,
-        value,
-        places: ruleParams.join('-'),
-        actualPlaces: actualDecimalPlaces,
-        ...rest,
-      });
-      reject(message);
-    }
-  });
+  if (ruleParams.length === 1) {
+    // Exact decimal places
+    const requiredPlaces = toNumber(ruleParams[0]);
+    isValid = actualDecimalPlaces === requiredPlaces;
+  } else if (ruleParams.length === 2) {
+    // Range of decimal places
+    const minPlaces = toNumber(ruleParams[0]);
+    const maxPlaces = toNumber(ruleParams[1]);
+    isValid =
+      !isNaN(minPlaces) &&
+      !isNaN(maxPlaces) &&
+      actualDecimalPlaces >= minPlaces &&
+      actualDecimalPlaces <= maxPlaces;
+  }
+  if (isValid) {
+    return true;
+  } else {
+    const message = i18n.t('validator.decimalPlaces', {
+      field: translatedPropertyName || fieldName,
+      value,
+      places: ruleParams.join('-'),
+      actualPlaces: actualDecimalPlaces,
+      ...rest,
+    });
+    return message;
+  }
 }, 'DecimalPlaces');
 
 /**
@@ -606,33 +594,31 @@ export const HasDecimalPlaces = Validator.buildRuleDecorator<
  * }
  * ```
  *
- * @returns Promise resolving to true if valid, rejecting with error message if invalid
+ * @returns true if valid, rejecting with error message if invalid
  *
  *
  * @public
  */
 export const IsInteger = Validator.buildRuleDecorator<
   ValidatorRuleParamTypes['Integer']
->(function _Integer({
+>(function Integer({
   value,
   fieldName,
   translatedPropertyName,
   i18n,
   ...rest
 }: ValidatorValidateOptions): ValidatorResult {
-  return new Promise((resolve, reject) => {
-    const numericValue = toNumber(value);
-    if (isNaN(numericValue) || !Number.isInteger(numericValue)) {
-      const message = i18n.t('validator.integer', {
-        field: translatedPropertyName || fieldName,
-        value,
-        ...rest,
-      });
-      reject(message);
-    } else {
-      resolve(true);
-    }
-  });
+  const numericValue = toNumber(value);
+  if (isNaN(numericValue) || !Number.isInteger(numericValue)) {
+    const message = i18n.t('validator.integer', {
+      field: translatedPropertyName || fieldName,
+      value,
+      ...rest,
+    });
+    return message;
+  } else {
+    return true;
+  }
 }, 'Integer');
 
 /**
@@ -805,7 +791,7 @@ export const IsOddNumber = Validator.buildRuleDecorator<
  *
  * @param options - Validation options with rule parameters
  * @param options.ruleParams - Array containing the multiple value
- * @returns Promise resolving to true if valid, rejecting with error message if invalid
+ * @returns true if valid, rejecting with error message if invalid
  *
  *
  * @public
@@ -820,58 +806,56 @@ export const IsMultipleOf = Validator.buildRuleDecorator<
   i18n,
   ...rest
 }: ValidatorValidateOptions<[number]>): ValidatorResult {
-  return new Promise((resolve, reject) => {
-    if (!ruleParams || !ruleParams.length) {
-      const message = i18n.t('validator.invalidRuleParams', {
-        rule: 'MultipleOf',
-        field: translatedPropertyName || fieldName,
-        ...rest,
-        ruleParams,
-      });
-      return reject(message);
-    }
+  if (!ruleParams || !ruleParams.length) {
+    const message = i18n.t('validator.invalidRuleParams', {
+      rule: 'MultipleOf',
+      field: translatedPropertyName || fieldName,
+      ...rest,
+      ruleParams,
+    });
+    return message;
+  }
 
-    const numericValue = toNumber(value);
-    if (isNaN(numericValue)) {
-      const message = i18n.t('validator.number', {
-        field: translatedPropertyName || fieldName,
-        value,
-        ruleParams,
-        ...rest,
-      });
-      return reject(message);
-    }
+  const numericValue = toNumber(value);
+  if (isNaN(numericValue)) {
+    const message = i18n.t('validator.number', {
+      field: translatedPropertyName || fieldName,
+      value,
+      ruleParams,
+      ...rest,
+    });
+    return message;
+  }
 
-    const multiple = toNumber(ruleParams[0]);
-    if (
-      isNaN(multiple) ||
-      (multiple === 0 && String(ruleParams[0]).trim() !== '0')
-    ) {
-      const message = i18n.t('validator.invalidRuleParams', {
-        rule: 'MultipleOf',
-        ruleParams,
-        field: translatedPropertyName || fieldName,
-        ...rest,
-      });
-      return reject(message);
-    }
+  const multiple = toNumber(ruleParams[0]);
+  if (
+    isNaN(multiple) ||
+    (multiple === 0 && String(ruleParams[0]).trim() !== '0')
+  ) {
+    const message = i18n.t('validator.invalidRuleParams', {
+      rule: 'MultipleOf',
+      ruleParams,
+      field: translatedPropertyName || fieldName,
+      ...rest,
+    });
+    return message;
+  }
 
-    // Check if the value is a multiple of the specified number
-    const remainder = numericValue % multiple;
-    const isMultiple = Math.abs(remainder) < Number.EPSILON;
-    if (isMultiple) {
-      resolve(true);
-    } else {
-      const message = i18n.t('validator.multipleOf', {
-        field: translatedPropertyName || fieldName,
-        value: numericValue,
-        multiple,
-        ruleParams,
-        ...rest,
-      });
-      reject(message);
-    }
-  });
+  // Check if the value is a multiple of the specified number
+  const remainder = numericValue % multiple;
+  const isMultiple = Math.abs(remainder) < Number.EPSILON;
+  if (isMultiple) {
+    return true;
+  } else {
+    const message = i18n.t('validator.multipleOf', {
+      field: translatedPropertyName || fieldName,
+      value: numericValue,
+      multiple,
+      ruleParams,
+      ...rest,
+    });
+    return message;
+  }
 }, 'MultipleOf');
 
 declare module '../types' {
@@ -932,7 +916,7 @@ declare module '../types' {
      * }
      * ```
      *
-     * @returns Promise resolving to true if valid number, rejecting with error message if invalid
+     * @returns true if valid number, rejecting with error message if invalid
      *
      * @public
      */
@@ -987,7 +971,7 @@ declare module '../types' {
      *
      * @param options - Validation options with rule parameters
      * @param options.ruleParams - Array containing the maximum value
-     * @returns Promise resolving to true if value ≤ max, rejecting with error message if value > max
+     * @returns true if value ≤ max, rejecting with error message if value > max
      *
      *
      * @public
@@ -1048,7 +1032,7 @@ declare module '../types' {
      *
      * @param options - Validation options with rule parameters
      * @param options.ruleParams - Array containing the exclusive maximum value
-     * @returns Promise resolving to true if value < max, rejecting with error message if value ≥ max
+     * @returns true if value < max, rejecting with error message if value ≥ max
      *
      *
      * @public
@@ -1109,7 +1093,7 @@ declare module '../types' {
      *
      * @param options - Validation options with rule parameters
      * @param options.ruleParams - Array containing the inclusive minimum value
-     * @returns Promise resolving to true if value ≥ min, rejecting with error message if value < min
+     * @returns true if value ≥ min, rejecting with error message if value < min
      *
      *
      * @public
@@ -1170,7 +1154,7 @@ declare module '../types' {
      *
      * @param options - Validation options with rule parameters
      * @param options.ruleParams - Array containing the exclusive minimum value
-     * @returns Promise resolving to true if value > min, rejecting with error message if value ≤ min
+     * @returns true if value > min, rejecting with error message if value ≤ min
      *
      *
      * @public
@@ -1232,7 +1216,7 @@ declare module '../types' {
      *
      * @param options - Validation options with rule parameters
      * @param options.ruleParams - Array containing the exact target value
-     * @returns Promise resolving to true if value === target, rejecting with error message if value !== target
+     * @returns true if value === target, rejecting with error message if value !== target
      *
      *
      * @public
@@ -1293,7 +1277,7 @@ declare module '../types' {
      *
      * @param options - Validation options with rule parameters
      * @param options.ruleParams - Array containing the forbidden value
-     * @returns Promise resolving to true if value !== forbidden, rejecting with error message if value === forbidden
+     * @returns true if value !== forbidden, rejecting with error message if value === forbidden
      *
      *
      * @public
@@ -1339,7 +1323,7 @@ declare module '../types' {
      *
      * @param options - Validation options with rule parameters
      * @param options.ruleParams - Array containing [min, max] values
-     * @returns Promise resolving to true if valid, rejecting with error message if invalid
+     * @returns true if valid, rejecting with error message if invalid
      *
      *
      * @public
@@ -1389,7 +1373,7 @@ declare module '../types' {
      *
      * @param options - Validation options with rule parameters
      * @param options.ruleParams - Array with decimal places specification
-     * @returns Promise resolving to true if valid, rejecting with error message if invalid
+     * @returns true if valid, rejecting with error message if invalid
      *
      *
      * @public
@@ -1435,7 +1419,7 @@ declare module '../types' {
      * }); // ✗ Invalid (not numeric)
      * ```
      *
-     * @returns Promise resolving to true if valid, rejecting with error message if invalid
+     * @returns true if valid, rejecting with error message if invalid
      *
      *
      * @public
@@ -1461,7 +1445,7 @@ declare module '../types' {
      * await Validator.validate({ value: 'abc', rules: ['EvenNumber'] }); // ✗ not numeric
      * ```
      *
-     * @returns Promise resolving to true if valid, rejecting with error message if invalid
+     * @returns true if valid, rejecting with error message if invalid
      *
      * @public
      */
@@ -1516,7 +1500,7 @@ declare module '../types' {
      *
      * @param options - Validation options with rule parameters
      * @param options.ruleParams - Array containing the multiple value
-     * @returns Promise resolving to true if valid, rejecting with error message if invalid
+     * @returns true if valid, rejecting with error message if invalid
      *
      *
      * @public
@@ -1542,7 +1526,7 @@ declare module '../types' {
      * await Validator.validate({ value: 'abc', rules: ['OddNumber'] }); // ✗ not numeric
      * ```
      *
-     * @returns Promise resolving to true if valid, rejecting with error message if invalid
+     * @returns true if valid, rejecting with error message if invalid
      *
      * @public
      */

@@ -1199,29 +1199,26 @@ export const IsJSON = Validator.buildRuleDecorator<
   i18n,
   ...rest
 }: ValidatorValidateOptions): ValidatorResult {
-  return new Promise((resolve, reject) => {
-    if (typeof value !== 'string') {
-      const message = i18n.t('validator.json', {
-        field: translatedPropertyName || fieldName,
-        value,
-        ...rest,
-      });
-      return reject(message);
-    }
+  if (typeof value !== 'string') {
+    const message = i18n.t('validator.json', {
+      field: translatedPropertyName || fieldName,
+      value,
+      ...rest,
+    });
+    return message;
+  }
 
-    try {
-      JSON.parse(value);
-      resolve(true);
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    } catch (error) {
-      const message = i18n.t('validator.json', {
-        field: translatedPropertyName || fieldName,
-        value,
-        ...rest,
-      });
-      reject(message);
-    }
-  });
+  try {
+    JSON.parse(value);
+    return true;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  } catch (error) {
+    return i18n.t('validator.json', {
+      field: translatedPropertyName || fieldName,
+      value,
+      ...rest,
+    });
+  }
 }, 'JSON');
 
 /**
@@ -1370,29 +1367,25 @@ export const IsBase64 = Validator.buildRuleDecorator<
   i18n,
   ...rest
 }: ValidatorValidateOptions): ValidatorResult {
-  return new Promise((resolve, reject) => {
-    if (typeof value !== 'string') {
-      const message = i18n.t('validator.base64', {
-        field: translatedPropertyName || fieldName,
-        value,
-        ...rest,
-      });
-      return reject(message);
-    }
-
-    const base64Regex =
-      /^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/;
-    if (base64Regex.test(value)) {
-      resolve(true);
-    } else {
-      const message = i18n.t('validator.base64', {
-        field: translatedPropertyName || fieldName,
-        value,
-        ...rest,
-      });
-      reject(message);
-    }
-  });
+  if (typeof value !== 'string') {
+    const message = i18n.t('validator.base64', {
+      field: translatedPropertyName || fieldName,
+      value,
+      ...rest,
+    });
+    return message;
+  }
+  const base64Regex =
+    /^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/;
+  if (base64Regex.test(value)) {
+    return true;
+  } else {
+    return i18n.t('validator.base64', {
+      field: translatedPropertyName || fieldName,
+      value,
+      ...rest,
+    });
+  }
 }, 'Base64');
 
 /**
@@ -2472,7 +2465,7 @@ declare module '../types' {
      * @param options - Optional configuration object for URL validation
      * @param options.requireHost - Whether to require protocols that need a hostname (default: true)
      * @param options.allowedProtocols - Array of allowed protocols without colons
-     * @returns Promise resolving to true if valid URL, rejecting with error message if invalid
+     * @returns true if valid URL, rejecting with error message if invalid
      *
      * @public
      */
@@ -2547,7 +2540,7 @@ declare module '../types' {
      * }
      * ```
      *
-     * @returns Promise resolving to true if valid file name, rejecting with error message if invalid
+     * @returns true if valid file name, rejecting with error message if invalid
      *
      * @public
      */
@@ -2610,7 +2603,7 @@ declare module '../types' {
      *
      * @param options - Optional configuration object
      * @param options.countryCode - Country code to validate against specific country's format
-     * @returns Promise resolving to true if valid phone number, rejecting with error message if invalid
+     * @returns true if valid phone number, rejecting with error message if invalid
      *
      * @public
      */
@@ -2685,7 +2678,7 @@ declare module '../types' {
      * @param options - Optional configuration object for email and phone validation
      * @param options.email - Email validation options (maxTotalLength, etc.)
      * @param options.phoneNumber - Phone validation options with country code
-     * @returns Promise resolving to true if valid email or phone, rejecting with error message if invalid
+     * @returns true if valid email or phone, rejecting with error message if invalid
      *
      * @public
      */
@@ -2784,7 +2777,7 @@ declare module '../types' {
      * @param options.maxLocalPartLength - Maximum local part length in characters (default: 64)
      * @param options.maxDomainLength - Maximum domain length in characters (default: 255)
      * @param options.maxDomainLabelLength - Maximum domain label length in characters (default: 63)
-     * @returns Promise resolving to true if valid email, rejecting with error message if invalid
+     * @returns true if valid email, rejecting with error message if invalid
      *
      * @public
      */
@@ -2833,7 +2826,7 @@ declare module '../types' {
      * ```
      *
      * @param options - Validation options containing value and context
-     * @returns Promise resolving to true if valid, rejecting with error message if invalid
+     * @returns true if valid, rejecting with error message if invalid
      *
      * @public
      */
@@ -2877,7 +2870,7 @@ declare module '../types' {
      * ```
      *
      * @param options - Validation options containing value and context
-     * @returns Promise resolving to true if valid, rejecting with error message if invalid
+     * @returns true if valid, rejecting with error message if invalid
      *
      * @public
      */
@@ -2921,7 +2914,7 @@ declare module '../types' {
      * ```
      *
      * @param options - Validation options containing value and context
-     * @returns Promise resolving to true if valid, rejecting with error message if invalid
+     * @returns true if valid, rejecting with error message if invalid
      *
      * @public
      */
@@ -2980,7 +2973,7 @@ declare module '../types' {
      * ```
      *
      * @param options - Validation options containing value and context
-     * @returns Promise resolving to true if valid, rejecting with error message if invalid
+     * @returns true if valid, rejecting with error message if invalid
      *
      * @public
      */
@@ -3029,7 +3022,7 @@ declare module '../types' {
      * ```
      *
      * @param options - Validation options containing value and context
-     * @returns Promise resolving to true if valid, rejecting with error message if invalid
+     * @returns true if valid, rejecting with error message if invalid
      *
      * @public
      */
@@ -3092,7 +3085,7 @@ declare module '../types' {
      *
      * @param options - Validation options with rule parameters
      * @param options.ruleParams - Array containing IP version ("4", "6", or "4/6")
-     * @returns Promise resolving to true if valid, rejecting with error message if invalid
+     * @returns true if valid, rejecting with error message if invalid
      *
      * @public
      */
@@ -3146,7 +3139,7 @@ declare module '../types' {
      * ```
      *
      * @param options - Validation options containing value and context
-     * @returns Promise resolving to true if valid, rejecting with error message if invalid
+     * @returns true if valid, rejecting with error message if invalid
      *
      * @public
      */
@@ -3219,7 +3212,7 @@ declare module '../types' {
      * @param ruleParams - Array containing pattern and optional error message
      * @param ruleParams[0] - Regular expression pattern as string or RegExp object
      * @param ruleParams[1] - Optional custom error message key for i18n
-     * @returns Promise resolving to true if pattern matches, rejecting with error message if invalid
+     * @returns true if pattern matches, rejecting with error message if invalid
      *
      * @public
      */
