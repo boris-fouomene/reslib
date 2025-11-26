@@ -11,8 +11,8 @@ import {
 } from '../index';
 import { ValidatorRule } from '../types';
 
+import { AllOf } from '../rules/multiRules';
 import { Validator } from '../validator';
-import { AllOf } from './multiRules';
 
 ensureRulesRegistered();
 

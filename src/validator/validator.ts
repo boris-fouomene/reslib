@@ -39,61 +39,6 @@ import {
   ValidatorValidationError,
 } from './types';
 
-// ============================================================================
-// METADATA & MARKER CONSTANTS - Centralized definitions to avoid duplication
-// ============================================================================
-
-/** Metadata keys for storing validation target information on classes */
-const VALIDATOR_TARGET_RULES_METADATA_KEY = Symbol('validatorTargetRules');
-const VALIDATOR_TARGET_OPTIONS_METADATA_KEY = Symbol('validatorTargetOptions');
-
-/** Symbol markers for identifying rule decorators (survives minification) */
-const VALIDATOR_NESTED_RULE_MARKER = Symbol.for('validatorNestedRuleMarker');
-const VALIDATOR_NESTED_RULE_PARAMS = Symbol.for('validatorNestedRuleParams');
-const VALIDATOR_ONEOF_RULE_MARKER = Symbol.for('validatorOneOfRuleMarker');
-const VALIDATOR_ALLOF_RULE_MARKER = Symbol.for('validatorAllOfRuleMarker');
-const VALIDATOR_ARRAYOF_RULE_MARKER = Symbol.for('validatorArrayOfRuleMarker');
-
-/**
- * Checks if a rule function has a specific marker.
- * @param ruleFunc - The rule function to check
- * @param marker - The marker symbol to check for
- * @returns true if the function has the specified marker
- */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function hasRuleMarker(ruleFunc: any, marker: symbol): boolean {
-  return typeof ruleFunc === 'function' && ruleFunc[marker] === true;
-}
-
-/**
- * Gets the type of multi-rule from marker inspection.
- * @param ruleFunc - The rule function to inspect
- * @returns "oneof" | "allof" | "arrayof" | undefined
- */
-function getMultiRuleType(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  ruleFunc: any
-): 'oneof' | 'allof' | 'arrayof' | undefined {
-  if (hasRuleMarker(ruleFunc, VALIDATOR_ONEOF_RULE_MARKER)) return 'oneof';
-  if (hasRuleMarker(ruleFunc, VALIDATOR_ALLOF_RULE_MARKER)) return 'allof';
-  if (hasRuleMarker(ruleFunc, VALIDATOR_ARRAYOF_RULE_MARKER)) return 'arrayof';
-  return undefined;
-}
-
-/**
- * Marks a rule function with a specific marker symbol.
- * Used during decorator creation to mark OneOf, AllOf, ArrayOf, ValidateNested rules.
- * @param ruleFunc - The rule function to mark
- * @param marker - The marker symbol to apply
- */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function markRuleWithSymbol(ruleFunc: any, marker: symbol): void {
-  if (typeof ruleFunc === 'function') {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (ruleFunc as any)[marker] = true;
-  }
-}
-
 /**
  * # Validator Class
  *
@@ -168,33 +113,7 @@ function markRuleWithSymbol(ruleFunc: any, marker: symbol): void {
  * @public
  */
 export class Validator {
-  /**
-   * ## Metadata Storage Key
-   *
-   * Private symbol used to store validation rules in metadata. This ensures
-   * that the validation rules don't conflict with other metadata keys.
-   *
-   * @private
-   * @readonly
-   *
-   */
-  private static readonly RULES_METADATA_KEY = Symbol('validationRules');
-
-  /**
-   * ## Mark Rule With Symbol
-   *
-   * Marks a rule function with a specific marker symbol. Used internally to mark
-   * decorators (OneOf, AllOf, ArrayOf, ValidateNested) for reliable identification
-   * even in minified code. Symbols survive minification while function names do not.
-   *
-   * @param ruleFunc - The rule function to mark
-   * @param marker - The marker symbol to apply
-   * @internal
-   */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  static markRuleWithSymbol(ruleFunc: any, marker: symbol): void {
-    markRuleWithSymbol(ruleFunc, marker);
-  }
+  private static readonly RULES_METADATA_KEY = Symbol.for('validationRules');
 
   /**
    * ## Register Validation Rule
@@ -257,14 +176,14 @@ export class Validator {
    * @template TParams - Array type for rule parameters
    * @template Context - Type for validation context
    *
-   * @param {ValidatorOptionalOrEmptyRuleNames} ruleName - Unique identifier for the validation rule (must be non-empty string)
+   * @param {ValidatorOptionalOrEmptyRuleNames} ruleName - Unique identifier for the validation rule (must be non-empty string). This type constrains registration to rules with optional or empty parameters only (e.g., Required[], Email[], PhoneNumber[countryCode?]) but not rules with required parameters (e.g., MinLength[number]).
    * @param ruleHandler - Function that performs the validation logic
    *
    * @throws {Error} When ruleName is not a non-empty string
    * @throws {Error} When ruleHandler is not a function
    *
    *
-   * @see {@link findRegisteredRule} - Find a registered rule
+   * @see {@link getRule} - Find a registered rule
    * @see {@link getRules} - Get all registered rules
    * @public
    */
@@ -282,7 +201,6 @@ export class Validator {
     if (typeof ruleHandler !== 'function') {
       throw new Error('Rule handler must be a function');
     }
-
     const existingRules = Validator.getRules();
     const updatedRules = { ...existingRules, [ruleName]: ruleHandler };
     Reflect.defineMetadata(
@@ -296,33 +214,96 @@ export class Validator {
    * ## Get All Registered Rules
    *
    * Retrieves an immutable copy of all currently registered validation rules.
-   * This method returns a shallow copy to prevent external modification of
-   * the internal rules registry while allowing inspection of available rules.
+   * This method provides access to the internal rules registry that contains
+   * all custom validation rules registered via {@link registerRule}.
+   *
+   * ### Rule Registry
+   * The Validator maintains a centralized registry of validation rules using
+   * TypeScript's Reflect Metadata API. This registry stores rule functions
+   * that can be used throughout the validation system.
+   *
+   * ### Return Value
+   * Returns a shallow copy of the rules registry to prevent external modification
+   * while allowing inspection of available rules. The returned object maps
+   * rule names to their corresponding validation functions.
+   *
+   * ### Rule Types
+   * The registry contains rules registered through {@link registerRule}, which
+   * are constrained by {@link ValidatorOptionalOrEmptyRuleNames} to only include
+   * rules with optional or empty parameters (e.g., Required[], Email[], PhoneNumber[countryCode?]).
    *
    * ### Use Cases
-   * - Debugging: Check what rules are available
-   * - Rule Discovery: List all registered rules for documentation
-   * - Testing: Verify rule registration in unit tests
-   * - Introspection: Build dynamic validation UIs
+   * - **Rule Discovery**: List all available validation rules for documentation
+   * - **Debugging**: Inspect the current state of the rules registry
+   * - **Testing**: Verify rule registration in unit tests
+   * - **Introspection**: Build dynamic validation UIs or rule explorers
+   * - **Rule Analysis**: Examine rule implementations programmatically
+   *
+   * ### Performance
+   * This method performs a shallow copy of the rules object, ensuring that
+   * external modifications cannot affect the internal registry while providing
+   * efficient access to rule functions.
    *
    * @example
    * ```typescript
    * // Get all registered rules
    * const allRules = Validator.getRules();
    * console.log('Available rules:', Object.keys(allRules));
+   * console.log('Total rules registered:', Object.keys(allRules).length);
    *
-   * // Check if a specific rule exists
+   * // Check if specific rules exist
    * const hasEmailRule = 'Email' in Validator.getRules();
+   * const hasRequiredRule = 'Required' in Validator.getRules();
    *
-   * // Get rule function directly (not recommended, use findRegisteredRule instead)
-   * const emailRule = Validator.getRules()['Email'];
+   * // Access rule functions directly (not recommended for normal use)
+   * const rules = Validator.getRules();
+   * const emailRule = rules['Email'];
+   * if (emailRule) {
+   *   // Use rule directly (bypasses normal validation pipeline)
+   *   const result = await emailRule({
+   *     value: 'test@example.com',
+   *     ruleParams: []
+   *   });
+   * }
+   *
+   * // Iterate through all rules for analysis
+   * const rulesRegistry = Validator.getRules();
+   * for (const [ruleName, ruleFunction] of Object.entries(rulesRegistry)) {
+   *   console.log(`Rule: ${ruleName}, Type: ${typeof ruleFunction}`);
+   * }
+   *
+   * // Use in testing to verify rule registration
+   * describe('Rule Registration', () => {
+   *   test('should register custom rules', () => {
+   *     const rulesBefore = Object.keys(Validator.getRules());
+   *     Validator.registerRule('CustomRule', ({ value }) => value === 'valid');
+   *     const rulesAfter = Object.keys(Validator.getRules());
+   *     expect(rulesAfter.length).toBe(rulesBefore.length + 1);
+   *     expect(rulesAfter).toContain('CustomRule');
+   *   });
+   * });
    * ```
    *
-   * @returns An immutable copy of all registered validation rules
+   * @template Context - Optional type for validation context (passed through to rule functions)
    *
+   * @returns A shallow copy of all registered validation rules as ValidatorRuleFunctionsMap<Context>
+   *          - Keys: Rule names (ValidatorRuleName strings)
+   *          - Values: Rule validation functions (ValidatorRuleFunction)
+   *          - Empty object if no rules are registered
+   *          - Immutable copy prevents external modification
    *
-   * @see {@link registerRule} - Register a new rule
-   * @see {@link findRegisteredRule} - Find a specific rule
+   * @remarks
+   * - Returns a new object each time to prevent external mutations
+   * - Rules are stored using Reflect Metadata API on the Validator class
+   * - Only includes rules registered via registerRule (not built-in decorator rules)
+   * - Rule functions maintain their original type signatures and context requirements
+   * - Useful for debugging, testing, and building rule management interfaces
+   *
+   * @see {@link registerRule} - Register a new validation rule
+   * @see {@link getRule} - Get a specific rule by name
+   * @see {@link hasRule} - Check if a rule exists (type guard)
+   * @see {@link ValidatorRuleFunctionsMap} - Type definition for the returned map
+   * @see {@link ValidatorOptionalOrEmptyRuleNames} - Type constraint for registered rules
    * @public
    */
   static getRules<Context = unknown>(): ValidatorRuleFunctionsMap<Context> {
@@ -335,58 +316,116 @@ export class Validator {
    * ## Get Registered Rule
    *
    * Retrieves a specific validation rule function by its registered name. This method
-   * provides direct access to the underlying validation functions that have been
-   * registered with the Validator system.
+   * provides direct access to individual validation functions that have been registered
+   * with the Validator system through {@link registerRule}.
    *
    * ### Rule Retrieval
-   * This method looks up rules in the internal rules registry that was populated
-   * through the `registerRule` method. It returns the actual validation function
-   * that can be used for custom validation logic or inspection.
+   * This method looks up a single rule in the internal rules registry by name. It serves
+   * as a convenience method that delegates to {@link getRules} but returns only the
+   * requested rule function, or `undefined` if the rule doesn't exist.
+   *
+   * ### Registry Lookup
+   * The method performs a direct key lookup in the rules registry maintained by
+   * {@link getRules}. This registry contains only rules registered via {@link registerRule},
+   * which are constrained by {@link ValidatorOptionalOrEmptyRuleNames}.
    *
    * ### Return Value
    * - Returns the validation rule function if found
    * - Returns `undefined` if no rule with the given name exists
-   * - The returned function has the signature `ValidatorRuleFunction`
+   * - The returned function has the signature `ValidatorRuleFunction<TParams, Context>`
+   *
+   * ### Use Cases
+   * - **Direct Rule Access**: Get a specific rule function for programmatic use
+   * - **Rule Inspection**: Examine the implementation of a particular validation rule
+   * - **Dynamic Validation**: Access rules by name at runtime
+   * - **Rule Testing**: Verify rule registration and functionality in tests
+   * - **Custom Validation Logic**: Build custom validation workflows using existing rules
+   *
+   * ### Performance
+   * This method performs a single hash map lookup in the rules registry, making it
+   * very efficient for retrieving individual rules. The underlying registry is
+   * maintained as a shallow copy to prevent external mutations.
    *
    * @example
    * ```typescript
-   * // Get a registered rule function
+   * // Get a specific rule function
    * const emailRule = Validator.getRule('Email');
    * if (emailRule) {
-   *   // Use the rule directly
+   *   // Use the rule directly (bypasses normal validation pipeline)
    *   const result = await emailRule({
    *     value: 'test@example.com',
    *     ruleParams: []
    *   });
-   *   console.log('Email validation result:', result);
+   *   console.log('Direct email validation result:', result);
    * }
    *
-   * // Check if a rule exists before using it
+   * // Safe rule access with existence check
    * const customRule = Validator.getRule('CustomRule');
    * if (customRule) {
-   *   // Rule exists, safe to use
+   *   console.log('CustomRule is available for use');
+   *   // Rule exists and is ready to use
    * } else {
    *   console.log('CustomRule is not registered');
+   *   // Handle missing rule case
    * }
    *
-   * // Get rule for programmatic validation
+   * // Get rule for custom validation logic
    * const minLengthRule = Validator.getRule('MinLength');
    * if (minLengthRule) {
-   *   const isValid = await minLengthRule({
-   *     value: 'hello',
-     ruleParams: [3]  // Minimum length of 3
-   *   });
+   *   const customValidator = async (value: string, minLen: number) => {
+   *     const result = await minLengthRule({
+   *       value,
+   *       ruleParams: [minLen]
+   *     });
+   *     return result === true ? 'Valid' : 'Invalid';
+   *   };
+   *
+   *   console.log(await customValidator('hello', 3)); // 'Valid'
+   *   console.log(await customValidator('hi', 5));    // 'Invalid'
    * }
+   *
+   * // Rule inspection and analysis
+   * const allRules = Validator.getRules();
+   * for (const ruleName of Object.keys(allRules)) {
+   *   const rule = Validator.getRule(ruleName);
+   *   console.log(`Rule: ${ruleName}, Function: ${rule?.name || 'anonymous'}`);
+   * }
+   *
+   * // Testing rule registration
+   * describe('Rule Registration', () => {
+   *   test('should register and retrieve custom rule', () => {
+   *     Validator.registerRule('TestRule', ({ value }) => value === 'test');
+   *     const retrievedRule = Validator.getRule('TestRule');
+   *     expect(retrievedRule).toBeDefined();
+   *     expect(typeof retrievedRule).toBe('function');
+   *   });
+   * });
    * ```
    *
-   * @param ruleName - The name of the validation rule to retrieve
+   * @template Context - Optional type for validation context (passed through to rule functions)
+   *
+   * @param ruleName - The name of the validation rule to retrieve (must be a valid ValidatorRuleName)
    *
    * @returns The validation rule function if found, undefined otherwise
+   *          - Function signature: `ValidatorRuleFunction<TParams, Context>`
+   *          - Returns `undefined` if rule doesn't exist in registry
+   *          - Rule function maintains its original type signatures and behavior
    *
-   * 
+   * @remarks
+   * - This method delegates to `getRules()` internally for registry access
+   * - Only returns rules registered via `registerRule()` (not built-in decorator rules)
+   * - Rules are constrained by `ValidatorOptionalOrEmptyRuleNames` type constraints
+   * - Direct rule function calls bypass the normal validation pipeline
+   * - Always check for `undefined` return value before using the rule
+   * - Useful for building custom validation logic and rule introspection
+   * - Rule functions expect the standard `ValidatorRuleFunction` parameter structure
+   *
+   * @see {@link getRules} - Get all registered rules as a map
    * @see {@link registerRule} - Register a new validation rule
-   * @see {@link getRules} - Get all registered rules
+   * @see {@link getRule} - Type-safe rule retrieval with generics
    * @see {@link hasRule} - Check if a rule exists (type guard)
+   * @see {@link ValidatorRuleFunction} - Type definition for rule functions
+   * @see {@link ValidatorOptionalOrEmptyRuleNames} - Type constraint for registered rules
    * @public
    */
   static getRule<Context = unknown>(ruleName: ValidatorRuleName) {
@@ -473,44 +512,108 @@ export class Validator {
    * ## Get Error Message Separators
    *
    * Retrieves the configured separators used for formatting validation error messages.
-   * These separators are internationalized and can be customized through the i18n system.
-   * This method provides a centralized way to get consistent error message formatting.
+   * This method provides centralized access to internationalized separator strings that
+   * ensure consistent error message formatting across different languages and locales.
+   *
+   * ### Purpose
+   * Error message separators are crucial for creating readable, localized error messages
+   * when multiple validation failures occur. Different languages use different punctuation
+   * conventions (commas, semicolons, periods) for joining error messages, and this method
+   * ensures proper internationalization support.
    *
    * ### Separator Types
-   * - `multiple` - Used when joining multiple error messages
-   * - `single` - Used for single error message formatting
+   * - **`multiple`** - Primary separator for joining multiple error messages
+   *   - Default: `", "` (comma + space)
+   *   - Used when combining multiple validation errors
+   *   - Examples: `"Field is required, Must be email, Too short"`
+   * - **`single`** - Secondary separator for single error message formatting
+   *   - Default: `", "` (comma + space)
+   *   - Used for complex single error messages with multiple parts
+   *   - Examples: `"Must be between 5 and 10, but received 15"`
    *
-   * ### Internationalization
-   * The separators are loaded from the i18n translation system under the key
-   * `validator.separators`. This allows different languages to use appropriate
-   * punctuation and formatting conventions.
+   * ### Internationalization Behavior
+   * - Loads separators from i18n translation key: `validator.separators`
+   * - Falls back to English defaults (`", "`) if translations unavailable
+   * - Supports custom I18n instances for testing or specialized formatting
+   * - Automatically adapts to language-specific punctuation conventions
    *
-   * @param customI18n - Optional custom I18n instance to use for translations
+   * ### Use Cases
+   * - **Custom Error Builders**: Create consistent error message formatting
+   * - **Multi-Field Validation**: Join errors from multiple field validations
+   * - **Complex Rules**: Format errors from rules with multiple conditions
+   * - **UI Integration**: Ensure error messages match application locale
+   * - **Testing**: Verify error message formatting in different languages
+   *
    * @example
    * ```typescript
-   * // Get current separators
+   * // Basic separator retrieval
    * const separators = Validator.getErrorMessageSeparators();
    * console.log(separators); // { multiple: ", ", single: ", " }
    *
-   * // Use separators for custom error formatting
-   * const errors = ['FieldMeta is required', 'Must be an email', 'Too short'];
-   * const errorMessage = errors.join(separators.multiple);
-   * console.log(errorMessage); // "FieldMeta is required, Must be an email, Too short"
-   *
-   * // Custom error message builder
-   * function buildErrorMessage(fieldName: string, errors: string[]) {
+   * // Custom error message formatting
+   * function formatValidationErrors(fieldName: string, errors: string[]) {
    *   const seps = Validator.getErrorMessageSeparators();
+   *   if (errors.length === 0) return null;
+   *   if (errors.length === 1) return `${fieldName}: ${errors[0]}`;
    *   return `${fieldName}: ${errors.join(seps.multiple)}`;
    * }
+   *
+   * const errors = ['Field is required', 'Must be email', 'Too short'];
+   * console.log(formatValidationErrors('email', errors));
+   * // Output: "email: Field is required, Must be email, Too short"
+   *
+   * // Using separators in validation result processing
+   * const result = await Validator.validate({
+   *   value: '',
+   *   rules: ['Required', 'Email', 'MinLength[5]'],
+   *   fieldName: 'userEmail'
+   * });
+   *
+   * if (!result.success) {
+   *   // This would normally be done internally, but for demonstration:
+   *   const seps = Validator.getErrorMessageSeparators();
+   *   const customMessage = `Validation failed: ${result.error.message}`;
+   *   console.log(customMessage);
+   * }
+   *
+   * // Custom I18n instance for testing
+   * const customI18n = new I18n({
+   *   validator: {
+   *     separators: {
+   *       multiple: '; ',
+   *       single: ' - '
+   *     }
+   *   }
+   * });
+   *
+   * const customSeparators = Validator.getErrorMessageSeparators(customI18n);
+   * console.log(customSeparators); // { multiple: "; ", single: " - " }
+   *
+   * // Language-specific formatting example
+   * // French: "Champ requis, Doit être email, Trop court"
+   * // German: "Feld erforderlich, Muss E-Mail sein, Zu kurz"
+   * // Japanese: "フィールドは必須です、メールアドレスである必要があります、短すぎます"
    * ```
    *
+   * @param customI18n - Optional custom I18n instance to override default translations
+   *                     Useful for testing, custom formatting, or specialized locales
+   *
    * @returns Object containing separator strings for error message formatting
-   * @returns returns.multiple - Separator for joining multiple error messages
-   * @returns returns.single - Separator for single error message formatting
+   * @returns returns.multiple - Separator string for joining multiple error messages (default: `", "`)
+   * @returns returns.single - Separator string for single error message formatting (default: `", "`)
    *
+   * @remarks
+   * - Separators are loaded from i18n key `validator.separators` with fallback defaults
+   * - Method is used internally by `validate()` and `validateTarget()` for error formatting
+   * - Supports both built-in i18n and custom I18n instances
+   * - Thread-safe and stateless - can be called multiple times without side effects
+   * - Default separators ensure English-compatible formatting when i18n unavailable
    *
-   * @see {@link validate} - Uses these separators for error formatting
-   * @see {@link validateTarget} - Also uses these separators
+   * @see {@link validate} - Uses these separators for formatting validation error messages
+   * @see {@link validateTarget} - Uses these separators for multi-field validation errors
+   * @see {@link validateMultiRule} - Uses separators for OneOf/AllOf error aggregation
+   * @see {@link validateArrayOfRule} - Uses separators for array item error formatting
+   * @see {@link I18n} - Internationalization system for custom separator configuration
    * @public
    */
   static getErrorMessageSeparators(customI18n?: I18n): {
@@ -529,157 +632,201 @@ export class Validator {
   }
 
   /**
-   * ## Find Registered Rule
-   *
-   * Locates and returns a specific validation rule by its name. This method provides
-   * type-safe access to registered validation rules with proper error handling for
-   * invalid rule names. Returns undefined if the rule doesn't exist.
-   *
-   * ### Type Safety
-   * This method is fully type-safe and will return the correctly typed rule function
-   * based on the generic parameters provided. The rule function signature will match
-   * the expected parameter and context types.
-   *
-   * @example
-   * ```typescript
-   * // Find a simple rule
-   * const emailRule = Validator.findRegisteredRule('Email');
-   * if (emailRule) {
-   *   const result = await emailRule({
-   *     value: 'test@example.com',
-   *     ruleParams: []
-   *   });
-   * }
-   *
-   * // Find a rule with specific parameter types
-   * const minLengthRule = Validator.findRegisteredRule<[number]>('MinLength');
-   * if (minLengthRule) {
-   *   const result = await minLengthRule({
-   *     value: 'hello',
-   *     ruleParams: [5]
-   *   });
-   * }
-   *
-   * // Find a rule with context
-   * interface UserContext {
-   *   userId: number;
-   *   permissions: string[];
-   * }
-   *
-   * const permissionRule = Validator.findRegisteredRule<string[], UserContext>('HasPermission');
-   * if (permissionRule) {
-   *   const result = await permissionRule({
-   *     value: 'admin',
-   *     ruleParams: ['admin', 'moderator'],
-   *     context: { userId: 123, permissions: ['user', 'admin'] }
-   *   });
-   * }
-   *
-   * // Safe rule checking
-   * const unknownRule = Validator.findRegisteredRule('NonExistentRule');
-   * console.log(unknownRule); // undefined
-   * ```
-   *
-   * @template TParams - Array type specifying the rule parameter types
-   * @template Context - Type of the validation context object
-   *
-   * @param ruleName - The name of the rule to find
-   *
-   * @returns The validation rule function if found, undefined otherwise
-   *
-   *
-   * @see {@link registerRule} - Register a new rule
-   * @see {@link getRules} - Get all rules
-   * @public
-   */
-  static findRegisteredRule<
-    TParams extends ValidatorDefaultArray = ValidatorDefaultArray,
-    Context = unknown,
-  >(
-    ruleName: ValidatorRuleName
-  ): ValidatorRuleFunction<TParams, Context> | undefined {
-    if (!isNonNullString(ruleName)) return undefined;
-    const rules = Validator.getRules();
-    return rules[ruleName] as
-      | ValidatorRuleFunction<TParams, Context>
-      | undefined;
-  }
-
-  /**
    * ## Parse and Validate Rules
    *
-   * Converts various input rule formats into a standardized, executable format while
-   * identifying and reporting any invalid rules. This method handles the complex task
-   * of normalizing different rule input formats into a consistent internal representation.
+   * Core rule normalization method that converts diverse validation rule formats into a standardized,
+   * executable representation while identifying and isolating invalid rules. This method serves as
+   * the critical preprocessing step that enables flexible rule input while ensuring type safety
+   * and consistent validation behavior across the entire validator system.
+   *
+   * ### Purpose
+   * The `parseAndValidateRules` method bridges the gap between user-friendly rule specification
+   * and the internal validation engine. It accepts rules in multiple formats (strings, objects, functions)
+   * and transforms them into a uniform structure that the validation pipeline can process efficiently.
+   * Invalid rules are separated out for error reporting rather than causing validation failures.
    *
    * ### Supported Input Formats
    *
-   * #### 1. Function Rules
+   * #### 1. Function Rules (Direct Validation Functions)
    * ```typescript
-   * const functionRule = ({ value }) => value > 0 || 'Must be positive';
+   * // Synchronous function rule
+   * const positiveRule = ({ value }) => value > 0 || 'Must be positive';
+   *
+   * // Asynchronous function rule with context
+   * const asyncRule = async ({ value, context }) => {
+   *   const result = await someAsyncCheck(value, context);
+   *   return result || 'Async validation failed';
+   * };
+   *
+   * // Function rules with custom error messages
+   * const customRule = ({ value }) => {
+   *   if (!value) return 'Value is required';
+   *   if (value.length < 3) return 'Must be at least 3 characters';
+   *   return true; // Valid
+   * };
    * ```
    *
-   * #### 2. String Rules
+   * #### 2. String Rules (Bracket Notation for Parameters)
    * ```typescript
-   * 'Required'                    // Simple rule
-   * 'MinLength[5]'               // Rule with single parameter
-   * 'Between[10,20]'             // Rule with multiple parameters
+   * // Simple rules without parameters
+   * 'Required'                    // Basic required field check
+   * 'Email'                       // Email format validation
+   * 'IsNumber'                    // Type checking
+   *
+   * // Rules with single parameter
+   * 'MinLength[5]'               // Minimum length validation
+   * 'MaxLength[100]'             // Maximum length validation
+   * 'GreaterThan[0]'             // Numeric comparison
+   *
+   * // Rules with multiple parameters
+   * 'Between[10,20]'             // Range validation (inclusive)
+   * 'InArray["option1","option2","option3"]'  // Value enumeration
+   * 'Matches[/^[A-Z]{2}\d{6}$/]' // Regex pattern matching
    * ```
    *
-   * #### 3. Object Rules
+   * #### 3. Object Rules (Structured Parameter Passing)
    * ```typescript
-   * { Required: [] }              // Rule without parameters
-   * { MinLength: [5] }           // Rule with parameters
-   * { Between: [10, 20] }        // Rule with multiple parameters
+   * // Rules without parameters
+   * { Required: [] }              // Explicit empty parameter array
+   * { Email: undefined }          // Undefined parameters (treated as [])
+   *
+   * // Rules with single parameter
+   * { MinLength: [5] }           // Array with one element
+   * { MaxLength: [100] }         // Array with one element
+   *
+   * // Rules with multiple parameters
+   * { Between: [10, 20] }        // Range validation
+   * { InArray: ['admin', 'user', 'guest'] }  // Multiple allowed values
+   * { CustomRule: ['param1', 'param2', 42] } // Mixed parameter types
    * ```
    *
    * ### Processing Logic
-   * 1. **Function Detection**: Direct function rules are passed through unchanged
-   * 2. **String Parsing**: Extracts rule names and parameters from bracketed syntax
-   * 3. **Object Processing**: Converts object notation to standardized format
-   * 4. **Validation**: Verifies that all referenced rules are registered
-   * 5. **Error Tracking**: Collects invalid rules for reporting
+   * The method follows a systematic approach to rule processing:
+   *
+   * 1. **Input Validation**: Accepts `undefined`, empty arrays, or arrays of mixed rule types
+   * 2. **Function Detection**: Direct function rules are preserved unchanged in the output
+   * 3. **String Parsing**: Bracket syntax is parsed to extract rule names and parameters
+   * 4. **Object Processing**: Object notation is converted to standardized rule objects
+   * 5. **Rule Registry Lookup**: Each parsed rule is validated against the registered rules map
+   * 6. **Error Isolation**: Invalid/unregistered rules are collected separately for reporting
+   * 7. **Type Safety**: All output maintains TypeScript type safety with proper generics
+   *
+   * ### Output Structure
+   * The method returns a structured result object with two key properties:
+   *
+   * #### `sanitizedRules` - Successfully Processed Rules
+   * Array of standardized rule objects with consistent structure:
+   * ```typescript
+   * interface SanitizedRule {
+   *   ruleName: ValidatorRuleName;        // Extracted rule name
+   *   params: any[];                     // Parameter array (empty for no params)
+   *   ruleFunction: ValidatorRuleFunction; // Actual validation function
+   *   rawRuleName: string;               // Original input string/object
+   * }
+   * ```
+   *
+   * #### `invalidRules` - Unprocessable Rules
+   * Array of rules that couldn't be processed (maintains original input types):
+   * - Unregistered rule names
+   * - Malformed string syntax
+   * - Invalid object structures
+   * - Rules that failed registry lookup
+   *
+   * ### Error Handling Strategy
+   * - **Graceful Degradation**: Invalid rules don't break the entire validation process
+   * - **Error Reporting**: Invalid rules are collected for user feedback
+   * - **Type Preservation**: Original rule formats are maintained in invalidRules array
+   * - **Validation Continuation**: Valid rules proceed through the validation pipeline
    *
    * @example
    * ```typescript
-   * // Mixed rule formats
+   * // Mixed rule formats with validation
    * const mixedRules = [
-   *   'Required',
-   *   'MinLength[3]',
-   *   { MaxLength: [50] },
-   *   ({ value }) => value.includes('@') || 'Must contain @',
-   *   'InvalidRule'  // This will be reported as invalid
+   *   'Required',                           // String rule
+   *   'MinLength[3]',                      // Parameterized string rule
+   *   { MaxLength: [50] },                 // Object rule
+   *   ({ value }) => value.includes('@') || 'Must contain @', // Function rule
+   *   'InvalidRule',                       // Will be reported as invalid
+   *   { NonExistentRule: ['param'] }       // Will be reported as invalid
    * ];
    *
    * const { sanitizedRules, invalidRules } = Validator.parseAndValidateRules(mixedRules);
    *
-   * console.log('Valid rules:', sanitizedRules.length);        // 4
-   * console.log('Invalid rules:', invalidRules);               // ['InvalidRule']
+   * console.log('Successfully parsed rules:', sanitizedRules.length); // 4
+   * console.log('Invalid rules found:', invalidRules.length);         // 2
+   * console.log('Invalid rules:', invalidRules);
+   * // Output: ['InvalidRule', { NonExistentRule: ['param'] }]
    *
-   * // Empty or undefined input
-   * const { sanitizedRules: empty } = Validator.parseAndValidateRules();
-   * console.log(empty.length); // 0
+   * // Each sanitized rule has consistent structure
+   * sanitizedRules.forEach(rule => {
+   *   console.log(`Rule: ${rule.ruleName}, Params: ${rule.params.length}, Raw: ${rule.rawRuleName}`);
+   * });
    *
-   * // Complex rule with parameters
+   * // Empty or undefined input handling
+   * const { sanitizedRules: emptyRules } = Validator.parseAndValidateRules();
+   * console.log('Empty input rules:', emptyRules.length); // 0
+   *
+   * const { sanitizedRules: undefinedRules } = Validator.parseAndValidateRules(undefined);
+   * console.log('Undefined input rules:', undefinedRules.length); // 0
+   *
+   * // Complex validation scenarios
    * const complexRules = [
-   *   'Between[1,100]',
-   *   { CustomRule: ['param1', 'param2'] }
+   *   'Between[1,100]',                    // Numeric range
+   *   { InArray: ['admin', 'user'] },      // Value enumeration
+   *   ({ value, context }) => {            // Context-aware function
+   *     if (context?.userType === 'admin') return true;
+   *     return value !== 'admin' || 'Admin access required';
+   *   }
    * ];
    *
    * const result = Validator.parseAndValidateRules(complexRules);
-   * // Each sanitized rule will have: ruleName, params, ruleFunction, rawRuleName
+   * console.log('Complex rules processed:', result.sanitizedRules.length); // 3
+   * console.log('No invalid rules:', result.invalidRules.length); // 0
+   *
+   * // Error handling in validation pipeline
+   * const validationRules = ['Required', 'Email', 'UnknownRule'];
+   * const { sanitizedRules: validRules, invalidRules: errors } = Validator.parseAndValidateRules(validationRules);
+   *
+   * if (errors.length > 0) {
+   *   console.warn('Some validation rules are invalid:', errors);
+   *   // Could log to monitoring system or throw custom error
+   * }
+   *
+   * // Proceed with valid rules only
+   * const validationResult = await Validator.validate({
+   *   value: 'test@example.com',
+   *   rules: validRules.map(rule => rule.ruleFunction) // Extract functions for validation
+   * });
    * ```
    *
+   * @template Context - Optional validation context type passed to rule functions
+   *
    * @param inputRules - Array of validation rules in various formats, or undefined
+   *                     Supports strings, objects, and functions in any combination
+   *                     Undefined or empty arrays are handled gracefully
    *
-   * @returns Object containing processed results
-   * @returns returns.sanitizedRules - Array of standardized, executable rule objects
-   * @returns returns.invalidRules - Array of rules that couldn't be processed (unregistered)
+   * @returns Structured result object containing processed rules and errors
+   * @returns returns.sanitizedRules - Array of successfully parsed rule objects with standardized structure
+   * @returns returns.invalidRules - Array of rules that couldn't be processed (maintains original format)
    *
+   * @remarks
+   * - This method is the primary entry point for rule preprocessing in the validation pipeline
+   * - Called internally by `validate()` and `validateTarget()` before rule execution
+   * - Invalid rules are isolated rather than causing validation failures for better error handling
+   * - Supports all rule formats: functions, bracket strings, and parameter objects
+   * - Maintains type safety through TypeScript generics for context propagation
+   * - Rule registry lookup ensures only registered rules are accepted
+   * - Empty input (undefined/null) returns empty arrays without errors
+   * - Processing is synchronous and performant for large rule sets
+   * - Invalid rules preserve original input format for accurate error reporting
    *
-   * @see {@link parseStringRule} - Internal string rule parser
-   * @see {@link parseObjectRule} - Internal object rule parser
-   * @see {@link validate} - Uses this method for rule processing
+   * @see {@link parseStringRule} - Internal method for parsing bracket notation strings
+   * @see {@link parseObjectRule} - Internal method for processing object notation rules
+   * @see {@link validate} - Main validation method that uses this preprocessing
+   * @see {@link validateTarget} - Class-based validation that uses this preprocessing
+   * @see {@link registerRule} - Method for registering custom rules in the system
+   * @see {@link getRules} - Method to retrieve all registered rules
+   * @see {@link ValidatorSanitizedRules} - Type definition for processed rules
    * @public
    */
   static parseAndValidateRules<Context = unknown>(
@@ -729,69 +876,135 @@ export class Validator {
    * ## Parse String-Based Validation Rules
    *
    * Internal helper method that parses string-format validation rules into standardized
-   * rule objects. Handles both simple rule names and rules with parameters using
-   * bracket notation syntax.
+   * rule objects. Currently handles simple rule names without parameter parsing.
+   * This method is part of the rule preprocessing pipeline that converts various
+   * rule formats into a consistent internal representation.
    *
-   * ### Supported String Formats
-   * - `"ruleName"` - Simple rule without parameters
-   * - `"ruleName[param]"` - Rule with single parameter
-   * - `"ruleName[param1,param2,param3]"` - Rule with multiple parameters
+   * ### Current Supported String Formats
+   * - `"ruleName"` - Simple rule without parameters (e.g., `"Required"`, `"Email"`)
    *
-   * ### Parameter Parsing
-   * - Parameters are extracted from content within square brackets
-   * - Multiple parameters are separated by commas
-   * - Leading/trailing whitespace is automatically trimmed
-   * - All parameters are treated as strings (conversion happens in rule functions)
+   * ### Future Parameter Support (Currently Commented Out)
+   * The method includes commented code for bracket notation parameter parsing:
+   * - `"ruleName[param]"` - Rule with single parameter (planned)
+   * - `"ruleName[param1,param2,param3]"` - Rule with multiple parameters (planned)
    *
-   * @example
+   * ### Processing Logic
+   * 1. **Input Validation**: Accepts any value, converts to trimmed string
+   * 2. **Rule Lookup**: Searches registered rules map using the string as rule name
+   * 3. **Function Retrieval**: Extracts the validation function if rule exists
+   * 4. **Object Construction**: Creates standardized rule object with metadata
+   * 5. **Error Handling**: Returns null if rule is not found in registry
+   *
+   * ### Parameter Handling
+   * - Currently no parameter parsing is performed
+   - All parameters must be provided via object notation: `{ RuleName: [params] }`
+   - Bracket notation parsing is reserved for future implementation
+   *
+   * ### Return Value Structure
+   * When successful, returns a complete rule object:
    * ```typescript
-   * // These calls demonstrate the parsing logic (internal method)
-   * // Simple rule
-   * parseStringRule("Required", registeredRules)
-   * // Returns: { ruleName: "Required", params: [], ruleFunction: fn, rawRuleName: "Required" }
-   *
-   * // Rule with single parameter
-   * parseStringRule("MinLength[5]", registeredRules)
-   * // Returns: { ruleName: "MinLength", params: ["5"], ruleFunction: fn, rawRuleName: "MinLength[5]" }
-   *
-   * // Rule with multiple parameters
-   * parseStringRule("Between[10, 20]", registeredRules)
-   * // Returns: { ruleName: "Between", params: ["10", "20"], ruleFunction: fn, rawRuleName: "Between[10, 20]" }
+   * {
+   *   ruleName: "Required",           // The rule identifier
+   *   params: [],                     // Empty array (no parsing yet)
+   *   ruleFunction: Function,         // The actual validation function
+   *   rawRuleName: "Required"         // Original input string
+   * }
    * ```
    *
-   * @internal
-   * @param ruleString - The string representation of the rule to parse
-   * @param registeredRules - Map of all currently registered validation rules
+   * ### Error Cases
+   * - **Unknown Rule**: Returns `null` if rule name not found in registry
+   * - **Invalid Input**: Any input is accepted (converted to string)
+   * - **Empty String**: Empty/whitespace strings return `null`
    *
-   * @returns Parsed rule object with standardized structure, or null if rule not found
-   * @returns returns.ruleName - The extracted rule name
-   * @returns returns.params - Array of string parameters
-   * @returns returns.ruleFunction - The actual validation function
+   * ### Examples
+   *
+   * #### Basic Rule Parsing
+   * ```typescript
+   * // Simple rule lookup
+   * const rule = Validator.parseStringRule("Required", registeredRules);
+   * // Returns: { ruleName: "Required", params: [], ruleFunction: fn, rawRuleName: "Required" }
+   *
+   * const emailRule = Validator.parseStringRule("Email", registeredRules);
+   * // Returns: { ruleName: "Email", params: [], ruleFunction: fn, rawRuleName: "Email" }
+   * ```
+   *
+   * #### Unknown Rule Handling
+   * ```typescript
+   * const unknownRule = Validator.parseStringRule("UnknownRule", registeredRules);
+   * // Returns: null (rule not found)
+   * ```
+   *
+   * #### Current Limitations
+   * ```typescript
+   * // These currently don't parse parameters (bracket notation commented out)
+   * const minLengthRule = Validator.parseStringRule("MinLength[5]", registeredRules);
+   * // Returns: null (looks for rule named "MinLength[5]")
+   *
+   * // Use object notation instead for parameters
+   * const objectRule = { MinLength: [5] };
+   * const parsedObject = Validator.parseObjectRule(objectRule, registeredRules);
+   * // Returns: [{ ruleName: "MinLength", params: [5], ruleFunction: fn, rawRuleName: "MinLength" }]
+   * ```
+   *
+   * #### Integration with Validation Pipeline
+   * ```typescript
+   * // Used internally by parseAndValidateRules
+   * const mixedRules = ["Required", "Email", { MinLength: [3] }];
+   * const { sanitizedRules, invalidRules } = Validator.parseAndValidateRules(mixedRules);
+   *
+   * // String rules are processed by this method
+   * // Object rules are processed by parseObjectRule
+   * // Function rules are used directly
+   * ```
+   *
+   * ### Performance Characteristics
+   * - **Fast Lookup**: O(1) hash map lookup in registered rules
+   * - **Minimal Processing**: Only string trimming and function lookup
+   * - **Memory Efficient**: Creates minimal rule objects
+   * - **Synchronous**: No async operations or I/O
+   *
+   * ### Future Enhancements
+   * - Implement bracket notation parameter parsing
+   * - Support nested parameter structures
+   * - Add parameter type validation
+   * - Support quoted parameters with spaces
+   *
+   * @template Context - Optional validation context type for rule functions
+   *
+   * @param ruleString - The string representation of the rule to parse
+   *                     Currently only supports simple rule names without parameters
+   * @param registeredRules - Map of all currently registered validation rules
+   *                          Used to lookup the validation function by rule name
+   *
+   * @returns ValidatorSanitizedRuleObject with standardized structure, or null if rule not found
+   * @returns returns.ruleName - The rule identifier (same as input string)
+   * @returns returns.params - Empty array (parameter parsing not implemented)
+   * @returns returns.ruleFunction - The actual validation function from registry
    * @returns returns.rawRuleName - The original unparsed rule string
    *
+   * @throws {Never} This method never throws errors; returns null for invalid rules
    *
-   * @see {@link parseAndValidateRules} - Public method that uses this parser
-   * @private
+   * @remarks
+   * - This is an internal method used by `parseAndValidateRules`
+   * - Parameter parsing via bracket notation is planned but currently commented out
+   * - For rules with parameters, use object notation: `{ RuleName: [param1, param2] }`
+   * - Rule registry lookup ensures only registered rules are accepted
+   * - Maintains type safety through TypeScript generics for context propagation
+   * - Processing is synchronous and performant for large rule sets
+   *
+   * @see {@link parseAndValidateRules} - Public method that orchestrates rule parsing
+   * @see {@link parseObjectRule} - Handles object notation rules with parameters
+   * @see {@link registerRule} - Method for registering rules in the system
+   * @see {@link getRules} - Method to retrieve all registered rules
+   * @see {@link ValidatorSanitizedRuleObject} - Type definition for parsed rules
    */
-  private static parseStringRule<Context = unknown>(
+  static parseStringRule<Context = unknown>(
     ruleString: string,
     registeredRules: ValidatorRuleFunctionsMap<Context>
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ): any {
     let ruleName = String(ruleString).trim();
     const ruleParameters: string[] = [];
-
-    /* if (ruleName.indexOf("[") > -1) {
-      const ruleParts = ruleName.rtrim("]").split("[");
-      ruleName = ruleParts[0].trim();
-      const parameterString = String(ruleParts[1]);
-      const parameterSegments = parameterString.split(",");
-
-      for (let index = 0; index < parameterSegments.length; index++) {
-        ruleParameters.push(parameterSegments[index].replace("]", "").trim());
-      }
-    }
- */
     const ruleFunction = registeredRules[ruleName as ValidatorRuleName];
     if (typeof ruleFunction === 'function') {
       return {
@@ -801,10 +1014,131 @@ export class Validator {
         rawRuleName: String(ruleString),
       };
     }
-
     return null;
   }
-  private static parseObjectRule<Context = unknown>(
+
+  /**
+   * ## Parse Object Rule
+   *
+   * Parses object notation validation rules into standardized rule objects. This method handles
+   * rules specified as key-value pairs where the key is the rule name and the value is an array
+   * of parameters. Object notation allows for more complex rule configurations with explicit
+   * parameter passing.
+   *
+   * ### Object Rule Format
+   * Object rules are specified as JavaScript objects where:
+   * - **Keys**: Rule names (strings) that correspond to registered validation functions
+   * - **Values**: Arrays of parameters to pass to the validation rule function
+   *
+   * ### Processing Logic
+   * 1. **Input Validation**: Ensures `rulesObject` is a valid object, returns empty array otherwise
+   * 2. **Rule Iteration**: Iterates through each property in the rules object
+   * 3. **Rule Lookup**: Checks if each rule name exists in the registered rules map
+   * 4. **Parameter Extraction**: Retrieves the parameter array for each valid rule
+   * 5. **Rule Construction**: Creates sanitized rule objects with function references and parameters
+   * 6. **Result Aggregation**: Collects all valid rules into a result array
+   *
+   * ### Parameter Requirements
+   * - Rule parameters must be arrays (e.g., `[5]` for MinLength, `[10, 100]` for range rules)
+   * - Non-array parameters are ignored (future enhancement may support other formats)
+   * - Invalid rule names (not registered) are silently skipped
+   *
+   * ### Examples
+   *
+   * #### Basic Object Rules
+   * ```typescript
+   * const rulesObject = {
+   *   Required: [],           // No parameters
+   *   MinLength: [5],         // Single parameter
+   *   MaxLength: [50],        // Single parameter
+   *   Pattern: ['^[A-Z]+$'],  // String parameter
+   * };
+   *
+   * const parsedRules = Validator.parseObjectRule(rulesObject, registeredRules);
+   * // Returns array of sanitized rule objects with function references
+   * ```
+   *
+   * #### Complex Parameter Rules
+   * ```typescript
+   * const complexRules = {
+   *   Range: [1, 100],                    // Multiple numeric parameters
+   *   CustomPattern: ['^[0-9]{3}-[0-9]{3}$'], // Regex pattern
+   *   Enum: [['active', 'inactive', 'pending']], // Array parameter
+   * };
+   * ```
+   *
+   * #### Mixed with String Rules
+   * ```typescript
+   * // Object rules are typically used alongside string rules
+   * const allRules = [
+   *   "Required",              // String rule
+   *   "Email",                 // String rule
+   *   { MinLength: [3] },      // Object rule
+   *   { MaxLength: [100] },    // Object rule
+   * ];
+   *
+   * const result = Validator.parseAndValidateRules(allRules);
+   * ```
+   *
+   * #### Integration with Validation Pipeline
+   * ```typescript
+   * // Object rules are processed during rule parsing phase
+   * const inputRules = [
+   *   "Required",
+   *   { MinLength: [5], MaxLength: [50] },
+   *   "Email"
+   * ];
+   *
+   * const { sanitizedRules } = Validator.parseAndValidateRules(inputRules);
+   * // sanitizedRules contains both string and object rule objects
+   * ```
+   *
+   * ### Error Handling
+   * - **Invalid Input**: Returns empty array if `rulesObject` is not an object
+   * - **Missing Rules**: Unregistered rule names are ignored (not added to result)
+   * - **Invalid Parameters**: Non-array parameters are ignored
+   * - **No Errors Thrown**: Method is robust and never throws exceptions
+   *
+   * ### Performance Characteristics
+   * - **Linear Time**: O(n) where n is the number of properties in rules object
+   * - **Memory Efficient**: Creates minimal objects with function references
+   * - **Registry Lookup**: Fast hash map lookup for rule function existence
+   * - **Parameter Validation**: Lightweight array type checking
+   *
+   * ### Future Enhancements
+   * - Support for non-array parameter formats (single values, objects)
+   * - Parameter type validation against rule function signatures
+   * - Rule dependency resolution and ordering
+   * - Enhanced error reporting for invalid configurations
+   *
+   * @template Context - Optional type for validation context passed to rule functions
+   *
+   * @param rulesObject - Object containing rule names as keys and parameter arrays as values
+   * @param registeredRules - Map of registered validation rule functions for lookup
+   *
+   * @returns Array of sanitized rule objects with function references and parameters
+   *          - Empty array if input is invalid or no valid rules found
+   *          - Each object contains: ruleName, ruleFunction, params, rawRuleName
+   *
+   * @throws {Never} This method never throws errors; invalid inputs return empty arrays
+   *
+   * @remarks
+   * - This method complements `parseStringRule` for different rule input formats
+   * - Object rules enable complex parameter passing not possible with string notation
+   * - Rules are validated against the registry to ensure only registered functions are used
+   * - Parameter arrays are passed directly to rule functions without modification
+   * - The method is part of the rule preprocessing pipeline in `parseAndValidateRules`
+   *
+   * @see {@link parseStringRule} - Handles string notation rules without parameters
+   * @see {@link parseAndValidateRules} - Main rule parsing method that uses this function
+   * @see {@link registerRule} - How rules are registered in the rule functions map
+   * @see {@link ValidatorRuleObject} - Type definition for object rule format
+   * @see {@link ValidatorSanitizedRuleObject} - Type definition for parsed rule objects
+   *
+   * @public
+   * @static
+   */
+  static parseObjectRule<Context = unknown>(
     rulesObject: ValidatorRuleObject,
     registeredRules: ValidatorRuleFunctionsMap<Context>
   ): ValidatorSanitizedRuleObject<ValidatorDefaultArray, Context>[] {
@@ -842,136 +1176,127 @@ export class Validator {
   }
 
   /**
-   * ## Validate a Single Value
+   * ## Validate - Core Single-Value Validation Engine
    *
-   * Performs validation on a single value using a set of specified validation rules.
-   * This is the main validation method for validating individual values outside of
-   * class-based validation contexts.
+   * Executes comprehensive validation on a single value against an array of validation rules.
+   * This method implements the core validation pipeline with sequential rule execution,
+   * multi-rule delegation, and sophisticated error handling for complex validation scenarios.
    *
-   * ### Key Features
-   * - **Synchronous Rule Support**: Handles both synchronous and asynchronous validation rules
-   * - **Multiple Rules**: Supports validation with multiple rules applied sequentially
-   * - **Error Handling**: Never throws errors; returns a result object with success/failure status
-   * - **Type Safe**: Full TypeScript support with generic typing for context
-   * - **Nullable Handling**: Supports Empty, Nullable, and Optional rules for conditional validation
-   * - **Performance**: Tracks validation duration and timestamps
+   * ### Validation Pipeline Overview
+   * 1. **Rule Parsing**: Validates and sanitizes input rules using `parseAndValidateRules`
+   * 2. **Invalid Rule Handling**: Returns failure result for any invalid rules
+   * 3. **Nullable Skip Check**: Skips validation if value meets nullable rule conditions
+   * 4. **Sequential Execution**: Processes rules one-by-one using Promise-based `next()` function
+   * 5. **Multi-Rule Detection**: Delegates to specialized handlers for OneOf/AllOf/ArrayOf/ValidateNested
+   * 6. **Result Processing**: Handles boolean, string, and Error results with proper error creation
+   * 7. **Error Aggregation**: Returns discriminated union result (success/failure)
    *
-   * ### Return Type: ValidatorValidateResult
-   * The method returns a discriminated union that can be narrowed:
+   * ### Rule Execution Strategy
+   * - **Sequential Processing**: Rules execute one after another, not in parallel
+   * - **Early Exit**: Validation stops on first rule failure (fail-fast behavior)
+   * - **Rule Context**: Each rule receives i18n context, field names, and validation options
+   * - **Parameter Extraction**: Automatically extracts rule names and parameters from various formats
+   *
+   * ### Multi-Rule Support
+   * The method automatically detects and delegates to specialized validators:
+   * - **OneOf/AllOf**: Uses symbol markers to identify logical combination rules
+   * - **ArrayOf**: Validates arrays where each item must satisfy sub-rules
+   * - **ValidateNested**: Delegates to class-based validation for nested objects
+   *
+   * ### Error Handling Architecture
+   * - **Boolean Results**: `false` → creates validation error with i18n message
+   * - **String Results**: Direct error messages (validated for non-null strings)
+   * - **Error Objects**: Stringifies thrown errors and creates validation errors
+   * - **Invalid Messages**: Falls back to i18n for null/undefined string results
+   *
+   * ### Nullable Rule Behavior
+   * Skips remaining validation when nullable conditions are met:
+   * - **Empty**: Skips if value is empty string `""`
+   * - **Nullable**: Skips if value is `null` or `undefined`
+   * - **Optional**: Skips if value is `undefined` only
+   *
+   * ### Rule Format Support
+   * Accepts rules in multiple formats with automatic parameter extraction:
+   * - **String Rules**: `"Email"`, `"Required"`, `"MinLength[5]"`
+   * - **Function Rules**: Direct validator functions with optional parameters
+   * - **Object Rules**: `{ ruleFunction, params, ruleName }` structured objects
+   *
+   * ### Context Propagation
+   * Builds comprehensive context for each rule execution:
+   * - **i18n Options**: Translation keys, field names, rule information
+   * - **Validation Data**: Current value, rule parameters, context object
+   * - **Field Metadata**: Property names, translated names, data references
+   *
+   * #### Basic Usage Examples
    * ```typescript
-   * type ValidatorValidateResult<Context> =
-   *   | ValidatorValidateSuccess<Context>  // success: true
-   *   | ValidatorValidateFailure<Context>  // success: false
-   * ```
-   *
-   * #### Success Result (success: true)
-   * - `success`: true
-   * - `value`: The original value that was validated
-   * - `validatedAt`: ISO timestamp when validation completed
-   * - `duration`: Milliseconds elapsed during validation
-   * - `data`: Optional context data passed to rules
-   * - `context`: Optional validation context of type Context
-   *
-   * #### Failure Result (success: false)
-   * - `success`: false
-   * - `value`: The original value that failed validation
-   * - `error`: ValidatorValidationError containing:
-   *   - `message`: Error message (translated if i18n available)
-   *   - `ruleName`: Name of the rule that failed
-   *   - `ruleParams`: Parameters passed to the rule
-   *   - `fieldName`: Optionally provided field identifier
-   * - `failedAt`: ISO timestamp when validation failed
-   * - `duration`: Milliseconds elapsed before failure
-   *
-   * ### Nullable Rules
-   * Special handling for conditional validation rules:
-   * - **Empty**: Skips validation if value is empty string ""
-   * - **Nullable**: Skips validation if value is null or undefined
-   * - **Optional**: Skips validation if value is undefined only
-   *
-   * Priority order: Empty > Nullable > Optional
-   *
-   * ### Examples
-   *
-   * #### Basic Single Rule Validation
-   * ```typescript
-   * const result = await Validator.validate({
-   *   value: "user@example.com",
+   * // Simple string validation
+   * const result1 = await Validator.validate({
+   *   value: "test@example.com",
    *   rules: ["Required", "Email"],
    * });
+   * // result1.success === true
    *
-   * if (result.success) {
-   *   console.log("Email is valid:", result.value);
-   * } else {
-   *   console.error("Validation failed:", result.error.message);
-   * }
-   * ```
-   *
-   * #### Validation with Parameters
-   * ```typescript
-   * const result = await Validator.validate({
-   *   value: "hello",
-   *   rules: [
-   *     "Required",
-   *     "MinLength[5]",  // Validates length >= 5
-   *     "MaxLength[20]", // Validates length <= 20
-   *   ],
+   * // Numeric validation with parameters
+   * const result2 = await Validator.validate({
+   *   value: 25,
+   *   rules: ["Required", { Min: [18] }, { Max: [65] }],
    * });
-   * ```
+   * // result2.success === true
    *
-   * #### Custom Error Messages with i18n
-   * ```typescript
-   * const result = await Validator.validate({
-   *   value: "",
-   *   rules: ["Required"],
-   *   fieldName: "email",  // For context in error messages
+   * // Function-based validation
+   * const result3 = await Validator.validate({
+   *   value: "custom",
+   *   rules: [({ value }) => value.startsWith("prefix") || "Must start with prefix"],
    * });
-   *
-   * if (!result.success) {
-   *   // Error message can include field name if i18n is configured
-   *   console.error(result.error.message);
-   * }
-   * ```
-   *
-   * #### Async Rule with Context
-   * ```typescript
-   * interface MyContext {
-   *   userId: number;
-   *   permissions: string[];
-   * }
-   *
-   * const result = await Validator.validate<MyContext>({
-   *   value: "admin_action",
-   *   rules: ["Required", "UniqueAction"],
-   *   context: {
-   *     userId: 123,
-   *     permissions: ["admin"],
-   *   },
-   * });
+   * // result3.success === true
    * ```
    *
    * #### Nullable Rule Examples
    * ```typescript
-   * // Null is valid with Nullable rule
+   * // Empty allows skipping other rules
    * const result1 = await Validator.validate({
-   *   value: null,
-   *   rules: ["Nullable", "Required"],
-   * });
-   * // result1.success === true (skips Required check)
-   *
-   * // Empty string is valid with Empty rule
-   * const result2 = await Validator.validate({
    *   value: "",
    *   rules: ["Empty", "Email"],
    * });
-   * // result2.success === true (skips Email check)
+   * // result1.success === true (skips Email check)
    *
-   * // Undefined is valid with Optional rule
+   * // Nullable allows null/undefined
+   * const result2 = await Validator.validate({
+   *   value: null,
+   *   rules: ["Nullable", "IsNumber"],
+   * });
+   * // result2.success === true (skips IsNumber check)
+   *
+   * // Optional allows undefined only
    * const result3 = await Validator.validate({
    *   value: undefined,
    *   rules: ["Optional", "MinLength[5]"],
    * });
    * // result3.success === true (skips MinLength check)
+   * ```
+   *
+   * #### Multi-Rule Examples
+   * ```typescript
+   * // OneOf: email OR phone required
+   * const result1 = await Validator.validate({
+   *   value: "user@example.com",
+   *   rules: [Validator.oneOf(["Email", "PhoneNumber"])],
+   * });
+   * // result1.success === true
+   *
+   * // ArrayOf: validate array items
+   * const result2 = await Validator.validate({
+   *   value: ["a@b.com", "c@d.com"],
+   *   rules: [Validator.arrayOf(["Email"])],
+   * });
+   * // result2.success === true
+   *
+   * // AllOf: must satisfy all conditions
+   * const result3 = await Validator.validate({
+   *   value: "hello",
+   *   rules: [Validator.allOf(["String", { MinLength: [3] }])],
+   * });
+   * // result3.success === true
    * ```
    *
    * #### Type Guards for Result Narrowing
@@ -990,6 +1315,13 @@ export class Validator {
    *   console.error("Error:", result.error.message);
    * }
    * ```
+   *
+   * ### Technical Implementation Details
+   * - **Promise-Based Execution**: Uses recursive `next()` function for sequential processing
+   * - **Symbol-Based Detection**: Identifies multi-rules using internal symbol markers
+   * - **Context Building**: Constructs i18n and validation context for each rule
+   * - **Error Creation**: Uses `createValidationError` for consistent error objects
+   * - **Duration Tracking**: Measures validation execution time from start to finish
    *
    * @template Context - Optional type for the validation context object
    *
@@ -1012,9 +1344,14 @@ export class Validator {
    *
    * @throws {Never} This method never throws. All errors are returned in the result object.
    *
-   * 
+   *
    * @see {@link validateTarget} - For class-based validation using decorators
    * @see {@link registerRule} - To register custom validation rules
+   * @see {@link parseAndValidateRules} - Internal rule parsing and validation
+   * @see {@link shouldSkipValidation} - Nullable rule checking logic
+   * @see {@link validateMultiRule} - OneOf/AllOf rule implementation
+   * @see {@link validateArrayOfRule} - ArrayOf rule implementation
+   * @see {@link validateNestedRule} - ValidateNested rule implementation
    * @see {@link ValidatorValidateResult} - Result type documentation
    * @see {@link ValidatorValidationError} - Error details type
    *
@@ -3074,33 +3411,42 @@ export class Validator {
    *
    * ### Type System Deep Dive
    *
-   * #### Conditional Parameter Optionality
+   * #### Parameter Handling
+   * The method uses rest parameters (`...ruleParameters: TRuleParams`) to accept
+   * variable numbers of arguments. This allows decorators to be called with zero
+   * or more parameters:
+   *
    * ```typescript
-   * ValidatorTupleAllowsEmpty<TRuleParams> extends true
-   *   ? (ruleParameters?: TRuleParams) => PropertyDecorator
-   *   : (ruleParameters: TRuleParams) => PropertyDecorator
+   * @MinLength(5)        // Single parameter
+   * @Range(0, 100)       // Multiple parameters
+   * @IsRequired()        // No parameters (empty rest args)
    * ```
    *
-   * The `ValidatorTupleAllowsEmpty` conditional type determines if parameters can be
-   * omitted based on the rule function's parameter structure. Rules that accept empty
-   * arrays (like `IsRequired`) make parameters optional, while rules requiring specific
-   * parameters (like `MinLength`) enforce parameter presence.
-   *
-   * #### Parameter Normalization
-   * All parameters are normalized to array format using `normalizeRuleParams()` to
-   * ensure consistent interfaces for rule functions, regardless of how parameters
-   * were passed to the decorator.
+   * #### Rule Name Registration
+   * The optional `ruleName` parameter enables automatic rule registration for rules
+   * that can be called without parameters. This is restricted to rules where
+   * `ValidatorTupleAllowsEmpty<TRuleParams>` is true, ensuring type safety.
    *
    * ### Implementation Flow
    *
-   * #### Phase 1: Parameter Processing
+   * #### Phase 1: Rule Registration (Optional)
    * ```typescript
-   * const finalRuleParameters = ruleParameters ?? ([] as unknown as TRuleParams);
+   * if (isNonNullString(ruleName)) {
+   *   Validator.registerRule(ruleName, ruleFunction);
+   * }
    * ```
-   * - Handles undefined parameters by defaulting to empty array
-   * - Type assertion ensures type compatibility
+   * - Registers the rule function under the provided name
+   * - Enables string-based rule references in validation configurations
+   * - Only available for rules that support empty parameter calls
    *
-   * #### Phase 2: Function Enhancement
+   * #### Phase 2: Decorator Factory Creation
+   * ```typescript
+   * return function (...ruleParameters: TRuleParams) {
+   *   const finalRuleParameters = ruleParameters;
+   * ```
+   * - Returns a function accepting rest parameters
+   * - Captures the exact parameters passed to the decorator
+   * - No default value assignment - parameters are used as-is
    * ```typescript
    * const enhancedValidatorFunction = function(validationOptions) {
    *   const enhancedOptions = Object.assign({}, validationOptions);
@@ -3186,10 +3532,10 @@ export class Validator {
    * const InRange = Validator.buildRuleDecorator(rangeRule);
    *
    * class Product {
-   *   @InRange([0, 100])     // Percentage: 0-100
+   *   @InRange(0, 100)     // Percentage: 0-100
    *   discount: number;
    *
-   *   @InRange([-90, 90])    // Latitude: -90 to 90
+   *   @InRange(-90, 90)    // Latitude: -90 to 90
    *   latitude: number;
    * }
    * ```
@@ -3214,10 +3560,10 @@ export class Validator {
    * const RequiresPermission = Validator.buildRuleDecorator<SecurityContext>(requiresPermissionRule);
    *
    * class SecureResource {
-   *   @RequiresPermission(['read'])
+   *   @RequiresPermission('read')
    *   publicData: string;
    *
-   *   @RequiresPermission(['admin'])
+   *   @RequiresPermission('admin')
    *   adminData: string;
    * }
    * ```
@@ -3243,7 +3589,7 @@ export class Validator {
    *   @MatchesPattern()                    // Uses default email pattern
    *   email: string;
    *
-   *   @MatchesPattern([/^\d{3}-\d{2}-\d{4}$/])  // SSN pattern
+   *   @MatchesPattern(/^\d{3}-\d{2}-\d{4}$/)  // SSN pattern
    *   ssn: string;
    * }
    * ```
@@ -3273,7 +3619,7 @@ export class Validator {
    * class Registration {
    *   @IsRequired()
    *   @IsEmail()
-   *   @IsUniqueEmail([])  // Empty array since no parameters needed
+   *   @IsUniqueEmail()  // Empty parameters since no config needed
    *   email: string;
    * }
    * ```
@@ -3314,7 +3660,7 @@ export class Validator {
    * });
    *
    * class Contact {
-   *   @IsRequiredEmail([])  // Combines required + email validation
+   *   @IsRequiredEmail()  // Combines required + email validation
    *   primaryEmail: string;
    * }
    * ```
@@ -3351,7 +3697,7 @@ export class Validator {
    * // ❌ Wrong: Missing parameters for required rule
    * const RequiredRule = ({ value }) => !!value || 'Required';
    * const IsRequired = Validator.buildRuleDecorator(RequiredRule);
-   * @IsRequired()()  // Runtime error: undefined parameters
+   * @IsRequired()  // Runtime error: undefined parameters
    *
    * // ✅ Correct: Use buildRuleDecoratorOptional or provide empty array
    * @IsRequired()([])
@@ -3369,7 +3715,7 @@ export class Validator {
    * Multiple decorators on the same property are accumulated:
    * ```typescript
    * class RobustField {
-   *   @IsRequired()()      // Rule 1: Required check
+   *   @IsRequired()      // Rule 1: Required check
    *   @MinLength(3)      // Rule 2: Length check
    *   @IsAlphanumeric()  // Rule 3: Content check
    *   username: string;
@@ -3463,8 +3809,8 @@ export class Validator {
    *
    * #### "Cannot read property '0' of undefined"
    * - Rule expects parameters but none provided
-   * - Use `buildRuleDecoratorOptional` for optional parameters
-   * - Provide empty array `[]` for no-parameter rules
+   * - Use empty call `()` for rules that don't need parameters
+   * - Check that decorator is called with correct syntax
    *
    * #### "Type 'string' is not assignable to type 'TRuleParams'"
    * - Parameters must be arrays, not single values
@@ -3809,38 +4155,256 @@ export class Validator {
   >(ruleFunction: ValidatorRuleFunction<[target: Target], Context>) {
     return this.buildRuleDecorator<[target: Target], Context>(ruleFunction);
   }
+
   /**
-   * ## Build Optional-Parameter Rule Decorator
+   * ## Build Multi-Rule Decorator Factory
    *
-   * Same as {@link buildRuleDecorator}, but the factory parameter is **optional**.
-   * Call it with `undefined`, `[]`, or no argument at all and the underlying rule
-   * will receive an empty parameter array, letting you write:
+   * Creates a specialized decorator factory for validation rules that operate on multiple
+   * sub-rules simultaneously. This method wraps {@link buildRuleDecorator} with type
+   * specialization for multi-rule validation functions like OneOf, AllOf, and ArrayOf.
    *
-   * ```ts
-   * @IsRequired()        // no params
-   * @MinLength(5)    // with params
-   * @PhoneNumber()          // optional-params version
-   * @IsPhoneNumber("US") // with params
+   * ### Purpose
+   * Multi-rule decorators enable complex validation logic that combines multiple validation
+   * rules with logical operators (AND/OR). This factory creates decorators that can apply
+   * OneOf (at least one rule must pass), AllOf (all rules must pass), or ArrayOf (validate
+   * arrays where each item must satisfy all sub-rules) validation patterns.
+   *
+   * ### How It Works
+   * 1. Takes a multi-rule validation function that accepts an array of sub-rules as parameters
+   * 2. Wraps it using {@link buildRuleDecorator} to create a decorator factory
+   * 3. Returns a decorator factory that accepts an array of sub-rules as decorator parameters
+   * 4. When the decorator is applied to a property, it triggers multi-rule validation
+   * 5. The rule function receives the sub-rules array in `ruleParams[0]`
+   *
+   * ### Type Parameters
+   * - **Context**: Type of the validation context passed through validation layers
+   *   - Optional, defaults to `unknown`
+   *   - Available to all sub-rules for context-aware validation
+   *   - Example: `{ userId: 123, permissions: ['read', 'write'] }`
+   *
+   * - **RulesFunctions**: Array type of validation rules accepted as parameters
+   *   - Constrained by {@link ValidatorDefaultMultiRule} for type safety
+   *   - Must be an array of validation rule functions or rule specifications
+   *   - Example: `[() => value > 0, 'Required', { MinLength: [3] }]`
+   *
+   * ### Rule Function Interface
+   * The multi-rule function receives:
+   * ```typescript
+   * {
+   *   value: any;                          // The property value being validated
+   *   ruleParams: RulesFunctions;          // Array of sub-rules to evaluate
+   *   context?: Context;                   // Validation context (if provided)
+   *   fieldName: string;                   // Property name
+   *   translatedPropertyName: string;      // Localized property name
+   *   i18n?: II18nService;                 // i18n service for error messages
+   * }
    * ```
    *
-   * @param ruleFunction  The validation rule to wrap
-   * @returns A decorator factory that can be invoked **with or without** parameters
+   * ### Multi-Rule Patterns
    *
+   * #### OneOf Validation (OR Logic)
+   * ```typescript
+   * const validateOneOf = ({ value, ruleParams }) => {
+   *   const subRules = ruleParams;
+   *   // Return true if any sub-rule passes
+   *   for (const subRule of subRules) {
+   *     const result = await Validator.validate({ value, rules: [subRule] });
+   *     if (result.success) return true;
+   *   }
+   *   return "None of the rules passed validation";
+   * };
    *
-   * @see {@link buildRuleDecorator}
+   * const OneOf = Validator.buildMultiRuleDecorator(validateOneOf);
+   *
+   * class Contact {
+   *   @OneOf(['Email', 'PhoneNumber'])  // Must be valid email OR phone
+   *   contactInfo: string;
+   * }
+   * ```
+   *
+   * #### AllOf Validation (AND Logic)
+   * ```typescript
+   * const validateAllOf = ({ value, ruleParams }) => {
+   *   const subRules = ruleParams;
+   *   // Return true only if all sub-rules pass
+   *   for (const subRule of subRules) {
+   *     const result = await Validator.validate({ value, rules: [subRule] });
+   *     if (!result.success) return result.error.message;
+   *   }
+   *   return true;
+   * };
+   *
+   * const AllOf = Validator.buildMultiRuleDecorator(validateAllOf);
+   *
+   * class Password {
+   *   @AllOf(['Required', { MinLength: [8] }, { MaxLength: [128] }])
+   *   password: string;  // Must satisfy ALL conditions
+   * }
+   * ```
+   *
+   * #### ArrayOf Validation
+   * ```typescript
+   * const validateArrayOf = async ({ value, ruleParams }) => {
+   *   if (!Array.isArray(value)) return "Must be an array";
+   *   const subRules = ruleParams;
+   *
+   *   for (let i = 0; i < value.length; i++) {
+   *     const item = value[i];
+   *     for (const subRule of subRules) {
+   *       const result = await Validator.validate({ value: item, rules: [subRule] });
+   *       if (!result.success) return `Item ${i}: ${result.error.message}`;
+   *     }
+   *   }
+   *   return true;
+   * };
+   *
+   * const ArrayOf = Validator.buildMultiRuleDecorator(validateArrayOf);
+   *
+   * class UserList {
+   *   @ArrayOf(['Email'])  // Each item must be a valid email
+   *   emails: string[];
+   * }
+   * ```
+   *
+   * ### Advanced Usage with Context
+   * ```typescript
+   * interface ValidationContext {
+   *   userRole: 'admin' | 'user';
+   *   strictMode: boolean;
+   * }
+   *
+   * const validateConditional = ({ value, ruleParams, context }) => {
+   *   const subRules = ruleParams;
+   *   const { userRole, strictMode } = context as ValidationContext;
+   *
+   *   // Apply different validation based on context
+   *   if (userRole === 'admin' && strictMode) {
+   *     return validateAllOf({ value, ruleParams: subRules, context });
+   *   }
+   *   return validateOneOf({ value, ruleParams: subRules, context });
+   * };
+   *
+   * const Conditional = Validator.buildMultiRuleDecorator<ValidationContext>(validateConditional);
+   *
+   * class FlexibleField {
+   *   @Conditional(['Required', { MinLength: [10] }])
+   *   flexibleValue: string;  // Validation depends on user context
+   * }
+   * ```
+   *
+   * ### Comparison with buildRuleDecorator
+   * While both create decorator factories, they differ in parameter handling:
+   *
+   * **buildRuleDecorator (Single Rule Focus):**
+   * - Accepts flexible parameter arrays for single validation rules
+   * - Used for property-level validation with fixed parameters
+   * - Examples: `@MinLength([5])`, `@IsEmail([])`, `@Pattern([/regex/])`
+   * - Rule parameters are typically fixed values
+   *
+   * **buildMultiRuleDecorator (Multiple Rules Focus):**
+   * - Accepts arrays of validation rules as parameters
+   * - Used for combining multiple validation rules with logic
+   * - Examples: `@OneOf(['Email', 'Phone'])`, `@AllOf(['Required', 'MinLength'])`
+   * - Rule parameters are themselves validation rules
+   *
+   * ### Implementation Details
+   * This method is a thin wrapper around {@link buildRuleDecorator} that:
+   * - Specializes the `TRuleParams` to `RulesFunctions` array type
+   * - Maintains type safety for multi-rule validation patterns
+   * - Delegates all decorator factory logic to `buildRuleDecorator`
+   * - Reduces code duplication while providing specialized typing
+   * - Enables complex validation logic through rule composition
+   *
+   * ### Performance Characteristics
+   * - **No additional overhead** vs `buildRuleDecorator`
+   * - **Wrapper instantiation** happens at decoration time, not import
+   * - **Actual validation** is performed lazily during `validate()` calls
+   * - **Rule evaluation** depends on the specific multi-rule logic (sequential/parallel)
+   * - **Memory efficient** - no additional state stored beyond rule metadata
+   *
+   * ### Error Handling
+   * When multi-rule validation fails:
+   * - **OneOf failures**: Aggregates all sub-rule error messages with separators
+   * - **AllOf failures**: Returns the first failing sub-rule's error message
+   * - **ArrayOf failures**: Includes item indices in error messages
+   * - **Invalid sub-rules**: Treated as validation failures with appropriate messages
+   * - **Context errors**: Propagated through the validation chain
+   *
+   * ### Integration with Validation System
+   * - **Works seamlessly** with property decorators and class validation
+   * - **Compatible with** target rule decorators for nested validation
+   * - **Participates in** parallel validation of all class properties
+   * - **Context propagation** through nested validation layers
+   * - **i18n support** for localized error messages in sub-rules
+   * - **Symbol markers** used internally for rule type identification
+   *
+   * ### Type Parameters
+   * - **Context**: Type of context object passed through validation
+   *   - Defaults to `unknown` if not specified
+   *   - Used for context-aware validation decisions
+   *   - Can include user permissions, environmental data, etc.
+   *
+   * - **RulesFunctions**: Array type of validation rules
+   *   - Constrained by `ValidatorDefaultMultiRule<Context>`
+   *   - Must be an array of valid validation rule specifications
+   *   - Enables type-safe multi-rule validation
+   *
+   * @param ruleFunction - The multi-rule validation function to wrap
+   *   - Must accept `ruleParams` as an array of validation rules
+   *   - Called by the decorator with sub-rules as first parameter
+   *   - Should implement the desired multi-rule logic (OneOf/AllOf/ArrayOf)
+   *   - Can be synchronous or asynchronous
+   *   - Returns validation result or error message
+   *
+   * @returns Decorator factory function that:
+   *   - Accepts an array of validation rules as parameters
+   *   - Returns a property decorator when called
+   *   - Attaches multi-rule validation to class properties
+   *   - Works with class validation via `validateTarget()`
+   *   - Enables complex validation logic through rule composition
+   *
+   * @example
+   * ```typescript
+   * // Create a OneOf validation rule
+   * const validateOneOf = async ({ value, ruleParams }) => {
+   *   const subRules = ruleParams;
+   *   for (const subRule of subRules) {
+   *     const result = await Validator.validate({ value, rules: [subRule] });
+   *     if (result.success) return true;
+   *   }
+   *   return "Value must satisfy at least one of the specified rules";
+   * };
+   *
+   * // Create the decorator factory
+   * const OneOf = Validator.buildMultiRuleDecorator(validateOneOf);
+   *
+   * // Use the decorator
+   * class Contact {
+   *   @OneOf(['Email', 'PhoneNumber'])
+   *   primaryContact: string;
+   *
+   *   @OneOf(['Required', { MinLength: [10] }])
+   *   secondaryContact: string;
+   * }
+   *
+   * // Validate with context
+   * const result = await Validator.validateTarget(Contact, {
+   *   data: { primaryContact: "user@example.com", secondaryContact: "" },
+   *   context: { allowEmptySecondary: true }
+   * });
+   * ```
+   *
+   * @see {@link buildRuleDecorator} - General-purpose decorator factory
+   * @see {@link buildTargetRuleDecorator} - For nested class validation
+   * @see {@link buildPropertyDecorator} - Low-level decorator creation
+   * @see {@link OneOf} - Example OneOf multi-rule decorator
+   * @see {@link AllOf} - Example AllOf multi-rule decorator
+   * @see {@link ArrayOf} - Example ArrayOf multi-rule decorator
+   * @see {@link validateMultiRule} - Core multi-rule validation logic
+   * @see {@link ValidatorDefaultMultiRule} - Type constraint for rule arrays
+   * @see {@link ValidatorMultiRuleFunction} - Multi-rule function type
    * @public
    */
-  static buildRuleDecoratorOptional<
-    TRuleParams extends ValidatorRuleParams = ValidatorRuleParams,
-    Context = unknown,
-  >(ruleFunction: ValidatorRuleFunction<TRuleParams, Context>) {
-    return function (ruleParameters?: TRuleParams) {
-      return Validator.buildRuleDecorator<TRuleParams, Context>(ruleFunction)(
-        ...((ruleParameters ?? []) as unknown as TRuleParams)
-      );
-    };
-  }
-
   static buildMultiRuleDecorator<
     Context = unknown,
     RulesFunctions extends
@@ -3850,54 +4414,273 @@ export class Validator {
   }
 
   /**
-   * ## Build Property Decorator
+   * ## Build Property Decorator Factory
    *
-   * Low-level method for creating property decorators that attach validation rules
-   * to class properties. This method handles the metadata storage and provides
-   * the foundation for all validation decorators in the system.
+   * Creates a low-level property decorator that attaches validation rules directly to class properties
+   * using TypeScript metadata reflection. This method provides the foundation for all validation
+   * decorators in the system, enabling rule accumulation and metadata storage on class properties.
    *
-   * ### Metadata Storage
-   * This method uses TypeScript's metadata system to attach validation rules to
-   * class properties. The rules are stored in a way that allows them to be
-   * retrieved later during validation.
+   * ### Purpose
+   * This is the most fundamental decorator factory in the validation system. It creates property
+   * decorators that store validation rules as metadata on class properties, enabling the
+   * {@link validateTarget} method to discover and execute validation rules during class-based
+   * validation. Unlike higher-level factories, this method works directly with rule objects
+   * and metadata storage.
    *
-   * ### Rule Accumulation
-   * Multiple decorators can be applied to the same property, and this method
-   * ensures that all rules are properly accumulated and stored together.
+   * ### How It Works
+   * 1. Takes a validation rule or array of validation rules as input
+   * 2. Uses the imported `buildPropertyDecorator` helper to create a property decorator
+   * 3. Stores rules under the `VALIDATOR_TARGET_RULES_METADATA_KEY` symbol
+   * 4. When applied to a property, accumulates rules with existing rules on the same property
+   * 5. Enables rule discovery during `validateTarget()` execution
    *
-   * @example
+   * ### Rule Accumulation Logic
+   * The decorator accumulates rules rather than replacing them:
    * ```typescript
-   * // Create a simple validation decorator
-   * const IsPositive = Validator.buildPropertyDecorator(
-   *   ({ value }) => value > 0 || 'Must be positive'
-   * );
-   *
-   * // Create a decorator with multiple rules
-   * const IsValidEmail = Validator.buildPropertyDecorator([
-   *   'required',
-   *   'email'
-   * ]);
-   *
-   * // Use the decorators
-   * class Product {
-   *   @IsPositive
-   *   price: number;
-   *
-   *   @IsValidEmail
-   *   contactEmail: string;
+   * // Multiple decorators on the same property accumulate rules
+   * class Example {
+   *   @IsRequired()              // Adds ["Required"] rule
+   *   @MinLength([5])           // Adds [{ MinLength: [5] }] rule
+   *   @MaxLength([100])         // Adds [{ MaxLength: [100] }] rule
+   *   name: string;             // Final rules: ["Required", { MinLength: [5] }, { MaxLength: [100] }]
    * }
    * ```
    *
-   * @template TRuleParams - Array type for rule parameters
-   * @template Context - Type of the validation context object
+   * ### Type Parameters
+   * - **TRuleParams**: Array type for rule parameters (default: `ValidatorRuleParams`)
+   *   - Defines the parameter structure for validation rules
+   *   - Must extend `ValidatorRuleParams` for type safety
+   *   - Example: `[minLength: number]` for MinLength rule
    *
-   * @param rule - Single rule or array of rules to attach to the property
+   * - **Context**: Type of the validation context (default: `unknown`)
+   *   - Optional context passed to rule functions
+   *   - Enables context-aware validation logic
+   *   - Example: `{ userId: 123, permissions: ['read'] }`
    *
-   * @returns Property decorator function that can be applied to class properties
+   * ### Rule Input Types
+   * Accepts validation rules in two formats:
+   * - **Single Rule**: `ValidatorRule<TRuleParams, Context>`
+   * - **Rule Array**: `ValidatorRule<TRuleParams, Context>[]`
    *
+   * ### Metadata Storage
+   * Rules are stored using TypeScript's Reflect Metadata API:
+   * ```typescript
+   * // Metadata structure on class constructor
+   * {
+   *   [VALIDATOR_TARGET_RULES_METADATA_KEY]: {
+   *     propertyName: [rule1, rule2, rule3, ...],
+   *     anotherProperty: [ruleA, ruleB, ...],
+   *     ...
+   *   }
+   * }
+   * ```
    *
-   * @see {@link buildRuleDecorator} - Higher-level decorator creation
-   * @internal
+   * ### Usage Examples
+   *
+   * #### Basic Property Decoration
+   * ```typescript
+   * // Create a simple required decorator
+   * const IsRequired = Validator.buildPropertyDecorator("Required");
+   *
+   * class User {
+   *   @IsRequired
+   *   name: string;  // Property now has ["Required"] rule attached
+   * }
+   * ```
+   *
+   * #### Parameterized Rule Decoration
+   * ```typescript
+   * // Create a min length decorator
+   * const MinLength = Validator.buildPropertyDecorator({ MinLength: [5] });
+   *
+   * class Product {
+   *   @MinLength
+   *   name: string;  // Property has [{ MinLength: [5] }] rule attached
+   * }
+   * ```
+   *
+   * #### Multiple Rules on One Property
+   * ```typescript
+   * class Contact {
+   *   @Validator.buildPropertyDecorator("Required")
+   *   @Validator.buildPropertyDecorator({ MinLength: [3] })
+   *   @Validator.buildPropertyDecorator({ MaxLength: [50] })
+   *   name: string;  // Accumulates all three rules
+   * }
+   * ```
+   *
+   * #### Array Rule Input
+   * ```typescript
+   * // Attach multiple rules at once
+   * const NameRules = Validator.buildPropertyDecorator([
+   *   "Required",
+   *   { MinLength: [2] },
+   *   { MaxLength: [100] }
+   * ]);
+   *
+   * class Person {
+   *   @NameRules
+   *   fullName: string;  // All rules attached in single decorator
+   * }
+   * ```
+   *
+   * ### Advanced Usage with Custom Rules
+   * ```typescript
+   * // Custom validation function
+   * const customRule = ({ value }) => value.startsWith('prefix_') || 'Must start with prefix_';
+   *
+   * const Prefixed = Validator.buildPropertyDecorator(customRule);
+   *
+   * class Config {
+   *   @Prefixed
+   *   apiKey: string;  // Uses custom validation function
+   * }
+   * ```
+   *
+   * ### Context-Aware Rules
+   * ```typescript
+   * interface UserContext {
+   *   isAdmin: boolean;
+   *   department: string;
+   * }
+   *
+   * const contextRule = ({ value, context }) => {
+   *   const userCtx = context as UserContext;
+   *   if (userCtx.isAdmin) return true;  // Admins bypass validation
+   *   return value.length >= 5 || 'Non-admin users need longer values';
+   * };
+   *
+   * const AdminBypass = Validator.buildPropertyDecorator<UserContext>(contextRule);
+   *
+   * class Document {
+   *   @AdminBypass
+   *   title: string;  // Validation depends on user context
+   * }
+   * ```
+   *
+   * ### Comparison with Higher-Level Factories
+   *
+   * **buildPropertyDecorator (Low-Level):**
+   * - Works directly with rule objects and metadata
+   * - Requires manual rule specification
+   * - Maximum flexibility and control
+   * - Used internally by other decorator factories
+   * - Example: `buildPropertyDecorator("Required")`
+   *
+   * **buildRuleDecorator (Mid-Level):**
+   * - Creates decorator factories with parameter handling
+   * - Supports rest parameters and rule wrapping
+   * - Used for single validation rules with parameters
+   * - Example: `buildRuleDecorator(ruleFunc)` returns factory for `@MinLength([5])`
+   *
+   * **buildMultiRuleDecorator (High-Level):**
+   * - Creates decorators for multi-rule validation
+   * - Handles OneOf/AllOf/ArrayOf patterns
+   * - Used for complex validation logic
+   * - Example: `buildMultiRuleDecorator(ruleFunc)` returns factory for `@OneOf(['Email', 'Phone'])`
+   *
+   * ### Implementation Details
+   * This method uses the imported `buildPropertyDecorator` helper:
+   * ```typescript
+   * return buildPropertyDecorator<ValidatorRule<TRuleParams, Context>[]>(
+   *   VALIDATOR_TARGET_RULES_METADATA_KEY,  // Metadata key for storage
+   *   (oldRules) => {                        // Accumulation function
+   *     return [
+   *       ...(Array.isArray(oldRules) ? oldRules : []),  // Preserve existing
+   *       ...(Array.isArray(rule) ? rule : [rule]),      // Add new rules
+   *     ];
+   *   }
+   * );
+   * ```
+   *
+   * ### Performance Characteristics
+   * - **Decoration time**: Minimal overhead (metadata storage only)
+   * - **Runtime impact**: No performance cost during decoration
+   * - **Validation time**: Rules discovered efficiently via metadata lookup
+   * - **Memory usage**: Stores rule references (not rule execution)
+   * - **Accumulation**: Efficient array concatenation for multiple decorators
+   *
+   * ### Error Handling
+   * - **Invalid rules**: Stored as-is (validation errors occur during `validateTarget`)
+   * - **Metadata failures**: Falls back gracefully if Reflect Metadata unavailable
+   * - **Type mismatches**: TypeScript prevents invalid rule types at compile time
+   * - **Runtime errors**: Handled during validation, not decoration
+   *
+   * ### Integration with Validation System
+   * - **Metadata discovery**: Rules found by `getDecoratedProperties()` during validation
+   * - **Parallel execution**: All property rules validated simultaneously in `validateTarget()`
+   * - **Error aggregation**: Property-level errors collected with field names
+   * - **Context propagation**: Validation context passed to all rule functions
+   * - **i18n support**: Error messages localized through validation system
+   *
+   * ### Type Parameters
+   * - **TRuleParams**: Parameter array type for validation rules
+   *   - Defaults to `ValidatorRuleParams` for maximum compatibility
+   *   - Constrains rule parameter structures for type safety
+   *   - Example: `[number]` for single numeric parameter
+   *
+   * - **Context**: Validation context type
+   *   - Defaults to `unknown` for flexibility
+   *   - Passed to rule functions for context-aware validation
+   *   - Example: `{ user: User, permissions: string[] }`
+   *
+   * @param rule - Validation rule(s) to attach to properties
+   *   - Can be a single `ValidatorRule<TRuleParams, Context>`
+   *   - Or an array of `ValidatorRule<TRuleParams, Context>[]`
+   *   - Rules are accumulated when multiple decorators applied
+   *   - Invalid rules stored but cause validation errors later
+   *
+   * @returns PropertyDecorator function that:
+   *   - Attaches the specified rule(s) to class properties
+   *   - Accumulates rules when multiple decorators applied
+   *   - Stores rules as metadata for validation discovery
+   *   - Works with `validateTarget()` for class validation
+   *   - Enables type-safe property-level validation
+   *
+   * @example
+   * ```typescript
+   * // Create basic validation decorators
+   * const IsRequired = Validator.buildPropertyDecorator("Required");
+   * const IsEmail = Validator.buildPropertyDecorator("Email");
+   * const MinLength5 = Validator.buildPropertyDecorator({ MinLength: [5] });
+   *
+   * // Use in class definitions
+   * class User {
+   *   @IsRequired
+   *   @MinLength5
+   *   name: string;
+   *
+   *   @IsEmail()
+   *   email: string;
+   *
+   *   @Validator.buildPropertyDecorator([
+   *     "Required",
+   *     { MinLength: [8] },
+   *     { MaxLength: [128] }
+   *   ])
+   *   password: string;
+   * }
+   *
+   * // Validate the class
+   * const result = await Validator.validateTarget(User, {
+   *   data: {
+   *     name: "John",
+   *     email: "john@example.com",
+   *     password: "secure123"
+   *   }
+   * });
+   *
+   * console.log(result.success); // true if all validations pass
+   * ```
+   *
+   * @see {@link buildRuleDecorator} - Higher-level decorator factory with parameter handling
+   * @see {@link buildMultiRuleDecorator} - For multi-rule validation patterns
+   * @see {@link buildTargetRuleDecorator} - For nested class validation
+   * @see {@link validateTarget} - Class validation method that uses these decorators
+   * @see {@link getDecoratedProperties} - Metadata discovery for validation
+   * @see {@link ValidatorRule} - Rule type attached by this decorator
+   * @see {@link VALIDATOR_TARGET_RULES_METADATA_KEY} - Metadata key for rule storage
+   * @public
    */
   static buildPropertyDecorator<
     TRuleParams extends ValidatorRuleParams = ValidatorRuleParams,
@@ -3916,6 +4699,21 @@ export class Validator {
         ];
       }
     );
+  }
+  /**
+   * ## Mark Rule With Symbol
+   *
+   * Marks a rule function with a specific marker symbol. Used internally to mark
+   * decorators (OneOf, AllOf, ArrayOf, ValidateNested) for reliable identification
+   * even in minified code. Symbols survive minification while function names do not.
+   *
+   * @param ruleFunc - The rule function to mark
+   * @param marker - The marker symbol to apply
+   * @internal
+   */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  static markRuleWithSymbol(ruleFunc: any, marker: symbol): void {
+    markRuleWithSymbol(ruleFunc, marker);
   }
 }
 
@@ -4139,3 +4937,56 @@ function createFailureResult<Context = unknown>(
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type ValidatorDefaultArray = Array<any>;
+
+/** Metadata keys for storing validation target information on classes */
+const VALIDATOR_TARGET_RULES_METADATA_KEY = Symbol.for('validatorTargetRules');
+const VALIDATOR_TARGET_OPTIONS_METADATA_KEY = Symbol.for(
+  'validatorTargetOptions'
+);
+
+/** Symbol markers for identifying rule decorators (survives minification) */
+const VALIDATOR_NESTED_RULE_MARKER = Symbol.for('validatorNestedRuleMarker');
+const VALIDATOR_NESTED_RULE_PARAMS = Symbol.for('validatorNestedRuleParams');
+const VALIDATOR_ONEOF_RULE_MARKER = Symbol.for('validatorOneOfRuleMarker');
+const VALIDATOR_ALLOF_RULE_MARKER = Symbol.for('validatorAllOfRuleMarker');
+const VALIDATOR_ARRAYOF_RULE_MARKER = Symbol.for('validatorArrayOfRuleMarker');
+
+/**
+ * Checks if a rule function has a specific marker.
+ * @param ruleFunc - The rule function to check
+ * @param marker - The marker symbol to check for
+ * @returns true if the function has the specified marker
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function hasRuleMarker(ruleFunc: any, marker: symbol): boolean {
+  return typeof ruleFunc === 'function' && ruleFunc[marker] === true;
+}
+
+/**
+ * Gets the type of multi-rule from marker inspection.
+ * @param ruleFunc - The rule function to inspect
+ * @returns "oneof" | "allof" | "arrayof" | undefined
+ */
+function getMultiRuleType(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ruleFunc: any
+): 'oneof' | 'allof' | 'arrayof' | undefined {
+  if (hasRuleMarker(ruleFunc, VALIDATOR_ONEOF_RULE_MARKER)) return 'oneof';
+  if (hasRuleMarker(ruleFunc, VALIDATOR_ALLOF_RULE_MARKER)) return 'allof';
+  if (hasRuleMarker(ruleFunc, VALIDATOR_ARRAYOF_RULE_MARKER)) return 'arrayof';
+  return undefined;
+}
+
+/**
+ * Marks a rule function with a specific marker symbol.
+ * Used during decorator creation to mark OneOf, AllOf, ArrayOf, ValidateNested rules.
+ * @param ruleFunc - The rule function to mark
+ * @param marker - The marker symbol to apply
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function markRuleWithSymbol(ruleFunc: any, marker: symbol): void {
+  if (typeof ruleFunc === 'function') {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (ruleFunc as any)[marker] = true;
+  }
+}

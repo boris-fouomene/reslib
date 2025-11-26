@@ -3,25 +3,35 @@ import type { ValidatorRuleParams } from '../types';
 import { ValidatorRuleParamTypes, ValidatorValidateOptions } from '../types';
 import { Validator } from '../validator';
 
+type t = ValidatorRuleParams;
+
 /**
- * ### Array Rule
+ * ## IsArray Decorator
  *
- * Validates that the field under validation is an array.
+ * Property decorator that validates a property value is an array.
+ * This is a fundamental array validation decorator that ensures the value
+ * is actually an array before applying other array-specific validations.
  *
- * @example
+ * ### Usage
  * ```typescript
- * // Class validation
- * class DataCollection {
- *   @IsRequired()
- *   @IsArray
- *   items: any[];
+ * class ProductList {
+ *   @IsArray()
+ *   products: Product[];
  * }
  * ```
  *
- * @param options - Validation options containing value and context
- * @returns Promise resolving to true if valid, rejecting with error message if invalid
+ * ### Validation Behavior
+ * - **Passes**: When value is an array (including empty arrays)
+ * - **Fails**: When value is not an array (null, undefined, object, string, number, etc.)
  *
+ * ### Error Messages
+ * - Default: `"[PropertyName]: Must be an array"`
+ * - I18n key: `"validator.array"`
  *
+ * ### Related Decorators
+ * - Often used as prerequisite for: `@ArrayMinLength`, `@ArrayMaxLength`, `@ArrayLength`, `@ArrayContains`, `@ArrayUnique`, `@ArrayAllStrings`, `@ArrayAllNumbers`
+ *
+ * @returns A property decorator function
  * @public
  */
 export const IsArray = Validator.buildRuleDecorator<
@@ -48,27 +58,38 @@ export const IsArray = Validator.buildRuleDecorator<
 }, 'Array');
 
 /**
- * ### ArrayMinLength Rule
+ * ## ArrayMinLength Decorator
  *
- * Validates that the array has at least the specified minimum length.
+ * Property decorator that validates an array has at least the specified minimum number of elements.
+ * Ensures arrays meet minimum size requirements for business logic.
  *
- * #### Parameters
- * - Minimum length (number)
- *
- * @example
+ * ### Usage
  * ```typescript
- * // Class validation
  * class ShoppingCart {
+ *   @IsArray()
  *   @ArrayMinLength(1)
- *   items: Product[];
+ *   items: CartItem[];
  * }
  * ```
  *
- * @param options - Validation options with rule parameters
- * @param options.ruleParams - Array containing minimum length
- * @returns Promise resolving to true if valid, rejecting with error message if invalid
+ * ### Parameters
+ * - `minLength: number` - The minimum number of elements required
  *
+ * ### Validation Behavior
+ * - **Passes**: When array length >= minimum length
+ * - **Fails**: When array length < minimum length
+ * - **Edge cases**: Empty arrays fail if minLength > 0
  *
+ * ### Error Messages
+ * - Default: `"[PropertyName]: Must contain at least {minLength} items"`
+ * - I18n key: `"validator.arrayMinLength"`
+ *
+ * ### Performance
+ * - **O(1) operation**: Only checks array length property
+ * - Fast validation suitable for large arrays
+ *
+ * @param minLength - Minimum number of elements required
+ * @returns A property decorator function
  * @public
  */
 export const ArrayMinLength = Validator.buildRuleDecorator<
@@ -116,27 +137,38 @@ export const ArrayMinLength = Validator.buildRuleDecorator<
 });
 
 /**
- * ### ArrayMaxLength Rule
+ * ## ArrayMaxLength Decorator
  *
- * Validates that the array has at most the specified maximum length.
+ * Property decorator that validates an array does not exceed the specified maximum number of elements.
+ * Prevents arrays from growing beyond acceptable limits to avoid memory issues or performance problems.
  *
- * #### Parameters
- * - Maximum length (number)
- *
- * @example
+ * ### Usage
  * ```typescript
- * // Class validation
- * class LimitedList {
- *   @ArrayMaxLength(10)
- *   tags: string[];
+ * class FileUploads {
+ *   @IsArray()
+ *   @ArrayMaxLength(5)
+ *   files: UploadedFile[];
  * }
  * ```
  *
- * @param options - Validation options with rule parameters
- * @param options.ruleParams - Array containing maximum length
- * @returns Promise resolving to true if valid, rejecting with error message if invalid
+ * ### Parameters
+ * - `maxLength: number` - The maximum number of elements allowed
  *
+ * ### Validation Behavior
+ * - **Passes**: When array length <= maximum length
+ * - **Fails**: When array length > maximum length
+ * - **Edge cases**: Empty arrays always pass
  *
+ * ### Error Messages
+ * - Default: `"[PropertyName]: Must not contain more than {maxLength} items"`
+ * - I18n key: `"validator.arrayMaxLength"`
+ *
+ * ### Performance
+ * - **O(1) operation**: Only checks array length property
+ * - Fast validation suitable for large arrays
+ *
+ * @param maxLength - Maximum number of elements allowed
+ * @returns A property decorator function
  * @public
  */
 export const ArrayMaxLength = Validator.buildRuleDecorator<
@@ -184,27 +216,39 @@ export const ArrayMaxLength = Validator.buildRuleDecorator<
 });
 
 /**
- * ### ArrayLength Rule
+ * ## ArrayLength Decorator
  *
- * Validates that the array has exactly the specified length.
+ * Property decorator that validates an array has exactly the specified number of elements.
+ * Ensures arrays have a precise, required size for structured data requirements.
  *
- * #### Parameters
- * - Exact length (number)
- *
- * @example
+ * ### Usage
  * ```typescript
- * // Class validation
- * class FixedSizeArray {
+ * class RGBColor {
+ *   @IsArray()
  *   @ArrayLength(3)
- *   coordinates: number[];
+ *   @ArrayAllNumbers()
+ *   values: number[]; // [1, 2, 3]
  * }
  * ```
  *
- * @param options - Validation options with rule parameters
- * @param options.ruleParams - Array containing exact length
- * @returns Promise resolving to true if valid, rejecting with error message if invalid
+ * ### Parameters
+ * - `length: number` - The exact number of elements required
  *
+ * ### Validation Behavior
+ * - **Passes**: When array length === exact length
+ * - **Fails**: When array length !== exact length
+ * - **Edge cases**: Empty arrays fail unless length is 0
  *
+ * ### Error Messages
+ * - Default: `"[PropertyName]: Must contain exactly {length} items"`
+ * - I18n key: `"validator.arrayLength"`
+ *
+ * ### Performance
+ * - **O(1) operation**: Only checks array length property
+ * - Fast validation suitable for large arrays
+ *
+ * @param length - Exact number of elements required
+ * @returns A property decorator function
  * @public
  */
 export const ArrayLength = Validator.buildRuleDecorator<
@@ -252,27 +296,38 @@ export const ArrayLength = Validator.buildRuleDecorator<
 });
 
 /**
- * ### ArrayContains Rule
+ * ## ArrayContains Decorator
  *
- * Validates that the array contains all of the specified values.
+ * Property decorator that validates an array contains all of the specified required values.
+ * Ensures that certain elements are present in the array for business logic requirements.
  *
- * #### Parameters
- * - Values that must be present in the array
- *
- * @example
+ * ### Usage
  * ```typescript
- * // Class validation
- * class Permissions {
- *   @ArrayContains(['read'])
- *   userPermissions: string[];
+ * class UserPermissions {
+ *   @IsArray()
+ *   @ArrayContains(["read", "write"])
+ *   permissions: string[];
  * }
  * ```
  *
- * @param options - Validation options with rule parameters
- * @param options.ruleParams - Array of values that must be contained
- * @returns Promise resolving to true if valid, rejecting with error message if invalid
+ * ### Parameters
+ * - `...requiredValues: any[]` - Values that must all be present in the array
  *
+ * ### Validation Behavior
+ * - **Passes**: When array contains ALL specified values
+ * - **Fails**: When array is missing ANY specified value
+ * - **Comparison**: Uses deep equality checking for objects
  *
+ * ### Error Messages
+ * - Default: `"[PropertyName]: Must contain all required values: {missingValues}"`
+ * - I18n key: `"validator.arrayContains"`
+ *
+ * ### Performance
+ * - **O(n*m) operation**: n = array length, m = required values length
+ * - May be slow for complex objects due to deep equality checking
+ *
+ * @param requiredValues - Values that must be present in the array
+ * @returns A property decorator function
  * @public
  */
 export const ArrayContains = Validator.buildRuleDecorator<
@@ -284,8 +339,7 @@ export const ArrayContains = Validator.buildRuleDecorator<
   translatedPropertyName,
   i18n,
   ...rest
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-}: ValidatorValidateOptions<any[]>): boolean | string {
+}): boolean | string {
   if (!Array.isArray(value)) {
     const message = i18n.t('validator.arrayContains', {
       field: translatedPropertyName || fieldName,
@@ -330,23 +384,44 @@ export const ArrayContains = Validator.buildRuleDecorator<
 });
 
 /**
- * ### ArrayUnique Rule
+ * ## ArrayUnique Decorator
  *
- * Validates that all elements in the array are unique.
+ * Property decorator that validates all elements in an array are unique (no duplicates).
+ * Ensures arrays contain distinct values only, commonly used for IDs and identifiers.
  *
- * @example
+ * ### Usage
  * ```typescript
- * // Class validation
- * class UniqueTags {
- *   @ArrayUnique
- *   tags: string[];
+ * class UserIds {
+ *   @IsArray()
+ *   @ArrayUnique()
+ *   @ArrayAllStrings()
+ *   userIds: string[];
  * }
  * ```
  *
- * @param options - Validation options containing value and context
- * @returns Promise resolving to true if valid, rejecting with error message if invalid
+ * ### Parameters
+ * - No parameters required
  *
+ * ### Validation Behavior
+ * - **Passes**: When all array elements are unique
+ * - **Fails**: When any element appears more than once
+ * - **Empty/Single element arrays**: Always pass
  *
+ * ### Uniqueness Checking
+ * - **Primitive types**: Compared by value
+ * - **Objects**: Compared by JSON string representation
+ * - **Null/undefined**: Treated as distinct values
+ *
+ * ### Error Messages
+ * - Default: `"[PropertyName]: Must contain only unique values"`
+ * - I18n key: `"validator.arrayUnique"`
+ *
+ * ### Performance
+ * - **O(n²) worst case**: Due to comparison operations
+ * - **Early exit**: Stops on first duplicate found
+ * - Uses Set for primitive type optimization
+ *
+ * @returns A property decorator function
  * @public
  */
 export const ArrayUnique = Validator.buildRuleDecorator<
@@ -400,29 +475,39 @@ export const ArrayUnique = Validator.buildRuleDecorator<
 }, 'ArrayUnique');
 
 /**
- * ### ArrayAllStrings Rule
+ * ## ArrayAllStrings Decorator
  *
- * Validates that all elements in the array are strings.
- * The check is strict — only primitive `string` values pass; other types fail.
+ * Property decorator that validates all elements in an array are strings.
+ * Ensures type homogeneity for string arrays used in text data collections.
  *
- * @example
+ * ### Usage
  * ```typescript
- * // Programmatic API
- * await Validator.validate({ value: ["a", "b"], rules: ["ArrayAllStrings"] }); // ✓ Valid
- * await Validator.validate({ value: ["a", 1], rules: ["ArrayAllStrings"] }); // ✗ Invalid
- * await Validator.validate({ value: "not an array", rules: ["ArrayAllStrings"] }); // ✗ Invalid (not an array)
- *
- * // Class validation
- * class Tags {
- *   @ArrayAllStrings
+ * class TagList {
+ *   @IsArray()
+ *   @ArrayAllStrings()
+ *   @ArrayUnique()
  *   tags: string[];
  * }
  * ```
  *
- * @param options - Validation options containing value and context
- * @returns Promise resolving to true if valid, rejecting with error message if invalid
+ * ### Parameters
+ * - No parameters required
  *
+ * ### Validation Behavior
+ * - **Passes**: When all elements are strings (including empty strings)
+ * - **Fails**: When any element is not a string
+ * - **Empty arrays**: Always pass
  *
+ * ### Error Messages
+ * - Default: `"[PropertyName]: All items must be strings"`
+ * - I18n key: `"validator.arrayAllStrings"`
+ *
+ * ### Performance
+ * - **O(n) operation**: Iterates through all array elements
+ * - **Early exit**: Stops on first non-string element
+ * - Uses fast `typeof` operator
+ *
+ * @returns A property decorator function
  * @public
  */
 export const ArrayAllStrings = Validator.buildRuleDecorator<
@@ -456,30 +541,43 @@ export const ArrayAllStrings = Validator.buildRuleDecorator<
 }, 'ArrayAllStrings');
 
 /**
- * ### ArrayAllNumbers Rule
+ * ## ArrayAllNumbers Decorator
  *
- * Validates that all elements in the array are numbers.
- * The check is strict — only primitive `number` values pass; `NaN` fails.
+ * Property decorator that validates all elements in an array are numbers.
+ * Ensures type homogeneity for numeric arrays used in data collections.
  *
- * @example
+ * ### Usage
  * ```typescript
- * // Programmatic API
- * await Validator.validate({ value: [1, 2, 3], rules: ["ArrayAllNumbers"] }); // ✓ Valid
- * await Validator.validate({ value: [1, "2"], rules: ["ArrayAllNumbers"] }); // ✗ Invalid
- * await Validator.validate({ value: [1, NaN], rules: ["ArrayAllNumbers"] }); // ✗ Invalid (NaN)
- * await Validator.validate({ value: "not an array", rules: ["ArrayAllNumbers"] }); // ✗ Invalid (not an array)
- *
- * // Class validation
- * class Scores {
- *   @ArrayAllNumbers
+ * class SensorReadings {
+ *   @IsArray()
+ *   @ArrayAllNumbers()
+ *   @ArrayMinLength(1)
  *   values: number[];
  * }
  * ```
  *
- * @param options - Validation options containing value and context
- * @returns Promise resolving to true if valid, rejecting with error message if invalid
+ * ### Parameters
+ * - No parameters required
  *
+ * ### Validation Behavior
+ * - **Passes**: When all elements are numbers (excluding NaN)
+ * - **Fails**: When any element is not a number or is NaN
+ * - **Empty arrays**: Always pass
  *
+ * ### Number Type Considerations
+ * - **Valid**: `42`, `3.14`, `-0`, `Infinity`, `-Infinity`
+ * - **Invalid**: `NaN`, strings `"42"`, booleans, objects, null, undefined
+ *
+ * ### Error Messages
+ * - Default: `"[PropertyName]: All items must be numbers"`
+ * - I18n key: `"validator.arrayAllNumbers"`
+ *
+ * ### Performance
+ * - **O(n) operation**: Iterates through all array elements
+ * - **Early exit**: Stops on first invalid element
+ * - Uses fast `typeof` and `Number.isNaN` checks
+ *
+ * @returns A property decorator function
  * @public
  */
 export const ArrayAllNumbers = Validator.buildRuleDecorator<
@@ -517,242 +615,326 @@ export const ArrayAllNumbers = Validator.buildRuleDecorator<
 declare module '../types' {
   export interface ValidatorRuleParamTypes {
     /**
-     * ### Array Rule
+     * ## Array Validation Rule
      *
-     * Validates that the field under validation is an array.
+     * Validates that a property value is an array. This is a fundamental array validation rule
+     * that ensures the value is actually an array before applying other array-specific validations.
      *
-     * @example
+     * ### Purpose
+     * Ensures the property value is an array type before applying array-specific validation rules.
+     * This rule is typically used as a prerequisite for other array validation rules.
+     *
+     * ### Parameter Structure
+     * - **No parameters required**: `ValidatorRuleParams<[]>`
+     * - Rule takes no arguments: `"Array"`
+     *
+     * ### Usage Examples
+     *
+     * #### Basic Usage
      * ```typescript
-     * // Valid arrays
-     * await Validator.validate({
-     *   value: [1, 2, 3],
-     *   rules: ['Array']
-     * }); // ✓ Valid
-     *
-     * await Validator.validate({
-     *   value: [],
-     *   rules: ['Array']
-     * }); // ✓ Valid
-     *
-     * // Invalid examples
-     * await Validator.validate({
-     *   value: "not an array",
-     *   rules: ['Array']
-     * }); // ✗ Invalid
-     *
-     * await Validator.validate({
-     *   value: null,
-     *   rules: ['Array']
-     * }); // ✗ Invalid
-     *
-     * // Class validation
-     * class DataCollection {
-     *   @Required
-     *   @Array
-     *   items: any[];
+     * class ProductList {
+     *   @IsArray()
+     *   products: Product[];
      * }
      * ```
      *
-     * @param options - Validation options containing value and context
-     * @returns Promise resolving to true if valid, rejecting with error message if invalid
+     * #### Combined with Other Array Rules
+     * ```typescript
+     * class UserRoles {
+     *   @IsArray()
+     *   @ArrayMinLength(1)
+     *   @ArrayAllStrings()
+     *   roles: string[];
+     * }
+     * ```
      *
+     * ### Validation Behavior
+     * - **Passes**: When value is an array (including empty arrays)
+     * - **Fails**: When value is not an array (null, undefined, object, string, number, etc.)
+     *
+     * ### Error Messages
+     * - Default: `"[PropertyName]: Must be an array"`
+     * - I18n key: `"validator.array"`
+     *
+     * ### Common Use Cases
+     * - Validating API responses that should return arrays
+     * - Ensuring form inputs that collect multiple values are arrays
+     * - Type guarding before applying array-specific operations
+     *
+     * ### Relationship to Other Rules
+     * - **Prerequisite for**: `ArrayMinLength`, `ArrayMaxLength`, `ArrayLength`, `ArrayContains`, `ArrayUnique`, `ArrayAllStrings`, `ArrayAllNumbers`
+     * - **Often combined with**: Array length and content validation rules
      *
      * @public
      */
     Array: ValidatorRuleParams<[]>;
 
     /**
-     * ### ArrayMinLength Rule
+     * ## Array Minimum Length Validation Rule
      *
-     * Validates that the array has at least the specified minimum length.
+     * Validates that an array has at least the specified minimum number of elements.
+     * This rule ensures arrays meet minimum size requirements.
      *
-     * #### Parameters
-     * - Minimum length (number)
+     * ### Purpose
+     * Enforces minimum array length constraints, commonly used for ensuring collections
+     * have sufficient elements for business logic requirements.
      *
-     * @example
+     * ### Parameter Structure
+     * - **Single parameter**: `ValidatorRuleParams<[minLength: number]>`
+     * - **Parameter type**: `number` (minimum length required)
+     * - **Rule syntax**: `"ArrayMinLength[5]"` (minimum 5 elements)
+     *
+     * ### Usage Examples
+     *
+     * #### Basic Minimum Length
      * ```typescript
-     * // Valid examples
-     * await Validator.validate({
-     *   value: [1, 2, 3],
-     *   rules: ['ArrayMinLength[2]']
-     * }); // ✓ Valid
-     *
-     * await Validator.validate({
-     *   value: ['a', 'b'],
-     *   rules: ['ArrayMinLength[1]']
-     * }); // ✓ Valid
-     *
-     * // Invalid examples
-     * await Validator.validate({
-     *   value: [1],
-     *   rules: ['ArrayMinLength[2]']
-     * }); // ✗ Invalid
-     *
-     * await Validator.validate({
-     *   value: "not an array",
-     *   rules: ['ArrayMinLength[1]']
-     * }); // ✗ Invalid
-     *
-     * // Class validation
      * class ShoppingCart {
+     *   @IsArray()
      *   @ArrayMinLength(1)
-     *   items: Product[];
+     *   items: CartItem[];
      * }
      * ```
      *
-     * @param options - Validation options with rule parameters
-     * @param options.ruleParams - Array containing minimum length
-     * @returns Promise resolving to true if valid, rejecting with error message if invalid
+     * #### Combined with Maximum Length
+     * ```typescript
+     * class TeamMembers {
+     *   @IsArray()
+     *   @ArrayMinLength(2)
+     *   @ArrayMaxLength(10)
+     *   members: User[];
+     * }
+     * ```
      *
+     * ### Validation Behavior
+     * - **Passes**: When array length >= minimum length
+     * - **Fails**: When array length < minimum length
+     * - **Edge cases**: Empty arrays fail if minLength > 0
+     *
+     * ### Parameter Validation
+     * - **Type checking**: Parameter must be a valid number
+     * - **Range validation**: Parameter must be >= 0
+     * - **Invalid parameters**: Throws error during rule parsing
+     *
+     * ### Error Messages
+     * - Default: `"[PropertyName]: Must contain at least {minLength} items"`
+     * - I18n key: `"validator.arrayMinLength"`
+     *
+     * ### Common Use Cases
+     * - Shopping carts requiring at least one item
+     * - Teams requiring minimum member counts
+     * - Collections needing baseline data
+     *
+     * ### Performance Notes
+     * - **O(1) operation**: Only checks array length property
+     * - **No iteration**: Does not traverse array elements
+     * - **Fast validation**: Suitable for large arrays
      *
      * @public
      */
     ArrayMinLength: ValidatorRuleParams<[minLength: number]>;
 
     /**
-     * ### ArrayMaxLength Rule
+     * ## Array Maximum Length Validation Rule
      *
-     * Validates that the array has at most the specified maximum length.
+     * Validates that an array does not exceed the specified maximum number of elements.
+     * This rule prevents arrays from growing beyond acceptable limits.
      *
-     * #### Parameters
-     * - Maximum length (number)
+     * ### Purpose
+     * Enforces maximum array length constraints to prevent excessive data,
+     * memory issues, or performance problems with large collections.
      *
-     * @example
+     * ### Parameter Structure
+     * - **Single parameter**: `ValidatorRuleParams<[maxLength: number]>`
+     * - **Parameter type**: `number` (maximum length allowed)
+     * - **Rule syntax**: `"ArrayMaxLength[100]"` (maximum 100 elements)
+     *
+     * ### Usage Examples
+     *
+     * #### Basic Maximum Length
      * ```typescript
-     * // Valid examples
-     * await Validator.validate({
-     *   value: [1, 2],
-     *   rules: ['ArrayMaxLength[3]']
-     * }); // ✓ Valid
-     *
-     * await Validator.validate({
-     *   value: [],
-     *   rules: ['ArrayMaxLength[10]']
-     * }); // ✓ Valid
-     *
-     * // Invalid examples
-     * await Validator.validate({
-     *   value: [1, 2, 3, 4],
-     *   rules: ['ArrayMaxLength[3]']
-     * }); // ✗ Invalid
-     *
-     * await Validator.validate({
-     *   value: "not an array",
-     *   rules: ['ArrayMaxLength[5]']
-     * }); // ✗ Invalid
-     *
-     * // Class validation
-     * class LimitedList {
-     *   @ArrayMaxLength(10)
-     *   tags: string[];
+     * class FileUploads {
+     *   @IsArray()
+     *   @ArrayMaxLength(5)
+     *   files: UploadedFile[];
      * }
      * ```
      *
-     * @param options - Validation options with rule parameters
-     * @param options.ruleParams - Array containing maximum length
-     * @returns Promise resolving to true if valid, rejecting with error message if invalid
+     * #### Combined with Minimum Length
+     * ```typescript
+     * class CommitteeMembers {
+     *   @IsArray()
+     *   @ArrayMinLength(3)
+     *   @ArrayMaxLength(7)
+     *   members: Person[];
+     * }
+     * ```
      *
+     * ### Validation Behavior
+     * - **Passes**: When array length <= maximum length
+     * - **Fails**: When array length > maximum length
+     * - **Edge cases**: Empty arrays always pass
+     *
+     * ### Parameter Validation
+     * - **Type checking**: Parameter must be a valid number
+     * - **Range validation**: Parameter must be >= 0
+     * - **Invalid parameters**: Throws error during rule parsing
+     *
+     * ### Error Messages
+     * - Default: `"[PropertyName]: Must not contain more than {maxLength} items"`
+     * - I18n key: `"validator.arrayMaxLength"`
+     *
+     * ### Common Use Cases
+     * - Limiting file upload counts
+     * - Restricting participant numbers in events
+     * - Preventing memory issues with large datasets
+     * - Enforcing business rules on collection sizes
+     *
+     * ### Performance Notes
+     * - **O(1) operation**: Only checks array length property
+     * - **No iteration**: Does not traverse array elements
+     * - **Fast validation**: Suitable for large arrays
      *
      * @public
      */
     ArrayMaxLength: ValidatorRuleParams<[maxLength: number]>;
 
     /**
-     * ### ArrayLength Rule
+     * ## Array Exact Length Validation Rule
      *
-     * Validates that the array has exactly the specified length.
+     * Validates that an array has exactly the specified number of elements.
+     * This rule ensures arrays have a precise, required size.
      *
-     * #### Parameters
-     * - Exact length (number)
+     * ### Purpose
+     * Enforces exact array length requirements where the number of elements
+     * must match a specific count exactly, not more or less.
      *
-     * @example
+     * ### Parameter Structure
+     * - **Single parameter**: `ValidatorRuleParams<[length: number]>`
+     * - **Parameter type**: `number` (exact length required)
+     * - **Rule syntax**: `"ArrayLength[3]"` (exactly 3 elements required)
+     *
+     * ### Usage Examples
+     *
+     * #### Fixed-Size Collections
      * ```typescript
-     * // Valid examples
-     * await Validator.validate({
-     *   value: [1, 2, 3],
-     *   rules: ['ArrayLength[3]']
-     * }); // ✓ Valid
-     *
-     * await Validator.validate({
-     *   value: ['x', 'y'],
-     *   rules: ['ArrayLength[2]']
-     * }); // ✓ Valid
-     *
-     * // Invalid examples
-     * await Validator.validate({
-     *   value: [1, 2],
-     *   rules: ['ArrayLength[3]']
-     * }); // ✗ Invalid
-     *
-     * await Validator.validate({
-     *   value: [1, 2, 3, 4],
-     *   rules: ['ArrayLength[3]']
-     * }); // ✗ Invalid
-     *
-     * await Validator.validate({
-     *   value: "not an array",
-     *   rules: ['ArrayLength[2]']
-     * }); // ✗ Invalid
-     *
-     * // Class validation
-     * class FixedSizeArray {
+     * class RGBColor {
+     *   @IsArray()
      *   @ArrayLength(3)
-     *   coordinates: number[];
+     *   @ArrayAllNumbers()
+     *   values: number[]; // [r, g, b]
      * }
      * ```
      *
-     * @param options - Validation options with rule parameters
-     * @param options.ruleParams - Array containing exact length
-     * @returns Promise resolving to true if valid, rejecting with error message if invalid
+     * #### Structured Data Requirements
+     * ```typescript
+     * class Coordinate {
+     *   @IsArray()
+     *   @ArrayLength(2)
+     *   @ArrayAllNumbers()
+     *   point: number[]; // [x, y]
+     * }
+     * ```
      *
+     * ### Validation Behavior
+     * - **Passes**: When array length === exact length
+     * - **Fails**: When array length !== exact length
+     * - **Edge cases**: Empty arrays fail unless length is 0
+     *
+     * ### Parameter Validation
+     * - **Type checking**: Parameter must be a valid number
+     * - **Range validation**: Parameter must be >= 0
+     * - **Invalid parameters**: Throws error during rule parsing
+     *
+     * ### Error Messages
+     * - Default: `"[PropertyName]: Must contain exactly {length} items"`
+     * - I18n key: `"validator.arrayLength"`
+     *
+     * ### Common Use Cases
+     * - Color values requiring specific channel counts
+     * - Geographic coordinates with fixed dimensions
+     * - Structured data with known field counts
+     * - Protocol buffers or fixed-schema data structures
+     *
+     * ### Performance Notes
+     * - **O(1) operation**: Only checks array length property
+     * - **No iteration**: Does not traverse array elements
+     * - **Fast validation**: Suitable for large arrays
+     *
+     * ### Comparison with Range Rules
+     * | Rule | Use Case | Example |
+     * |------|----------|---------|
+     * | `ArrayLength` | Exact count required | RGB values: exactly 3 numbers |
+     * | `ArrayMinLength` + `ArrayMaxLength` | Size range allowed | Team: 2-10 members |
      *
      * @public
      */
     ArrayLength: ValidatorRuleParams<[length: number]>;
 
     /**
-     * ### ArrayContains Rule
+     * ## Array Contains Validation Rule
      *
-     * Validates that the array contains all of the specified values.
+     * Validates that an array contains all of the specified required values.
+     * This rule ensures that certain elements are present in the array.
      *
-     * #### Parameters
-     * - Values that must be present in the array
+     * ### Purpose
+     * Ensures that an array includes specific required elements, commonly used
+     * for validating that collections contain mandatory items or meet inclusion criteria.
      *
-     * @example
+     * ### Parameter Structure
+     * - **Array parameter**: `ValidatorRuleParams<any[]>`
+     * - **Parameter type**: `any[]` (array of values that must be present)
+     * - **Rule syntax**: `"ArrayContains[value1, value2, ...]"`
+     *
+     * ### Usage Examples
+     *
+     * #### Required Permissions
      * ```typescript
-     * // Valid examples
-     * await Validator.validate({
-     *   value: ['read', 'write', 'delete'],
-     *   rules: ['ArrayContains[read,write]']
-     * }); // ✓ Valid
-     *
-     * await Validator.validate({
-     *   value: [1, 2, 3, 4],
-     *   rules: ['ArrayContains[2,3]']
-     * }); // ✓ Valid
-     *
-     * // Invalid examples
-     * await Validator.validate({
-     *   value: ['read', 'write'],
-     *   rules: ['ArrayContains[read,delete]']
-     * }); // ✗ Invalid
-     *
-     * await Validator.validate({
-     *   value: "not an array",
-     *   rules: ['ArrayContains[1]']
-     * }); // ✗ Invalid
-     *
-     * // Class validation
-     * class Permissions {
-     *   @ArrayContains(['read'])
-     *   userPermissions: string[];
+     * class UserPermissions {
+     *   @IsArray()
+     *   @ArrayContains(["read", "write"])
+     *   permissions: string[];
      * }
      * ```
      *
-     * @param options - Validation options with rule parameters
-     * @param options.ruleParams - Array of values that must be contained
-     * @returns Promise resolving to true if valid, rejecting with error message if invalid
+     * #### Mandatory Categories
+     * ```typescript
+     * class ProductTags {
+     *   @IsArray()
+     *   @ArrayContains(["electronics", "featured"])
+     *   tags: string[];
+     * }
+     * ```
      *
+     * ### Validation Behavior
+     * - **Passes**: When array contains ALL specified values
+     * - **Fails**: When array is missing ANY specified value
+     * - **Comparison**: Uses deep equality checking for objects
+     *
+     * ### Parameter Validation
+     * - **Type checking**: Parameter must be an array
+     * - **Empty arrays**: Valid but meaningless (no requirements)
+     * - **Invalid parameters**: Throws error during rule parsing
+     *
+     * ### Error Messages
+     * - Default: `"[PropertyName]: Must contain all required values: {missingValues}"`
+     * - I18n key: `"validator.arrayContains"`
+     *
+     * ### Common Use Cases
+     * - User permissions requiring specific access levels
+     * - Product categories needing mandatory tags
+     * - Configuration requiring essential settings
+     * - Business rules mandating certain options
+     *
+     * ### Performance Notes
+     * - **O(n*m) operation**: n = array length, m = required values length
+     * - **Nested loops**: Uses `some()` and `every()` for checking
+     * - **Deep equality**: May be slow for complex objects
+     *
+     * ### Important Considerations
+     * - **Deep equality**: Objects are compared by structure, not reference
+     * - **Primitive types**: Strings, numbers, booleans compared by value
+     * - **Null/undefined**: Treated as distinct values
+     * - **Order irrelevant**: Array order doesn't affect validation
      *
      * @public
      */
@@ -760,100 +942,231 @@ declare module '../types' {
     ArrayContains: ValidatorRuleParams<any[]>;
 
     /**
-     * ### ArrayUnique Rule
+     * ## Array Uniqueness Validation Rule
      *
-     * Validates that all elements in the array are unique.
+     * Validates that all elements in an array are unique (no duplicates).
+     * This rule ensures arrays contain distinct values only.
      *
-     * @example
+     * ### Purpose
+     * Prevents duplicate values in arrays where uniqueness is required,
+     * commonly used for IDs, usernames, email lists, or any collection
+     * where duplicates would cause issues.
+     *
+     * ### Parameter Structure
+     * - **No parameters required**: `ValidatorRuleParams<[]>`
+     * - Rule takes no arguments: `"ArrayUnique"`
+     *
+     * ### Usage Examples
+     *
+     * #### Unique Identifiers
      * ```typescript
-     * // Valid examples
-     * await Validator.validate({
-     *   value: [1, 2, 3],
-     *   rules: ['ArrayUnique']
-     * }); // ✓ Valid
-     *
-     * await Validator.validate({
-     *   value: ['a', 'b', 'c'],
-     *   rules: ['ArrayUnique']
-     * }); // ✓ Valid
-     *
-     * // Invalid examples
-     * await Validator.validate({
-     *   value: [1, 2, 2, 3],
-     *   rules: ['ArrayUnique']
-     * }); // ✗ Invalid
-     *
-     * await Validator.validate({
-     *   value: ['a', 'b', 'a'],
-     *   rules: ['ArrayUnique']
-     * }); // ✗ Invalid
-     *
-     * await Validator.validate({
-     *   value: "not an array",
-     *   rules: ['ArrayUnique']
-     * }); // ✗ Invalid
-     *
-     * // Class validation
-     * class UniqueTags {
-     *   @ArrayUnique
-     *   tags: string[];
+     * class UserIds {
+     *   @IsArray()
+     *   @ArrayUnique()
+     *   @ArrayAllStrings()
+     *   userIds: string[];
      * }
      * ```
      *
-     * @param options - Validation options containing value and context
-     * @returns Promise resolving to true if valid, rejecting with error message if invalid
+     * #### Unique Email List
+     * ```typescript
+     * class InvitationList {
+     *   @IsArray()
+     *   @ArrayUnique()
+     *   @ArrayAllStrings()
+     *   emails: string[];
+     * }
+     * ```
      *
+     * ### Validation Behavior
+     * - **Passes**: When all array elements are unique
+     * - **Fails**: When any element appears more than once
+     * - **Empty arrays**: Always pass (no duplicates possible)
+     * - **Single element**: Always pass (no duplicates possible)
+     *
+     * ### Uniqueness Checking
+     * - **Primitive types**: Compared by value (string, number, boolean)
+     * - **Objects**: Compared by reference (not deep equality)
+     * - **Null/undefined**: Treated as distinct values
+     * - **Mixed types**: Different types are considered unique
+     *
+     * ### Error Messages
+     * - Default: `"[PropertyName]: Must contain only unique values"`
+     * - I18n key: `"validator.arrayUnique"`
+     *
+     * ### Common Use Cases
+     * - User ID collections
+     * - Email address lists
+     * - Tag collections
+     * - Primary key arrays
+     * - Selection lists without duplicates
+     *
+     * ### Performance Notes
+     * - **O(n²) worst case**: Nested loops for comparison
+     * - **Early exit**: Stops on first duplicate found
+     * - **Memory efficient**: Uses Set for primitive type optimization
+     * - **Object comparison**: Reference-based (fast but shallow)
+     *
+     * ### Important Considerations
+     * - **Object uniqueness**: Based on reference, not content
+     * - **Deep equality**: Not performed for performance reasons
+     * - **Custom comparison**: Not supported (use custom rule if needed)
+     * - **Case sensitivity**: String comparison is case-sensitive
+     *
+     * ### Alternatives for Complex Uniqueness
+     * For content-based uniqueness of objects, consider custom validation rules:
+     * ```typescript
+     * const uniqueByProperty = ({ value }) => {
+     *   const ids = value.map(item => item.id);
+     *   return ids.length === new Set(ids).size || "Duplicate IDs found";
+     * };
+     * ```
      *
      * @public
      */
     ArrayUnique: ValidatorRuleParams<[]>;
 
     /**
-     * ### ArrayAllStrings Rule
+     * ## Array All Strings Validation Rule
      *
-     * Validates that all elements in the array are strings.
+     * Validates that all elements in an array are strings.
+     * This rule ensures type homogeneity for string arrays.
      *
-     * @example
+     * ### Purpose
+     * Enforces that array elements are exclusively strings, commonly used
+     * for validating collections of text data, identifiers, or labels.
+     *
+     * ### Parameter Structure
+     * - **No parameters required**: `ValidatorRuleParams<[]>`
+     * - Rule takes no arguments: `"ArrayAllStrings"`
+     *
+     * ### Usage Examples
+     *
+     * #### String Collections
      * ```typescript
-     * await Validator.validate({ value: ["a", "b"], rules: ["ArrayAllStrings"] }); // ✓ Valid
-     * await Validator.validate({ value: ["a", 1], rules: ["ArrayAllStrings"] }); // ✗ Invalid
-     * await Validator.validate({ value: "not an array", rules: ["ArrayAllStrings"] }); // ✗ Invalid
-     *
-     * class Tags {
-     *   @ArrayAllStrings
+     * class TagList {
+     *   @IsArray()
+     *   @ArrayAllStrings()
+     *   @ArrayUnique()
      *   tags: string[];
      * }
      * ```
      *
-     * @param options - Validation options containing value and context
-     * @returns Promise resolving to true if valid, rejecting with error message if invalid
+     * #### User Input Arrays
+     * ```typescript
+     * class SearchKeywords {
+     *   @IsArray()
+     *   @ArrayAllStrings()
+     *   @ArrayMinLength(1)
+     *   keywords: string[];
+     * }
+     * ```
      *
+     * ### Validation Behavior
+     * - **Passes**: When all elements are strings (including empty strings)
+     * - **Fails**: When any element is not a string
+     * - **Empty arrays**: Always pass (no non-string elements)
+     * - **Type checking**: Uses `typeof item === 'string'`
+     *
+     * ### Error Messages
+     * - Default: `"[PropertyName]: All items must be strings"`
+     * - I18n key: `"validator.arrayAllStrings"`
+     *
+     * ### Common Use Cases
+     * - Tag collections
+     * - Keyword lists
+     * - User input arrays
+     * - Identifier collections
+     * - Text-based data arrays
+     *
+     * ### Performance Notes
+     * - **O(n) operation**: Iterates through all array elements
+     * - **Early exit**: Stops on first non-string element
+     * - **Type checking**: Uses fast `typeof` operator
+     *
+     * ### Related Rules
+     * - **ArrayAllNumbers**: For numeric arrays
+     * - **ArrayUnique**: For unique string arrays
+     * - **ArrayMinLength/ArrayMaxLength**: For size constraints
      *
      * @public
      */
     ArrayAllStrings: ValidatorRuleParams<[]>;
 
     /**
-     * ### ArrayAllNumbers Rule
+     * ## Array All Numbers Validation Rule
      *
-     * Validates that all elements in the array are numbers. `NaN` fails.
+     * Validates that all elements in an array are numbers.
+     * This rule ensures type homogeneity for numeric arrays.
      *
-     * @example
+     * ### Purpose
+     * Enforces that array elements are exclusively numbers, commonly used
+     * for validating collections of numeric data, measurements, or calculations.
+     *
+     * ### Parameter Structure
+     * - **No parameters required**: `ValidatorRuleParams<[]>`
+     * - Rule takes no arguments: `"ArrayAllNumbers"`
+     *
+     * ### Usage Examples
+     *
+     * #### Numeric Data Collections
      * ```typescript
-     * await Validator.validate({ value: [1, 2, 3], rules: ["ArrayAllNumbers"] }); // ✓ Valid
-     * await Validator.validate({ value: [1, "2"], rules: ["ArrayAllNumbers"] }); // ✗ Invalid
-     * await Validator.validate({ value: [1, NaN], rules: ["ArrayAllNumbers"] }); // ✗ Invalid
-     * await Validator.validate({ value: "not an array", rules: ["ArrayAllNumbers"] }); // ✗ Invalid
-     *
-     * class Scores {
-     *   @ArrayAllNumbers
+     * class SensorReadings {
+     *   @IsArray()
+     *   @ArrayAllNumbers()
+     *   @ArrayMinLength(1)
      *   values: number[];
      * }
      * ```
      *
-     * @param options - Validation options containing value and context
-     * @returns Promise resolving to true if valid, rejecting with error message if invalid
+     * #### Coordinate Arrays
+     * ```typescript
+     * class PolygonPoints {
+     *   @IsArray()
+     *   @ArrayAllNumbers()
+     *   @ArrayLength(6) // [x1,y1,x2,y2,x3,y3]
+     *   coordinates: number[];
+     * }
+     * ```
      *
+     * ### Validation Behavior
+     * - **Passes**: When all elements are numbers (including NaN, Infinity)
+     * - **Fails**: When any element is not a number
+     * - **Empty arrays**: Always pass (no non-number elements)
+     * - **Type checking**: Uses `typeof item === 'number'`
+     *
+     * ### Number Type Considerations
+     * - **Valid numbers**: `42`, `3.14`, `-0`, `NaN`, `Infinity`, `-Infinity`
+     * - **Invalid values**: Strings `"42"`, booleans, objects, null, undefined
+     * - **Numeric strings**: Not accepted (must be actual numbers)
+     *
+     * ### Error Messages
+     * - Default: `"[PropertyName]: All items must be numbers"`
+     * - I18n key: `"validator.arrayAllNumbers"`
+     *
+     * ### Common Use Cases
+     * - Sensor data collections
+     * - Measurement arrays
+     * - Coordinate systems
+     * - Statistical data
+     * - Mathematical calculations
+     *
+     * ### Performance Notes
+     * - **O(n) operation**: Iterates through all array elements
+     * - **Early exit**: Stops on first non-number element
+     * - **Type checking**: Uses fast `typeof` operator
+     *
+     * ### Related Rules
+     * - **ArrayAllStrings**: For string arrays
+     * - **ArrayUnique**: For unique number arrays
+     * - **ArrayMinLength/ArrayMaxLength**: For size constraints
+     * - **NumberGreaterThan/NumberLessThan**: For individual number validation
+     *
+     * ### Important Considerations
+     * - **NaN handling**: `NaN` values are considered valid numbers
+     * - **Infinity handling**: `Infinity` and `-Infinity` are valid numbers
+     * - **Type coercion**: No automatic conversion from strings to numbers
+     * - **Precision**: No validation of number precision or range
      *
      * @public
      */

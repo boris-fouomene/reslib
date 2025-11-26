@@ -26,14 +26,14 @@ describe('Validator', () => {
       const ruleFunction: ValidatorRuleFunction = ({ value }) =>
         value % 2 === 0 || 'The number must be even.';
 
-      Validator.registerRule(ruleName, ruleFunction);
+      Validator.registerRule(ruleName as any, ruleFunction);
 
-      const retrievedRule = Validator.findRegisteredRule(ruleName);
+      const retrievedRule = Validator.getRule(ruleName);
       expect(retrievedRule).toBe(ruleFunction);
     });
 
     it('should return undefined for a non-existent rule', () => {
-      const retrievedRule = Validator.findRegisteredRule(
+      const retrievedRule = Validator.getRule(
         'nonExistentRule' as ValidatorRuleName
       );
       expect(retrievedRule).toBeUndefined();

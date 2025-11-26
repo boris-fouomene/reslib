@@ -1,17 +1,23 @@
-import { Primitive } from '@/types';
-import { ValidatorResult, ValidatorValidateOptions } from '../types';
+import { ValidatorResult } from '../types';
 import { Validator } from '../validator';
 
 import type { ValidatorRuleParams } from '../types';
 
-function _IsEnum<T extends Primitive = Primitive>({
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+type t = ValidatorRuleParams;
+
+import type { ValidatorRuleParamTypes } from '../types';
+
+export const IsEnum = Validator.buildRuleDecorator<
+  ValidatorRuleParamTypes['Enum']
+>(function Enum({
   value,
   ruleParams,
   fieldName,
   translatedPropertyName,
   i18n,
   ...rest
-}: ValidatorValidateOptions<Array<T>>): ValidatorResult {
+}): ValidatorResult {
   if (!ruleParams || !ruleParams.length) {
     const message = i18n.t('validator.invalidRuleParams', {
       rule: 'Enum',
@@ -21,7 +27,8 @@ function _IsEnum<T extends Primitive = Primitive>({
     });
     return message;
   }
-  const exists = allInRules(value, ruleParams);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const exists = allInRules(value, ruleParams as any);
   if (!exists) {
     return i18n.t('validator.invalidEnumValue', {
       field: translatedPropertyName || fieldName,
@@ -31,35 +38,14 @@ function _IsEnum<T extends Primitive = Primitive>({
     });
   }
   return true;
-}
-export const IsEnum = Validator.buildRuleDecorator<Array<Primitive>>(_IsEnum);
-Validator.registerRule('Enum', _IsEnum);
+});
 declare module '../types' {
   export interface ValidatorRuleParamTypes {
-    /**
-     * ### Enum Rule
-     *
-     * Validates that the field match one of the following value, passed throght rulesParams
-     *
-     *
-     * @param options - Validation options with rule parameters
-     * @param options.ruleParams - Array containing enum values
-     * @returns Promise resolving to true if valid, rejecting with error message if invalid
-     *
-     * @public
-     */
-    Enum: ValidatorRuleParams<Array<Primitive>>;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    Enum: ValidatorRuleParams<Array<any>>;
   }
 }
 
-/**
- * Validates that all values exist in rule parameters using O(1) lookups.
- * Performs both strict and type-coerced comparisons (null/undefined excluded).
- *
- * @param value - Single value or array of values to check
- * @param ruleParams - Allowed parameter values
- * @returns true if ALL values are found in ruleParams, false otherwise
- */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const allInRules = (value: any, ruleParams: any[]): boolean => {
   // Normalize input to array for uniform processing

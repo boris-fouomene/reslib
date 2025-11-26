@@ -1,40 +1,6 @@
 import type { ValidatorRuleParams } from '../types';
-import { ValidatorResult, ValidatorValidateOptions } from '../types';
+import { ValidatorResult, ValidatorRuleParamTypes } from '../types';
 import { Validator } from '../validator';
-
-function _Date({
-  value,
-  fieldName,
-  translatedPropertyName,
-  i18n,
-  ...rest
-}: ValidatorValidateOptions): ValidatorResult {
-  return new Promise((resolve, reject) => {
-    if (value instanceof Date && !isNaN(value.getTime())) {
-      resolve(true);
-    } else if (typeof value === 'string' || typeof value === 'number') {
-      const date = new Date(value);
-      if (!isNaN(date.getTime())) {
-        resolve(true);
-      } else {
-        const message = i18n.t('validator.date', {
-          field: translatedPropertyName || fieldName,
-          value,
-          ...rest,
-        });
-        reject(message);
-      }
-    } else {
-      const message = i18n.t('validator.date', {
-        field: translatedPropertyName || fieldName,
-        value,
-        ...rest,
-      });
-      reject(message);
-    }
-  });
-}
-Validator.registerRule('Date', _Date);
 
 /**
  * ### Date Rule
@@ -46,7 +12,7 @@ Validator.registerRule('Date', _Date);
  * // Class validation
  * class Event {
  *   @IsRequired()
- *   @IsDate
+ *   @IsDate()
  *   eventDate: Date;
  * }
  * ```
@@ -57,79 +23,38 @@ Validator.registerRule('Date', _Date);
  *
  * @public
  */
-export const IsDate = Validator.buildPropertyDecorator(['Date']);
-
-function _DateAfter({
+export const IsDate = Validator.buildRuleDecorator<
+  ValidatorRuleParamTypes['Date']
+>(function _Date({
   value,
-  ruleParams,
   fieldName,
   translatedPropertyName,
   i18n,
   ...rest
-}: ValidatorValidateOptions<[string | Date]>): ValidatorResult {
-  return new Promise((resolve, reject) => {
-    if (
-      !value ||
-      (!(value instanceof Date) &&
-        typeof value !== 'string' &&
-        typeof value !== 'number')
-    ) {
-      const message = i18n.t('validator.dateAfter', {
-        field: translatedPropertyName || fieldName,
-        value,
-        date: ruleParams?.[0] || '',
-        ...rest,
-      });
-      return reject(message);
-    }
-
-    const valueDate = value instanceof Date ? value : new Date(value);
-    if (isNaN(valueDate.getTime())) {
-      const message = i18n.t('validator.dateAfter', {
-        field: translatedPropertyName || fieldName,
-        value,
-        date: ruleParams?.[0] || '',
-        ...rest,
-      });
-      return reject(message);
-    }
-
-    if (!ruleParams) {
-      const message = i18n.t('validator.invalidRuleParams', {
-        rule: 'DateAfter',
-        field: translatedPropertyName || fieldName,
-        ruleParams,
-        ...rest,
-      });
-      return reject(message);
-    }
-
-    const compareDate =
-      ruleParams[0] instanceof Date ? ruleParams[0] : new Date(ruleParams[0]);
-    if (isNaN(compareDate.getTime())) {
-      const message = i18n.t('validator.invalidRuleParams', {
-        rule: 'DateAfter',
-        field: translatedPropertyName || fieldName,
-        ruleParams,
-        ...rest,
-      });
-      return reject(message);
-    }
-
-    if (valueDate > compareDate) {
-      resolve(true);
+}): ValidatorResult {
+  if (value instanceof Date && !isNaN(value.getTime())) {
+    return true;
+  } else if (typeof value === 'string' || typeof value === 'number') {
+    const date = new Date(value);
+    if (!isNaN(date.getTime())) {
+      return true;
     } else {
-      const message = i18n.t('validator.dateAfter', {
+      const message = i18n.t('validator.date', {
         field: translatedPropertyName || fieldName,
         value,
-        date: ruleParams[0],
         ...rest,
       });
-      reject(message);
+      return message;
     }
-  });
-}
-Validator.registerRule('DateAfter', _DateAfter);
+  } else {
+    const message = i18n.t('validator.date', {
+      field: translatedPropertyName || fieldName,
+      value,
+      ...rest,
+    });
+    return message;
+  }
+}, 'Date');
 
 /**
  * ### DateAfter Rule
@@ -155,80 +80,76 @@ Validator.registerRule('DateAfter', _DateAfter);
  *
  * @public
  */
-export const IsDateAfter =
-  Validator.buildRuleDecorator<[date: string | Date]>(_DateAfter);
-
-function _DateBefore({
+export const IsDateAfter = Validator.buildRuleDecorator<
+  ValidatorRuleParamTypes['DateAfter']
+>(function DateAfter({
   value,
   ruleParams,
   fieldName,
   translatedPropertyName,
   i18n,
   ...rest
-}: ValidatorValidateOptions<[string | Date]>): ValidatorResult {
-  return new Promise((resolve, reject) => {
-    if (
-      !value ||
-      (!(value instanceof Date) &&
-        typeof value !== 'string' &&
-        typeof value !== 'number')
-    ) {
-      const message = i18n.t('validator.dateBefore', {
-        field: translatedPropertyName || fieldName,
-        value,
-        date: ruleParams?.[0] || '',
-        ...rest,
-      });
-      return reject(message);
-    }
+}): ValidatorResult {
+  if (
+    !value ||
+    (!(value instanceof Date) &&
+      typeof value !== 'string' &&
+      typeof value !== 'number')
+  ) {
+    const message = i18n.t('validator.dateAfter', {
+      field: translatedPropertyName || fieldName,
+      value,
+      date: ruleParams?.[0] || '',
+      ...rest,
+    });
+    return message;
+  }
 
-    const valueDate = value instanceof Date ? value : new Date(value);
-    if (isNaN(valueDate.getTime())) {
-      const message = i18n.t('validator.dateBefore', {
-        field: translatedPropertyName || fieldName,
-        value,
-        date: ruleParams?.[0] || '',
-        ...rest,
-      });
-      return reject(message);
-    }
+  const valueDate = value instanceof Date ? value : new Date(value);
+  if (isNaN(valueDate.getTime())) {
+    const message = i18n.t('validator.dateAfter', {
+      field: translatedPropertyName || fieldName,
+      value,
+      date: ruleParams?.[0] || '',
+      ...rest,
+    });
+    return message;
+  }
 
-    if (!ruleParams) {
-      const message = i18n.t('validator.invalidRuleParams', {
-        rule: 'DateBefore',
-        field: translatedPropertyName || fieldName,
-        ruleParams,
-        ...rest,
-      });
-      return reject(message);
-    }
+  if (!ruleParams) {
+    const message = i18n.t('validator.invalidRuleParams', {
+      rule: 'DateAfter',
+      field: translatedPropertyName || fieldName,
+      ruleParams,
+      ...rest,
+    });
+    return message;
+  }
 
-    const compareDate =
-      ruleParams[0] instanceof Date ? ruleParams[0] : new Date(ruleParams[0]);
-    if (isNaN(compareDate.getTime())) {
-      const message = i18n.t('validator.invalidRuleParams', {
-        rule: 'DateBefore',
-        field: translatedPropertyName || fieldName,
-        ruleParams,
-        ...rest,
-      });
-      return reject(message);
-    }
+  const compareDate =
+    ruleParams[0] instanceof Date ? ruleParams[0] : new Date(ruleParams[0]);
+  if (isNaN(compareDate.getTime())) {
+    const message = i18n.t('validator.invalidRuleParams', {
+      rule: 'DateAfter',
+      field: translatedPropertyName || fieldName,
+      ruleParams,
+      ...rest,
+    });
+    return message;
+  }
 
-    if (valueDate < compareDate) {
-      resolve(true);
-    } else {
-      const message = i18n.t('validator.dateBefore', {
-        field: translatedPropertyName || fieldName,
-        value,
-        date: ruleParams[0],
-        ...rest,
-      });
-      reject(message);
-    }
-  });
-}
-Validator.registerRule('DateBefore', _DateBefore);
+  if (valueDate > compareDate) {
+    return true;
+  } else {
+    const message = i18n.t('validator.dateAfter', {
+      field: translatedPropertyName || fieldName,
+      value,
+      date: ruleParams[0],
+      ...rest,
+    });
+    return message;
+  }
+});
 
 /**
  * ### DateBefore Rule
@@ -254,86 +175,76 @@ Validator.registerRule('DateBefore', _DateBefore);
  *
  * @public
  */
-export const IsDateBefore =
-  Validator.buildRuleDecorator<[date: string | Date]>(_DateBefore);
-
-function _DateBetween({
+export const IsDateBefore = Validator.buildRuleDecorator<
+  ValidatorRuleParamTypes['DateBefore']
+>(function DateBefore({
   value,
   ruleParams,
   fieldName,
   translatedPropertyName,
   i18n,
   ...rest
-}: ValidatorValidateOptions<[string | Date, string | Date]>): ValidatorResult {
-  return new Promise((resolve, reject) => {
-    if (
-      !value ||
-      (!(value instanceof Date) &&
-        typeof value !== 'string' &&
-        typeof value !== 'number')
-    ) {
-      const message = i18n.t('validator.dateBetween', {
-        field: translatedPropertyName || fieldName,
-        value,
-        startDate: ruleParams?.[0] || '',
-        endDate: ruleParams?.[1] || '',
-        ...rest,
-      });
-      return reject(message);
-    }
+}): ValidatorResult {
+  if (
+    !value ||
+    (!(value instanceof Date) &&
+      typeof value !== 'string' &&
+      typeof value !== 'number')
+  ) {
+    const message = i18n.t('validator.dateBefore', {
+      field: translatedPropertyName || fieldName,
+      value,
+      date: ruleParams?.[0] || '',
+      ...rest,
+    });
+    return message;
+  }
 
-    const valueDate = value instanceof Date ? value : new Date(value);
-    if (isNaN(valueDate.getTime())) {
-      const message = i18n.t('validator.dateBetween', {
-        field: translatedPropertyName || fieldName,
-        value,
-        startDate: ruleParams?.[0] || '',
-        endDate: ruleParams?.[1] || '',
-        ...rest,
-      });
-      return reject(message);
-    }
+  const valueDate = value instanceof Date ? value : new Date(value);
+  if (isNaN(valueDate.getTime())) {
+    const message = i18n.t('validator.dateBefore', {
+      field: translatedPropertyName || fieldName,
+      value,
+      date: ruleParams?.[0] || '',
+      ...rest,
+    });
+    return message;
+  }
 
-    if (!ruleParams || ruleParams.length < 2) {
-      const message = i18n.t('validator.invalidRuleParams', {
-        rule: 'DateBetween',
-        field: translatedPropertyName || fieldName,
-        ruleParams,
-        ...rest,
-      });
-      return reject(message);
-    }
+  if (!ruleParams) {
+    const message = i18n.t('validator.invalidRuleParams', {
+      rule: 'DateBefore',
+      field: translatedPropertyName || fieldName,
+      ruleParams,
+      ...rest,
+    });
+    return message;
+  }
 
-    const startDate =
-      ruleParams[0] instanceof Date ? ruleParams[0] : new Date(ruleParams[0]);
-    const endDate =
-      ruleParams[1] instanceof Date ? ruleParams[1] : new Date(ruleParams[1]);
+  const compareDate =
+    ruleParams[0] instanceof Date ? ruleParams[0] : new Date(ruleParams[0]);
+  if (isNaN(compareDate.getTime())) {
+    const message = i18n.t('validator.invalidRuleParams', {
+      rule: 'DateBefore',
+      field: translatedPropertyName || fieldName,
+      ruleParams,
+      ...rest,
+    });
+    return message;
+  }
 
-    if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
-      const message = i18n.t('validator.invalidRuleParams', {
-        rule: 'DateBetween',
-        field: translatedPropertyName || fieldName,
-        ruleParams,
-        ...rest,
-      });
-      return reject(message);
-    }
-
-    if (valueDate >= startDate && valueDate <= endDate) {
-      resolve(true);
-    } else {
-      const message = i18n.t('validator.dateBetween', {
-        field: translatedPropertyName || fieldName,
-        value,
-        startDate: ruleParams[0],
-        endDate: ruleParams[1],
-        ...rest,
-      });
-      reject(message);
-    }
-  });
-}
-Validator.registerRule('DateBetween', _DateBetween);
+  if (valueDate < compareDate) {
+    return true;
+  } else {
+    const message = i18n.t('validator.dateBefore', {
+      field: translatedPropertyName || fieldName,
+      value,
+      date: ruleParams[0],
+      ...rest,
+    });
+    return message;
+  }
+});
 
 /**
  * ### DateBetween Rule
@@ -360,94 +271,82 @@ Validator.registerRule('DateBetween', _DateBetween);
  *
  * @public
  */
-export const IsDateBetween =
-  Validator.buildRuleDecorator<
-    [minDate: string | Date, maxDate: string | Date]
-  >(_DateBetween);
-
-function _IsSameDate({
+export const IsDateBetween = Validator.buildRuleDecorator<
+  ValidatorRuleParamTypes['DateBetween']
+>(function DateBetween({
   value,
   ruleParams,
   fieldName,
   translatedPropertyName,
   i18n,
   ...rest
-}: ValidatorValidateOptions<[string | Date]>): ValidatorResult {
-  return new Promise((resolve, reject) => {
-    if (
-      !value ||
-      (!(value instanceof Date) &&
-        typeof value !== 'string' &&
-        typeof value !== 'number')
-    ) {
-      const message = i18n.t('validator.dateEquals', {
-        field: translatedPropertyName || fieldName,
-        value,
-        date: ruleParams?.[0] || '',
-        ...rest,
-      });
-      return reject(message);
-    }
+}): ValidatorResult {
+  if (
+    !value ||
+    (!(value instanceof Date) &&
+      typeof value !== 'string' &&
+      typeof value !== 'number')
+  ) {
+    const message = i18n.t('validator.dateBetween', {
+      field: translatedPropertyName || fieldName,
+      value,
+      startDate: ruleParams?.[0] || '',
+      endDate: ruleParams?.[1] || '',
+      ...rest,
+    });
+    return message;
+  }
 
-    const valueDate = value instanceof Date ? value : new Date(value);
-    if (isNaN(valueDate.getTime())) {
-      const message = i18n.t('validator.dateEquals', {
-        field: translatedPropertyName || fieldName,
-        value,
-        date: ruleParams?.[0] || '',
-        ...rest,
-      });
-      return reject(message);
-    }
+  const valueDate = value instanceof Date ? value : new Date(value);
+  if (isNaN(valueDate.getTime())) {
+    const message = i18n.t('validator.dateBetween', {
+      field: translatedPropertyName || fieldName,
+      value,
+      startDate: ruleParams?.[0] || '',
+      endDate: ruleParams?.[1] || '',
+      ...rest,
+    });
+    return message;
+  }
 
-    if (!ruleParams) {
-      const message = i18n.t('validator.invalidRuleParams', {
-        rule: 'SameDate',
-        field: translatedPropertyName || fieldName,
-        ruleParams,
-        ...rest,
-      });
-      return reject(message);
-    }
+  if (!ruleParams || ruleParams.length < 2) {
+    const message = i18n.t('validator.invalidRuleParams', {
+      rule: 'DateBetween',
+      field: translatedPropertyName || fieldName,
+      ruleParams,
+      ...rest,
+    });
+    return message;
+  }
 
-    const compareDate =
-      ruleParams[0] instanceof Date ? ruleParams[0] : new Date(ruleParams[0]);
-    if (isNaN(compareDate.getTime())) {
-      const message = i18n.t('validator.invalidRuleParams', {
-        rule: 'SameDate',
-        field: translatedPropertyName || fieldName,
-        ruleParams,
-        ...rest,
-      });
-      return reject(message);
-    }
+  const startDate =
+    ruleParams[0] instanceof Date ? ruleParams[0] : new Date(ruleParams[0]);
+  const endDate =
+    ruleParams[1] instanceof Date ? ruleParams[1] : new Date(ruleParams[1]);
 
-    // Compare dates by setting time to start of day for date-only comparison
-    const valueStartOfDay = new Date(
-      valueDate.getFullYear(),
-      valueDate.getMonth(),
-      valueDate.getDate()
-    );
-    const compareStartOfDay = new Date(
-      compareDate.getFullYear(),
-      compareDate.getMonth(),
-      compareDate.getDate()
-    );
+  if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+    const message = i18n.t('validator.invalidRuleParams', {
+      rule: 'DateBetween',
+      field: translatedPropertyName || fieldName,
+      ruleParams,
+      ...rest,
+    });
+    return message;
+  }
 
-    if (valueStartOfDay.getTime() === compareStartOfDay.getTime()) {
-      resolve(true);
-    } else {
-      const message = i18n.t('validator.dateEquals', {
-        field: translatedPropertyName || fieldName,
-        value,
-        date: ruleParams[0],
-        ...rest,
-      });
-      reject(message);
-    }
-  });
-}
-Validator.registerRule('SameDate', _IsSameDate);
+  if (valueDate >= startDate && valueDate <= endDate) {
+    return true;
+  } else {
+    const message = i18n.t('validator.dateBetween', {
+      field: translatedPropertyName || fieldName,
+      value,
+      startDate: ruleParams[0],
+      endDate: ruleParams[1],
+      ...rest,
+    });
+    return message;
+  }
+});
 
 /**
  * ### SameDate Rule
@@ -473,55 +372,88 @@ Validator.registerRule('SameDate', _IsSameDate);
  *
  * @public
  */
-export const IsSameDate =
-  Validator.buildRuleDecorator<[string | Date]>(_IsSameDate);
-
-function _IsFutureDate({
+export const IsSameDate = Validator.buildRuleDecorator<
+  ValidatorRuleParamTypes['SameDate']
+>(function SameDate({
   value,
+  ruleParams,
   fieldName,
   translatedPropertyName,
   i18n,
   ...rest
-}: ValidatorValidateOptions<[]>): ValidatorResult {
-  return new Promise((resolve, reject) => {
-    if (
-      !value ||
-      (!(value instanceof Date) &&
-        typeof value !== 'string' &&
-        typeof value !== 'number')
-    ) {
-      const message = i18n.t('validator.futureDate', {
-        field: translatedPropertyName || fieldName,
-        value,
-        ...rest,
-      });
-      return reject(message);
-    }
+}): ValidatorResult {
+  if (
+    !value ||
+    (!(value instanceof Date) &&
+      typeof value !== 'string' &&
+      typeof value !== 'number')
+  ) {
+    const message = i18n.t('validator.dateEquals', {
+      field: translatedPropertyName || fieldName,
+      value,
+      date: ruleParams?.[0] || '',
+      ...rest,
+    });
+    return message;
+  }
 
-    const valueDate = value instanceof Date ? value : new Date(value);
-    if (isNaN(valueDate.getTime())) {
-      const message = i18n.t('validator.futureDate', {
-        field: translatedPropertyName || fieldName,
-        value,
-        ...rest,
-      });
-      return reject(message);
-    }
+  const valueDate = value instanceof Date ? value : new Date(value);
+  if (isNaN(valueDate.getTime())) {
+    const message = i18n.t('validator.dateEquals', {
+      field: translatedPropertyName || fieldName,
+      value,
+      date: ruleParams?.[0] || '',
+      ...rest,
+    });
+    return message;
+  }
 
-    const now = new Date();
-    if (valueDate > now) {
-      resolve(true);
-    } else {
-      const message = i18n.t('validator.futureDate', {
-        field: translatedPropertyName || fieldName,
-        value,
-        ...rest,
-      });
-      reject(message);
-    }
-  });
-}
-Validator.registerRule('FutureDate', _IsFutureDate);
+  if (!ruleParams) {
+    const message = i18n.t('validator.invalidRuleParams', {
+      rule: 'SameDate',
+      field: translatedPropertyName || fieldName,
+      ruleParams,
+      ...rest,
+    });
+    return message;
+  }
+
+  const compareDate =
+    ruleParams[0] instanceof Date ? ruleParams[0] : new Date(ruleParams[0]);
+  if (isNaN(compareDate.getTime())) {
+    const message = i18n.t('validator.invalidRuleParams', {
+      rule: 'SameDate',
+      field: translatedPropertyName || fieldName,
+      ruleParams,
+      ...rest,
+    });
+    return message;
+  }
+
+  // Compare dates by setting time to start of day for date-only comparison
+  const valueStartOfDay = new Date(
+    valueDate.getFullYear(),
+    valueDate.getMonth(),
+    valueDate.getDate()
+  );
+  const compareStartOfDay = new Date(
+    compareDate.getFullYear(),
+    compareDate.getMonth(),
+    compareDate.getDate()
+  );
+
+  if (valueStartOfDay.getTime() === compareStartOfDay.getTime()) {
+    return true;
+  } else {
+    const message = i18n.t('validator.dateEquals', {
+      field: translatedPropertyName || fieldName,
+      value,
+      date: ruleParams[0],
+      ...rest,
+    });
+    return message;
+  }
+});
 
 /**
  * ### IsFutureDate Rule
@@ -543,56 +475,50 @@ Validator.registerRule('FutureDate', _IsFutureDate);
  *
  * @public
  */
-export const IsFutureDate = Validator.buildPropertyDecorator<[]>([
-  'FutureDate',
-]);
-
-function _IsPassDate({
+export const IsFutureDate = Validator.buildRuleDecorator<
+  ValidatorRuleParamTypes['FutureDate']
+>(function FutureDate({
   value,
   fieldName,
   translatedPropertyName,
   i18n,
   ...rest
-}: ValidatorValidateOptions<[]>): ValidatorResult {
-  return new Promise((resolve, reject) => {
-    if (
-      !value ||
-      (!(value instanceof Date) &&
-        typeof value !== 'string' &&
-        typeof value !== 'number')
-    ) {
-      const message = i18n.t('validator.pastDate', {
-        field: translatedPropertyName || fieldName,
-        value,
-        ...rest,
-      });
-      return reject(message);
-    }
+}): ValidatorResult {
+  if (
+    !value ||
+    (!(value instanceof Date) &&
+      typeof value !== 'string' &&
+      typeof value !== 'number')
+  ) {
+    const message = i18n.t('validator.futureDate', {
+      field: translatedPropertyName || fieldName,
+      value,
+      ...rest,
+    });
+    return message;
+  }
+  const valueDate = value instanceof Date ? value : new Date(value);
+  if (isNaN(valueDate.getTime())) {
+    const message = i18n.t('validator.futureDate', {
+      field: translatedPropertyName || fieldName,
+      value,
+      ...rest,
+    });
+    return message;
+  }
 
-    const valueDate = value instanceof Date ? value : new Date(value);
-    if (isNaN(valueDate.getTime())) {
-      const message = i18n.t('validator.pastDate', {
-        field: translatedPropertyName || fieldName,
-        value,
-        ...rest,
-      });
-      return reject(message);
-    }
-
-    const now = new Date();
-    if (valueDate < now) {
-      resolve(true);
-    } else {
-      const message = i18n.t('validator.pastDate', {
-        field: translatedPropertyName || fieldName,
-        value,
-        ...rest,
-      });
-      reject(message);
-    }
-  });
-}
-Validator.registerRule('PastDate', _IsPassDate);
+  const now = new Date();
+  if (valueDate > now) {
+    return true;
+  } else {
+    const message = i18n.t('validator.futureDate', {
+      field: translatedPropertyName || fieldName,
+      value,
+      ...rest,
+    });
+    return message;
+  }
+}, 'FutureDate');
 
 /**
  * ### PastDate Rule
@@ -614,7 +540,51 @@ Validator.registerRule('PastDate', _IsPassDate);
  *
  * @public
  */
-export const IsPastDate = Validator.buildPropertyDecorator<[]>(['PastDate']);
+export const IsPastDate = Validator.buildRuleDecorator<
+  ValidatorRuleParamTypes['PastDate']
+>(function IsPassDate({
+  value,
+  fieldName,
+  translatedPropertyName,
+  i18n,
+  ...rest
+}): ValidatorResult {
+  if (
+    !value ||
+    (!(value instanceof Date) &&
+      typeof value !== 'string' &&
+      typeof value !== 'number')
+  ) {
+    const message = i18n.t('validator.pastDate', {
+      field: translatedPropertyName || fieldName,
+      value,
+      ...rest,
+    });
+    return message;
+  }
+
+  const valueDate = value instanceof Date ? value : new Date(value);
+  if (isNaN(valueDate.getTime())) {
+    const message = i18n.t('validator.pastDate', {
+      field: translatedPropertyName || fieldName,
+      value,
+      ...rest,
+    });
+    return message;
+  }
+
+  const now = new Date();
+  if (valueDate < now) {
+    return true;
+  } else {
+    const message = i18n.t('validator.pastDate', {
+      field: translatedPropertyName || fieldName,
+      value,
+      ...rest,
+    });
+    return message;
+  }
+}, 'PastDate');
 
 declare module '../types' {
   export interface ValidatorRuleParamTypes {
@@ -655,7 +625,7 @@ declare module '../types' {
      * // Class validation
      * class Event {
      *   @Required
-     *   @IsDate
+     *   @IsDate()
      *   eventDate: Date;
      * }
      * ```
@@ -714,7 +684,7 @@ declare module '../types' {
      *
      * @public
      */
-    DateAfter: ValidatorRuleParams<[date: string | Date]>;
+    DateAfter: ValidatorRuleParams<[date: ValidatorDate]>;
 
     /**
      * ### DateBefore Rule
@@ -762,7 +732,7 @@ declare module '../types' {
      *
      * @public
      */
-    DateBefore: ValidatorRuleParams<[date: string | Date]>;
+    DateBefore: ValidatorRuleParams<[date: ValidatorDate]>;
 
     /**
      * ### DateBetween Rule
@@ -812,7 +782,7 @@ declare module '../types' {
      * @public
      */
     DateBetween: ValidatorRuleParams<
-      [minDate: string | Date, maxDate: string | Date]
+      [minDate: ValidatorDate, maxDate: ValidatorDate]
     >;
 
     /**
@@ -861,7 +831,7 @@ declare module '../types' {
      *
      * @public
      */
-    SameDate: ValidatorRuleParams<[date: string | Date]>;
+    SameDate: ValidatorRuleParams<[date: ValidatorDate]>;
 
     /**
      * ### FutureDate Rule
@@ -952,3 +922,5 @@ declare module '../types' {
     PastDate: ValidatorRuleParams<[]>;
   }
 }
+
+type ValidatorDate = string | Date | number;

@@ -1,71 +1,43 @@
 import { defaultStr } from '@/utils';
-import type { ValidatorRuleParams } from '../types';
+import type { ValidatorRuleParamTypes } from '../types';
 import { ValidatorResult, ValidatorValidateOptions } from '../types';
 import { Validator } from '../validator';
 
-function _Boolean({
+import type { ValidatorRuleParams } from '../types';
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+type t = ValidatorRuleParams;
+
+export const IsBoolean = Validator.buildRuleDecorator<
+  ValidatorRuleParamTypes['Boolean']
+>(function Boolean({
   value,
   fieldName,
   translatedPropertyName,
   i18n,
   ...rest
 }: ValidatorValidateOptions): ValidatorResult {
-  return new Promise((resolve, reject) => {
-    const validBooleans = [true, false, 1, 0, '1', '0'];
-    // Handle string Boolean values case-insensitively
-    let normalizedValue = value;
-    if (typeof value === 'string') {
-      const lowerValue = value.toLowerCase();
-      if (lowerValue === 'true') normalizedValue = true;
-      else if (lowerValue === 'false') normalizedValue = false;
-      else normalizedValue = value;
-    }
-    const isValidBoolean = validBooleans.includes(normalizedValue);
-    if (isValidBoolean) {
-      resolve(true);
-    } else {
-      const message = i18n.t('validator.Boolean', {
-        field: defaultStr(translatedPropertyName, fieldName),
-        value,
-        ...rest,
-      });
-      reject(message);
-    }
-  });
-}
-
-/**
- * ### IsBoolean Rule
- *
- * Validates that the field under validation can be cast as a Boolean.
- * This rule accepts true, false, 1, 0, "1", and "0" as valid Boolean values.
- *
- * #### Valid boolean Values
- * - `true` and `false` (Boolean)
- * - `1` and `0` (number)
- * - `"1"` and `"0"` (string)
- * - `"true"` and `"false"` (case-insensitive string)
- *
- * @example
- * ```typescript
- * // With class validation
- * class UserPreferences {
- *   @IsBoolean
- *   emailNotifications: Boolean;
- *
- *   @IsBoolean
- *   darkMode: string; // Can be "true"/"false"
- * }
- * ```
- *
- * @param options - Validation options containing value and context
- * @returns Promise resolving to true if valid, rejecting with error message if invalid
- *
- *
- * @public
- */
-export const IsBoolean = Validator.buildPropertyDecorator(['Boolean']);
-Validator.registerRule('Boolean', _Boolean);
+  const validBooleans = [true, false, 1, 0, '1', '0'];
+  // Handle string Boolean values case-insensitively
+  let normalizedValue = value;
+  if (typeof value === 'string') {
+    const lowerValue = value.toLowerCase();
+    if (lowerValue === 'true') normalizedValue = true;
+    else if (lowerValue === 'false') normalizedValue = false;
+    else normalizedValue = value;
+  }
+  const isValidBoolean = validBooleans.includes(normalizedValue);
+  if (isValidBoolean) {
+    return true;
+  } else {
+    const message = i18n.t('validator.Boolean', {
+      field: defaultStr(translatedPropertyName, fieldName),
+      value,
+      ...rest,
+    });
+    return message;
+  }
+}, 'Boolean');
 
 declare module '../types' {
   export interface ValidatorRuleParamTypes {
