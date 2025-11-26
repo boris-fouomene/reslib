@@ -12,9 +12,9 @@ import { Validator } from '../validator';
 type t = ValidatorRuleParams;
 
 /**
- * ### IsEmail Decorator
+ * @summary IsEmail Decorator
  *
- * Validates that a property value is a properly formatted email address according to RFC 5322 standards.
+ * @description Validates that a property value is a properly formatted email address according to RFC 5322 standards.
  * This decorator performs comprehensive email validation including:
  *
  * - **Local part validation**: Checks the part before @ for valid characters, proper dot placement, and quoted strings
@@ -146,9 +146,6 @@ type t = ValidatorRuleParams;
  * }
  * ```
  *
- * @template {IsEmailOptions} [TOptions=[options?: IsEmailOptions]]
- *   Type parameter for the email validation options tuple
- *
  * @param {TOptions} [options] - Optional configuration object for email validation constraints
  * @param {number} [options.maxTotalLength=320] - Maximum total email length in characters
  * @param {number} [options.maxLocalPartLength=64] - Maximum local part length in characters
@@ -192,9 +189,9 @@ export const IsEmail = Validator.buildRuleDecorator<
 }, 'Email');
 
 /**
- * ### IsUrl Decorator
+ * @summary IsUrl Decorator
  *
- * Validates that a property value is a properly formatted URL. Checks for
+ * @description Validates that a property value is a properly formatted URL. Checks for
  * valid URL structure including protocol, domain, and optional path components.
  * This decorator provides comprehensive URL validation with configurable options
  * for protocol requirements and allowed protocols.
@@ -361,9 +358,9 @@ export const IsUrl = Validator.buildRuleDecorator<
 }, 'Url');
 
 /**
- * ### IsPhoneNumber Decorator
+ * @summary IsPhoneNumber Decorator
  *
- * Validates that a property value is a valid phone number. This decorator uses
+ * @description Validates that a property value is a valid phone number. This decorator uses
  * the InputFormatter's comprehensive phone number validation which supports
  * international phone numbers with automatic country code detection and validation
  * against specific country formats.
@@ -539,9 +536,9 @@ export const IsPhoneNumber = Validator.buildRuleDecorator<
 }, 'PhoneNumber');
 
 /**
- * ### IsEmailOrPhone Decorator
+ * @summary IsEmailOrPhone Decorator
  *
- * Validates that a property value is either a valid email address or a valid phone number.
+ * @description Validates that a property value is either a valid email address or a valid phone number.
  * This decorator provides flexible validation for contact information fields that can accept
  * either email or phone number formats, automatically detecting and validating the appropriate type.
  *
@@ -825,7 +822,7 @@ export const IsEmailOrPhone = Validator.buildRuleDecorator<
  * class Asset {
  *   @IsRequired()
  *   @IsFileName()
- *   @Matches(['^[a-zA-Z0-9._-]+$', 'asset.invalidChars'])
+ *   @Matches('^[a-zA-Z0-9._-]+$', {message: 'asset.invalidChars'})
  *   name: string;
  * }
  * ```
@@ -852,7 +849,7 @@ export const IsEmailOrPhone = Validator.buildRuleDecorator<
  * class StrictFileUpload {
  *   @IsFileName()
  *   @MaxLength(100)
- *   @Matches(['^[a-zA-Z0-9._-]+$', 'filename.invalid'])
+ *   @Matches('^[a-zA-Z0-9._-]+$', {message: 'filename.invalid'})
  *   fileName: string;
  * }
  * ```
@@ -1573,9 +1570,9 @@ export const IsHexColor = Validator.buildRuleDecorator<
 }, 'HexColor');
 
 /**
- * ### IsCreditCard Decorator
+ * @summary IsCreditCard Decorator
  *
- * Validates that a property value is a valid credit card number using the Luhn algorithm.
+ * @description Validates that a property value is a valid credit card number using the Luhn algorithm.
  * This decorator checks the format and performs mathematical validation to ensure
  * the credit card number follows proper checksum rules used by major card networks.
  *
@@ -1781,9 +1778,9 @@ export const IsCreditCard = Validator.buildRuleDecorator<
 }, 'CreditCard');
 
 /**
- * ### IsIP Decorator
+ * @summary IsIP Decorator
  *
- * Validates that a property value is a valid IP (Internet Protocol) address.
+ * @description Validates that a property value is a valid IP (Internet Protocol) address.
  * This decorator supports both IPv4 and IPv6 address validation with configurable
  * version restrictions, ensuring proper network address format compliance.
  *
@@ -2006,9 +2003,9 @@ export const IsIP = Validator.buildRuleDecorator<ValidatorRuleParamTypes['IP']>(
 );
 
 /**
- * ### IsMACAddress Decorator
+ * @summary IsMACAddress Decorator
  *
- * Validates that a property value is a valid Media Access Control (MAC) address.
+ * @description Validates that a property value is a valid Media Access Control (MAC) address.
  * This decorator supports multiple common MAC address formats used in networking,
  * ensuring proper hardware address format compliance for network device identification.
  *
@@ -2164,7 +2161,7 @@ export const IsMACAddress = Validator.buildRuleDecorator<
   translatedPropertyName,
   i18n,
   ...rest
-}: ValidatorValidateOptions): ValidatorResult {
+}): ValidatorResult {
   if (typeof value !== 'string') {
     const message = i18n.t('validator.macAddress', {
       field: translatedPropertyName || fieldName,
@@ -2190,9 +2187,9 @@ export const IsMACAddress = Validator.buildRuleDecorator<
 }, 'MACAddress');
 
 /**
- * ### Matches Decorator
+ * @summary Matches Decorator
  *
- * Validates that a property value matches a specified regular expression pattern.
+ * @description Validates that a property value matches a specified regular expression pattern.
  * This decorator provides flexible pattern-based validation using JavaScript regular expressions,
  * allowing for complex string validation requirements beyond built-in format validators.
  *
@@ -2216,10 +2213,10 @@ export const IsMACAddress = Validator.buildRuleDecorator<
  * ```typescript
  * class User {
  *   @IsRequired()
- *   @Matches(['^[a-zA-Z0-9_]+$', 'username.invalid'])
+ *   @Matches('^[a-zA-Z0-9_]+$', {message: 'username.invalid'})
  *   username: string;
  *
- *   @Matches(['^\\+?[1-9]\\d{1,14}$']) // E.164 phone pattern
+ *   @Matches('^\\+?[1-9]\\d{1,14}$') // E.164 phone pattern
  *   phoneNumber?: string;
  * }
  *
@@ -2239,16 +2236,16 @@ export const IsMACAddress = Validator.buildRuleDecorator<
  * **Advanced patterns:**
  * ```typescript
  * class ValidationExamples {
- *   @Matches(['^[A-Z][a-z]+$', 'name.capitalized'])
+ *   @Matches('^[A-Z][a-z]+$', {message: 'name.capitalized'})
  *   firstName: string; // Must start with capital letter
  *
- *   @Matches(['^\\d{5}(-\\d{4})?$', 'zipcode.invalid'])
+ *   @Matches('^\\d{5}(-\\d{4})?$', {message: 'zipcode.invalid'})
  *   zipCode: string; // US ZIP code format
  *
- *   @Matches(['^(http|https)://[^\\s/$.?#].[^\\s]*$', 'url.invalid'])
+ *   @Matches('^(http|https)://[^\\s/$.?#].[^\\s]*$', {message: 'url.invalid'})
  *   website?: string; // Basic URL pattern
  *
- *   @Matches(['^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$', 'uuid.invalid'])
+ *   @Matches('^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$', {message: 'uuid.invalid'})
  *   customId?: string; // UUID pattern
  * }
  * ```
@@ -2281,7 +2278,7 @@ export const IsMACAddress = Validator.buildRuleDecorator<
  * ```typescript
  * class UserAccount {
  *   @IsRequired()
- *   @Matches(['^[a-zA-Z0-9_]{3,20}$', 'username.invalid'])
+ *   @Matches('^[a-zA-Z0-9_]{3,20}$', {message: 'username.invalid'})
  *   username: string;
  * }
  * ```
@@ -2289,7 +2286,7 @@ export const IsMACAddress = Validator.buildRuleDecorator<
  * **Password complexity:**
  * ```typescript
  * class SecureAccount {
- *   @Matches(['(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,}', 'password.weak'])
+ *   @Matches('(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,}', {message: 'password.weak'})
  *   password?: string; // At least 1 lowercase, 1 uppercase, 1 digit, 1 special char, 8+ chars
  * }
  * ```
@@ -2297,10 +2294,10 @@ export const IsMACAddress = Validator.buildRuleDecorator<
  * **Custom formats:**
  * ```typescript
  * class Product {
- *   @Matches(['^[A-Z]{2}-\\d{4}$', 'productCode.invalid'])
+ *   @Matches('^[A-Z]{2}-\\d{4}$', {message: 'productCode.invalid'})
  *   productCode: string; // Format: AB-1234
  *
- *   @Matches(['^v\\d+\\.\\d+\\.\\d+$', 'version.invalid'])
+ *   @Matches('^v\\d+\\.\\d+\\.\\d+$', {message: 'version.invalid'})
  *   version?: string; // Semantic versioning: v1.2.3
  * }
  * ```
@@ -2333,19 +2330,19 @@ export const IsMACAddress = Validator.buildRuleDecorator<
  * ```typescript
  * // Basic pattern matching
  * class Validation {
- *   @Matches(['^[a-z]+$', 'lowercase.required'])
+ *   @Matches('^[a-z]+$', {message: 'lowercase.required'})
  *   lowercaseOnly: string;
  * }
  *
  * // With custom error message
  * class CustomValidation {
- *   @Matches(['^\\d{3}-\\d{2}-\\d{4}$', 'ssn.invalid'])
+ *   @Matches('^\\d{3}-\\d{2}-\\d{4}$', {message: 'ssn.invalid'})
  *   socialSecurity: string;
  * }
  *
  * // Complex validation
  * class AdvancedValidation {
- *   @Matches(['(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,}', 'password.complexity'])
+ *   @Matches('(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,}', {message: 'password.complexity'})
  *   strongPassword: string;
  * }
  * ```
@@ -2382,7 +2379,8 @@ export const Matches = Validator.buildRuleDecorator<
     });
     return message;
   }
-  const messageParams = defaultStr(ruleParams[1]).trim();
+  const options = Object.assign({}, ruleParams[1]);
+  const messageParams = defaultStr(options.message).trim();
   const translatedMessage = defaultStr(
     messageParams ? i18n.getNestedTranslation(messageParams) : ''
   ).trim();
@@ -2405,9 +2403,9 @@ export const Matches = Validator.buildRuleDecorator<
 declare module '../types' {
   export interface ValidatorRuleParamTypes {
     /**
-     * ### Url Rule
+     * @summary Url Rule
      *
-     * Validates that the field under validation is a properly formatted URL.
+     * @description Validates that the field under validation is a properly formatted URL.
      * This rule checks for valid URL structure including protocol, domain, and optional path components.
      *
      * #### Configuration Options
@@ -2481,9 +2479,9 @@ declare module '../types' {
     Url: ValidatorRuleParams<[options?: IsUrlOptions]>;
 
     /**
-     * ### FileName Rule
+     * @summary FileName Rule
      *
-     * Validates that the field under validation is a valid file name.
+     * @description Validates that the field under validation is a valid file name.
      * This rule checks for forbidden characters and reserved names that cannot be used as file names
      * across different operating systems (Windows, macOS, Linux).
      *
@@ -2556,9 +2554,9 @@ declare module '../types' {
     FileName: ValidatorRuleParams<[]>;
 
     /**
-     * ### PhoneNumber Rule
+     * @summary PhoneNumber Rule
      *
-     * Validates that the field under validation is a valid phone number.
+     * @description Validates that the field under validation is a valid phone number.
      * This rule uses the InputFormatter's phone number validation which supports
      * international phone numbers with country code detection.
      *
@@ -2619,9 +2617,9 @@ declare module '../types' {
     PhoneNumber: ValidatorRuleParams<[countryCode?: CountryCode]>;
 
     /**
-     * ### EmailOrPhoneNumber Rule
+     * @summary EmailOrPhoneNumber Rule
      *
-     * Validates that the field under validation is either a valid email address or a valid phone number.
+     * @description Validates that the field under validation is either a valid email address or a valid phone number.
      * This rule provides flexible validation for contact information fields that can accept either format.
      *
      * #### Configuration Options
@@ -2703,9 +2701,9 @@ declare module '../types' {
     >;
 
     /**
-     * ### Email Rule
+     * @summary Email Rule
      *
-     * Validates that the field under validation is a properly formatted email address according to RFC 5322 standards.
+     * @description Validates that the field under validation is a properly formatted email address according to RFC 5322 standards.
      * This decorator performs comprehensive email validation including local part validation, domain validation,
      * international domains (IDN), IP address domains, and configurable length constraints.
      *
@@ -2793,9 +2791,9 @@ declare module '../types' {
     Email: ValidatorRuleParams<[options?: IsEmailOptions]>;
 
     /**
-     * ### UUID Rule
+     * @summary UUID Rule
      *
-     * Validates that the field under validation is a valid UUID (v1-v5).
+     * @description Validates that the field under validation is a valid UUID (v1-v5).
      *
      * @example
      * ```typescript
@@ -2828,8 +2826,8 @@ declare module '../types' {
      *
      * // Class validation
      * class Entity {
-     *   @Required
-     *   @UUID
+     *   @IsRequired()
+     *   @IsUUID()
      *   id: string;
      * }
      * ```
@@ -2837,15 +2835,14 @@ declare module '../types' {
      * @param options - Validation options containing value and context
      * @returns Promise resolving to true if valid, rejecting with error message if invalid
      *
-     *
      * @public
      */
     UUID: ValidatorRuleParams<[]>;
 
     /**
-     * ### JSON Rule
+     * @summary JSON Rule
      *
-     * Validates that the field under validation is valid JSON.
+     * @description Validates that the field under validation is valid JSON.
      *
      * @example
      * ```typescript
@@ -2873,8 +2870,8 @@ declare module '../types' {
      *
      * // Class validation
      * class Config {
-     *   @Required
-     *   @JSON
+     *   @IsRequired()
+     *   @IsJSON()
      *   settings: string;
      * }
      * ```
@@ -2882,15 +2879,14 @@ declare module '../types' {
      * @param options - Validation options containing value and context
      * @returns Promise resolving to true if valid, rejecting with error message if invalid
      *
-     *
      * @public
      */
     JSON: ValidatorRuleParams<[]>;
 
     /**
-     * ### Base64 Rule
+     * @summary Base64 Rule
      *
-     * Validates that the field under validation is valid Base64 encoded string.
+     * @description Validates that the field under validation is valid Base64 encoded string.
      *
      * @example
      * ```typescript
@@ -2918,8 +2914,8 @@ declare module '../types' {
      *
      * // Class validation
      * class ImageData {
-     *   @Required
-     *   @Base64
+     *   @IsRequired()
+     *   @IsBase64()
      *   data: string;
      * }
      * ```
@@ -2927,15 +2923,14 @@ declare module '../types' {
      * @param options - Validation options containing value and context
      * @returns Promise resolving to true if valid, rejecting with error message if invalid
      *
-     *
      * @public
      */
     Base64: ValidatorRuleParams<[]>;
 
     /**
-     * ### HexColor Rule
+     * @summary HexColor Rule
      *
-     * Validates that the field under validation is a valid hexadecimal color code.
+     * @description Validates that the field under validation is a valid hexadecimal color code.
      *
      * @example
      * ```typescript
@@ -2978,8 +2973,8 @@ declare module '../types' {
      *
      * // Class validation
      * class Theme {
-     *   @Required
-     *   @HexColor
+     *   @IsRequired()
+     *   @IsHexColor()
      *   primaryColor: string;
      * }
      * ```
@@ -2987,15 +2982,14 @@ declare module '../types' {
      * @param options - Validation options containing value and context
      * @returns Promise resolving to true if valid, rejecting with error message if invalid
      *
-     *
      * @public
      */
     HexColor: ValidatorRuleParams<[]>;
 
     /**
-     * ### CreditCard Rule
+     * @summary CreditCard Rule
      *
-     * Validates that the field under validation is a valid credit card number using Luhn algorithm.
+     * @description Validates that the field under validation is a valid credit card number using Luhn algorithm.
      *
      * @example
      * ```typescript
@@ -3028,8 +3022,8 @@ declare module '../types' {
      *
      * // Class validation
      * class Payment {
-     *   @Required
-     *   @CreditCard
+     *   @IsRequired()
+     *   @IsCreditCard()
      *   cardNumber: string;
      * }
      * ```
@@ -3037,15 +3031,14 @@ declare module '../types' {
      * @param options - Validation options containing value and context
      * @returns Promise resolving to true if valid, rejecting with error message if invalid
      *
-     *
      * @public
      */
     CreditCard: ValidatorRuleParams<[]>;
 
     /**
-     * ### IP Rule
+     * @summary IP Rule
      *
-     * Validates that the field under validation is a valid IP address.
+     * @description Validates that the field under validation is a valid IP address.
      *
      * #### Parameters
      * - IP version: "4", "6", or "4/6" (default: "4/6")
@@ -3055,12 +3048,12 @@ declare module '../types' {
      * // Valid IP addresses
      * await Validator.validate({
      *   value: '192.168.1.1',
-     *   rules: ['IP[4]']
+     *   rules: ['IP', '4']
      * }); // ✓ Valid IPv4
      *
      * await Validator.validate({
      *   value: '2001:0db8:85a3:0000:0000:8a2e:0370:7334',
-     *   rules: ['IP[6]']
+     *   rules: ['IP', '6']
      * }); // ✓ Valid IPv6
      *
      * await Validator.validate({
@@ -3071,12 +3064,12 @@ declare module '../types' {
      * // Invalid examples
      * await Validator.validate({
      *   value: '256.1.1.1', // Invalid IPv4
-     *   rules: ['IP[4]']
+     *   rules: ['IP', '4']
      * }); // ✗ Invalid
      *
      * await Validator.validate({
      *   value: '192.168.1.1',
-     *   rules: ['IP[6]'] // IPv4 not valid for IPv6 only
+     *   rules: ['IP', '6'] // IPv4 not valid for IPv6 only
      * }); // ✗ Invalid
      *
      * await Validator.validate({
@@ -3101,15 +3094,14 @@ declare module '../types' {
      * @param options.ruleParams - Array containing IP version ("4", "6", or "4/6")
      * @returns Promise resolving to true if valid, rejecting with error message if invalid
      *
-     *
      * @public
      */
     IP: ValidatorRuleParams<string[]>;
 
     /**
-     * ### MACAddress Rule
+     * @summary MACAddress Rule
      *
-     * Validates that the field under validation is a valid MAC address.
+     * @description Validates that the field under validation is a valid MAC address.
      *
      * @example
      * ```typescript
@@ -3147,8 +3139,8 @@ declare module '../types' {
      *
      * // Class validation
      * class NetworkDevice {
-     *   @Required
-     *   @MACAddress
+     *   @IsRequired()
+     *   @IsMACAddress()
      *   macAddress: string;
      * }
      * ```
@@ -3156,15 +3148,14 @@ declare module '../types' {
      * @param options - Validation options containing value and context
      * @returns Promise resolving to true if valid, rejecting with error message if invalid
      *
-     *
      * @public
      */
     MACAddress: ValidatorRuleParams<[]>;
 
     /**
-     * ### Matches Rule
+     * @summary Matches Rule
      *
-     * Validates that the field under validation matches a regular expression pattern.
+     * @description Validates that the field under validation matches a regular expression pattern.
      * This rule provides flexible pattern-based validation using JavaScript regular expressions.
      *
      * #### Parameters
@@ -3180,47 +3171,47 @@ declare module '../types' {
      * // Valid matches
      * await Validator.validate({
      *   value: 'abc123',
-     *   rules: ['Matches[/^[a-z]+\\d+$/]']
+     *   rules: ['Matches', '/^[a-z]+\\d+$/']
      * }); // ✓ Valid (letters followed by numbers)
      *
      * await Validator.validate({
      *   value: 'test@example.com',
-     *   rules: ['Matches[/^[\\w.-]+@[\\w.-]+\\.\\w+$/]']
+     *   rules: ['Matches', '/^[\\w.-]+@[\\w.-]+\\.\\w+$/']
      * }); // ✓ Valid (simple email pattern)
      *
      * await Validator.validate({
      *   value: 'Hello World',
-     *   rules: ['Matches[/^Hello/]']
+     *   rules: ['Matches', '/^Hello/']
      * }); // ✓ Valid (starts with "Hello")
      *
      * // Invalid examples
      * await Validator.validate({
      *   value: '123abc',
-     *   rules: ['Matches[/^[a-z]+\\d+$/]']
+     *   rules: ['Matches', '/^[a-z]+\\d+$/']
      * }); // ✗ Invalid (numbers before letters)
      *
      * await Validator.validate({
      *   value: 'hello world',
-     *   rules: ['Matches[/^Hello/]']
+     *   rules: ['Matches', '/^Hello/']
      * }); // ✗ Invalid (case sensitive)
      *
      * await Validator.validate({
      *   value: 123,
-     *   rules: ['Matches[/^\\d+$/]']
+     *   rules: ['Matches', '/^\\d+$/']
      * }); // ✗ Invalid (not a string)
      *
      * await Validator.validate({
      *   value: 'test',
-     *   rules: ['Matches[/^$/]']
+     *   rules: ['Matches', '/^$/']
      * }); // ✗ Invalid (empty pattern)
      *
      * // Class validation
      * class User {
      *   @IsRequired()
-     *   @Matches(['^[a-zA-Z0-9_]+$', 'username.invalid'])
+     *   @Matches('^[a-zA-Z0-9_]+$', {message: 'username.invalid'})
      *   username: string;
      *
-     *   @Matches(['^\\+?[1-9]\\d{1,14}$']) // E.164 phone pattern
+     *   @Matches('^\\+?[1-9]\\d{1,14}$') // E.164 phone pattern
      *   phoneNumber?: string;
      * }
      * ```
@@ -3233,7 +3224,12 @@ declare module '../types' {
      * @public
      */
     Matches: ValidatorRuleParams<
-      [pattern: string | RegExp, errorMessage?: string]
+      [
+        pattern: string | RegExp,
+        options?: {
+          message?: string;
+        },
+      ]
     >;
   }
 }

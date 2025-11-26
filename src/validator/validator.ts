@@ -3867,6 +3867,10 @@ export class Validator {
    *   This function receives normalized validation options and returns validation results.
    *   Function signature: `(options: ValidationOptions<TRuleParams, Context>) => ValidationResult`
    *
+   * @param symbolMarker - (Internal use only) A unique symbol used to mark the rule function for special handling.
+   *   This parameter is not intended for public use and should generally be omitted.
+   *   It is used internally to preserve symbol markers through function wrapping,
+   *   enabling reliable identification of the rule internally even in minified code.
    * @returns A decorator factory function that accepts rule parameters as rest parameters and returns a property decorator.
    *   The signature is: `(...ruleParameters: TRuleParams) => PropertyDecorator`
    *
@@ -3927,10 +3931,15 @@ export class Validator {
     Context = unknown,
   >(
     ruleFunction: ValidatorRuleFunction<TRuleParams, Context>,
-    ruleName?: ValidatorOptionalOrEmptyRuleNames
+    ruleName?: ValidatorOptionalOrEmptyRuleNames,
+
+    symbolMarker?: symbol
   ): (...ruleParameters: TRuleParams) => PropertyDecorator {
     if (isNonNullString(ruleName)) {
       Validator.registerRule(ruleName, ruleFunction);
+    }
+    if (symbolMarker) {
+      Validator.markRuleWithSymbol(ruleFunction, symbolMarker);
     }
     return function (...ruleParameters: TRuleParams) {
       const finalRuleParameters = ruleParameters;
@@ -4135,6 +4144,8 @@ export class Validator {
    *   - Should return validation result or error message
    *   - Can be synchronous or asynchronous
    *
+   * @param symbolMarker - (Internal use only) Unique symbol for marking the rule function
+   *
    * @returns Decorator factory function that:
    *   - Accepts the target class constructor
    *   - Returns a property decorator
@@ -4152,8 +4163,15 @@ export class Validator {
   static buildTargetRuleDecorator<
     Target extends ClassConstructor = ClassConstructor,
     Context = unknown,
-  >(ruleFunction: ValidatorRuleFunction<[target: Target], Context>) {
-    return this.buildRuleDecorator<[target: Target], Context>(ruleFunction);
+  >(
+    ruleFunction: ValidatorRuleFunction<[target: Target], Context>,
+    symbolMarker?: symbol
+  ) {
+    return this.buildRuleDecorator<[target: Target], Context>(
+      ruleFunction,
+      undefined,
+      symbolMarker
+    );
   }
 
   /**
@@ -4356,6 +4374,8 @@ export class Validator {
    *   - Can be synchronous or asynchronous
    *   - Returns validation result or error message
    *
+   * @param symbolMarker - (Internal use only) A unique symbol used to mark the rule function for special handling.
+   *
    * @returns Decorator factory function that:
    *   - Accepts an array of validation rules as parameters
    *   - Returns a property decorator when called
@@ -4409,8 +4429,15 @@ export class Validator {
     Context = unknown,
     RulesFunctions extends
       ValidatorDefaultMultiRule<Context> = ValidatorDefaultMultiRule<Context>,
-  >(ruleFunction: ValidatorMultiRuleFunction<Context, RulesFunctions>) {
-    return this.buildRuleDecorator<RulesFunctions, Context>(ruleFunction);
+  >(
+    ruleFunction: ValidatorMultiRuleFunction<Context, RulesFunctions>,
+    symbolMarker?: symbol
+  ) {
+    return this.buildRuleDecorator<RulesFunctions, Context>(
+      ruleFunction,
+      undefined,
+      symbolMarker
+    );
   }
 
   /**
