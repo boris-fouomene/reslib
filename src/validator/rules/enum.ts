@@ -3,13 +3,54 @@ import { Validator } from '../validator';
 
 import type { ValidatorRuleParams } from '../types';
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-type t = ValidatorRuleParams;
-
-import type { ValidatorRuleParamTypes } from '../types';
-
+/**
+ * @summary A validation decorator that ensures a property value is within a specified set of allowed values.
+ * @description
+ * Validates that the decorated property contains a value (or array of values) that matches one of the
+ * allowed enum values. Supports both strict equality and string-based comparison for flexibility.
+ * Useful for restricting input to predefined options like status codes, categories, or selections.
+ *
+ * @param allowedValues - Array of allowed values for the enum. Can be mixed types (strings, numbers, etc.).
+ *
+ * @example
+ * ```typescript
+ * enum Status {
+ *   ACTIVE = 'active',
+ *   INACTIVE = 'inactive',
+ *   PENDING = 'pending'
+ * }
+ *
+ * class User {
+ *   @IsEnum([Status.ACTIVE, Status.INACTIVE, Status.PENDING])
+ *   status: string;
+ * }
+ *
+ * const user = new User();
+ * user.status = 'active'; // ✓ Valid
+ * user.status = Status.ACTIVE; // ✓ Valid
+ * user.status = 'unknown'; // ✗ Invalid
+ * ```
+ *
+ * @example
+ * ```typescript
+ * // Multiple selection (array input)
+ * class Survey {
+ *   @IsEnum(['yes', 'no', 'maybe'])
+ *   responses: string[];
+ * }
+ *
+ * const survey = new Survey();
+ * survey.responses = ['yes', 'no']; // ✓ Valid
+ * survey.responses = ['yes', 'invalid']; // ✗ Invalid
+ * ```
+ *
+ * @returns A property decorator function for enum validation.
+ *
+ * @public
+ */
 export const IsEnum = Validator.buildRuleDecorator<
-  ValidatorRuleParamTypes['Enum']
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ValidatorRuleParams<Array<any>>
 >(function Enum({
   value,
   ruleParams,
@@ -39,12 +80,6 @@ export const IsEnum = Validator.buildRuleDecorator<
   }
   return true;
 });
-declare module '../types' {
-  export interface ValidatorRuleParamTypes {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    Enum: ValidatorRuleParams<Array<any>>;
-  }
-}
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const allInRules = (value: any, ruleParams: any[]): boolean => {
