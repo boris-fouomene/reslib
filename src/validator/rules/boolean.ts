@@ -8,6 +8,42 @@ import type { ValidatorRuleParams } from '../types';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 type t = ValidatorRuleParams;
 
+/**
+ * A validation decorator that ensures a property can be cast as a boolean.
+ *
+ * This decorator accepts various representations of boolean values, providing flexible
+ * validation for boolean-like inputs from different sources (e.g., forms, APIs).
+ *
+ * @description
+ * Validates that the decorated property contains a value that can be interpreted as a boolean.
+ * The validation is lenient, accepting multiple formats to handle common input scenarios.
+ *
+ * @example
+ * ```typescript
+ * class MyClass {
+ *   @IsBoolean()
+ *   public isActive: boolean;
+ * }
+ *
+ * const instance = new MyClass();
+ * instance.isActive = true; // Valid
+ * instance.isActive = 'false'; // Valid (case-insensitive string)
+ * instance.isActive = 1; // Valid
+ * instance.isActive = 'yes'; // Invalid
+ * ```
+ *
+ * @example
+ * ```typescript
+ * // Using with validation
+ * const validator = new Validator();
+ * const result = await validator.validate(instance);
+ * ```
+ *
+ * @returns A property decorator function that can be applied to class properties.
+ *
+ * @since 1.0.0
+ * @public
+ */
 export const IsBoolean = Validator.buildRuleDecorator<
   ValidatorRuleParamTypes['Boolean']
 >(function Boolean({
