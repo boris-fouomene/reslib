@@ -673,59 +673,6 @@ describe('ValidateNested Validation - Comprehensive Test Suite', () => {
   });
 
   // ============================================================================
-  // Section 6: getValidateNestedTarget Inspection Method
-  // ============================================================================
-
-  describe('getValidateNestedTarget Inspection Method', () => {
-    it('should retrieve nested class constructor', () => {
-      class Address {
-        street: string = '';
-      }
-
-      class User {
-        @ValidateNested(Address)
-        address: Address = new Address();
-      }
-
-      const target = Validator.getValidateNestedTarget(User, 'address');
-      expect(target).toBe(Address);
-    });
-
-    it('should return undefined when no nested rule exists', () => {
-      class User {
-        name: string = '';
-      }
-
-      const target = Validator.getValidateNestedTarget(User, 'name');
-      expect(target).toBeUndefined();
-    });
-
-    it('should retrieve correct targets for multiple nested properties', () => {
-      class Address {
-        street: string = '';
-      }
-
-      class Company {
-        name: string = '';
-      }
-
-      class User {
-        @ValidateNested(Address)
-        address: Address = new Address();
-
-        @ValidateNested(Company)
-        company: Company = new Company();
-      }
-
-      const addressTarget = Validator.getValidateNestedTarget(User, 'address');
-      const companyTarget = Validator.getValidateNestedTarget(User, 'company');
-
-      expect(addressTarget).toBe(Address);
-      expect(companyTarget).toBe(Company);
-    });
-  });
-
-  // ============================================================================
   // Section 7: Edge Cases and Error Handling
   // ============================================================================
 
@@ -990,10 +937,8 @@ describe('ValidateNested Validation - Comprehensive Test Suite', () => {
           },
         },
       });
-      console.log(result1, ' is rrrrrrrrrrrrrrr1');
       expect(result1.success).toBe(true);
       expect(result2.success).toBe(true);
-      console.log(result2, ' is rrrrrrrrrrrrrrrr2');
     });
 
     it('should validate mixed nested and non-nested fields', async () => {
@@ -1040,7 +985,6 @@ describe('ValidateNested Validation - Comprehensive Test Suite', () => {
           },
         },
       });
-
       expect(result.success).toBe(false);
     });
 

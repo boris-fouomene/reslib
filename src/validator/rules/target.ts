@@ -1,3 +1,4 @@
+import { VALIDATOR_RULE_MARKERS } from '@validator/rulesMarkers';
 import { Validator } from '../validator';
 
 /**
@@ -140,5 +141,5 @@ export const ValidateNested = Validator.buildTargetRuleDecorator(
   function ValidateNested(options) {
     return Validator.validateNestedRule(options);
   },
-  Symbol.for('validatorNestedRuleMarker')
+  VALIDATOR_RULE_MARKERS.nested
 );

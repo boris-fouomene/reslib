@@ -2,7 +2,7 @@ import {
   buildPropertyDecorator,
   getDecoratedProperties,
 } from '@/resources/decorators';
-import { ClassConstructor, Dictionary, MakeOptional, Primitive } from '@/types';
+import { ClassConstructor, Dictionary, MakeOptional } from '@/types';
 import {
   defaultStr,
   isEmpty,
@@ -13,6 +13,7 @@ import {
   stringify,
 } from '@utils/index';
 import { I18n, i18n as defaultI18n } from '../i18n';
+import { VALIDATOR_RULE_MARKERS } from './rulesMarkers';
 import {
   ValidatorAsyncResult,
   ValidatorDefaultMultiRule,
@@ -846,9 +847,8 @@ export class Validator {
 
     for (const rule of rulesToProcess) {
       if (typeof rule === 'function') {
-        parsedRules.push(
-          rule as ValidatorRuleFunction<ValidatorDefaultArray, Context>
-        );
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        parsedRules.push(this.parseFunctionRule<Context>(rule) as any);
       } else if (isNonNullString(rule)) {
         const parsedRule = this.parseStringRule<Context>(rule, registeredRules);
         if (parsedRule) {
@@ -868,7 +868,6 @@ export class Validator {
         }
       }
     }
-
     return { sanitizedRules: parsedRules, invalidRules };
   }
 
@@ -1015,6 +1014,21 @@ export class Validator {
       };
     }
     return null;
+  }
+  static parseFunctionRule<Context = unknown>(
+    rule: ValidatorRuleFunction<ValidatorDefaultArray, Context>
+  ): ValidatorSanitizedRuleObject<ValidatorDefaultArray, Context> {
+    const ruleName =
+      getMarkedRuleName(rule) ?? (rule.name as ValidatorRuleName);
+    return {
+      ruleFunction: rule as ValidatorRuleFunction<
+        ValidatorDefaultArray,
+        Context
+      >,
+      ruleName,
+      rawRuleName: ruleName,
+      params: [],
+    };
   }
 
   /**
@@ -1457,6 +1471,7 @@ export class Validator {
         const validateOptions = {
           ...extra,
           data: data ?? Object.assign({}, data),
+          startTime,
           ...i18nRuleOptions,
           ruleName,
           rule: ruleName,
@@ -1516,41 +1531,45 @@ export class Validator {
 
         // Check for multi-rule decorators (OneOf, AllOf, ArrayOf) using symbol markers
         // These decorators are never registered as named rules, only available as decorator functions
-        const markerType = getMultiRuleType(ruleFunc);
-
-        if (markerType === 'arrayof') {
-          const arrayOfResult = await Validator.validateArrayOfRule<Context>({
-            ...validateOptions,
-            startTime,
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          } as any);
-          return handleResult(arrayOfResult);
-        } else if (markerType === 'oneof' || markerType === 'allof') {
-          const oneOrAllResult = await Validator.validateMultiRule<Context>(
-            markerType === 'oneof' ? 'OneOf' : 'AllOf',
-            {
-              ...validateOptions,
-              startTime,
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            } as any
-          );
-          return handleResult(oneOrAllResult);
-        } else if (
-          hasRuleMarker(ruleFunc, VALIDATOR_NESTED_RULE_MARKER) &&
-          ruleParams[0]
-        ) {
-          const nestedResult = await Validator.validateNestedRule<
-            ClassConstructor,
-            Context
-          >({
-            ...validateOptions,
-            data,
-            startTime,
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            ruleParams: ruleParams as any,
-          });
-          return handleResult(nestedResult);
+        for (const symb of [
+          VALIDATOR_RULE_MARKERS.arrayOf,
+          VALIDATOR_RULE_MARKERS.oneOf,
+          VALIDATOR_RULE_MARKERS.allOf,
+        ]) {
+          const marker = getRuleMarker(ruleFunc, symb);
+          if (marker && marker.ruleName) {
+            const rName = String(marker.ruleName);
+            if (rName === String(VALIDATOR_RULE_MARKERS.arrayOf)) {
+              const arrayOfResult =
+                await Validator.validateArrayOfRule<Context>({
+                  ...validateOptions,
+                  startTime,
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                } as any);
+              return handleResult(arrayOfResult);
+            }
+            if (
+              [
+                String(VALIDATOR_RULE_MARKERS.oneOf),
+                String(VALIDATOR_RULE_MARKERS.allOf),
+              ].includes(rName)
+            ) {
+              const oneOrAllResult = await Validator.validateMultiRule<Context>(
+                rName === String(VALIDATOR_RULE_MARKERS.oneOf)
+                  ? 'OneOf'
+                  : 'AllOf',
+                {
+                  ...validateOptions,
+                  startTime,
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                } as any
+              );
+              return handleResult(oneOrAllResult);
+            }
+          }
         }
+        //check for nested rules
+        //hasRuleMarker(ruleFunc, VALIDATOR_RULE_MARKERS.nested)
 
         if (typeof ruleFunc !== 'function') {
           const error = createValidationError(
@@ -1626,36 +1645,44 @@ export class Validator {
     // Check for nullable rules - if value meets nullable conditions, skip validation
     if (isEmpty(value) && Array.isArray(rules)) {
       const nullableConditions = {
-        Empty: (value: Primitive) => value === '',
-        Nullable: (value: Primitive) => value === null || value === undefined,
-        Optional: (value: Primitive) => value === undefined,
-      };
-      for (const rule of rules) {
-        let ruleName: ValidatorRuleName | undefined = undefined;
-        if (typeof rule == 'function') {
+        /**
+         * Empty rule
+         */
+        IsEmpty: {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          ruleName = rule.name as any;
-        } else if (typeof rule == 'object' && rule) {
-          ruleName = (rule as ValidatorSanitizedRuleObject).ruleName;
-        } else {
-          ruleName = typeof rule == 'string' ? rule : undefined;
+          validate: (value: any) => value === '',
+          symbol: VALIDATOR_RULE_MARKERS.empty,
+        },
+        Nullable: {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          validate: (value: any) => value === null || value === undefined,
+          symbol: VALIDATOR_RULE_MARKERS.nullable,
+        },
+        Optional: {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          validate: (value: any) => value === undefined,
+
+          symbol: VALIDATOR_RULE_MARKERS.optional,
+        },
+      } as const;
+      for (const rule of rules) {
+        const ruleF =
+          typeof rule == 'object' && rule
+            ? rule.ruleFunction
+            : typeof rule == 'function'
+              ? rule
+              : undefined;
+        if (typeof ruleF !== 'function') {
+          continue;
         }
-        if (
-          !isNonNullString(ruleName) &&
-          typeof rule === 'object' &&
-          rule &&
-          isNonNullString(rule.ruleName)
-        ) {
-          ruleName = rule.ruleName;
-        }
-        if (
-          ruleName &&
-          ruleName in nullableConditions &&
-          nullableConditions[ruleName as keyof typeof nullableConditions](
-            value as Primitive
-          )
-        ) {
-          return true;
+        for (const key in nullableConditions) {
+          const nullableRule =
+            nullableConditions[key as keyof typeof nullableConditions];
+
+          const hasMarker = hasRuleMarker(ruleF, nullableRule.symbol);
+          if (hasMarker && nullableRule.validate(value)) {
+            return true;
+          }
         }
       }
     }
@@ -3212,116 +3239,18 @@ export class Validator {
     // Check if any rule is marked with the ValidateNested symbol marker
     return propertyRules.some((rule) => {
       if (typeof rule === 'function') {
-        return hasRuleMarker(rule, VALIDATOR_NESTED_RULE_MARKER);
+        return hasRuleMarker(rule, VALIDATOR_RULE_MARKERS.nested);
       }
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       if (isObj(rule) && typeof (rule as any).ruleFunction === 'function') {
         return hasRuleMarker(
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           (rule as any).ruleFunction,
-          VALIDATOR_NESTED_RULE_MARKER
+          VALIDATOR_RULE_MARKERS.nested
         );
       }
       return false;
     });
-  }
-
-  /**
-   * ## Get ValidateNested Rule Parameters
-   *
-   * Retrieves the target class constructor parameter from a `@ValidateNested` decorator
-   * attached to a specific property. This allows programmatic inspection of which nested
-   * class is being validated without executing the validation.
-   *
-   * ### Purpose
-   * Extract the nested class constructor that was passed to the `@ValidateNested` decorator,
-   * useful for:
-   * - Programmatic validation inspection
-   * - Dynamic class discovery
-   * - Reflection-based tools
-   * - Testing and debugging
-   *
-   * @example
-   * ```typescript
-   * class Address {
-   *   street: string = "";
-   * }
-   *
-   * class User {
-   *   @ValidateNested([Address])
-   *   address: Address = new Address();
-   * }
-   *
-   * // Get the target class for nested validation
-   * const nestedClass = Validator.getValidateNestedTarget(User, 'address');
-   * console.log(nestedClass === Address); // true
-   * ```
-   *
-   * ### Return Value
-   * Returns the class constructor if found, or undefined if:
-   * - The property has no ValidateNested rule
-   * - The metadata cannot be retrieved
-   * - The rule parameters are invalid
-   *
-   * ### Implementation Details
-   * This method:
-   * 1. Identifies ValidateNested rules using symbol markers (works with minified code)
-   * 2. Extracts the target class from stored rule parameters
-   * 3. Returns the class constructor for reflection or dynamic validation
-   * 4. Works with nested target rules created via buildTargetRuleDecorator
-   *
-   * @template T - Class constructor type
-   *
-   * @param target - The class constructor to inspect
-   * @param propertyKey - The property with the ValidateNested decorator
-   *
-   * @returns The nested class constructor if found, undefined otherwise
-   *
-   *
-   * @see {@link hasValidateNestedRule} - Check if property has ValidateNested rule
-   * @see {@link getTargetRules} - Get all rules for a class
-   * @public
-   */
-  static getValidateNestedTarget<T extends ClassConstructor>(
-    target: T,
-    propertyKey: keyof InstanceType<T>
-  ): ClassConstructor | undefined {
-    const rules = this.getTargetRules(target);
-    const propertyRules = rules[propertyKey];
-
-    if (!Array.isArray(propertyRules)) {
-      return undefined;
-    }
-
-    // Find the ValidateNested rule by symbol marker
-    for (const rule of propertyRules) {
-      if (
-        typeof rule === 'function' &&
-        hasRuleMarker(rule, VALIDATOR_NESTED_RULE_MARKER)
-      ) {
-        // Try to get params from the stored params symbol
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const params = (rule as any)[VALIDATOR_NESTED_RULE_PARAMS];
-        if (Array.isArray(params) && params.length > 0) {
-          return params[0];
-        }
-      } else if (
-        isObj(rule) &&
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        typeof (rule as any).ruleFunction === 'function' &&
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        hasRuleMarker((rule as any).ruleFunction, VALIDATOR_NESTED_RULE_MARKER)
-      ) {
-        // For object rules, try to get from params
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const ruleParams = (rule as any).params;
-        if (Array.isArray(ruleParams) && ruleParams.length > 0) {
-          return ruleParams[0];
-        }
-      }
-    }
-
-    return undefined;
   }
 
   /**
@@ -3943,7 +3872,9 @@ export class Validator {
     return (...ruleParameters: TRuleParams) => {
       return this._buildRuleDecorator<TRuleParams, Context>(
         ruleParameters,
-        ruleFunction
+        ruleFunction,
+        ruleName,
+        symbolMarker
       );
     };
   }
@@ -3957,11 +3888,10 @@ export class Validator {
   ) {
     if (isNonNullString(ruleName)) {
       Validator.registerRule(ruleName, ruleFunction);
+      markRuleName(ruleFunction, ruleName);
     }
     if (symbolMarker) {
-      Validator.markRuleWithSymbol(ruleFunction, symbolMarker);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (ruleFunction as any)[symbolMarker] = true;
+      markRuleWithSymbol(ruleFunction, symbolMarker, { ruleName });
     }
     return ruleFunction;
   }
@@ -3970,34 +3900,29 @@ export class Validator {
     Context = unknown,
   >(
     ruleParameters: TRuleParams,
-    ruleFunction: ValidatorRuleFunction<TRuleParams, Context>
+    ruleFunction: ValidatorRuleFunction<TRuleParams, Context>,
+    ruleName?: ValidatorRuleName,
+    symbolMarker?: symbol
   ): PropertyDecorator {
-    const finalRuleParameters = ruleParameters;
     const enhancedValidatorFunction: ValidatorRuleFunction<
       TRuleParams,
       Context
     > = function (validationOptions) {
       const enhancedOptions = Object.assign({}, validationOptions);
       enhancedOptions.ruleParams =
-        Validator.normalizeRuleParams(finalRuleParameters);
+        Validator.normalizeRuleParams(ruleParameters);
       return ruleFunction(enhancedOptions);
     };
-
-    // Preserve symbol markers from the original function through wrapping
-    // This allows decorators to be reliably identified even in minified code
-    if (hasRuleMarker(ruleFunction, VALIDATOR_NESTED_RULE_MARKER)) {
+    this._prepareRuleDecorator<TRuleParams, Context>(
+      enhancedValidatorFunction,
+      ruleName,
+      symbolMarker
+    );
+    markRuleName(
+      enhancedValidatorFunction,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (enhancedValidatorFunction as any)[VALIDATOR_NESTED_RULE_MARKER] = true;
-
-      // Store the rule parameters so they can be retrieved by inspection methods
-      // This is particularly important for ValidateNested to access the target class
-      const normalizedParams =
-        Validator.normalizeRuleParams(finalRuleParameters);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (enhancedValidatorFunction as any)[VALIDATOR_NESTED_RULE_PARAMS] =
-        normalizedParams;
-    }
-
+      (ruleName ?? symbolMarker?.toString()) as any
+    );
     return Validator.buildPropertyDecorator<TRuleParams, Context>(
       enhancedValidatorFunction
     );
@@ -4466,7 +4391,9 @@ export class Validator {
       this._prepareRuleDecorator(ruleFunction, undefined, symbolMarker);
       return this._buildRuleDecorator<RulesFunctions, Context>(
         ruleParameters,
-        ruleFunction
+        ruleFunction,
+        undefined,
+        symbolMarker
       );
     };
   }
@@ -4758,21 +4685,6 @@ export class Validator {
       }
     );
   }
-  /**
-   * ## Mark Rule With Symbol
-   *
-   * Marks a rule function with a specific marker symbol. Used internally to mark
-   * decorators (OneOf, AllOf, ArrayOf, ValidateNested) for reliable identification
-   * even in minified code. Symbols survive minification while function names do not.
-   *
-   * @param ruleFunc - The rule function to mark
-   * @param marker - The marker symbol to apply
-   * @internal
-   */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  static markRuleWithSymbol(ruleFunc: any, marker: symbol): void {
-    markRuleWithSymbol(ruleFunc, marker);
-  }
 }
 
 /**
@@ -4999,13 +4911,6 @@ const VALIDATOR_TARGET_OPTIONS_METADATA_KEY = Symbol.for(
   'validatorTargetOptions'
 );
 
-/** Symbol markers for identifying rule decorators (survives minification) */
-const VALIDATOR_NESTED_RULE_MARKER = Symbol.for('validatorNestedRuleMarker');
-const VALIDATOR_NESTED_RULE_PARAMS = Symbol.for('validatorNestedRuleParams');
-const VALIDATOR_ONEOF_RULE_MARKER = Symbol.for('validatorOneOfRuleMarker');
-const VALIDATOR_ALLOF_RULE_MARKER = Symbol.for('validatorAllOfRuleMarker');
-const VALIDATOR_ARRAYOF_RULE_MARKER = Symbol.for('validatorArrayOfRuleMarker');
-
 /**
  * Checks if a rule function has a specific marker.
  * @param ruleFunc - The rule function to check
@@ -5013,37 +4918,61 @@ const VALIDATOR_ARRAYOF_RULE_MARKER = Symbol.for('validatorArrayOfRuleMarker');
  * @returns true if the function has the specified marker
  */
 function hasRuleMarker(ruleFunc: unknown, marker: symbol): boolean {
-  return (
-    typeof ruleFunc === 'function' &&
-    (ruleFunc as unknown as Record<symbol, unknown>)[marker] === true
+  if (typeof ruleFunc !== 'function') {
+    return false;
+  }
+  const m = getRuleMarker(ruleFunc, marker);
+  return Boolean(m?.validatorRuleFuncMarked);
+}
+function getRuleMarker(
+  ruleFunc: unknown,
+  marker: symbol
+): ValidatorRuleMarkerMeta | null {
+  if (typeof ruleFunc !== 'function') {
+    return null;
+  }
+  return Object.assign(
+    {},
+    (ruleFunc as unknown as Record<symbol, unknown>)[marker]
   );
 }
-
-/**
- * Gets the type of multi-rule from marker inspection.
- * @param ruleFunc - The rule function to inspect
- * @returns "oneof" | "allof" | "arrayof" | undefined
- */
-function getMultiRuleType(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  ruleFunc: any
-): 'oneof' | 'allof' | 'arrayof' | undefined {
-  if (hasRuleMarker(ruleFunc, VALIDATOR_ONEOF_RULE_MARKER)) return 'oneof';
-  if (hasRuleMarker(ruleFunc, VALIDATOR_ALLOF_RULE_MARKER)) return 'allof';
-  if (hasRuleMarker(ruleFunc, VALIDATOR_ARRAYOF_RULE_MARKER)) return 'arrayof';
-  return undefined;
+function markRuleName(ruleFunc: unknown, ruleName: ValidatorRuleName): void {
+  if (typeof ruleFunc === 'function') {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (ruleFunc as any)[VALIDATOR_RULE_MARKERS.ruleName] = ruleName;
+  }
 }
-
+function getMarkedRuleName(ruleFunc: unknown): ValidatorRuleName | undefined {
+  if (typeof ruleFunc == 'function') {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const markedRuleName = (ruleFunc as any)[VALIDATOR_RULE_MARKERS.ruleName];
+    return isNonNullString(markedRuleName) ? markedRuleName : undefined;
+  }
+}
 /**
  * Marks a rule function with a specific marker symbol.
  * Used during decorator creation to mark OneOf, AllOf, ArrayOf, ValidateNested rules.
  * @param ruleFunc - The rule function to mark
  * @param marker - The marker symbol to apply
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function markRuleWithSymbol(ruleFunc: any, marker: symbol): void {
+
+function markRuleWithSymbol(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ruleFunc: any,
+  marker: symbol,
+  meta?: ValidatorRuleMarkerMeta
+): void {
   if (typeof ruleFunc === 'function') {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (ruleFunc as any)[marker] = true;
+    (ruleFunc as any)[marker] = {
+      ...meta,
+      validatorRuleFuncMarked: true,
+      ruleName: meta?.ruleName ?? marker,
+    };
   }
 }
+
+type ValidatorRuleMarkerMeta = Dictionary & {
+  validatorRuleFuncMarked?: boolean;
+  ruleName?: ValidatorRuleName;
+};

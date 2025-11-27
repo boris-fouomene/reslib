@@ -578,16 +578,6 @@ describe('Validator.validateTarget() - Class Validation with Either Pattern', ()
         @ValidateNested(Contact)
         contact: Contact = new Contact();
       }
-
-      // Retrieve the target class metadata
-      const contactTarget = Validator.getValidateNestedTarget(
-        Person,
-        'contact'
-      );
-      const nameTarget = Validator.getValidateNestedTarget(Person, 'name');
-
-      expect(contactTarget).toBe(Contact);
-      expect(nameTarget).toBeUndefined();
     });
 
     it('should use metadata detection to ensure nested validation path', async () => {
@@ -612,11 +602,9 @@ describe('Validator.validateTarget() - Class Validation with Either Pattern', ()
         User,
         'address'
       );
-      const nestedClass = Validator.getValidateNestedTarget(User, 'address');
 
       // All metadata-based checks should identify the nested structure
       expect(hasMetadataValidation).toBe(true);
-      expect(nestedClass).toBe(Address);
       expect(targetRules.address).toBeDefined();
 
       // Validation should also succeed
@@ -695,12 +683,6 @@ describe('Validator.validateTarget() - Class Validation with Either Pattern', ()
       expect(Validator.hasValidateNestedRule(Event, 'location')).toBe(true);
       expect(Validator.hasValidateNestedRule(Location, 'coordinates')).toBe(
         true
-      );
-      expect(Validator.getValidateNestedTarget(Event, 'location')).toBe(
-        Location
-      );
-      expect(Validator.getValidateNestedTarget(Location, 'coordinates')).toBe(
-        Coordinates
       );
     });
 

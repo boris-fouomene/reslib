@@ -44,7 +44,7 @@ type t = ValidatorRuleParams;
  */
 export const MinLength = Validator.buildRuleDecorator<
   ValidatorRuleParamTypes['MinLength']
->(function minLength(options) {
+>(function MinLength(options) {
   let { value, ruleParams, i18n } = options;
   const params = Array.isArray(ruleParams) ? ruleParams : [];
   const mLength = toNumber(params[0]) || 0;
@@ -90,7 +90,7 @@ export const MinLength = Validator.buildRuleDecorator<
  */
 export const MaxLength = Validator.buildRuleDecorator<
   ValidatorRuleParamTypes['MaxLength']
->(function maxLength(options) {
+>(function MaxLength(options) {
   let { value, ruleParams, i18n } = options;
   const params = Array.isArray(ruleParams) ? ruleParams : [];
   const mLength = toNumber(params[0]) || 0;

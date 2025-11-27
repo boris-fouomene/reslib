@@ -1,3 +1,4 @@
+import { VALIDATOR_RULE_MARKERS } from '@validator/rulesMarkers';
 import { ValidatorRuleParamTypes, type ValidatorRuleParams } from '../types';
 import { Validator } from '../validator';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -75,10 +76,14 @@ export const IsRequired = Validator.buildRuleDecorator<
  */
 export const IsEmpty = Validator.buildRuleDecorator<
   ValidatorRuleParamTypes['Empty']
->(function Empty() {
-  // This rule always passes - its presence indicates that empty string values should skip validation
-  return true;
-}, 'Empty');
+>(
+  function Empty() {
+    // This rule always passes - its presence indicates that empty string values should skip validation
+    return true;
+  },
+  'Empty',
+  VALIDATOR_RULE_MARKERS.empty
+);
 
 /**
  * ### Nullable Decorator
@@ -105,10 +110,14 @@ export const IsEmpty = Validator.buildRuleDecorator<
  */
 export const IsNullable = Validator.buildRuleDecorator<
   ValidatorRuleParamTypes['Nullable']
->(function Nullable() {
-  // This rule always passes - its presence indicates that null or undefined values should skip validation
-  return true;
-}, 'Nullable');
+>(
+  function Nullable() {
+    // This rule always passes - its presence indicates that null or undefined values should skip validation
+    return true;
+  },
+  'Nullable',
+  VALIDATOR_RULE_MARKERS.nullable
+);
 
 /**
  * ### Optional Decorator
@@ -136,10 +145,14 @@ export const IsNullable = Validator.buildRuleDecorator<
  */
 export const IsOptional = Validator.buildRuleDecorator<
   ValidatorRuleParamTypes['Optional']
->(function Optional() {
-  // This rule always passes - its presence indicates that undefined values should skip validation
-  return true;
-}, 'Optional');
+>(
+  function Optional() {
+    // This rule always passes - its presence indicates that undefined values should skip validation
+    return true;
+  },
+  'Optional',
+  VALIDATOR_RULE_MARKERS.optional
+);
 
 declare module '../types' {
   export interface ValidatorRuleParamTypes {
