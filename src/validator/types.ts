@@ -748,7 +748,7 @@ export type ValidatorSanitizedRules<Context = unknown> = ValidatorSanitizedRule<
 >[];
 
 /**
- * @typedef ValidatorRuleFunction
+ * ## Validator Validate Rule Function Type
  *
  * Represents a validation rule function that is used within the validation system.
  * This function takes a set of options and performs validation on a given value,
@@ -775,13 +775,13 @@ export type ValidatorSanitizedRules<Context = unknown> = ValidatorSanitizedRule<
  *
  * ### Example Usage:
  * ```typescript
- * const validateEmail: ValidatorRuleFunction = ({ value }) => {
+ * function validateEmail({ value }):ValidatorSyncResult {
  *     const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
  *     if (!emailPattern.test(value)) {
  *         return "Invalid email format."; // Invalid validation
  *     }
  *     return true; // Valid validation
- * };
+ * }
  *
  * // Example of using the validation function
  * const result = validateEmail({ value: "test@example.com" });
@@ -936,10 +936,7 @@ export type ValidatorRuleParams<
  * }
  *
  * // Custom nested validation rule
- * const validateNestedProfile: ValidatorRuleFunction<
- *   [target: UserProfile],
- *   ValidationContext
- * > = async (options: ValidatorNestedRuleFunctionOptions<UserProfile, ValidationContext>) => {
+ * async function validateNestedProfile(options: ValidatorNestedRuleFunctionOptions<UserProfile, ValidationContext>) {
  *   const { value, data, context } = options;
  *
  *   // Validate the nested profile
@@ -950,7 +947,7 @@ export type ValidatorRuleParams<
  *   }
  *
  *   return true;
- * };
+ * }
  * ```
  *
  * ### Relationship to Validation System
