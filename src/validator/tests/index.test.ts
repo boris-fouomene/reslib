@@ -111,7 +111,7 @@ describe('Validator Rules', () => {
       });
       expect(r1).toBe(true);
       expect(r2).toBe(true);
-      expect(r3).toBe(true);
+      expect(r3).toContain('This field must be a valid number');
       expect(r4).toBe(true);
     });
 
@@ -161,7 +161,7 @@ describe('Validator Rules', () => {
         ruleParams: [],
       });
       expect(r1).toBe(true);
-      expect(r2).toBe(true);
+      expect(r2).toContain('This field must be a valid number');
       expect(r3).toBe(true);
     });
 
@@ -381,22 +381,23 @@ describe('Validator Rules', () => {
 
     const allRules = Validator.getTargetRules(Entity);
     it('Getting validation rules', async () => {
-      expect(allRules).toMatchObject({
-        id: expect.arrayContaining(['Number', expect.any(Function)]),
-        name: expect.arrayContaining(['Required', 'NonNullString']),
-        email: expect.arrayContaining(['Email', 'Required']),
-        url: ['Url'],
-        note: expect.arrayContaining([
-          'Required',
-          expect.any(Function),
-          expect.any(Function),
-        ]),
-        aString: expect.arrayContaining([
-          expect.any(Function),
-          expect.any(Function),
-          'Required',
-        ]),
-      });
+      expect(getRuleNames(allRules.id)).toEqual(['Number', 'NumberNE']);
+      expect(getRuleNames(allRules.name)).toEqual([
+        'NonNullString',
+        'Required',
+      ]);
+      expect(getRuleNames(allRules.email)).toEqual(['Email', 'Required']);
+      expect(getRuleNames(allRules.url)).toEqual(['Url']);
+      expect(getRuleNames(allRules.note)).toEqual([
+        'NumberGT',
+        'NumberLT',
+        'Required',
+      ]);
+      expect(getRuleNames(allRules.aString)).toEqual([
+        'Length',
+        'Length',
+        'Required',
+      ]);
     });
     it('Validate rules with decorators on entity', async () => {
       try {
@@ -499,8 +500,8 @@ describe('Validator Rules', () => {
 
         it('should register Empty rule in target rules', () => {
           const rules = Validator.getTargetRules(TestEntity);
-          expect(rules.emptyField).toContain('Empty');
-          expect(rules.optionalEmail).toContain('Empty');
+          expect(getRuleNames(rules.emptyField)).toContain('Empty');
+          expect(getRuleNames(rules.optionalEmail)).toContain('Empty');
         });
 
         it('should skip validation for empty string with decorator', async () => {
@@ -630,9 +631,18 @@ describe('Validator Rules', () => {
 
         it('should register Nullable rule in target rules', () => {
           const rules = Validator.getTargetRules(TestEntity);
-          expect(rules.nullableField).toContain('Nullable');
-          expect(rules.optionalEmail).toContain('Nullable');
-          expect(rules.strictString).toContain('Nullable');
+          expect(getRuleNames(rules.nullableField)).toEqual([
+            'Nullable',
+            'Required',
+          ]);
+          expect(getRuleNames(rules.optionalEmail)).toEqual([
+            'Email',
+            'Nullable',
+          ]);
+          expect(getRuleNames(rules.strictString)).toEqual([
+            'NonNullString',
+            'Nullable',
+          ]);
         });
 
         it('should skip validation for null with decorator', async () => {
@@ -797,9 +807,19 @@ describe('Validator Rules', () => {
 
         it('should register Optional rule in target rules', () => {
           const rules = Validator.getTargetRules(TestEntity);
-          expect(rules.sometimesField).toContain('Optional');
-          expect(rules.optionalEmail).toContain('Optional');
-          expect(rules.strictString).toContain('Optional');
+
+          expect(getRuleNames(rules.sometimesField)).toEqual([
+            'Optional',
+            'Required',
+          ]);
+          expect(getRuleNames(rules.optionalEmail)).toEqual([
+            'Email',
+            'Optional',
+          ]);
+          expect(getRuleNames(rules.strictString)).toEqual([
+            'NonNullString',
+            'Optional',
+          ]);
         });
 
         it('should skip validation for undefined with decorator', async () => {
@@ -1028,3 +1048,10 @@ describe('Validator Rules', () => {
     });
   });
 });
+
+const getRuleNames = (rules: any[]) =>
+  rules
+    .map((r) => r.ruleName)
+    .sort((a, b) => {
+      return a > b ? 1 : a === b ? 0 : -1;
+    });

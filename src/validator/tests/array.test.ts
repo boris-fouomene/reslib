@@ -90,7 +90,13 @@ describe('Array Validation Rules', () => {
 
       it('should register Array rule in target rules', () => {
         const rules = Validator.getTargetRules(TestEntity);
-        expect(rules.items).toContain('Array');
+        expect(rules.items).toEqual([
+          expect.objectContaining({
+            params: [],
+            ruleFunction: expect.any(Function),
+            ruleName: 'Array',
+          }),
+        ]);
       });
 
       it('should validate array with decorator', async () => {
@@ -183,7 +189,15 @@ describe('Array Validation Rules', () => {
 
       it('should register ArrayMinLength rule in target rules', () => {
         const rules = Validator.getTargetRules(TestEntity);
-        expect(rules.items).toContainEqual(expect.any(Function));
+        expect(rules).toEqual({
+          items: [
+            expect.objectContaining({
+              params: [2],
+              ruleFunction: expect.any(Function),
+              ruleName: 'ArrayMinLength',
+            }),
+          ],
+        });
       });
 
       it('should validate sufficient length with decorator', async () => {
@@ -626,7 +640,15 @@ describe('Array Validation Rules', () => {
 
       it('registers decorator and validates', async () => {
         const rules = Validator.getTargetRules(StringList);
-        expect(rules.items).toContain(Function);
+        expect(rules).toEqual({
+          items: [
+            expect.objectContaining({
+              ruleName: 'ArrayAllStrings',
+              ruleFunction: expect.any(Function),
+              params: [],
+            }),
+          ],
+        });
 
         const ok = await Validator.validateTarget(StringList, {
           data: { items: ['x', 'y'] },
@@ -733,7 +755,15 @@ describe('Array Validation Rules', () => {
 
       it('registers decorator and validates', async () => {
         const rules = Validator.getTargetRules(NumberList);
-        expect(rules.values).toContain(Function);
+        expect(rules).toEqual({
+          values: [
+            expect.objectContaining({
+              ruleFunction: expect.any(Function),
+              ruleName: 'ArrayAllNumbers',
+              params: [],
+            }),
+          ],
+        });
 
         const ok = await Validator.validateTarget(NumberList, {
           data: { values: [1, 2, 3] },

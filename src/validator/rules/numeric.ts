@@ -437,9 +437,7 @@ export const IsNumberBetween = Validator.buildRuleDecorator<
     });
     return message;
   }
-
-  const numericValue = toNumber(value);
-  if (isNaN(numericValue)) {
+  if (!isNumber(value)) {
     const message = i18n.t('validator.numeric', {
       field: translatedPropertyName || fieldName,
       value,
@@ -459,12 +457,12 @@ export const IsNumberBetween = Validator.buildRuleDecorator<
     });
     return message;
   }
-  if (numericValue >= min && numericValue <= max) {
+  if (value >= min && value <= max) {
     return true;
   } else {
     const message = i18n.t('validator.numberBetween', {
       field: translatedPropertyName || fieldName,
-      value: numericValue,
+      value,
       min,
       max,
       ...rest,
@@ -525,8 +523,7 @@ export const HasDecimalPlaces = Validator.buildRuleDecorator<
     return message;
   }
 
-  const numericValue = toNumber(value);
-  if (isNaN(numericValue)) {
+  if (!isNumber(value)) {
     const message = i18n.t('validator.number', {
       rule: 'DecimalPlaces',
       field: translatedPropertyName || fieldName,
@@ -610,8 +607,7 @@ export const IsInteger = Validator.buildRuleDecorator<
   i18n,
   ...rest
 }: ValidatorValidateOptions): ValidatorResult {
-  const numericValue = toNumber(value);
-  if (isNaN(numericValue) || !Number.isInteger(numericValue)) {
+  if (!isNumber(value) || !Number.isInteger(value)) {
     const message = i18n.t('validator.integer', {
       field: translatedPropertyName || fieldName,
       value,
@@ -667,8 +663,7 @@ export const IsEvenNumber = Validator.buildRuleDecorator<
   i18n,
   ...rest
 }: ValidatorValidateOptions): ValidatorResult {
-  const numericValue = toNumber(value);
-  if (isNaN(numericValue)) {
+  if (!isNumber(value)) {
     const message = i18n.t('validator.number', {
       field: translatedPropertyName || fieldName,
       value,
@@ -676,7 +671,7 @@ export const IsEvenNumber = Validator.buildRuleDecorator<
     });
     return message;
   }
-  if (!Number.isInteger(numericValue)) {
+  if (!Number.isInteger(value)) {
     const message = i18n.t('validator.integer', {
       field: translatedPropertyName || fieldName,
       value,
@@ -684,12 +679,12 @@ export const IsEvenNumber = Validator.buildRuleDecorator<
     });
     return message;
   }
-  if (numericValue % 2 === 0) {
+  if (value % 2 === 0) {
     return true;
   } else {
     return i18n.t('validator.evenNumber', {
       field: translatedPropertyName || fieldName,
-      value: numericValue,
+      value,
       ...rest,
     });
   }
@@ -739,8 +734,7 @@ export const IsOddNumber = Validator.buildRuleDecorator<
   i18n,
   ...rest
 }: ValidatorValidateOptions): ValidatorResult {
-  const numericValue = toNumber(value);
-  if (isNaN(numericValue)) {
+  if (!isNumber(value)) {
     const message = i18n.t('validator.number', {
       field: translatedPropertyName || fieldName,
       value,
@@ -748,7 +742,7 @@ export const IsOddNumber = Validator.buildRuleDecorator<
     });
     return message;
   }
-  if (!Number.isInteger(numericValue)) {
+  if (!Number.isInteger(value)) {
     const message = i18n.t('validator.integer', {
       field: translatedPropertyName || fieldName,
       value,
@@ -756,12 +750,12 @@ export const IsOddNumber = Validator.buildRuleDecorator<
     });
     return message;
   }
-  if (numericValue % 2 !== 0) {
+  if (value % 2 !== 0) {
     return true;
   } else {
     return i18n.t('validator.oddNumber', {
       field: translatedPropertyName || fieldName,
-      value: numericValue,
+      value,
       ...rest,
     });
   }
@@ -818,8 +812,7 @@ export const IsMultipleOf = Validator.buildRuleDecorator<
     return message;
   }
 
-  const numericValue = toNumber(value);
-  if (isNaN(numericValue)) {
+  if (!isNumber(value)) {
     const message = i18n.t('validator.number', {
       field: translatedPropertyName || fieldName,
       value,
@@ -844,14 +837,14 @@ export const IsMultipleOf = Validator.buildRuleDecorator<
   }
 
   // Check if the value is a multiple of the specified number
-  const remainder = numericValue % multiple;
+  const remainder = value % multiple;
   const isMultiple = Math.abs(remainder) < Number.EPSILON;
   if (isMultiple) {
     return true;
   } else {
     const message = i18n.t('validator.multipleOf', {
       field: translatedPropertyName || fieldName,
-      value: numericValue,
+      value,
       multiple,
       ruleParams,
       ...rest,
