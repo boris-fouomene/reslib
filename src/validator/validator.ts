@@ -1402,8 +1402,12 @@ export class Validator {
       return createSuccessResult<Context>(successOrErrorData, startTime);
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    if (this.shouldSkipValidation({ value, rules: sanitizedRules as any })) {
+    if (
+      this.shouldSkipValidation({
+        value,
+        rules: sanitizedRules as unknown as ValidatorSanitizedRules<Context>,
+      })
+    ) {
       // Value meets nullable conditions - validation succeeds
       return createSuccessResult<Context>(successOrErrorData, startTime);
     }
@@ -1415,8 +1419,7 @@ export class Validator {
     return new Promise((resolve) => {
       let index = -1;
       const rulesLength = sanitizedRules.length;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const next = async function (): Promise<any> {
+      const next = async function (): Promise<void> {
         index++;
         if (index >= rulesLength) {
           return resolve(createSuccessResult(successOrErrorData, startTime));
@@ -1424,14 +1427,15 @@ export class Validator {
         const rule = sanitizedRules[index];
         let ruleName = undefined;
         let rawRuleName: ValidatorRuleName | string | undefined = undefined;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        let ruleParams: ValidatorRuleParams<Array<any>, Context>[] = [];
+        let ruleParams: ValidatorRuleParams<Array<unknown>, Context>[] = [];
         let ruleFunc:
           | ValidatorRuleFunction<ValidatorDefaultArray, Context>
           | undefined = typeof rule === 'function' ? rule : undefined;
         if (typeof rule === 'object' && isObj(rule)) {
           ruleFunc = rule.ruleFunction;
-          ruleParams = Array.isArray(rule.params) ? rule.params : [];
+          ruleParams = (
+            Array.isArray(rule.params) ? rule.params : []
+          ) as ValidatorRuleParams<Array<unknown>, Context>[];
           ruleName = rule.ruleName;
           rawRuleName = rule.rawRuleName;
         } else if (typeof rule == 'function') {
@@ -1461,8 +1465,7 @@ export class Validator {
           value,
           i18n,
         };
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const handleResult = (result: any) => {
+        const handleResult = (result: unknown) => {
           result =
             typeof result === 'string'
               ? isNonNullString(result)
@@ -1612,13 +1615,12 @@ export class Validator {
    * @see {@link validateTarget} - Also uses this method for class-based validation
    * @public
    */
-  static shouldSkipValidation({
+  static shouldSkipValidation<Context = unknown>({
     value,
     rules,
   }: {
-    rules: Array<ValidatorRuleName> | ValidatorSanitizedRules;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    value: any;
+    rules: Array<ValidatorRuleName> | ValidatorSanitizedRules<Context>;
+    value: unknown;
   }) {
     // Check for nullable rules - if value meets nullable conditions, skip validation
     if (isEmpty(value) && Array.isArray(rules)) {
@@ -1648,7 +1650,9 @@ export class Validator {
         if (
           ruleName &&
           ruleName in nullableConditions &&
-          nullableConditions[ruleName as keyof typeof nullableConditions](value)
+          nullableConditions[ruleName as keyof typeof nullableConditions](
+            value as Primitive
+          )
         ) {
           return true;
         }
@@ -2291,18 +2295,18 @@ export class Validator {
    * @see {@link registerRule} - Register the returned function as a named rule
    * @public
    */
-  static oneOf<
-    Context = unknown,
-    RulesFunctions extends
-      ValidatorDefaultMultiRule<Context> = ValidatorDefaultMultiRule<Context>,
-  >(
-    ruleParams: RulesFunctions
-  ): ValidatorRuleFunction<RulesFunctions, Context> {
-    return function OneOf(
-      options: ValidatorValidateMultiRuleOptions<Context, RulesFunctions>
-    ) {
-      return Validator.validateOneOfRule<Context, RulesFunctions>({
-        ...options,
+  static oneOf<Context = unknown>(
+    ruleParams: ValidatorDefaultMultiRule<Context>
+  ): ValidatorRuleFunction<ValidatorDefaultArray, Context> {
+    return function OneOf(options) {
+      return Validator.validateOneOfRule<
+        Context,
+        ValidatorDefaultMultiRule<Context>
+      >({
+        ...(options as unknown as ValidatorValidateMultiRuleOptions<
+          Context,
+          ValidatorDefaultMultiRule<Context>
+        >),
         ruleParams,
       });
     };
@@ -2329,18 +2333,20 @@ export class Validator {
    * @see {@link registerRule}
    * @public
    */
-  static allOf<
-    Context = unknown,
-    RulesFunctions extends
-      ValidatorDefaultMultiRule<Context> = ValidatorDefaultMultiRule<Context>,
-  >(
-    ruleParams: RulesFunctions
-  ): ValidatorRuleFunction<RulesFunctions, Context> {
+  static allOf<Context = unknown>(
+    ruleParams: ValidatorDefaultMultiRule<Context>
+  ): ValidatorRuleFunction<ValidatorDefaultArray, Context> {
     return function AllOf(
-      options: ValidatorValidateMultiRuleOptions<Context, RulesFunctions>
+      options: ValidatorValidateOptions<ValidatorDefaultArray, Context>
     ) {
-      return Validator.validateAllOfRule<Context, RulesFunctions>({
-        ...options,
+      return Validator.validateAllOfRule<
+        Context,
+        ValidatorDefaultMultiRule<Context>
+      >({
+        ...(options as unknown as ValidatorValidateMultiRuleOptions<
+          Context,
+          ValidatorDefaultMultiRule<Context>
+        >),
         ruleParams,
       });
     };
@@ -2361,18 +2367,20 @@ export class Validator {
    * const res = await emails({ value: ["a@b.com", "c@d.com"] }); // true
    *
    */
-  static arrayOf<
-    Context = unknown,
-    RulesFunctions extends
-      ValidatorDefaultMultiRule<Context> = ValidatorDefaultMultiRule<Context>,
-  >(
-    ruleParams: RulesFunctions
-  ): ValidatorRuleFunction<RulesFunctions, Context> {
+  static arrayOf<Context = unknown>(
+    ruleParams: ValidatorDefaultMultiRule<Context>
+  ): ValidatorRuleFunction<ValidatorDefaultArray, Context> {
     return function ArrayOf(
-      options: ValidatorValidateMultiRuleOptions<Context, RulesFunctions>
+      options: ValidatorValidateOptions<ValidatorDefaultArray, Context>
     ) {
-      return Validator.validateArrayOfRule<Context, RulesFunctions>({
-        ...options,
+      return Validator.validateArrayOfRule<
+        Context,
+        ValidatorDefaultMultiRule<Context>
+      >({
+        ...(options as unknown as ValidatorValidateMultiRuleOptions<
+          Context,
+          ValidatorDefaultMultiRule<Context>
+        >),
         ruleParams,
       });
     };
@@ -2605,12 +2613,11 @@ export class Validator {
    * @public
    */
   static validateNested<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    Target extends ClassConstructor<any> = ClassConstructor<any>,
+    Target extends ClassConstructor<unknown> = ClassConstructor<unknown>,
     Context = unknown,
-  >(target: Target): ValidatorRuleFunction<[target: Target], Context> {
+  >(target: Target): ValidatorRuleFunction<Array<unknown>, Context> {
     return function ValidateNested(
-      options: ValidatorValidateOptions<[target: Target], Context>
+      options: ValidatorValidateOptions<Array<unknown>, Context>
     ) {
       return Validator.validateNestedRule<Target, Context>({
         ...options,
@@ -4942,8 +4949,7 @@ function createValidationError(
 function createSuccessResult<Context = unknown>(
   options: {
     context?: Context;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    value: any;
+    value: unknown;
     data?: Dictionary;
   },
   startTime: number
@@ -4964,8 +4970,7 @@ function createFailureResult<Context = unknown>(
   error: ValidatorValidationError,
   options: {
     context?: Context;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    value: any;
+    value: unknown;
   },
   startTime: number
 ): ValidatorValidateFailure<Context> {
@@ -4978,8 +4983,7 @@ function createFailureResult<Context = unknown>(
   };
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type ValidatorDefaultArray = Array<any>;
+type ValidatorDefaultArray = Array<unknown>;
 
 /** Metadata keys for storing validation target information on classes */
 const VALIDATOR_TARGET_RULES_METADATA_KEY = Symbol.for('validatorTargetRules');
@@ -5000,9 +5004,11 @@ const VALIDATOR_ARRAYOF_RULE_MARKER = Symbol.for('validatorArrayOfRuleMarker');
  * @param marker - The marker symbol to check for
  * @returns true if the function has the specified marker
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function hasRuleMarker(ruleFunc: any, marker: symbol): boolean {
-  return typeof ruleFunc === 'function' && ruleFunc[marker] === true;
+function hasRuleMarker(ruleFunc: unknown, marker: symbol): boolean {
+  return (
+    typeof ruleFunc === 'function' &&
+    (ruleFunc as unknown as Record<symbol, unknown>)[marker] === true
+  );
 }
 
 /**

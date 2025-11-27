@@ -706,7 +706,7 @@ export const IsPhoneNumber = Validator.buildRuleDecorator<
  */
 export const IsEmailOrPhone = Validator.buildRuleDecorator<
   ValidatorRuleParamTypes['EmailOrPhoneNumber']
->(function emailOrPhoneNumber(options: ValidatorValidateOptions) {
+>(function emailOrPhoneNumber(options) {
   const { value, phoneCountryCode, i18n, ruleParams } = options;
   return (
     isEmail(value, ruleParams?.[0]?.email) ||

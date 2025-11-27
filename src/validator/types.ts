@@ -631,8 +631,7 @@ export type ValidatorRuleObject = Partial<{
  * @see {@link Validator.validate} - Validation method that accepts these rules
  */
 export type ValidatorRules<Context = unknown> = Array<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  ValidatorRule<Array<any>, Context>
+  ValidatorRule<Array<unknown>, Context>
 >;
 /**
  * @typedef ValidatorSanitizedRule
@@ -800,8 +799,7 @@ export interface ValidatorSanitizedRuleObject<
  * ];
  */
 export type ValidatorSanitizedRules<Context = unknown> = ValidatorSanitizedRule<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  Array<any>,
+  Array<unknown>,
   Context
 >[];
 
@@ -913,7 +911,7 @@ export type ValidatorRuleFunction<
  * - Compatible with {@link ValidatorRuleFunction} parameter signatures
  * - Supports both mutable and immutable parameter arrays for flexibility
  *
- * @template TParams - The parameter array type (extends Array<any> | ReadonlyArray<any>)
+ * @template TParams - The parameter array type (extends Array<unknown> | ReadonlyArray<unknown>)
  * @template Context - Optional context type for validation (defaults to unknown)
  *
  * @public
@@ -923,8 +921,7 @@ export type ValidatorRuleFunction<
  * @see {@link ValidatorRule} - Complete rule definition including this parameter type
  */
 export type ValidatorRuleParams<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  TParams extends Array<any> | ReadonlyArray<any> = Array<any>,
+  TParams extends Array<unknown> | ReadonlyArray<unknown> = Array<unknown>,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   Context = unknown,
 > = TParams extends [] ? [] : TParams;
@@ -1703,10 +1700,8 @@ export type ValidatorDefaultMultiRule<
  */
 export type ValidatorMultiRuleFunction<
   Context = unknown,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  RulesFunctions extends Array<ValidatorRule<Array<any>, Context>> = Array<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    ValidatorRule<Array<any>, Context>
+  RulesFunctions extends Array<ValidatorRule<Array<unknown>, Context>> = Array<
+    ValidatorRule<Array<unknown>, Context>
   >,
 > = ValidatorRuleFunction<RulesFunctions, Context>;
 

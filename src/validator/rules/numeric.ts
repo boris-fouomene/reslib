@@ -182,7 +182,7 @@ export const IsNumberLTE = Validator.buildRuleDecorator<
  */
 export const IsNumberLT = Validator.buildRuleDecorator<
   ValidatorRuleParamTypes['NumberLT']
->(function NumberLT(options: ValidatorValidateOptions) {
+>(function NumberLT(options) {
   return compareNumer(
     (value, toCompare) => {
       return value < toCompare;
@@ -260,7 +260,9 @@ export const IsNumberGTE = Validator.buildRuleDecorator<
  */
 export const IsNumberGT = Validator.buildRuleDecorator<
   ValidatorRuleParamTypes['NumberGT']
->(function NumberGT(options: ValidatorValidateOptions) {
+>(function NumberGT(
+  options: ValidatorValidateOptions<ValidatorRuleParamTypes['NumberGT']>
+) {
   return compareNumer(
     (value, toCompare) => {
       return value > toCompare;

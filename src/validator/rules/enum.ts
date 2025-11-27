@@ -203,7 +203,6 @@ declare module '../types' {
      *
      * @public
      */
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    Enum: ValidatorRuleParams<Array<any>>;
+    Enum: ValidatorRuleParams<Array<unknown>>;
   }
 }

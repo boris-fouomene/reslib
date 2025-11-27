@@ -44,10 +44,10 @@ type t = ValidatorRuleParams;
  */
 export const MinLength = Validator.buildRuleDecorator<
   ValidatorRuleParamTypes['MinLength']
->(function minLength(options: ValidatorValidateOptions) {
+>(function minLength(options) {
   let { value, ruleParams, i18n } = options;
-  ruleParams = Array.isArray(ruleParams) ? ruleParams : [];
-  const mLength = parseFloat(ruleParams[0]) || 0;
+  const params = Array.isArray(ruleParams) ? ruleParams : [];
+  const mLength = toNumber(params[0]) || 0;
   const message = i18n.t('validator.minLength', {
     ...options,
     minLength: mLength,
@@ -90,10 +90,10 @@ export const MinLength = Validator.buildRuleDecorator<
  */
 export const MaxLength = Validator.buildRuleDecorator<
   ValidatorRuleParamTypes['MaxLength']
->(function maxLength(options: ValidatorValidateOptions) {
+>(function maxLength(options) {
   let { value, ruleParams, i18n } = options;
-  ruleParams = Array.isArray(ruleParams) ? ruleParams : [];
-  const mLength = parseFloat(ruleParams[0]) || 0;
+  const params = Array.isArray(ruleParams) ? ruleParams : [];
+  const mLength = toNumber(params[0]) || 0;
   const message = i18n.t('validator.maxLength', {
     ...options,
     maxLength: mLength,
