@@ -2,13 +2,84 @@ import { I18n } from '@/i18n';
 import { InputFormatterResult } from '@/inputFormatter/types';
 import { ClassConstructor, Dictionary } from '@/types';
 
-export type ValidatorResult =
-  | ValidatorSyncResult
-  | Promise<ValidatorSyncResult>;
+/**
+ * ## Validator Sync Result
+ *
+ * Represents the synchronous result returned by a validation rule function.
+ *
+ * - `true` means the validation rule passed successfully.
+ * - `string` means the validation rule failed and the string is the error
+ *   message to display to the user.
+ *
+ * This narrow type is intentionally small to make it easy to return a
+ * meaningful result from fast, CPU-only rule functions. If a rule needs to
+ * perform asynchronous work, it should return a {@link ValidatorAsyncResult}
+ * (i.e. a `Promise<ValidatorSyncResult>`).
+ *
+ * @example
+ * ```ts
+ * // Success
+ * return true;
+ *
+ * // Failure with message
+ * return 'Must be at least 3 characters.';
+ * ```
+ *
+ * @public
+ */
+export type ValidatorSyncResult = true | string;
 
+/**
+ * ## Validator Async Result
+ *
+ * A convenience alias for the asynchronous validator result. Asynchronous
+ * rules return a Promise that resolves to a {@link ValidatorSyncResult}.
+ *
+ * Use this type when declaring asynchronous rule implementations so that
+ * type-checking and tooling can correctly surface the expected resolved
+ * result values (`true` or error `string`).
+ *
+ * @example
+ * ```ts
+ * // Asynchronous rule example
+ * async function rule(opts) {
+ *   const ok = await someAsyncCheck(opts.value);
+ *   return ok ? true : 'Async check failed';
+ * }
+ * ```
+ *
+ * @public
+ */
 export type ValidatorAsyncResult = Promise<ValidatorSyncResult>;
 
-export type ValidatorSyncResult = true | string;
+/**
+ * ## Validator Result
+ *
+ * Union type that describes the full set of possible return values from a
+ * validator rule function (`ValidatorRuleFunction`). The union includes both
+ * synchronous and asynchronous outcomes so rule implementations can be either
+ * sync or async without requiring the caller to have special handling logic.
+ *
+ * When consuming a `ValidatorResult` you should `await` it, or treat it as a
+ * possible `Promise`, which resolves to a `ValidatorSyncResult`.
+ *
+ * @example
+ * ```ts
+ * // Generic rule consumer (supports both sync and async rules)
+ * const r = await myRule({ value: 'x' });
+ * if (r === true) {
+ *   // success
+ * } else {
+ *   // r is the failure message
+ *   console.error(r);
+ * }
+ * ```
+ *
+ * @see {@link ValidatorSyncResult}
+ * @see {@link ValidatorAsyncResult}
+ * @public
+ */
+export type ValidatorResult = ValidatorSyncResult | ValidatorAsyncResult;
 
 /**
  * ## Validation Rule Type

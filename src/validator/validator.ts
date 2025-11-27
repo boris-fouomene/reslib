@@ -4319,9 +4319,9 @@ export class Validator {
    *
    *   // Apply different validation based on context
    *   if (userRole === 'admin' && strictMode) {
-   *     return validateAllOf({ value, ruleParams: subRules, context });
+   *     return validateAllOf([{ value, ruleParams: subRules, context }]);
    *   }
-   *   return validateOneOf({ value, ruleParams: subRules, context });
+   *   return validateOneOf([{ value, ruleParams: subRules, context }]);
    * };
    *
    * const Conditional = Validator.buildMultiRuleDecorator<ValidationContext>(validateConditional);
