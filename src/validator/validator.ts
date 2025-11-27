@@ -847,8 +847,7 @@ export class Validator {
 
     for (const rule of rulesToProcess) {
       if (typeof rule === 'function') {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        parsedRules.push(this.parseFunctionRule<Context>(rule) as any);
+        parsedRules.push(rule);
       } else if (isNonNullString(rule)) {
         const parsedRule = this.parseStringRule<Context>(rule, registeredRules);
         if (parsedRule) {
@@ -1160,7 +1159,11 @@ export class Validator {
       ValidatorDefaultArray,
       Context
     >[] = [];
-    if (!isObj(rulesObject) || typeof rulesObject !== 'object') {
+    if (!isObj(rulesObject)) {
+      return result;
+    }
+    if (this.isSanitizedRuleObject(rulesObject)) {
+      result.push(rulesObject);
       return result;
     }
     for (const propertyKey in rulesObject) {
@@ -1186,6 +1189,24 @@ export class Validator {
       }
     }
     return result;
+  }
+  static isSanitizedRuleObject<
+    TRuleParams extends ValidatorDefaultArray = ValidatorDefaultArray,
+    Context = unknown,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  >(rule: any): rule is ValidatorSanitizedRuleObject<TRuleParams, Context> {
+    if (!isObj(rule)) {
+      return false;
+    }
+    const sanitizedRule = rule as ValidatorSanitizedRuleObject<
+      TRuleParams,
+      Context
+    >;
+    return (
+      typeof sanitizedRule.ruleFunction == 'function' &&
+      typeof sanitizedRule.ruleName == 'string' &&
+      Array.isArray(sanitizedRule.params)
+    );
   }
 
   /**
@@ -1445,7 +1466,7 @@ export class Validator {
         let ruleFunc:
           | ValidatorRuleFunction<ValidatorDefaultArray, Context>
           | undefined = typeof rule === 'function' ? rule : undefined;
-        if (typeof rule === 'object' && isObj(rule)) {
+        if (Validator.isSanitizedRuleObject(rule)) {
           ruleFunc = rule.ruleFunction;
           ruleParams = (
             Array.isArray(rule.params) ? rule.params : []
@@ -1453,7 +1474,12 @@ export class Validator {
           ruleName = rule.ruleName;
           rawRuleName = rule.rawRuleName;
         } else if (typeof rule == 'function') {
-          ruleName = rule.name as ValidatorRuleName;
+          const parsedRuleFunc = Validator.parseFunctionRule<Context>(rule);
+          if (parsedRuleFunc) {
+            ruleName = parsedRuleFunc.ruleName;
+          } else {
+            ruleName = rule.name as ValidatorRuleName;
+          }
           rawRuleName = ruleName;
         }
 
@@ -2100,7 +2126,6 @@ export class Validator {
     const errors: string[] = [];
     const allErrors: ValidatorValidateFailure<Context>[] = [];
     let firstSuccess: ValidatorValidateSuccess<Context> | null = null;
-
     for (const subRule of subRules) {
       const res = await Validator.validate<Context>({
         value,
@@ -2966,7 +2991,8 @@ export class Validator {
           translatedPropertyName,
           fieldName: propertyKey,
           propertyName: propertyKey,
-          rules: targetRules[propertyKey],
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          rules: sanitizedRules as any,
           fieldLabel: translatedPropertyName,
         }).then((validationResult) => {
           if (validationResult.success) {
@@ -3182,16 +3208,6 @@ export class Validator {
       {},
       Reflect.getMetadata(VALIDATOR_TARGET_OPTIONS_METADATA_KEY, target) || {}
     );
-  }
-  /**
-   * ## Helper: Normalize Rule Parameters
-   * Ensures rule parameters are always in array format for consistent processing
-   * @private
-   */
-  private static normalizeRuleParams<TRuleParams extends ValidatorRuleParams>(
-    params: TRuleParams
-  ): TRuleParams {
-    return (Array.isArray(params) ? params : [params]) as TRuleParams;
   }
 
   /**
@@ -3740,10 +3756,11 @@ export class Validator {
   >(
     ruleFunction: ValidatorRuleFunction<TRuleParams, Context>,
     ruleName?: ValidatorRuleName,
-
     symbolMarker?: symbol
   ): (...ruleParameters: TRuleParams) => PropertyDecorator {
-    this._prepareRuleDecorator(ruleFunction, ruleName, symbolMarker);
+    if (ruleName) {
+      this._prepareRuleDecorator(ruleFunction, ruleName, symbolMarker);
+    }
     return (...ruleParameters: TRuleParams) => {
       return this._buildRuleDecorator<TRuleParams, Context>(
         ruleParameters,
@@ -3777,33 +3794,26 @@ export class Validator {
     ruleParameters: TRuleParams,
     ruleFunction: ValidatorRuleFunction<TRuleParams, Context>,
     ruleName?: ValidatorRuleName,
-    symbolMarker?: symbol,
-    useDecoratorParams?: boolean
+    symbolMarker?: symbol
   ): PropertyDecorator {
-    const enhancedValidatorFunction: ValidatorRuleFunction<
-      TRuleParams,
-      Context
-    > = function (validationOptions) {
-      const enhancedOptions = Object.assign({}, validationOptions);
-      enhancedOptions.ruleParams = useDecoratorParams
-        ? Validator.normalizeRuleParams(ruleParameters)
-        : Validator.normalizeRuleParams(validationOptions.ruleParams);
-      //: ;
-      return ruleFunction(enhancedOptions);
-    };
     this._prepareRuleDecorator<TRuleParams, Context>(
-      enhancedValidatorFunction,
+      ruleFunction,
       ruleName,
       symbolMarker
     );
-    markRuleName(
-      enhancedValidatorFunction,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (ruleName ?? symbolMarker?.toString()) as any
-    );
-    return Validator.buildPropertyDecorator<TRuleParams, Context>(
-      enhancedValidatorFunction
-    );
+
+    ruleName = defaultStr(
+      ruleName,
+      symbolMarker?.toString(),
+      ruleFunction.name,
+      ruleFunction.constructor?.name
+    ) as ValidatorRuleName;
+    markRuleName(ruleFunction, ruleName);
+    return Validator.buildPropertyDecorator<TRuleParams, Context>({
+      ruleName,
+      ruleFunction,
+      params: ruleParameters,
+    } as ValidatorSanitizedRuleObject<TRuleParams, Context>);
   }
 
   /**
@@ -4266,13 +4276,11 @@ export class Validator {
     symbolMarker?: symbol
   ) {
     return (ruleParameters: RulesFunctions) => {
-      this._prepareRuleDecorator(ruleFunction, undefined, symbolMarker);
       return this._buildRuleDecorator<RulesFunctions, Context>(
         ruleParameters,
         ruleFunction,
         undefined,
-        symbolMarker,
-        true
+        symbolMarker
       );
     };
   }
@@ -4551,18 +4559,17 @@ export class Validator {
     Context = unknown,
   >(
     rule:
-      | ValidatorRule<TRuleParams, Context>
-      | ValidatorRule<TRuleParams, Context>[]
+      | BuildPropertyDecorator<TRuleParams, Context>
+      | BuildPropertyDecorator<TRuleParams, Context>[]
   ): PropertyDecorator {
-    return buildPropertyDecorator<ValidatorRule<TRuleParams, Context>[]>(
-      VALIDATOR_TARGET_RULES_METADATA_KEY,
-      (oldRules) => {
-        return [
-          ...(Array.isArray(oldRules) ? oldRules : []),
-          ...(Array.isArray(rule) ? rule : [rule]),
-        ];
-      }
-    );
+    return buildPropertyDecorator<
+      BuildPropertyDecorator<TRuleParams, Context>[]
+    >(VALIDATOR_TARGET_RULES_METADATA_KEY, (oldRules) => {
+      return [
+        ...(Array.isArray(oldRules) ? oldRules : []),
+        ...(Array.isArray(rule) ? rule : [rule]),
+      ];
+    });
   }
 }
 
@@ -4855,3 +4862,10 @@ type ValidatorRuleMarkerMeta = Dictionary & {
   validatorRuleFuncMarked?: boolean;
   ruleName?: ValidatorRuleName;
 };
+
+type BuildPropertyDecorator<
+  TRuleParams extends ValidatorRuleParams = ValidatorRuleParams,
+  Context = unknown,
+> =
+  | ValidatorRule<TRuleParams, Context>
+  | ValidatorSanitizedRuleObject<TRuleParams, Context>;

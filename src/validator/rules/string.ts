@@ -1,5 +1,4 @@
 import { defaultStr } from '@utils/defaultStr';
-import { isEmpty } from '@utils/isEmpty';
 import { isNonNullString } from '@utils/isNonNullString';
 import { isNumber } from '@utils/isNumber';
 import type {
@@ -53,7 +52,6 @@ export const MinLength = Validator.buildRuleDecorator<
     minLength: mLength,
   });
   return (
-    isEmpty(value) ||
     (value && typeof value === 'string' && String(value).length >= mLength) ||
     message
   );
@@ -99,7 +97,6 @@ export const MaxLength = Validator.buildRuleDecorator<
     maxLength: mLength,
   });
   return (
-    isEmpty(value) ||
     (value && typeof value === 'string' && String(value).length <= mLength) ||
     message
   );

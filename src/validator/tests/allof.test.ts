@@ -1395,8 +1395,7 @@ describe('AllOf Validation Rules', () => {
           },
           i18n,
         });
-
-        expect(result1.success).toBe(true);
+        expect(result1.success).toBe(false);
         expect(result2.success).toBe(true);
       });
     });

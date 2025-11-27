@@ -755,7 +755,6 @@ describe('Validator.validateTarget() - Class Validation with Either Pattern', ()
       };
 
       const result = await Validator.validateTarget(Document, { data });
-
       expect(result.success).toBe(true);
       if (result.success) {
         expect(result.data.title).toBe('My Document');
