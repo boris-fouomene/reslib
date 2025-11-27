@@ -1,6 +1,6 @@
 import { i18n } from '../../i18n';
 import { ensureRulesRegistered } from '../index';
-import { ValidatorRule } from '../types';
+import { ValidatorAsyncResult, ValidatorResult, ValidatorRule } from '../types';
 
 import { OneOf } from '../rules/multiRules';
 import { Validator } from '../validator';
@@ -124,18 +124,18 @@ describe('OneOf Validation Rules', () => {
       it('should execute multiple async rules in parallel', async () => {
         const executionTimes: number[] = [];
 
-        const slowAsyncRule1 = async ({ value }: any) => {
+        const slowAsyncRule1 = async ({ value }: any): ValidatorAsyncResult => {
           const start = Date.now();
           await new Promise((resolve) => setTimeout(resolve, 50));
           executionTimes.push(Date.now() - start);
-          return false; // Fails
+          return 'Fails'; // Fails
         };
 
-        const slowAsyncRule2 = async ({ value }: any) => {
+        const slowAsyncRule2 = async ({ value }: any): ValidatorAsyncResult => {
           const start = Date.now();
           await new Promise((resolve) => setTimeout(resolve, 50));
           executionTimes.push(Date.now() - start);
-          return value === 'pass'; // Passes
+          return value === 'pass' ? true : 'Not passed'; // Passes
         };
 
         const result = await Validator.validateOneOfRule({
@@ -151,14 +151,14 @@ describe('OneOf Validation Rules', () => {
       it('should return immediately on first success without waiting for others', async () => {
         const executionOrder: string[] = [];
 
-        const rule1 = async ({ value }: any) => {
+        const rule1 = async ({ value }: any): ValidatorAsyncResult => {
           executionOrder.push('rule1_start');
           await new Promise((resolve) => setTimeout(resolve, 100));
           executionOrder.push('rule1_end');
           return true; // Passes immediately
         };
 
-        const rule2 = async ({ value }: any) => {
+        const rule2 = async ({ value }: any): ValidatorAsyncResult => {
           executionOrder.push('rule2_start');
           await new Promise((resolve) => setTimeout(resolve, 200));
           executionOrder.push('rule2_end');
@@ -206,7 +206,10 @@ describe('OneOf Validation Rules', () => {
 
       it('should handle empty error messages gracefully', async () => {
         const result = await Validator.validateOneOfRule({
-          ruleParams: [({ value }: any) => false, ({ value }: any) => false],
+          ruleParams: [
+            ({ value }: any) => 'Not found',
+            ({ value }: any) => 'Not found',
+          ],
           value: 'test',
           i18n,
         });
@@ -316,7 +319,10 @@ describe('OneOf Validation Rules', () => {
 
       it('should handle boolean values', async () => {
         const result = await Validator.validateOneOfRule({
-          ruleParams: ['Email', ({ value }) => typeof value === 'boolean'],
+          ruleParams: [
+            'Email',
+            ({ value }) => (typeof value === 'boolean' ? true : 'Not found'),
+          ],
           value: true,
           i18n,
         });
@@ -328,7 +334,8 @@ describe('OneOf Validation Rules', () => {
         const result = await Validator.validateOneOfRule({
           ruleParams: [
             'Email',
-            ({ value }) => typeof value === 'object' && value !== null,
+            ({ value }) =>
+              typeof value === 'object' && value !== null ? true : 'Not found',
           ],
           value: { key: 'value' },
           i18n,
@@ -448,8 +455,8 @@ describe('OneOf Validation Rules', () => {
 
       it('should create rule from function rules only', async () => {
         const rule = Validator.oneOf([
-          ({ value }: any) => value > 10,
-          ({ value }: any) => value < 5,
+          ({ value }: any) => (value > 10 ? true : 'Invalid value'),
+          ({ value }: any) => (value < 5 ? true : 'Invlaid value'),
         ]);
         const result = await rule({
           value: 3,
@@ -463,7 +470,8 @@ describe('OneOf Validation Rules', () => {
       });
 
       it('should create rule from mixed rule types', async () => {
-        const customRule = ({ value }: any) => typeof value === 'string';
+        const customRule = ({ value }: any): ValidatorResult =>
+          typeof value === 'string' ? true : 'Invlaid string';
 
         const rule = Validator.oneOf(['Email', { MinLength: [5] }, customRule]);
         const result = await rule({
@@ -650,7 +658,8 @@ describe('OneOf Validation Rules', () => {
           }
         );
 
-        const customRule = ({ value }: any) => typeof value === 'string';
+        const customRule = ({ value }: any) =>
+          typeof value === 'string' ? true : 'Invalid value';
 
         class TestEntity {
           @FunctionRuleDecorator([customRule, 'Email'])
@@ -1082,7 +1091,10 @@ describe('OneOf Validation Rules', () => {
 
       it('should validate boolean values', async () => {
         class BooleanOneOf {
-          @OneOf(['Email', ({ value }) => typeof value === 'boolean'])
+          @OneOf([
+            'Email',
+            ({ value }) => (typeof value === 'boolean' ? true : 'Not found'),
+          ])
           value: string | boolean = '';
         }
 
@@ -1138,7 +1150,10 @@ describe('OneOf Validation Rules', () => {
     describe('OneOf with Empty String', () => {
       it('should handle empty string value', async () => {
         class EmptyStringTest {
-          @OneOf(['Email', ({ value }) => value === ''])
+          @OneOf([
+            'Email',
+            ({ value }): ValidatorResult => (value === '' ? true : 'Not empty'),
+          ])
           value: string = '';
         }
 
@@ -1207,7 +1222,10 @@ describe('OneOf Validation Rules', () => {
             'PhoneNumber',
             'UUID',
             'Number',
-            ({ value }) => typeof value === 'string' && value.length > 0,
+            ({ value }): ValidatorResult =>
+              typeof value === 'string' && value.length > 0
+                ? true
+                : 'Invalid string',
           ])
           multiField: string | number = '';
         }

@@ -21,7 +21,7 @@ import { ClassConstructor, Dictionary } from '@/types';
  *   - Used when validation fails and provides specific feedback
  *
  * #### Asynchronous Results
- * - **`Promise<boolean | string>`**: Asynchronous validation result
+ * - **`Promise<ValidatorBaseResult>`**: Asynchronous validation result
  *   - Resolves to `true` for success
  *   - Resolves to `string` for failure with error message
  *   - Enables complex validations requiring I/O, network calls, or async operations
@@ -133,9 +133,17 @@ import { ClassConstructor, Dictionary } from '@/types';
  *
  * @see {@link ValidatorRuleFunction} - Functions that return this type
  * @see {@link ValidatorValidateResult} - Higher-level validation results
+ * @see {@link ValidatorBaseResult} - Base synchronous validation results
+ * @see {@link ValidatorAsyncResult} - Base asynchronous validation results
  * @see {@link Validator.validate} - Main validation method
  */
-export type ValidatorResult = boolean | string | Promise<boolean | string>;
+export type ValidatorResult =
+  | ValidatorBaseResult
+  | Promise<ValidatorBaseResult>;
+
+export type ValidatorAsyncResult = Promise<ValidatorBaseResult>;
+
+export type ValidatorBaseResult = true | string;
 
 /**
  * ## Validation Rule Type
@@ -825,7 +833,7 @@ export type ValidatorSanitizedRules<Context = unknown> = ValidatorSanitizedRule<
  *
  * ### Return Value:
  * - The function returns an `ValidatorResult`, which can be one of the following:
- *   - A `Promise<boolean | string>`: Indicates asynchronous validation. If resolved to `true`, the validation has succeeded; if resolved to a `string`, it represents an error message indicating a validation failure.
+ *   - A `Promise<ValidatorBaseResult>`: Indicates asynchronous validation. If resolved to `true`, the validation has succeeded; if resolved to a `string`, it represents an error message indicating a validation failure.
  *   - A `string`: Represents an invalid validation result, where the string contains an error message.
  *   - A `boolean`: Indicates the success (`true`) or failure (`false`) of the validation.
  *

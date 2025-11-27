@@ -14,6 +14,7 @@ import {
 } from '@utils/index';
 import { I18n, i18n as defaultI18n } from '../i18n';
 import {
+  ValidatorAsyncResult,
   ValidatorDefaultMultiRule,
   ValidatorMultiRuleFunction,
   ValidatorMultiRuleNames,
@@ -133,14 +134,14 @@ export class Validator {
    *   context?: Context;
    *   fieldName?: string;
    *   translatedPropertyName?: string;
-   * }) => boolean | string | Promise<boolean | string>;
+   * }) => ValidatorResult
    * ```
    *
    * ### Rule Return Values
    * - `true` - Validation passed
    * - `false` - Validation failed (uses default error message)
    * - `string` - Validation failed with custom error message
-   * - `Promise<boolean|string>` - Async validation
+   * - `ValidatorAsyncResult` - Async validation
    *
    * @example
    * ```typescript
@@ -1672,7 +1673,7 @@ export class Validator {
    * @template Context - Optional type for validation context
    * @template RulesFunctions - Array of sub-rules to evaluate
    * @param options - Multi-rule validation options
-   * @returns `ValidatorResult` (`Promise<boolean|string>`)
+   * @returns `ValidatorResult` (`ValidatorAsyncResult`)
    * @example
    * const res = await Validator.validateOneOfRule({
    *   value: "user@example.com",
@@ -1703,7 +1704,7 @@ export class Validator {
    * @template Context - Optional type for validation context
    * @template RulesFunctions - Array of sub-rules to evaluate
    * @param options - Multi-rule validation options
-   * @returns `ValidatorResult` (`Promise<boolean|string>`)
+   * @returns `ValidatorResult` (`ValidatorAsyncResult`)
    * @example
    * const res = await Validator.validateAllOfRule({
    *   value: "hello",
@@ -1738,7 +1739,7 @@ export class Validator {
    * @template Context - Optional type for validation context
    * @template RulesFunctions - Array of sub-rules applied to each item
    * @param options - Multi-rule validation options
-   * @returns `ValidatorResult` (`Promise<boolean|string>`) - `true` if all items pass; otherwise an aggregated error string
+   * @returns `ValidatorResult` (`ValidatorAsyncResult`) - `true` if all items pass; otherwise an aggregated error string
    * @example
    * const res = await Validator.validateArrayOfRule({
    *   value: ["user@example.com", "admin@example.com"],
@@ -1753,7 +1754,7 @@ export class Validator {
       ValidatorDefaultMultiRule<Context> = ValidatorDefaultMultiRule<Context>,
   >(
     options: ValidatorValidateMultiRuleOptions<Context, RulesFunctions>
-  ): Promise<boolean | string> {
+  ): ValidatorAsyncResult {
     let { value, ruleParams, startTime, ...extra } = options;
     startTime = isNumber(startTime) ? startTime : Date.now();
     const subRules = (
@@ -1918,7 +1919,7 @@ export class Validator {
    * @param options.startTime - Optional timestamp for duration tracking
    * @param options.i18n - Optional i18n instance for error message translation
    *
-   * @returns Promise<boolean | string>
+   * @returns {ValidatorAsyncResult}
    * - Resolves to `true` if nested object validation succeeds
    * - Resolves to error message string if validation fails
    * - Never rejects; all errors are returned as resolution values
@@ -1951,9 +1952,10 @@ export class Validator {
   >({
     ruleParams,
     ...options
-  }: ValidatorNestedRuleFunctionOptions<Target, Context>): Promise<
-    boolean | string
-  > {
+  }: ValidatorNestedRuleFunctionOptions<
+    Target,
+    Context
+  >): ValidatorAsyncResult {
     let { startTime, value, ...extra } = options;
     startTime = isNumber(startTime) ? startTime : Date.now();
     const i18n = this.getI18n(extra);

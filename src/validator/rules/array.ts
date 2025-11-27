@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import type { ValidatorRuleParams } from '../types';
-import { ValidatorRuleParamTypes, ValidatorValidateOptions } from '../types';
+import { ValidatorRuleParamTypes } from '../types';
 import { Validator } from '../validator';
 
 type t = ValidatorRuleParams;
@@ -42,7 +42,7 @@ export const IsArray = Validator.buildRuleDecorator<
   translatedPropertyName,
   i18n,
   ...rest
-}: ValidatorValidateOptions): boolean | string {
+}) {
   if (Array.isArray(value)) {
     return true;
   } else {
@@ -101,7 +101,7 @@ export const ArrayMinLength = Validator.buildRuleDecorator<
   translatedPropertyName,
   i18n,
   ...rest
-}: ValidatorValidateOptions<number[]>): boolean | string {
+}) {
   if (!Array.isArray(value)) {
     const message = i18n.t('validator.array', {
       field: translatedPropertyName || fieldName,
@@ -180,7 +180,7 @@ export const ArrayMaxLength = Validator.buildRuleDecorator<
   translatedPropertyName,
   i18n,
   ...rest
-}: ValidatorValidateOptions<number[]>): boolean | string {
+}) {
   if (!Array.isArray(value)) {
     const message = i18n.t('validator.array', {
       field: translatedPropertyName || fieldName,
@@ -260,7 +260,7 @@ export const ArrayLength = Validator.buildRuleDecorator<
   translatedPropertyName,
   i18n,
   ...rest
-}: ValidatorValidateOptions<number[]>): boolean | string {
+}) {
   if (!Array.isArray(value)) {
     const message = i18n.t('validator.array', {
       field: translatedPropertyName || fieldName,
@@ -339,7 +339,7 @@ export const ArrayContains = Validator.buildRuleDecorator<
   translatedPropertyName,
   i18n,
   ...rest
-}): boolean | string {
+}) {
   if (!Array.isArray(value)) {
     const message = i18n.t('validator.arrayContains', {
       field: translatedPropertyName || fieldName,
@@ -432,7 +432,7 @@ export const ArrayUnique = Validator.buildRuleDecorator<
   translatedPropertyName,
   i18n,
   ...rest
-}: ValidatorValidateOptions): boolean | string {
+}) {
   if (!Array.isArray(value)) {
     const message = i18n.t('validator.arrayUnique', {
       field: translatedPropertyName || fieldName,
@@ -518,7 +518,7 @@ export const ArrayAllStrings = Validator.buildRuleDecorator<
   translatedPropertyName,
   i18n,
   ...rest
-}: ValidatorValidateOptions): boolean | string {
+}) {
   if (!Array.isArray(value)) {
     return i18n.t('validator.array', {
       field: translatedPropertyName || fieldName,
@@ -588,7 +588,7 @@ export const ArrayAllNumbers = Validator.buildRuleDecorator<
   translatedPropertyName,
   i18n,
   ...rest
-}: ValidatorValidateOptions): boolean | string {
+}) {
   if (!Array.isArray(value)) {
     return i18n.t('validator.array', {
       field: translatedPropertyName || fieldName,
