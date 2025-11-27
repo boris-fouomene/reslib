@@ -303,7 +303,6 @@ describe('OneOf Validation Rules', () => {
           value: '',
           i18n,
         });
-
         expect(result).toBe(true);
       });
 
@@ -1262,8 +1261,7 @@ describe('OneOf Validation Rules', () => {
         const result2 = await Validator.validateTarget(UserProfile, {
           data: { contact: 'test@example.com', identifier: 'abc' },
         });
-
-        expect(result1.success).toBe(true);
+        expect(result1.success).toBe(false);
         expect(result2.success).toBe(true);
       });
     });

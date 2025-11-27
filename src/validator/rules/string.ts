@@ -51,10 +51,7 @@ export const MinLength = Validator.buildRuleDecorator<
     ...options,
     minLength: mLength,
   });
-  return (
-    (value && typeof value === 'string' && String(value).length >= mLength) ||
-    message
-  );
+  return (typeof value === 'string' && value.length >= mLength) || message;
 }, 'MinLength');
 
 /**
@@ -96,10 +93,7 @@ export const MaxLength = Validator.buildRuleDecorator<
     ...options,
     maxLength: mLength,
   });
-  return (
-    (value && typeof value === 'string' && String(value).length <= mLength) ||
-    message
-  );
+  return (typeof value === 'string' && value.length <= mLength) || message;
 }, 'MaxLength');
 
 /**
