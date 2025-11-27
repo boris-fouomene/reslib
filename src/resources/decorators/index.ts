@@ -1,4 +1,3 @@
-import { extendObj } from '@utils/object';
 import 'reflect-metadata';
 import { ClassConstructor } from '../../types';
 
@@ -81,10 +80,10 @@ export function getDecoratedProperties<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   metadataKey: any
 ): Record<PropertyKeyType, MetaDataType> {
-  return extendObj(
+  return Object.assign(
     {},
-    Reflect.getMetadata(metadataKey, target),
-    Reflect.getMetadata(metadataKey, target.prototype)
+    Object.assign({}, Reflect.getMetadata(metadataKey, target)),
+    Object.assign({}, Reflect.getMetadata(metadataKey, target.prototype))
   );
 }
 

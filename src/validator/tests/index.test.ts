@@ -380,7 +380,6 @@ describe('Validator Rules', () => {
     }
 
     const allRules = Validator.getTargetRules(Entity);
-    console.log(allRules, ' are all rules heein');
     it('Getting validation rules', async () => {
       expect(allRules).toMatchObject({
         id: expect.arrayContaining(['Number', expect.any(Function)]),

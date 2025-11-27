@@ -67,7 +67,6 @@ describe('AllOf Validation Rules', () => {
           password: '1',
         },
       });
-      console.log(result, ' is result');
       expect(result.message).toContain('failed for one field');
     });
   });
@@ -794,7 +793,7 @@ describe('AllOf Validation Rules', () => {
 
       it('should fail validation when any rule fails', async () => {
         const TestDecorator = Validator.buildMultiRuleDecorator(
-          function testAllOf(options: any) {
+          function testAllOf(options) {
             return Validator.validateAllOfRule(options);
           }
         );
@@ -808,7 +807,6 @@ describe('AllOf Validation Rules', () => {
           data: { contact: 'not-an-email' },
           i18n,
         });
-
         expect(result.success).toBe(false);
       });
     });
@@ -1436,7 +1434,6 @@ describe('AllOf Validation Rules', () => {
           },
           i18n,
         });
-
         expect(result.success).toBe(false);
         const errorMsg = (result as any).errors?.[0]?.message || '';
         expect(errorMsg.split(';').length).toBeGreaterThanOrEqual(2);

@@ -1175,7 +1175,6 @@ export class Validator {
         if (Array.isArray(ruleParameters)) {
           result.push({
             ruleName,
-
             ruleFunction: ruleFunction as ValidatorRuleFunction<
               ValidatorDefaultArray,
               Context
@@ -1495,8 +1494,8 @@ export class Validator {
                 value,
                 ruleName,
                 rawRuleName,
-                ruleParams,
                 ...translateOptions,
+                ruleParams,
               }
             );
             return resolve(
@@ -1529,48 +1528,6 @@ export class Validator {
           return next();
         };
 
-        // Check for multi-rule decorators (OneOf, AllOf, ArrayOf) using symbol markers
-        // These decorators are never registered as named rules, only available as decorator functions
-        for (const symb of [
-          VALIDATOR_RULE_MARKERS.arrayOf,
-          VALIDATOR_RULE_MARKERS.oneOf,
-          VALIDATOR_RULE_MARKERS.allOf,
-        ]) {
-          const marker = getRuleMarker(ruleFunc, symb);
-          if (marker && marker.ruleName) {
-            const rName = String(marker.ruleName);
-            if (rName === String(VALIDATOR_RULE_MARKERS.arrayOf)) {
-              const arrayOfResult =
-                await Validator.validateArrayOfRule<Context>({
-                  ...validateOptions,
-                  startTime,
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                } as any);
-              return handleResult(arrayOfResult);
-            }
-            if (
-              [
-                String(VALIDATOR_RULE_MARKERS.oneOf),
-                String(VALIDATOR_RULE_MARKERS.allOf),
-              ].includes(rName)
-            ) {
-              const oneOrAllResult = await Validator.validateMultiRule<Context>(
-                rName === String(VALIDATOR_RULE_MARKERS.oneOf)
-                  ? 'OneOf'
-                  : 'AllOf',
-                {
-                  ...validateOptions,
-                  startTime,
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                } as any
-              );
-              return handleResult(oneOrAllResult);
-            }
-          }
-        }
-        //check for nested rules
-        //hasRuleMarker(ruleFunc, VALIDATOR_RULE_MARKERS.nested)
-
         if (typeof ruleFunc !== 'function') {
           const error = createValidationError(
             i18n.t('validator.invalidRule', i18nRuleOptions),
@@ -1586,8 +1543,16 @@ export class Validator {
             createFailureResult(error, successOrErrorData, startTime)
           );
         }
-
         try {
+          /* console.log(
+            'validating rule ',
+            validateOptions.ruleName,
+            ' is rule, ',
+            validateOptions.ruleParams,
+            ' are params heerin',
+            ruleFunc,
+            ' is rule function'
+          ); */
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const result = await ruleFunc(validateOptions as any);
           return handleResult(result);
@@ -3164,96 +3129,6 @@ export class Validator {
   }
 
   /**
-   * ## Check If Property Has ValidateNested Rule
-   *
-   * Determines whether a specific property of a class has the `@ValidateNested` decorator
-   * applied by inspecting the metadata attached to the property. This provides an alternative
-   * to string-based rule name checking, allowing metadata-based detection of nested validation rules.
-   *
-   * ### Purpose
-   * This method enables detection of `@ValidateNested` decorators using the reflection
-   * metadata system rather than relying on normalized rule name string comparison.
-   * This is more robust and type-safe for identifying nested validation requirements.
-   *
-   * ### How It Works
-   * 1. Retrieves all validation rules attached to the specified property
-   * 2. Checks if any rule is marked with the ValidateNested symbol marker
-   * 3. Returns true if at least one ValidateNested rule is found
-   *
-   * @example
-   * ```typescript
-   * class Address {
-   *   street: string = "";
-   *   city: string = "";
-   * }
-   *
-   * class User {
-   *   name: string = "";
-   *
-   *   @ValidateNested([Address])
-   *   address: Address = new Address();
-   * }
-   *
-   * // Check if the address property has ValidateNested
-   * const hasNested = Validator.hasValidateNestedRule(User, 'address');
-   * console.log(hasNested); // true
-   *
-   * // Check if the name property has ValidateNested
-   * const nameHasNested = Validator.hasValidateNestedRule(User, 'name');
-   * console.log(nameHasNested); // false
-   * ```
-   *
-   * ### Metadata-Based Detection
-   * Unlike the string-based `normalizedRule === "validatenested"` check in the validation
-   * pipeline, this method directly inspects decorator metadata stored on the class property.
-   * It provides:
-   * - Type safety: Works with actual decorator function references
-   * - Clarity: Explicitly checks for the ValidateNested decorator
-   * - Robustness: Works with minified code (uses symbol markers, not function names)
-   * - Decoupling: No dependency on rule name strings or normalization
-   *
-   * @template T - Class constructor type extending ClassConstructor
-   *
-   * @param target - The class constructor to inspect
-   * @param propertyKey - The property name to check for ValidateNested decorator
-   *
-   * @returns `true` if the property has a ValidateNested rule applied, `false` otherwise
-   *
-   *
-   * @see {@link getTargetRules} - Get all rules for a target class
-   * @see {@link validateNestedRule} - The underlying nested validation method
-   * @see {@link ValidateNested} - The decorator that applies nested validation
-   * @public
-   */
-  static hasValidateNestedRule<T extends ClassConstructor>(
-    target: T,
-    propertyKey: keyof InstanceType<T>
-  ): boolean {
-    const rules = this.getTargetRules(target);
-    const propertyRules = rules[propertyKey];
-
-    if (!Array.isArray(propertyRules)) {
-      return false;
-    }
-
-    // Check if any rule is marked with the ValidateNested symbol marker
-    return propertyRules.some((rule) => {
-      if (typeof rule === 'function') {
-        return hasRuleMarker(rule, VALIDATOR_RULE_MARKERS.nested);
-      }
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      if (isObj(rule) && typeof (rule as any).ruleFunction === 'function') {
-        return hasRuleMarker(
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          (rule as any).ruleFunction,
-          VALIDATOR_RULE_MARKERS.nested
-        );
-      }
-      return false;
-    });
-  }
-
-  /**
    * ## Get Target Validation Options
    *
    * Retrieves validation options that have been configured for a specific class
@@ -3902,15 +3777,18 @@ export class Validator {
     ruleParameters: TRuleParams,
     ruleFunction: ValidatorRuleFunction<TRuleParams, Context>,
     ruleName?: ValidatorRuleName,
-    symbolMarker?: symbol
+    symbolMarker?: symbol,
+    useDecoratorParams?: boolean
   ): PropertyDecorator {
     const enhancedValidatorFunction: ValidatorRuleFunction<
       TRuleParams,
       Context
     > = function (validationOptions) {
       const enhancedOptions = Object.assign({}, validationOptions);
-      enhancedOptions.ruleParams =
-        Validator.normalizeRuleParams(ruleParameters);
+      enhancedOptions.ruleParams = useDecoratorParams
+        ? Validator.normalizeRuleParams(ruleParameters)
+        : Validator.normalizeRuleParams(validationOptions.ruleParams);
+      //: ;
       return ruleFunction(enhancedOptions);
     };
     this._prepareRuleDecorator<TRuleParams, Context>(
@@ -4393,7 +4271,8 @@ export class Validator {
         ruleParameters,
         ruleFunction,
         undefined,
-        symbolMarker
+        symbolMarker,
+        true
       );
     };
   }

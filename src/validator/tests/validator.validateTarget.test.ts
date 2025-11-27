@@ -540,30 +540,6 @@ describe('Validator.validateTarget() - Class Validation with Either Pattern', ()
       }
     });
 
-    it('should detect @ValidateNested decorator using metadata inspection', async () => {
-      // This test demonstrates metadata-based detection as an alternative
-      // to the string-based normalizedRule === "validatenested" check
-
-      class Address {
-        street: string = '';
-        city: string = '';
-      }
-
-      class User {
-        name: string = '';
-
-        @ValidateNested(Address)
-        address: Address = new Address();
-      }
-
-      // Use the metadata-based method to check if a property has ValidateNested
-      const hasAddressNested = Validator.hasValidateNestedRule(User, 'address');
-      const hasNameNested = Validator.hasValidateNestedRule(User, 'name');
-
-      expect(hasAddressNested).toBe(true);
-      expect(hasNameNested).toBe(false);
-    });
-
     it('should retrieve nested class target from metadata', async () => {
       // This test demonstrates retrieving the nested class constructor
       // using metadata instead of relying on string-based rule detection
@@ -595,17 +571,6 @@ describe('Validator.validateTarget() - Class Validation with Either Pattern', ()
         @ValidateNested(Address)
         address: Address = new Address();
       }
-
-      // Metadata-based detection
-      const targetRules = Validator.getTargetRules(User);
-      const hasMetadataValidation = Validator.hasValidateNestedRule(
-        User,
-        'address'
-      );
-
-      // All metadata-based checks should identify the nested structure
-      expect(hasMetadataValidation).toBe(true);
-      expect(targetRules.address).toBeDefined();
 
       // Validation should also succeed
       const result = await Validator.validateTarget(User, {
@@ -678,12 +643,6 @@ describe('Validator.validateTarget() - Class Validation with Either Pattern', ()
       if (result.success) {
         expect(result.data).toEqual(data);
       }
-
-      // Metadata detection for multi-level nesting
-      expect(Validator.hasValidateNestedRule(Event, 'location')).toBe(true);
-      expect(Validator.hasValidateNestedRule(Location, 'coordinates')).toBe(
-        true
-      );
     });
 
     it('should invoke validatenested rule handling path in normalizedRule check', async () => {
