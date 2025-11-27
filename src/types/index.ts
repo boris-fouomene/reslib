@@ -56,9 +56,7 @@ export type Primitive = string | number | boolean;
   const exampleController = new ExampleControllerClass(exampleService);
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export interface ClassConstructor<T = unknown, D extends any[] = any[]>
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
-  extends Function {
+export interface ClassConstructor<T = unknown, D extends any[] = any[]> {
   new (...args: D): T;
 }
 

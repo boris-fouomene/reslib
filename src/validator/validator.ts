@@ -2605,13 +2605,14 @@ export class Validator {
    * @public
    */
   static validateNested<
-    Target extends ClassConstructor = ClassConstructor,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    Target extends ClassConstructor<any> = ClassConstructor<any>,
     Context = unknown,
   >(target: Target): ValidatorRuleFunction<[target: Target], Context> {
     return function ValidateNested(
       options: ValidatorValidateOptions<[target: Target], Context>
     ) {
-      return Validator.validateNestedRule({
+      return Validator.validateNestedRule<Target, Context>({
         ...options,
         ruleParams: [target],
       });
@@ -3698,8 +3699,6 @@ export class Validator {
    * const IsRequired = Validator.buildRuleDecorator(RequiredRule);
    * @IsRequired()  // Runtime error: undefined parameters
    *
-   * // ✅ Correct: Use buildRuleDecoratorOptional or provide empty array
-   * @IsRequired()([])
    * ```
    *
    * #### Debugging Tips
@@ -3822,7 +3821,6 @@ export class Validator {
    *
    * ### Related Methods
    *
-   * - {@link buildRuleDecoratorOptional} - Same as this method but parameters always optional
    * - {@link buildTargetRuleDecorator} - Specialized for nested class validation
    * - {@link buildPropertyDecorator} - Low-level decorator creation
    * - {@link buildMultiRuleDecorator} - For rules with multiple validation functions
@@ -3919,7 +3917,6 @@ export class Validator {
    * @since 1.0.0
    * @public
    * @category Decorator Factories
-   * @see {@link buildRuleDecoratorOptional}
    * @see {@link buildTargetRuleDecorator}
    * @see {@link ValidatorRuleFunction}
    * @see {@link ValidatorTupleAllowsEmpty}
@@ -3933,6 +3930,24 @@ export class Validator {
 
     symbolMarker?: symbol
   ): (...ruleParameters: TRuleParams) => PropertyDecorator {
+    return (...ruleParameters: TRuleParams) => {
+      return this._buildRuleDecorator<TRuleParams, Context>(
+        ruleParameters,
+        ruleFunction,
+        ruleName,
+        symbolMarker
+      );
+    };
+  }
+  private static _buildRuleDecorator<
+    TRuleParams extends ValidatorRuleParams = ValidatorRuleParams,
+    Context = unknown,
+  >(
+    ruleParameters: TRuleParams,
+    ruleFunction: ValidatorRuleFunction<TRuleParams, Context>,
+    ruleName?: ValidatorRuleName,
+    symbolMarker?: symbol
+  ): PropertyDecorator {
     if (isNonNullString(ruleName)) {
       Validator.registerRule(ruleName, ruleFunction);
     }
@@ -3941,37 +3956,35 @@ export class Validator {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (ruleFunction as any)[symbolMarker] = true;
     }
-    return function (...ruleParameters: TRuleParams) {
-      const finalRuleParameters = ruleParameters;
-      const enhancedValidatorFunction: ValidatorRuleFunction<
-        TRuleParams,
-        Context
-      > = function (validationOptions) {
-        const enhancedOptions = Object.assign({}, validationOptions);
-        enhancedOptions.ruleParams =
-          Validator.normalizeRuleParams(finalRuleParameters);
-        return ruleFunction(enhancedOptions);
-      };
-
-      // Preserve symbol markers from the original function through wrapping
-      // This allows decorators to be reliably identified even in minified code
-      if (hasRuleMarker(ruleFunction, VALIDATOR_NESTED_RULE_MARKER)) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (enhancedValidatorFunction as any)[VALIDATOR_NESTED_RULE_MARKER] = true;
-
-        // Store the rule parameters so they can be retrieved by inspection methods
-        // This is particularly important for ValidateNested to access the target class
-        const normalizedParams =
-          Validator.normalizeRuleParams(finalRuleParameters);
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (enhancedValidatorFunction as any)[VALIDATOR_NESTED_RULE_PARAMS] =
-          normalizedParams;
-      }
-
-      return Validator.buildPropertyDecorator<TRuleParams, Context>(
-        enhancedValidatorFunction
-      );
+    const finalRuleParameters = ruleParameters;
+    const enhancedValidatorFunction: ValidatorRuleFunction<
+      TRuleParams,
+      Context
+    > = function (validationOptions) {
+      const enhancedOptions = Object.assign({}, validationOptions);
+      enhancedOptions.ruleParams =
+        Validator.normalizeRuleParams(finalRuleParameters);
+      return ruleFunction(enhancedOptions);
     };
+
+    // Preserve symbol markers from the original function through wrapping
+    // This allows decorators to be reliably identified even in minified code
+    if (hasRuleMarker(ruleFunction, VALIDATOR_NESTED_RULE_MARKER)) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (enhancedValidatorFunction as any)[VALIDATOR_NESTED_RULE_MARKER] = true;
+
+      // Store the rule parameters so they can be retrieved by inspection methods
+      // This is particularly important for ValidateNested to access the target class
+      const normalizedParams =
+        Validator.normalizeRuleParams(finalRuleParameters);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (enhancedValidatorFunction as any)[VALIDATOR_NESTED_RULE_PARAMS] =
+        normalizedParams;
+    }
+
+    return Validator.buildPropertyDecorator<TRuleParams, Context>(
+      enhancedValidatorFunction
+    );
   }
 
   /**
@@ -4433,11 +4446,14 @@ export class Validator {
     ruleFunction: ValidatorMultiRuleFunction<Context, RulesFunctions>,
     symbolMarker?: symbol
   ) {
-    return this.buildRuleDecorator<RulesFunctions, Context>(
-      ruleFunction,
-      undefined,
-      symbolMarker
-    );
+    return (ruleParameters: RulesFunctions) => {
+      return this._buildRuleDecorator<RulesFunctions, Context>(
+        ruleParameters,
+        ruleFunction,
+        undefined,
+        symbolMarker
+      );
+    };
   }
 
   /**

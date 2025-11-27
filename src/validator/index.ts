@@ -12,7 +12,11 @@ class Address {
 }
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 class User {
-  @ArrayOf('Array', 'ArrayAllNumbers')
-  @OneOf(Validator.validateNested(Address))
+  @ArrayOf(['Array', 'ArrayAllNumbers'])
+  @OneOf([
+    'NonNullString',
+    { MinLength: [10] },
+    Validator.validateNested<typeof Address>(Address),
+  ])
   address: Address = new Address();
 }
