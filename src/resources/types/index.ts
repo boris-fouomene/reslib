@@ -164,7 +164,7 @@ export interface FieldBase<
  * // In your application's types file (e.g., types.ts or global.d.ts)
  * import "reslib/resources";
  *
- * declare module "reslib/resources/resources" {
+ * declare module "reslib/resources" {
  *   interface FieldMap {
  *     // Define a text field type
  *     text: FieldBase<"text", string>;
@@ -180,7 +180,7 @@ export interface FieldBase<
  *
  * #### Advanced FieldMeta Configuration
  * ```typescript
- * declare module "reslib/resources/resources" {
+ * declare module "reslib/resources" {
  *   interface FieldMap {
  *     // Text field with validation
  *     text: FieldBase<"text", string> & {
@@ -246,7 +246,7 @@ export interface FieldBase<
  *
  * #### Conditional FieldMeta Extensions
  * ```typescript
- * declare module "reslib/resources/resources" {
+ * declare module "reslib/resources" {
  *   interface FieldMap {
  *     // Conditional field that changes behavior based on context
  *     conditional: FieldBase<"conditional", any> & {
@@ -283,7 +283,7 @@ export interface FieldBase<
  * @example
  * ```typescript
  * // Complete example of extending FieldMap
- * declare module "reslib/resources/resources" {
+ * declare module "reslib/resources" {
  *   interface FieldMap {
  *     text: FieldBase<"text", string> & {
  *       minLength?: number;
@@ -373,9 +373,9 @@ export interface FieldMap {}
  * #### Module Augmentation for Custom Actions
  * ```typescript
  * // In your application's types file
- * import "reslib/resources/resources";
+ * import "reslib/resources";
  *
- * declare module "reslib/resources/resources" {
+ * declare module "reslib/resources" {
  *   interface FieldActionsMap {
  *     // Add custom action contexts
  *     import: string;      // For bulk import operations
@@ -400,7 +400,7 @@ export interface FieldMap {}
  *
  * #### Advanced FieldMeta Behavior Overrides
  * ```typescript
- * declare module "reslib/resources/resources" {
+ * declare module "reslib/resources" {
  *   interface FieldActionsMap {
  *     bulkUpdate: string;
  *     softDelete: string;
@@ -479,7 +479,7 @@ export interface FieldMap {}
  * @example
  * ```typescript
  * // Complete example of extending FieldActionsMap
- * declare module "reslib/resources/resources" {
+ * declare module "reslib/resources" {
  *   interface FieldActionsMap {
  *     // Standard CRUD operations
  *     create: string;
@@ -695,7 +695,7 @@ export interface FieldActionsMap {
  * #### Advanced Usage with Custom Field Types
  * ```typescript
  * // After extending FieldMap with custom types
- * declare module "reslib/resources/resources" {
+ * declare module "reslib/resources" {
  *   interface FieldMap {
  *     richText: FieldBase<"richText", string> & {
  *       toolbar: string[];
@@ -772,9 +772,9 @@ export interface FieldActionsMap {
  * @example
  * ```typescript
  * // Complete example of field definitions with action overrides
- * import "reslib/resources/resources";
+ * import "reslib/resources";
  *
- * declare module "reslib/resources/resources" {
+ * declare module "reslib/resources" {
  *   interface FieldMap {
  *     text: FieldBase<"text", string> & {
  *       minLength?: number;
