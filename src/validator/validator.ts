@@ -1919,7 +1919,7 @@ export class Validator {
    *   @IsRequired()
    *   name: string;
    *
-   *   @ValidateNested([Address])
+   *   @ValidateNested(Address)
    *   address: Address;
    * }
    *
@@ -2477,7 +2477,7 @@ export class Validator {
    *   @IsEmail()
    *   email: string;
    *
-   *   @ValidateNested([Address])
+   *   @ValidateNested(Address)
    *   address: Address;
    * }
    *
@@ -2501,7 +2501,7 @@ export class Validator {
    *
    * // Now can be used by name in validation rules
    * class User {
-   *   @ValidateNested([Address])
+   *   @ValidateNested(Address)
    *   address: Address;
    * }
    * ```
@@ -3909,7 +3909,7 @@ export class Validator {
    *   @IsRequired()
    *   name: string;
    *
-   *   @ValidateNested([Address])
+   *   @ValidateNested(Address)
    *   address: Address;
    * }
    * ```
@@ -3962,7 +3962,7 @@ export class Validator {
    * **buildTargetRuleDecorator (Specialized):**
    * - Accepts specifically [TargetClass] as ruleParams
    * - Used for class-level nested validation
-   * - Examples: @ValidateNested([Address]), custom target validators
+   * - Examples: @ValidateNested(Address), custom target validators
    * - Rule params must contain a class constructor
    *
    * ### Implementation Details
