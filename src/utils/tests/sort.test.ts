@@ -695,6 +695,7 @@ describe('sortBy', () => {
 });
 
 // Stress testing and memory efficiency
+// eslint-disable-next-line jest/no-commented-out-tests
 /* describe('Stress Testing and Memory Efficiency', () => {
   test('handles million-element arrays', () => {
     const millionArray = Array.from({ length: 1000000 }, () =>
