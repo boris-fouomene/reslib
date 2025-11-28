@@ -540,22 +540,6 @@ describe('Validator.validateTarget() - Class Validation with Either Pattern', ()
       }
     });
 
-    it('should retrieve nested class target from metadata', async () => {
-      // This test demonstrates retrieving the nested class constructor
-      // using metadata instead of relying on string-based rule detection
-
-      class Contact {
-        email: string = '';
-      }
-
-      class Person {
-        name: string = '';
-
-        @ValidateNested(Contact)
-        contact: Contact = new Contact();
-      }
-    });
-
     it('should use metadata detection to ensure nested validation path', async () => {
       // This test verifies that metadata-based detection correctly identifies
       // properties requiring nested validation, providing an alternative to

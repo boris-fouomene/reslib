@@ -20,7 +20,7 @@ describe('Enum Validation Rules', () => {
     it('should pass for valid enum string values', async () => {
       const result = await Validator.validate({
         value: 'active',
-        rules: [{ Enum: [Status] }],
+        rules: [{ Enum: Object.values(Status) }],
       });
       expect(result.success).toBe(true);
     });
@@ -28,7 +28,7 @@ describe('Enum Validation Rules', () => {
     it('should pass for valid enum numeric values', async () => {
       const result = await Validator.validate({
         value: 2,
-        rules: [{ Enum: [Priority] }],
+        rules: [{ Enum: Object.values(Priority) }],
       });
       expect(result.success).toBe(true);
     });
@@ -36,55 +36,55 @@ describe('Enum Validation Rules', () => {
     it('should fail for invalid string values', async () => {
       const result = await Validator.validate({
         value: 'invalid',
-        rules: [{ Enum: [Status] }],
+        rules: [{ Enum: Object.values(Status) }],
       });
       expect(result.success).toBe(false);
-      expect((result as any).error?.message).toContain('enum');
+      expect((result as any).error?.message).toContain('must be one of');
     });
 
     it('should fail for invalid numeric values', async () => {
       const result = await Validator.validate({
         value: 99,
-        rules: [{ Enum: [Priority] }],
+        rules: [{ Enum: Object.values(Priority) }],
       });
       expect(result.success).toBe(false);
-      expect((result as any).error?.message).toContain('enum');
+      expect((result as any).error?.message).toContain('must be one of');
     });
 
     it('should fail for null', async () => {
       const result = await Validator.validate({
         value: null,
-        rules: [{ Enum: [Status] }],
+        rules: [{ Enum: Object.values(Status) }],
       });
       expect(result.success).toBe(false);
-      expect((result as any).error?.message).toContain('enum');
+      expect((result as any).error?.message).toContain('must be one of');
     });
 
     it('should fail for undefined', async () => {
       const result = await Validator.validate({
         value: undefined,
-        rules: [{ Enum: [Status] }],
+        rules: [{ Enum: Object.values(Status) }],
       });
       expect(result.success).toBe(false);
-      expect((result as any).error?.message).toContain('enum');
+      expect((result as any).error?.message).toContain('must be one of');
     });
 
     it('should fail for objects', async () => {
       const result = await Validator.validate({
         value: {},
-        rules: [{ Enum: [Status] }],
+        rules: [{ Enum: Object.values(Status) }],
       });
       expect(result.success).toBe(false);
-      expect((result as any).error?.message).toContain('enum');
+      expect((result as any).error?.message).toContain('must be one of');
     });
 
     it('should fail for arrays', async () => {
       const result = await Validator.validate({
         value: [],
-        rules: [{ Enum: [Status] }],
+        rules: [{ Enum: Object.values(Status) }],
       });
       expect(result.success).toBe(false);
-      expect((result as any).error?.message).toContain('enum');
+      expect((result as any).error?.message).toContain('must be one of');
     });
 
     it('should work with string enums', async () => {
@@ -100,7 +100,7 @@ describe('Enum Validation Rules', () => {
       for (const value of validValues) {
         const result = await Validator.validate({
           value,
-          rules: [{ Enum: [Color] }],
+          rules: [{ Enum: Object.values(Color) }],
         });
         expect(result.success).toBe(true);
       }
@@ -108,7 +108,7 @@ describe('Enum Validation Rules', () => {
       for (const value of invalidValues) {
         const result = await Validator.validate({
           value,
-          rules: [{ Enum: [Color] }],
+          rules: [{ Enum: Object.values(Color) }],
         });
         expect(result.success).toBe(false);
       }
@@ -127,7 +127,7 @@ describe('Enum Validation Rules', () => {
       for (const value of validValues) {
         const result = await Validator.validate({
           value,
-          rules: [{ Enum: [Size] }],
+          rules: [{ Enum: Object.values(Size) }],
         });
         expect(result.success).toBe(true);
       }
@@ -135,7 +135,7 @@ describe('Enum Validation Rules', () => {
       for (const value of invalidValues) {
         const result = await Validator.validate({
           value,
-          rules: [{ Enum: [Size] }],
+          rules: [{ Enum: Object.values(Size) }],
         });
         expect(result.success).toBe(false);
       }
@@ -154,7 +154,7 @@ describe('Enum Validation Rules', () => {
       for (const value of validValues) {
         const result = await Validator.validate({
           value,
-          rules: [{ Enum: [Mixed] }],
+          rules: [{ Enum: Object.values(Mixed) }],
         });
         expect(result.success).toBe(true);
       }
@@ -162,7 +162,7 @@ describe('Enum Validation Rules', () => {
       for (const value of invalidValues) {
         const result = await Validator.validate({
           value,
-          rules: [{ Enum: [Mixed] }],
+          rules: [{ Enum: Object.values(Mixed) }],
         });
         expect(result.success).toBe(false);
       }
@@ -174,7 +174,7 @@ describe('Enum Validation Rules', () => {
         rules: [{ Enum: ['not-an-enum'] }],
       });
       expect(result.success).toBe(false);
-      expect((result as any).error?.message).toContain('enum');
+      expect((result as any).error?.message).toContain('must be one of');
     });
 
     it('should fail when no enum provided', async () => {
@@ -183,13 +183,15 @@ describe('Enum Validation Rules', () => {
         rules: [{ Enum: [] }],
       });
       expect(result.success).toBe(false);
-      expect((result as any).error?.message).toContain('invalidRuleParams');
+      expect((result as any).error?.message).toContain(
+        'Invalid parameters for rule Enum'
+      );
     });
 
     // Decorator test
     it('should work with decorator for valid enum value', async () => {
       class TestClass {
-        @IsEnum(Status)
+        @IsEnum(...Object.values(Status))
         status!: Status;
       }
 
@@ -204,7 +206,7 @@ describe('Enum Validation Rules', () => {
 
     it('should work with decorator for valid string enum value', async () => {
       class TestClass {
-        @IsEnum(Status)
+        @IsEnum(...Object.values(Status))
         status!: Status;
       }
 
@@ -219,7 +221,7 @@ describe('Enum Validation Rules', () => {
 
     it('should work with decorator for valid numeric enum value', async () => {
       class TestClass {
-        @IsEnum(Priority)
+        @IsEnum(...Object.values(Priority))
         priority!: Priority;
       }
 
@@ -234,7 +236,7 @@ describe('Enum Validation Rules', () => {
 
     it('should fail with decorator for invalid enum value', async () => {
       class TestClass {
-        @IsEnum(Status)
+        @IsEnum(...Object.values(Status))
         status!: Status;
       }
 
@@ -245,7 +247,7 @@ describe('Enum Validation Rules', () => {
         data: instance,
       });
       expect(result.success).toBe(false);
-      expect((result as any).errors?.[0].message).toContain('enum');
+      expect((result as any).errors?.[0].message).toContain('must be one of');
     });
 
     // Edge cases
@@ -257,7 +259,7 @@ describe('Enum Validation Rules', () => {
 
       const result = await Validator.validate({
         value: 0,
-        rules: [{ Enum: [ZeroEnum] }],
+        rules: [{ Enum: Object.values(ZeroEnum) }],
       });
       expect(result.success).toBe(true);
     });
@@ -270,13 +272,13 @@ describe('Enum Validation Rules', () => {
 
       const result1 = await Validator.validate({
         value: '',
-        rules: [{ Enum: [EmptyStringEnum] }],
+        rules: [{ Enum: Object.values(EmptyStringEnum) }],
       });
       expect(result1.success).toBe(true);
 
       const result2 = await Validator.validate({
         value: 'value',
-        rules: [{ Enum: [EmptyStringEnum] }],
+        rules: [{ Enum: Object.values(EmptyStringEnum) }],
       });
       expect(result2.success).toBe(true);
     });
@@ -297,7 +299,7 @@ describe('Enum Validation Rules', () => {
 
       const result = await Validator.validate({
         value: 'val5',
-        rules: [{ Enum: [LargeEnum] }],
+        rules: [{ Enum: Object.values(LargeEnum) }],
       });
       expect(result.success).toBe(true);
     });

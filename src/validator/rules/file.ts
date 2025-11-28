@@ -5,6 +5,8 @@ import {
 } from '../types';
 import { Validator } from '../validator';
 
+import { isNonNullString } from '@utils/isNonNullString';
+import { isNumber } from '@utils/isNumber';
 import type { ValidatorRuleParams } from '../types';
 
 /**
@@ -615,15 +617,18 @@ function isFileLike(value: any): value is FileLike {
     }
     // eslint-disable-next-line no-empty
   } catch {}
-  return (
-    value &&
-    typeof value === 'object' &&
-    (typeof value.size === 'number' ||
-      typeof value.type === 'string' ||
-      typeof value.name === 'string' ||
-      typeof value.mimetype === 'string' ||
-      typeof value.originalname === 'string')
-  );
+
+  if (!value || typeof value !== 'object') return false;
+
+  // Count how many file-like properties are present
+  let score = 0;
+  if (isNumber(value.size) && value.size >= 0) score++;
+  if (isNonNullString(value.type) || isNonNullString(value.mimetype)) score++;
+  if (isNonNullString(value.name) || isNonNullString(value.originalname))
+    score++;
+
+  // Require at least 3 out of 3 core properties for strict validation
+  return score >= 3;
 }
 
 // Type definitions for file objects

@@ -84,6 +84,9 @@ export const IsEnum = Validator.buildRuleDecorator<
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const allInRules = (value: any, ruleParams: any[]): boolean => {
+  if (Array.isArray(value) && !value.length) {
+    return false;
+  }
   // Normalize input to array for uniform processing
   const values = Array.isArray(value) ? value : [value];
 
@@ -91,10 +94,15 @@ const allInRules = (value: any, ruleParams: any[]): boolean => {
   const strictSet = new Set(ruleParams);
 
   // Set for string-based comparison (filters out null/undefined first)
-  const stringSet = new Set(ruleParams.filter((v) => v != null).map(String));
+  const stringSet = new Set(ruleParams.filter((v) => v != null));
+  let hasChecked = false;
 
   // Verify every value exists in either set
-  return values.every((v) => strictSet.has(v) || stringSet.has(String(v)));
+  const check = values.every((v) => {
+    hasChecked = true;
+    return strictSet.has(v) || stringSet.has(String(v));
+  });
+  return hasChecked && check;
 };
 
 declare module '../types' {

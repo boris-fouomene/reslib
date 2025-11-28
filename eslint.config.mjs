@@ -77,6 +77,8 @@ export default [
       '@typescript-eslint/no-unused-vars': 'off',
       // Jest plugin handles unused vars in test contexts
       'no-unused-vars': 'off',
+      // Ensure duplicate test titles show as warnings
+      'jest/no-identical-title': 'warn',
     },
   },
   {

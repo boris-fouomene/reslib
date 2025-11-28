@@ -55,7 +55,9 @@ describe('File Validation Rules', () => {
           rules: ['File'],
         });
         expect(result.success).toBe(false);
-        expect((result as any).error?.message).toContain('file');
+        expect((result as any).error?.message).toContain(
+          'This field must be a valid file'
+        );
       }
     });
 
@@ -73,7 +75,9 @@ describe('File Validation Rules', () => {
           rules: ['File'],
         });
         expect(result.success).toBe(false);
-        expect((result as any).error?.message).toContain('file');
+        expect((result as any).error?.message).toContain(
+          'This field must be a valid file'
+        );
       }
     });
 
@@ -106,7 +110,9 @@ describe('File Validation Rules', () => {
         data: instance,
       });
       expect(result.success).toBe(false);
-      expect((result as any).errors?.[0].message).toContain('file');
+      expect((result as any).errors?.[0].message).toContain(
+        'must be a valid file'
+      );
     });
   });
 
@@ -134,7 +140,7 @@ describe('File Validation Rules', () => {
         rules: [{ MaxFileSize: [1024] }], // 1KB limit
       });
       expect(result.success).toBe(false);
-      expect((result as any).error?.message).toContain('maxFileSize');
+      expect((result as any).error?.message).toContain('must not exceed');
     });
 
     it('should fail for invalid parameters', async () => {
@@ -143,20 +149,22 @@ describe('File Validation Rules', () => {
         rules: [{ MaxFileSize: [-1] }],
       });
       expect(result.success).toBe(false);
-      expect((result as any).error?.message).toContain('invalidRuleParams');
+      expect((result as any).error?.message).toContain(
+        'Invalid parameters for rule'
+      );
     });
 
-    it('should fail for non-file objects', async () => {
+    it('should fail for non-file objects when using MaxFileSize', async () => {
       const result = await Validator.validate({
         value: 'not a file',
         rules: [{ MaxFileSize: [1024] }],
       });
       expect(result.success).toBe(false);
-      expect((result as any).error?.message).toContain('file');
+      expect((result as any).error?.message).toContain('must not exceed');
     });
 
     // Decorator test
-    it('should work with decorator', async () => {
+    it('should work with decorator for MaxFileSize', async () => {
       class TestClass {
         @IsFile()
         @MaxFileSize(2048)
@@ -186,7 +194,7 @@ describe('File Validation Rules', () => {
         data: instance,
       });
       expect(result.success).toBe(false);
-      expect((result as any).errors?.[0].message).toContain('maxFileSize');
+      expect((result as any).errors?.[0].message).toContain('must not exceed');
     });
   });
 
@@ -214,7 +222,7 @@ describe('File Validation Rules', () => {
         rules: [{ MinFileSize: [512] }], // 512B minimum
       });
       expect(result.success).toBe(false);
-      expect((result as any).error?.message).toContain('minFileSize');
+      expect((result as any).error?.message).toContain('must be at least');
     });
 
     it('should fail for invalid parameters', async () => {
@@ -223,11 +231,13 @@ describe('File Validation Rules', () => {
         rules: [{ MinFileSize: [-1] }],
       });
       expect(result.success).toBe(false);
-      expect((result as any).error?.message).toContain('invalidRuleParams');
+      expect((result as any).error?.message).toContain(
+        'Invalid parameters for rule'
+      );
     });
 
     // Decorator test
-    it('should work with decorator', async () => {
+    it('should work with decorator for MinFileSize', async () => {
       class TestClass {
         @IsFile()
         @MinFileSize(512)
@@ -257,7 +267,7 @@ describe('File Validation Rules', () => {
         data: instance,
       });
       expect(result.success).toBe(false);
-      expect((result as any).errors?.[0].message).toContain('minFileSize');
+      expect((result as any).errors?.[0].message).toContain('must be at least');
     });
   });
 
@@ -276,7 +286,7 @@ describe('File Validation Rules', () => {
         rules: [{ FileType: ['text/plain'] }],
       });
       expect(result.success).toBe(false);
-      expect((result as any).error?.message).toContain('fileType');
+      expect((result as any).error?.message).toContain('following types');
     });
 
     it('should work with multiple allowed types', async () => {
@@ -293,20 +303,22 @@ describe('File Validation Rules', () => {
         rules: [{ FileType: [] }],
       });
       expect(result.success).toBe(false);
-      expect((result as any).error?.message).toContain('invalidRuleParams');
+      expect((result as any).error?.message).toContain('Invalid parameters');
     });
 
-    it('should fail for non-file objects', async () => {
+    it('should fail for non-file objects when using IsFileType', async () => {
       const result = await Validator.validate({
         value: 'not a file',
         rules: [{ FileType: ['text/plain'] }],
       });
       expect(result.success).toBe(false);
-      expect((result as any).error?.message).toContain('file');
+      expect((result as any).error?.message).toContain(
+        'the following types: text/plain'
+      );
     });
 
     // Decorator test
-    it('should work with decorator', async () => {
+    it('should work with decorator for IsFileType', async () => {
       class TestClass {
         @IsFile()
         @IsFileType('text/plain', 'application/pdf')
@@ -336,7 +348,7 @@ describe('File Validation Rules', () => {
         data: instance,
       });
       expect(result.success).toBe(false);
-      expect((result as any).errors?.[0].message).toContain('fileType');
+      expect((result as any).errors?.[0].message).toContain('following types');
     });
   });
 
@@ -362,13 +374,13 @@ describe('File Validation Rules', () => {
       expect((result as any).error?.message).toContain('image');
     });
 
-    it('should fail for non-file objects', async () => {
+    it('should fail for non-file objects when using IsImage', async () => {
       const result = await Validator.validate({
         value: 'not a file',
         rules: ['Image'],
       });
       expect(result.success).toBe(false);
-      expect((result as any).error?.message).toContain('file');
+      expect((result as any).error?.message).toContain('valid image file');
     });
 
     // Decorator test
@@ -430,7 +442,7 @@ describe('File Validation Rules', () => {
         rules: [{ FileExtension: ['txt', 'pdf'] }],
       });
       expect(result.success).toBe(false);
-      expect((result as any).error?.message).toContain('fileExtension');
+      expect((result as any).error?.message).toContain('following extensions');
     });
 
     it('should work with multiple allowed extensions', async () => {
@@ -448,7 +460,7 @@ describe('File Validation Rules', () => {
         rules: [{ FileExtension: ['txt'] }],
       });
       expect(result.success).toBe(false);
-      expect((result as any).error?.message).toContain('fileExtension');
+      expect((result as any).error?.message).toContain('following extensions');
     });
 
     it('should fail for empty allowed extensions array', async () => {
@@ -457,20 +469,22 @@ describe('File Validation Rules', () => {
         rules: [{ FileExtension: [] }],
       });
       expect(result.success).toBe(false);
-      expect((result as any).error?.message).toContain('invalidRuleParams');
+      expect((result as any).error?.message).toContain(
+        'for rule FileExtension'
+      );
     });
 
-    it('should fail for non-file objects', async () => {
+    it('should fail for non-file objects when using IsFileExtension', async () => {
       const result = await Validator.validate({
         value: 'not a file',
         rules: [{ FileExtension: ['txt'] }],
       });
       expect(result.success).toBe(false);
-      expect((result as any).error?.message).toContain('file');
+      expect((result as any).error?.message).toContain('following extensions');
     });
 
     // Decorator test
-    it('should work with decorator', async () => {
+    it('should work with decorator for IsFileExtension', async () => {
       class TestClass {
         @IsFile()
         @IsFileExtension('txt', 'pdf')
@@ -500,7 +514,25 @@ describe('File Validation Rules', () => {
         data: instance,
       });
       expect(result.success).toBe(false);
-      expect((result as any).errors?.[0].message).toContain('fileExtension');
+      expect((result as any).errors?.[0].message).toContain(
+        'following extensions'
+      );
+    });
+
+    it('should work with decorator for IsFileExtension2', async () => {
+      class TestClass {
+        @IsFile()
+        @IsFileExtension('txt', 'pdf')
+        uploadedFile: any;
+      }
+
+      const instance = new TestClass();
+      instance.uploadedFile = textFile;
+
+      const result = await Validator.validateTarget(TestClass, {
+        data: instance,
+      });
+      expect(result.success).toBe(true);
     });
   });
 
