@@ -20,7 +20,6 @@ import { isNonNullString } from './isNonNullString';
 export function defaultStr(...args: any[]): string {
   for (var i in args) {
     const v = args[i];
-
     if (isNonNullString(v)) {
       return v;
     }

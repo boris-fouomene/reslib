@@ -979,7 +979,7 @@ describe('Format Validation Rules', () => {
         rules: [{ Matches: ['[invalid'] }],
       });
       expect(result.success).toBe(false);
-      expect((result as any).error?.message).toContain('invalidRuleParams');
+      expect((result as any).error?.message).toContain('field must match');
     });
 
     it('should fail for empty pattern array', async () => {
@@ -988,7 +988,7 @@ describe('Format Validation Rules', () => {
         rules: [{ Matches: [/abc/] }],
       });
       expect(result.success).toBe(false);
-      expect((result as any).error?.message).toContain('invalidRuleParams');
+      expect((result as any).error?.message).toContain('field must match');
     });
 
     // Decorator test
@@ -1020,7 +1020,9 @@ describe('Format Validation Rules', () => {
         data: instance,
       });
       expect(result.success).toBe(false);
-      expect((result as any).errors?.[0].message).toContain('matches');
+      expect((result as any).errors?.[0].message).toContain(
+        'must match the patter'
+      );
     });
   });
 });

@@ -3,6 +3,7 @@ import { CountryCode } from '@countries/types';
 import { defaultStr } from '@utils/defaultStr';
 import { isEmail, IsEmailOptions } from '@utils/isEmail';
 import { isNonNullString } from '@utils/isNonNullString';
+import { isRegExp } from '@utils/isRegex';
 import { isUrl, IsUrlOptions } from '@utils/uri';
 import type { ValidatorRuleParams, ValidatorRuleParamTypes } from '../types';
 import { ValidatorResult, ValidatorValidateOptions } from '../types';
@@ -2262,7 +2263,7 @@ export const IsMACAddress = Validator.buildRuleDecorator<
  * #### Internationalization Support
  *
  * Error messages are fully internationalized and can be customized through the validator's i18n system.
- * Supports both default error key `'validator.regex'` and custom error message keys.
+ * Supports both default error key `'validator.matches'` and custom error message keys.
  * The default error key supports interpolation with field names, values, and pattern information.
  *
  * #### Common Validation Scenarios
@@ -2354,7 +2355,7 @@ export const Matches = Validator.buildRuleDecorator<
   ...rest
 }): ValidatorResult {
   if (typeof value !== 'string') {
-    const message = i18n.t('validator.regex', {
+    const message = i18n.t('validator.matches', {
       field: translatedPropertyName || fieldName,
       value,
       pattern: ruleParams?.[0] || '',
@@ -2362,31 +2363,30 @@ export const Matches = Validator.buildRuleDecorator<
     });
     return message;
   }
-
-  if (!ruleParams || !ruleParams[0]) {
-    const message = i18n.t('validator.invalidRuleParams', {
+  const regexRule = Array.isArray(ruleParams) ? ruleParams[0] : null;
+  if (!regexRule || !isRegExp(regexRule)) {
+    return i18n.t('validator.invalidRuleParams', {
       rule: 'Matches',
       field: translatedPropertyName || fieldName,
       ruleParams,
       ...rest,
     });
-    return message;
   }
   const options = Object.assign({}, ruleParams[1]);
-  const messageParams = defaultStr(options.message).trim();
+  const customMessage = defaultStr(options.message).trim();
   const translatedMessage = defaultStr(
-    messageParams ? i18n.getNestedTranslation(messageParams) : ''
+    customMessage ? i18n.getNestedTranslation(customMessage) : ''
   ).trim();
-  const message =
-    translatedMessage ??
-    i18n.t('validator.regex', {
-      field: translatedPropertyName || fieldName,
-      value,
-      pattern: ruleParams[0],
-      ...rest,
-    });
+  const message = isNonNullString(translatedMessage)
+    ? translatedMessage
+    : i18n.t('validator.matches', {
+        field: translatedPropertyName || fieldName,
+        value,
+        pattern: regexRule,
+        ...rest,
+      });
   try {
-    const regex = new RegExp(ruleParams[0]);
+    const regex = new RegExp(regexRule);
     return regex.test(value) ? true : message;
     // eslint-disable-next-line no-empty, @typescript-eslint/no-unused-vars
   } catch (error) {}

@@ -12,8 +12,11 @@ import type { ValidatorRuleParams } from '../types';
 /**
  * @summary A validation decorator that ensures a property contains a valid file object.
  * @description
- * Validates that the decorated property represents a file-like object with properties
- * such as size, type, name, etc. Supports both browser File objects and server-side file representations.
+ * Validates that the decorated property represents a file-like object with valid properties:
+ * - Size must be a non-negative number
+ * - Type must be a non-empty string
+ * - Name must be a non-empty string
+ * Supports both browser File objects and server-side file representations (e.g., Multer files with mimetype/originalname).
  *
  * @example
  * ```typescript
@@ -24,6 +27,8 @@ import type { ValidatorRuleParams } from '../types';
  *
  * const form = new UploadForm();
  * form.document = new File(['content'], 'test.txt'); // ✓ Valid
+ * form.document = { name: 'test.txt', size: 1024, type: 'text/plain' }; // ✓ Valid
+ * form.document = { name: '', size: 1024, type: 'text/plain' }; // ✗ Invalid (empty name)
  * form.document = 'not a file'; // ✗ Invalid
  * ```
  *
@@ -412,8 +417,11 @@ declare module '../types' {
     /**
      * @summary Validates that the field contains a valid file object.
      * @description
-     * Ensures the input represents a file-like object with properties such as size, type, name, etc.
-     * Accepts both browser File objects and server-side file representations (e.g., Multer files).
+     * Ensures the input represents a file-like object with valid properties:
+     * - Size must be a non-negative number
+     * - Type must be a non-empty string
+     * - Name must be a non-empty string
+     * Accepts both browser File objects and server-side file representations (e.g., Multer files with mimetype/originalname).
      *
      * @example
      * ```typescript
@@ -429,6 +437,11 @@ declare module '../types' {
      * }); // ✓ Valid
      *
      * // Invalid inputs
+     * await Validator.validate({
+     *   value: { name: '', size: 1024, type: 'text/plain' },
+     *   rules: ['File']
+     * }); // ✗ Invalid (empty name)
+     *
      * await Validator.validate({
      *   value: 'not a file',
      *   rules: ['File']

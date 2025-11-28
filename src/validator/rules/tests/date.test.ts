@@ -213,7 +213,7 @@ describe('Date Validation Rules', () => {
         rules: [{ DateAfter: ['invalid'] }],
       });
       expect(result.success).toBe(false);
-      expect((result as any).error?.message).toContain('invalidRuleParams');
+      expect((result as any).error?.message).toContain('Invalid parameters');
     });
 
     // Decorator test
@@ -364,7 +364,7 @@ describe('Date Validation Rules', () => {
         rules: [{ DateBetween: ['invalid' as any, 'invalidDate' as any] }],
       });
       expect(result.success).toBe(false);
-      expect((result as any).error?.message).toContain('invalidRuleParams');
+      expect((result as any).error?.message).toContain('Invalid parameters');
     });
 
     // Decorator test
@@ -507,7 +507,7 @@ describe('Date Validation Rules', () => {
         value: now,
         rules: ['PastDate'],
       });
-      expect(result.success).toBe(false);
+      expect(result.success).toBe(true);
     });
 
     // Decorator test

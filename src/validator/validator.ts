@@ -1538,8 +1538,13 @@ export class Validator {
             return resolve(
               createFailureResult(error, successOrErrorData, startTime)
             );
+          } else if (
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          } else if ((result as any) instanceof Error) {
+            (result as any) instanceof Error ||
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            isNonNullString((result as any)?.message) ||
+            isNonNullString(result)
+          ) {
             const error = createValidationError(stringify(result), {
               value,
               ruleName,
@@ -1839,9 +1844,9 @@ export class Validator {
         propertyName: defaultStr(propertyName, fieldName),
         fieldName,
       };
-    if ('data' in rest && rest.data !== undefined) {
+    /* if ('data' in rest && rest.data !== undefined) {
       r.data = rest.data;
-    }
+    } */
     if ('value' in rest) {
       r.value = rest.value;
     }

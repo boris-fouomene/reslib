@@ -442,7 +442,7 @@ export class DateHelper {
   /**
    * Checks if the provided variable is a valid date, either in SQL format or as a Date object.
    *
-   * @param {string|Date} sDate The date to test.
+   * @param {string|Date|number} sDate The date to test.
    * @param {string} [format] The format of the date, using Moment.js format. See https://momentjs.com/docs/#/parsing/string-format/
    * @returns {boolean} True if the date is valid, false otherwise.
    */
@@ -458,6 +458,11 @@ export class DateHelper {
      * If the input is already a Date object, it's a valid date.
      */
     if (DateHelper.isDateObj(sDate)) return true;
+
+    if (isNumber(sDate)) {
+      const d = new Date(sDate);
+      return d && !isNaN(d.getTime());
+    }
 
     /**
      * If the input is a non-empty string, try to parse it as a date.

@@ -470,11 +470,13 @@ export class I18n extends I18nJs implements Observable<I18nEvent> {
     locale?: string
   ): string | Dictionary | undefined {
     locale = defaultStr(locale, this.getLocale());
-    const scopeArray = isNonNullString(scope)
-      ? scope.trim().split('.')
-      : Array.isArray(scope)
-        ? scope
-        : [];
+    const scopeArray = (
+      isNonNullString(scope)
+        ? scope.trim().split('.')
+        : Array.isArray(scope)
+          ? scope
+          : []
+    ).filter(isNonNullString);
     if (!scopeArray.length) return undefined;
     let result = this.getTranslations(locale);
     for (const k of scopeArray) {
