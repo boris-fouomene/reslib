@@ -566,7 +566,7 @@ export class Validator {
    * // Using separators in validation result processing
    * const result = await Validator.validate({
    *   value: '',
-   *   rules: ['Required', 'Email', 'MinLength[5]'],
+   *   rules: ['Required', 'Email'],
    *   fieldName: 'userEmail'
    * });
    *
@@ -675,13 +675,13 @@ export class Validator {
    * 'IsNumber'                    // Type checking
    *
    * // Rules with single parameter
-   * 'MinLength[5]'               // Minimum length validation
-   * 'MaxLength[100]'             // Maximum length validation
-   * 'GreaterThan[0]'             // Numeric comparison
+   * 'MinLength'               // Minimum length validation
+   * 'MaxLength'             // Maximum length validation
+   * 'GreaterThan'             // Numeric comparison
    *
    * // Rules with multiple parameters
-   * 'Between[10,20]'             // Range validation (inclusive)
-   * 'InArray["option1","option2","option3"]'  // Value enumeration
+   * 'Between'             // Range validation (inclusive)
+   * 'InArray'  // Value enumeration
    * 'Matches[/^[A-Z]{2}\d{6}$/]' // Regex pattern matching
    * ```
    *
@@ -744,7 +744,6 @@ export class Validator {
    * // Mixed rule formats with validation
    * const mixedRules = [
    *   'Required',                           // String rule
-   *   'MinLength[3]',                      // Parameterized string rule
    *   { MaxLength: [50] },                 // Object rule
    *   ({ value }) => value.includes('@') || 'Must contain @', // Function rule
    *   'InvalidRule',                       // Will be reported as invalid
@@ -933,16 +932,6 @@ export class Validator {
    * ```
    *
    * #### Current Limitations
-   * ```typescript
-   * // These currently don't parse parameters (bracket notation commented out)
-   * const minLengthRule = Validator.parseStringRule("MinLength[5]", registeredRules);
-   * // Returns: null (looks for rule named "MinLength[5]")
-   *
-   * // Use object notation instead for parameters
-   * const objectRule = { MinLength: [5] };
-   * const parsedObject = Validator.parseObjectRule(objectRule, registeredRules);
-   * // Returns: [{ ruleName: "MinLength", params: [5], ruleFunction: fn, rawRuleName: "MinLength" }]
-   * ```
    *
    * #### Integration with Validation Pipeline
    * ```typescript
@@ -1251,7 +1240,7 @@ export class Validator {
    *
    * ### Rule Format Support
    * Accepts rules in multiple formats with automatic parameter extraction:
-   * - **String Rules**: `"Email"`, `"Required"`, `"MinLength[5]"`
+   * - **String Rules**: `"Email"`, `"Required"`
    * - **Function Rules**: Direct validator functions with optional parameters
    * - **Object Rules**: `{ ruleFunction, params, ruleName }` structured objects
    *
@@ -1304,7 +1293,7 @@ export class Validator {
    * // Optional allows undefined only
    * const result3 = await Validator.validate({
    *   value: undefined,
-   *   rules: ["Optional", "MinLength[5]"],
+   *   rules: ["Optional"],
    * });
    * // result3.success === true (skips MinLength check)
    * ```

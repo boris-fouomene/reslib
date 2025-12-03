@@ -128,7 +128,7 @@ export type ValidatorResult = ValidatorSyncResult | ValidatorAsyncResult;
  * ```typescript
  * const rules: ValidatorRules = [
  *   "Required",                    // Named rule
- *   "MinLength[3]",               // Parameterized rule
+ *   "MinLength",               // Parameterized rule
  *   { MaxLength: [50] },          // Object rule
  *   ({ value }) => value !== "",  // Function rule
  * ];
@@ -153,7 +153,7 @@ export type ValidatorResult = ValidatorSyncResult | ValidatorAsyncResult;
  * // Multiple rules validation
  * const multiResult = await Validator.validate({
  *   value: "hello",
- *   rules: ["Required", "MinLength[3]", { MaxLength: [10] }],  // ValidatorRule[]
+ *   rules: ["Required", "MinLength", { MaxLength: [10] }],  // ValidatorRule[]
  * });
  * ```
  *
@@ -197,7 +197,7 @@ export type ValidatorResult = ValidatorSyncResult | ValidatorAsyncResult;
  * ```typescript
  * const comprehensiveRules: ValidatorRules = [
  *   "Required",           // Built-in
- *   "MinLength[3]",      // Parameterized
+ *   "MinLength",      // Parameterized
  *   { Email: [] },       // Object (type-safe)
  *   ({ value, context }) => {  // Custom function
  *     return context?.allowSpecialChars || !/[!@#$%]/.test(value);
@@ -210,7 +210,7 @@ export type ValidatorResult = ValidatorSyncResult | ValidatorAsyncResult;
  * ```typescript
  * // These will throw validation errors:
  * const invalid1 = "UnknownRule";        // Rule doesn't exist
- * const invalid2 = "MinLength[abc]";     // Invalid parameter type
+ * const invalid2 = "MinLength";     // Invalid parameter type
  * const invalid3 = { UnknownRule: [] };  // Unknown rule name
  * ```
  *
@@ -228,7 +228,7 @@ export type ValidatorResult = ValidatorSyncResult | ValidatorAsyncResult;
  *
  * const userValidationRules: UserRules = [
  *   "Required",
- *   "MinLength[2]",
+ *   "MinLength",
  *   { MaxLength: [50] },
  *   ({ value }) => !/\s/.test(value),  // No spaces
  * ];
@@ -293,7 +293,7 @@ export type ValidatorOptionalOrEmptyRuleNames =
  * ### Purpose
  * Provides compile-time type safety for determining whether validation rule parameter tuples
  * support empty invocation. This is crucial for distinguishing between rules that require
- * parameters (like `MinLength[5]`) and rules that can be called without them (like `Required`).
+ * parameters (like `MinLength`) and rules that can be called without them (like `Required`).
  *
  * ### Type Logic
  * The type uses conditional type checking to evaluate tuple structures:
@@ -626,14 +626,14 @@ export type ValidatorSanitizedRule<
  * ### Usage in Validation Pipeline
  * ```typescript
  * // Raw rule input
- * const rawRule = "MinLength[8]";
+ * const rawRule = "MinLength";
  *
  * // After parsing/sanitization
  * const sanitizedRule: ValidatorSanitizedRuleObject = {
  *   ruleName: "MinLength",
  *   params: [8],
  *   ruleFunction: minLengthFunction,
- *   rawRuleName: "MinLength[8]"
+ *   rawRuleName: "MinLength"
  * };
  *
  * // During validation
@@ -683,7 +683,6 @@ export interface ValidatorSanitizedRuleObject<
    * The parameters extracted from the rule specification
    *
    * Array of values that were parsed from the rule's parameter brackets.
-   * For example, "MinLength[5,10]" would result in `[5, 10]`.
    * Empty array for rules that don't take parameters.
    *
    * @type {TParams}
@@ -814,7 +813,6 @@ export type ValidatorRuleFunction<
  *
  * ### Purpose
  * This type enables validation rules to accept parameters in multiple formats:
- * - Regular arrays: `[minLength: number]` for `MinLength[5]`
  * - Readonly arrays: `readonly [minLength: number]` for const assertions
  * - Empty parameters: `[]` for rules like `Required` that take no parameters
  *
@@ -1071,9 +1069,6 @@ export type ValidatorRuleName = keyof ValidatorRuleParamTypes & string;
  *
  * ### Parameter Type Patterns
  * - **Empty Arrays `[]`**: Rules that take no parameters (e.g., "Required", "Email")
- * - **Single Parameters `[Type]`**: Rules with one required parameter (e.g., "MinLength[number]")
- * - **Optional Parameters `[Type?]`**: Rules with optional parameters (e.g., "PhoneNumber[string?]")
- * - **Multiple Parameters `[Type1, Type2]`**: Rules with multiple required parameters
  * - **Complex Parameters**: Rules with mixed required/optional parameters
  *
  * ### Usage in Type System

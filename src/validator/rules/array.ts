@@ -682,7 +682,7 @@ declare module '../types' {
      * ### Parameter Structure
      * - **Single parameter**: `ValidatorRuleParams<[minLength: number]>`
      * - **Parameter type**: `number` (minimum length required)
-     * - **Rule syntax**: `"ArrayMinLength[5]"` (minimum 5 elements)
+     * - **Rule syntax**: `"ArrayMinLength"` (minimum 5 elements)
      *
      * ### Usage Examples
      *
