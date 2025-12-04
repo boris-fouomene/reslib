@@ -21,6 +21,8 @@ export * from './sort';
 export { stringify } from './stringify';
 export { uniqid } from './uniqid';
 export * from './uri';
+export * from './isHexadecimal';
+export * from './isMongoId';
 
 export * from './global';
 export * from './isEmail';
