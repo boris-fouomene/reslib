@@ -5,6 +5,13 @@ import '../translations';
 import { Auth } from './index';
 import { AuthPerm, AuthPerms, AuthUser } from './types';
 
+declare module './types' {
+  interface AuthUser {
+    id: string | number;
+    email?: string;
+    username?: string;
+  }
+}
 declare module '@resources/types' {
   interface Resources {
     documents: {
@@ -212,14 +219,12 @@ describe('Auth', () => {
       const testUser: AuthUser = {
         id: 'encrypted123',
         email: 'encrypted@example.com',
-        token: 'secret-token',
       };
 
       await Auth.setSignedUser(testUser, false);
       const retrievedUser = Auth.getSignedUser();
 
       expect(retrievedUser).toEqual(testUser);
-      expect(retrievedUser?.token).toBe('secret-token');
     });
 
     it('should clear cache when user is signed out', async () => {
@@ -363,7 +368,6 @@ describe('Auth', () => {
         id: 'complex123',
         email: 'complex@example.com',
         username: 'complexuser',
-        token: 'bearer-token-123',
         perms: {
           documents: ['read', 'create', 'update'],
           users: ['read'],
@@ -426,10 +430,8 @@ describe('Auth', () => {
     });
 
     it('should clear session data completely', async () => {
-      const testUser: AuthUser = { id: 'cleanup123', token: 'test-token' };
+      const testUser: AuthUser = { id: 'cleanup123' };
       await Auth.signIn(testUser, false);
-
-      // Verify user and token are stored
       expect(Auth.getSignedUser()).toEqual(testUser);
       expect(Session.get('user-session')).toBeDefined();
 
@@ -1173,7 +1175,6 @@ describe('Auth', () => {
       const user: AuthUser = {
         id: 'persistent123',
         email: 'persistent@example.com',
-        token: 'persistent-token',
       };
 
       // Sign in and store session
@@ -1185,7 +1186,6 @@ describe('Auth', () => {
       // Should reload from session storage
       const reloadedUser = Auth.getSignedUser();
       expect(reloadedUser).toEqual(user);
-      expect(reloadedUser?.token).toBe('persistent-token');
     });
   });
 });

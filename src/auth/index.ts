@@ -129,7 +129,9 @@ class Session {
    * const sessionKey = getKey(); // Returns: 'auth--'
    */
   static getKey(sessionName?: string) {
-    return `auth-${stringify(Auth.getSignedUser()?.id)}-${sessionName || ''}`;
+    const user = Auth.getSignedUser();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return `auth-${stringify((user as any)?.id || (user as any)?.email)}-${sessionName || ''}`;
   }
   /**
    * Retrieves session data associated with a specific session name.

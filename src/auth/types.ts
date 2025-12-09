@@ -69,8 +69,8 @@ import { Dictionary } from '../types/dictionary';
  * @see {@link AuthRole} for the `AuthRole` interface.
  */
 
-export interface AuthUser extends Dictionary {
-  id: string | number | object;
+export interface AuthUser {
+  //id: string | number | object;
   sessionCreatedAt?: number;
   perms?: AuthPerms;
 
