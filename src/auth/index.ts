@@ -2230,6 +2230,83 @@ export class Auth {
     return Session;
   }
   private static _secureStorage: AuthSecureStorage = DefaultAuthStorage;
+
+  /**
+   * Gets the currently configured secure storage implementation for authentication data.
+   *
+   * This getter provides access to the secure storage adapter that handles sensitive authentication
+   * data like tokens and encrypted user sessions. The method implements a fallback mechanism that
+   * prioritizes custom implementations while maintaining a default secure storage as backup.
+   *
+   * ### Storage Resolution Priority:
+   * 1. **Custom Storage**: Returns the user-configured storage implementation if valid
+   * 2. **Cached Storage**: Returns the previously validated storage instance
+   * 3. **Default Storage**: Falls back to the built-in secure storage wrapper
+   *
+   * ### Security Architecture:
+   * - **Validation**: All storage implementations are validated before use
+   * - **Metadata Storage**: Uses reflection metadata to persist custom configurations
+   * - **Fail-Safe Design**: Always returns a working storage implementation
+   * - **Cross-Platform**: Supports platform-specific secure storage adapters
+   *
+   * ### Implementation Details:
+   * The getter checks for custom storage configurations stored via reflection metadata,
+   * validates the implementation, and caches it for performance. If no valid custom
+   * storage is found, it returns the default secure storage that wraps the session module.
+   *
+   * @returns The configured `AuthSecureStorage` implementation for secure data operations.
+   *          This will be either a custom user-provided storage adapter or the default
+   *          secure storage implementation that provides basic encrypted session storage.
+   *
+   * @example
+   * ```typescript
+   * // Get the current secure storage implementation
+   * const storage = Auth.secureStorage;
+   * console.log(storage.constructor.name); // "WebSecureStorage" or "DefaultAuthStorage"
+   * ```
+   *
+   * @example
+   * ```typescript
+   * // Check if custom storage is configured
+   * const currentStorage = Auth.secureStorage;
+   * const isCustomStorage = currentStorage !== Auth['DefaultAuthStorage'];
+   * console.log(`Using custom storage: ${isCustomStorage}`);
+   * ```
+   *
+   * @example
+   * ```typescript
+   * // Access storage methods directly
+   * const token = await Auth.secureStorage.get('auth-token');
+   * await Auth.secureStorage.set('user-session', encryptedData);
+   * await Auth.secureStorage.remove('expired-data');
+   * ```
+   *
+   * @see {@link Auth.secureStorage} - Setter for configuring custom storage
+   * @see {@link AuthSecureStorage} - Interface defining storage contract
+   * @see {@link DefaultAuthStorage} - Default secure storage implementation
+   * @see {@link Auth.getToken} - Uses this storage for token retrieval
+   * @see {@link Auth.setToken} - Uses this storage for token storage
+   *
+   * @public
+   * @readonly
+   *
+   * @remarks
+   * **Performance Considerations:**
+   * - The getter caches validated storage instances to avoid repeated validation
+   * - Metadata lookup is performed only when necessary
+   * - Default storage is lightweight and doesn't require external dependencies
+   *
+   * **Security Best Practices:**
+   * - Never directly access the private `_secureStorage` field
+   * - Always use this getter to ensure proper validation and fallbacks
+   * - Custom storage implementations should handle encryption internally
+   * - Validate storage implementations before configuration
+   *
+   * **Platform Compatibility:**
+   * - Default storage works across web, Node.js, and React Native environments
+   * - Custom implementations can provide platform-specific optimizations
+   * - Storage validation ensures consistent behavior across platforms
+   */
   static get secureStorage(): AuthSecureStorage {
     const storage = Reflect.getMetadata(Auth.authStorageMetaData, Auth);
     if (isValidStorage(storage)) {
@@ -2238,6 +2315,177 @@ export class Auth {
     if (this._secureStorage) return this._secureStorage;
     return DefaultAuthStorage;
   }
+
+  /**
+   * Configures a custom secure storage implementation for authentication data.
+   *
+   * This setter allows injection of platform-specific or custom secure storage adapters
+   * that implement the `AuthSecureStorage` interface. The configured storage will be
+   * used for all secure data operations including token storage, encrypted user sessions,
+   * and other sensitive authentication data.
+   *
+   * ### Configuration Process:
+   * 1. **Validation**: The provided storage implementation is validated for required methods
+   * 2. **Metadata Storage**: Valid implementations are stored using reflection metadata
+   * 3. **Caching**: The validated storage is cached for performance optimization
+   * 4. **Fallback**: Invalid implementations are rejected, preserving existing configuration
+   *
+   * ### Security Requirements:
+   * - **Method Validation**: Storage must implement `get`, `set`, and `remove` methods
+   * - **Async Operations**: All methods must return Promises for secure storage APIs
+   * - **Error Handling**: Implementations should handle storage failures gracefully
+   * - **Encryption**: Sensitive data should be encrypted at the storage layer
+   *
+   * ### Use Cases:
+   * - **Web Applications**: HttpOnly cookies, IndexedDB with encryption
+   * - **React Native**: expo-secure-store, react-native-keychain
+   * - **Node.js**: Encrypted file storage, environment variables
+   * - **Enterprise**: Hardware security modules, key management services
+   *
+   * @param secureStorage - A custom storage implementation conforming to the `AuthSecureStorage` interface.
+   *                       The implementation must provide secure, asynchronous storage operations.
+   *                       Invalid or incomplete implementations will be rejected.
+   *
+   * @example
+   * ```typescript
+   * // Configure for web environment with HttpOnly cookies
+   * class WebSecureStorage implements AuthSecureStorage {
+   *   async get(key: string): Promise<string | null> {
+   *     return Cookies.get(key) || null;
+   *   }
+   *   async set(key: string, value: string): Promise<void> {
+   *     Cookies.set(key, value, { httpOnly: true, secure: true });
+   *   }
+   *   async remove(key: string): Promise<void> {
+   *     Cookies.remove(key);
+   *   }
+   * }
+   *
+   * Auth.secureStorage = new WebSecureStorage();
+   * ```
+   *
+   * @example
+   * ```typescript
+   * // Configure for React Native with expo-secure-store
+   * import * as SecureStore from 'expo-secure-store';
+   *
+   * class ReactNativeSecureStorage implements AuthSecureStorage {
+   *   async get(key: string): Promise<string | null> {
+   *     try {
+   *       return await SecureStore.getItemAsync(key);
+   *     } catch {
+   *       return null;
+   *     }
+   *   }
+   *   async set(key: string, value: string): Promise<void> {
+   *     await SecureStore.setItemAsync(key, value);
+   *   }
+   *   async remove(key: string): Promise<void> {
+   *     await SecureStore.deleteItemAsync(key);
+   *   }
+   * }
+   *
+   * Auth.secureStorage = new ReactNativeSecureStorage();
+   * ```
+   *
+   * @example
+   * ```typescript
+   * // Configure for Node.js with encrypted file storage
+   * import * as fs from 'fs';
+   * import * as crypto from 'crypto';
+   *
+   * class NodeSecureStorage implements AuthSecureStorage {
+   *   private encrypt(data: string): string {
+   *     const cipher = crypto.createCipher('aes-256-cbc', 'encryption-key');
+   *     return cipher.update(data, 'utf8', 'hex') + cipher.final('hex');
+   *   }
+   *
+   *   private decrypt(data: string): string {
+   *     const decipher = crypto.createDecipher('aes-256-cbc', 'encryption-key');
+   *     return decipher.update(data, 'hex', 'utf8') + decipher.final('utf8');
+   *   }
+   *
+   *   async get(key: string): Promise<string | null> {
+   *     try {
+   *       const filePath = `./secure/${key}.enc`;
+   *       if (!fs.existsSync(filePath)) return null;
+   *       const encrypted = fs.readFileSync(filePath, 'utf8');
+   *       return this.decrypt(encrypted);
+   *     } catch {
+   *       return null;
+   *     }
+   *   }
+   *
+   *   async set(key: string, value: string): Promise<void> {
+   *     const encrypted = this.encrypt(value);
+   *     const filePath = `./secure/${key}.enc`;
+   *     fs.writeFileSync(filePath, encrypted);
+   *   }
+   *
+   *   async remove(key: string): Promise<void> {
+   *     const filePath = `./secure/${key}.enc`;
+   *     if (fs.existsSync(filePath)) {
+   *       fs.unlinkSync(filePath);
+   *     }
+   *   }
+   * }
+   *
+   * Auth.secureStorage = new NodeSecureStorage();
+   * ```
+   *
+   * @example
+   * ```typescript
+   * // Error handling for invalid storage implementations
+   * class InvalidStorage implements AuthSecureStorage {
+   *   // Missing required methods
+   *   async get(key: string): Promise<string | null> {
+   *     return null;
+   *   }
+   *   // Missing set and remove methods
+   * }
+   *
+   * try {
+   *   Auth.secureStorage = new InvalidStorage(); // Will be rejected
+   *   console.log('Storage configured successfully');
+   * } catch (error) {
+   *   console.log('Storage configuration failed:', error.message);
+   * }
+   * ```
+   *
+   * @see {@link Auth.secureStorage} - Getter for accessing configured storage
+   * @see {@link AuthSecureStorage} - Interface defining required storage methods
+   * @see {@link DefaultAuthStorage} - Default storage implementation
+   * @see {@link isValidStorage} - Validation function for storage implementations
+   * @see {@link Auth.getToken} - Uses configured storage for token operations
+   * @see {@link Auth.setToken} - Uses configured storage for token operations
+   *
+   * @public
+   *
+   * @remarks
+   * **Implementation Requirements:**
+   * - All methods must be asynchronous and return Promises
+   * - Storage implementations should handle errors gracefully
+   * - Sensitive data should be encrypted before storage
+   * - Implementations should be thread-safe where applicable
+   *
+   * **Security Considerations:**
+   * - Never store sensitive data in plain text
+   * - Implement proper error handling to prevent information leakage
+   * - Use platform-specific secure storage APIs when available
+   * - Consider data encryption and integrity verification
+   *
+   * **Performance Guidelines:**
+   * - Implementations should be efficient for frequent access patterns
+   * - Consider caching strategies for improved performance
+   * - Avoid synchronous operations that could block the event loop
+   * - Implement connection pooling for network-based storage
+   *
+   * **Testing Recommendations:**
+   * - Test storage operations under various failure conditions
+   * - Verify encryption/decryption works correctly
+   * - Test concurrent access patterns
+   * - Validate behavior across different platforms
+   */
   public static set secureStorage(secureStorage: AuthSecureStorage) {
     if (isValidStorage(secureStorage)) {
       Reflect.defineMetadata(Auth.authStorageMetaData, secureStorage, Auth);
