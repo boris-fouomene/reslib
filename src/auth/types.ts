@@ -481,10 +481,10 @@ export interface AuthEventMap {
 export type AuthEvent = keyof AuthEventMap;
 
 /**
- * @interface AuthStorage
+ * @interface AuthSecureStorage
  * Interface for secure, cross-platform storage of authentication data.
  *
- * The `AuthStorage` interface abstracts storage operations to enable secure,
+ * The `AuthSecureStorage` interface abstracts storage operations to enable secure,
  * platform-specific implementations for storing sensitive data like user sessions
  * and tokens. This allows the library to work across web, React Native, Node.js,
  * and other environments by injecting appropriate storage adapters.
@@ -505,7 +505,7 @@ export type AuthEvent = keyof AuthEventMap;
  *
  * ```typescript
  * // Web implementation using HttpOnly cookies
- * class WebSecureStorage implements AuthStorage {
+ * class WebSecureStorage implements AuthSecureStorage {
  *   async get(key: string): Promise<string | null> {
  *     return Cookies.get(key) || null;
  *   }
@@ -518,7 +518,7 @@ export type AuthEvent = keyof AuthEventMap;
  * }
  *
  * // React Native implementation using expo-secure-store
- * class ReactNativeSecureStorage implements AuthStorage {
+ * class ReactNativeSecureStorage implements AuthSecureStorage {
  *   async get(key: string): Promise<string | null> {
  *     return await SecureStore.getItemAsync(key);
  *   }
@@ -531,14 +531,14 @@ export type AuthEvent = keyof AuthEventMap;
  * }
  *
  * // Configure Auth to use platform-specific storage
- * Auth.configure({ storage: new ReactNativeSecureStorage() });
+ * Auth.secureStorage = new ReactNativeSecureStorage();
  * ```
  *
  * @see {@link Auth.configure} - Method to inject storage implementation
  * @see {@link Auth.getToken} - Uses this interface for token storage
  * @see {@link Auth.setToken} - Uses this interface for token storage
  */
-export interface AuthStorage {
+export interface AuthSecureStorage {
   /**
    * Retrieves the value associated with the specified key.
    *

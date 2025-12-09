@@ -18,8 +18,8 @@ import {
   AuthEvent,
   AuthPerm,
   AuthPerms,
+  AuthSecureStorage,
   AuthSessionStorage,
-  AuthStorage,
   AuthUser,
 } from './types';
 
@@ -34,7 +34,7 @@ type ILocalUserRef = {
   current: AuthUser | null;
 };
 
-const DefaultAuthStorage: AuthStorage = {
+const DefaultAuthStorage: AuthSecureStorage = {
   get: async (key) => $session.get(key),
   set: async (key, value) => {
     await $session.set(key, value);
@@ -2229,38 +2229,76 @@ export class Auth {
   static get Session() {
     return Session;
   }
-  private static _storage: AuthStorage = DefaultAuthStorage;
-  static get storage(): AuthStorage {
+  private static _secureStorage: AuthSecureStorage = DefaultAuthStorage;
+  static get secureStorage(): AuthSecureStorage {
     const storage = Reflect.getMetadata(Auth.authStorageMetaData, Auth);
     if (isValidStorage(storage)) {
-      this._storage = storage;
+      this._secureStorage = storage;
     }
-    if (this._storage) return this._storage;
+    if (this._secureStorage) return this._secureStorage;
     return DefaultAuthStorage;
   }
-  public static set storage(storage: AuthStorage) {
-    if (isValidStorage(storage)) {
-      Reflect.defineMetadata(Auth.authStorageMetaData, storage, Auth);
+  public static set secureStorage(secureStorage: AuthSecureStorage) {
+    if (isValidStorage(secureStorage)) {
+      Reflect.defineMetadata(Auth.authStorageMetaData, secureStorage, Auth);
     }
   }
+
+  /**
+   * Retrieves the authentication token from secure storage.
+   *
+   * This method provides secure, cross-platform access to the stored authentication token.
+   * The token is stored separately from user data for enhanced security and to prevent
+   * accidental exposure through session data serialization.
+   *
+   * @returns Promise resolving to the token string, or null if no token is stored
+   * @example
+   * ```typescript
+   * const token = await Auth.getToken();
+   * if (token) {
+   *   // Use token for API calls
+   * }
+   * ```
+   */
+  static async getToken(): Promise<string | null> {
+    return await this.secureStorage.get('auth-token');
+  }
+
+  /**
+   * Stores the authentication token in secure storage.
+   *
+   * This method securely stores the authentication token using the configured secure storage
+   * implementation. The token is isolated from user session data for better security practices.
+   *
+   * @param token - The authentication token to store
+   * @returns Promise that resolves when the token is stored
+   * @example
+   * ```typescript
+   * await Auth.setToken('jwt-token-here');
+   * ```
+   */
+  static async setToken(token: string): Promise<void> {
+    await this.secureStorage.set('auth-token', token);
+  }
+
   private static readonly authStorageMetaData = Symbol('auth:storage:meta');
 }
 
 export function AttachAuthStorage() {
-  return function (target: ClassConstructor<AuthStorage>) {
+  return function (target: ClassConstructor<AuthSecureStorage>) {
     try {
       const storage = new target();
       if (!isValidStorage(storage)) {
         return;
       }
-      Auth.storage = storage;
+      Auth.secureStorage = storage;
     } catch (error) {
       console.error(error, ' registering session storage');
     }
   };
 }
 
-const isValidStorage = (storage?: AuthStorage): boolean => {
+const isValidStorage = (storage?: AuthSecureStorage): boolean => {
   /**
    * Check if the storage object is null or undefined.
    * If so, return false immediately.
