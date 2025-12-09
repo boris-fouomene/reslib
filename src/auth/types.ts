@@ -75,7 +75,7 @@ import { Dictionary } from '../types/dictionary';
  */
 
 export interface AuthUser extends Dictionary {
-  //id: string | number | object;
+  id: string | number | object;
   sessionCreatedAt?: number;
   perms?: AuthPerms;
   /**
