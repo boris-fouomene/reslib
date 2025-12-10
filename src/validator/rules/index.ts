@@ -9,6 +9,7 @@ export * from './file';
 export * from './format';
 export * from './multiRules';
 export * from './numeric';
+export * from './object';
 export * from './string';
 export * from './target';
 
