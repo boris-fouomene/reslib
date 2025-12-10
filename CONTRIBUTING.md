@@ -11,6 +11,7 @@ Thank you for your interest in contributing to ResLib! This document provides gu
 - [Coding Standards](#coding-standards)
 - [Testing](#testing)
 - [Submitting Changes](#submitting-changes)
+- [Release Process](#release-process)
 - [Reporting Issues](#reporting-issues)
 
 ## Code of Conduct
@@ -113,7 +114,92 @@ Check formatting:
 npm run format:check
 ```
 
-## Coding Standards
+### Additional Development Commands
+
+Clean build artifacts:
+
+```bash
+npm run clean
+```
+
+Build TypeScript declarations only:
+
+```bash
+npm run build-dts
+```
+
+Build for testing environment:
+
+```bash
+npm run build-test
+```
+
+Generate API documentation:
+
+```bash
+npm run build-doc
+```
+
+Run the built test application:
+
+```bash
+npm run start
+```
+
+Check package integrity (dry run):
+
+```bash
+npm run check
+```
+
+Clear npx cache (useful for troubleshooting):
+
+```bash
+npm run clear-npx-cache
+```
+
+### Maintenance and Publishing
+
+Check for dependency updates:
+
+```bash
+npm run check:updates
+```
+
+Generate changelog from commits:
+
+```bash
+npm run changelog
+```
+
+Fix security vulnerabilities:
+
+```bash
+npm run audit:fix
+```
+
+Publish to different npm tags:
+
+```bash
+# Pre-release versions
+npm run publish:canary  # Publish with canary tag
+npm run publish:beta    # Publish with beta tag
+
+# Stable release
+npm run publish:latest  # Publish stable version
+```
+
+**Note:** Publishing commands are typically only used by maintainers. The `prepublishOnly` script automatically runs the build before publishing.
+
+### Automatic Scripts
+
+Some scripts run automatically as pre-hooks:
+
+- **`prebuild`**: Runs `clean && lint` before building
+- **`pretest`**: Runs `build-test` before running tests
+- **`prepublishOnly`**: Runs `build` before publishing to npm
+
+These ensure code quality and consistency in the development workflow.
 
 ### TypeScript
 
@@ -149,22 +235,136 @@ npm run format:check
    ```
 
 2. Make your changes, ensuring tests pass and code is linted/formatted.
-3. Commit your changes with descriptive messages:
+
+3. **Create a changeset** for your changes (if applicable):
+
+   This project uses [Changesets](https://github.com/changesets/changesets) for version management and changelog generation. If your changes introduce new features, fix bugs, or include breaking changes, you need to create a changeset.
+
+   ```bash
+   npm run changeset:add
+   ```
+
+   This command will prompt you to:
+   - Select the type of change: `patch`, `minor`, or `major`
+   - Enter a description of the changes
+
+   **When to create a changeset:**
+   - ✅ **Patch**: Bug fixes, small improvements, documentation updates
+   - ✅ **Minor**: New features that are backward compatible
+   - ✅ **Major**: Breaking changes that require version bumps
+
+   **When NOT to create a changeset:**
+   - ❌ Internal refactoring with no API changes
+   - ❌ Test-only changes
+   - ❌ Documentation-only changes (unless significant)
+   - ❌ Changes that don't affect the published package
+
+   Changesets are stored in the `.changeset/` directory and will be used to automatically update version numbers and generate changelogs when releases are prepared.
+
+4. Commit your changes with descriptive messages:
 
    ```bash
    git commit -m "feat: add new feature description"
    ```
 
-4. Push to your fork:
+   If you created a changeset, commit it along with your changes:
+
+   ```bash
+   git add .
+   git commit -m "feat: add new feature description"
+   ```
+
+5. Push to your fork:
 
    ```bash
    git push origin feature/your-feature-name
    ```
 
-5. Create a Pull Request on GitHub:
+6. Create a Pull Request on GitHub:
    - Provide a clear description of the changes.
    - Reference any related issues.
    - Ensure CI checks pass.
+   - Mention if a changeset was included and what type (patch/minor/major).
+
+### Release Process
+
+This project supports two release workflows: **Changesets** (recommended) and **Traditional Releases**. Here's a comparison and guide for both:
+
+#### Changesets (Recommended)
+
+**Why Changesets?**
+
+- ✅ **Automated versioning**: System determines version bumps based on change types
+- ✅ **Batched releases**: Multiple changes can be combined into a single release
+- ✅ **Automatic changelog generation**: Professional changelogs created automatically
+- ✅ **Better collaboration**: Contributors focus on describing changes, not versioning
+- ✅ **Prevents version conflicts**: No manual version management issues
+- ✅ **Semantic versioning compliance**: Ensures proper version increments
+
+**How to use Changesets:**
+
+1. **For Contributors**: Create changesets when making changes
+
+   ```bash
+   npm run changeset:add
+   ```
+
+   Select the appropriate change type and describe your changes.
+
+2. **For Maintainers**: When ready to release
+
+   ```bash
+   # Update versions and generate changelog
+   npm run changeset:version
+
+   # Publish to npm
+   npm run changeset:publish
+   ```
+
+**Changeset Types:**
+
+- **Patch** (`0.0.1`): Bug fixes, small improvements
+- **Minor** (`0.1.0`): New features (backward compatible)
+- **Major** (`1.0.0`): Breaking changes
+
+#### Traditional Releases (Legacy)
+
+**When to use Traditional Releases:**
+
+- ❌ **Not recommended** for regular development
+- ❌ **Use only** for emergency hotfixes or when changesets are unavailable
+- ❌ **Manual process** that can lead to version conflicts
+
+**How to use Traditional Releases:**
+
+```bash
+# Patch release (0.0.1)
+npm run release:patch
+
+# Minor release (0.1.0)
+npm run release:minor
+
+# Major release (1.0.0)
+npm run release:major
+```
+
+**Problems with Traditional Releases:**
+
+- Manual version decisions can be inconsistent
+- No automatic changelog generation
+- Risk of version conflicts between contributors
+- Doesn't scale well with multiple contributors
+
+#### Recommendation
+
+**Use Changesets for all regular development and releases.** The traditional release commands are kept for backward compatibility and emergency situations only.
+
+**Workflow Summary:**
+
+1. Contributors create changesets with their PRs
+2. Maintainers batch changesets into releases using `changeset:version` and `changeset:publish`
+3. Automatic version bumping and changelog generation
+4. Professional release management without manual overhead
 
 ## Reporting Issues
 
