@@ -1011,9 +1011,9 @@ export interface ValidatorNestedRuleFunctionOptions<
   Target extends ClassConstructor = ClassConstructor,
   Context = unknown,
 > extends Omit<
-    ValidatorValidateTargetOptions<Target, Context, [target: Target]>,
-    'data'
-  > {
+  ValidatorValidateTargetOptions<Target, Context, [target: Target]>,
+  'data'
+> {
   value?: ValidatorValidateTargetData<Target>;
 
   data?: Dictionary;
@@ -1155,8 +1155,8 @@ export interface ValidatorRuleParamTypes<Context = unknown> {}
 export interface ValidatorValidateOptions<
   TParams extends ValidatorRuleParams = ValidatorRuleParams,
   Context = unknown,
-> extends Omit<Partial<InputFormatterResult>, 'value'>,
-    BaseData<Context> {
+>
+  extends Omit<Partial<InputFormatterResult>, 'value'>, BaseData<Context> {
   /**
    * The list of validation rules to apply
    *
@@ -1522,8 +1522,8 @@ export interface ValidatorValidateOptions<
  */
 export interface ValidatorValidateMultiRuleOptions<
   Context = unknown,
-  RulesFunctions extends
-    ValidatorDefaultMultiRule<Context> = ValidatorDefaultMultiRule<Context>,
+  RulesFunctions extends ValidatorDefaultMultiRule<Context> =
+    ValidatorDefaultMultiRule<Context>,
 > extends ValidatorValidateOptions<RulesFunctions, Context> {
   startTime?: number;
 }
@@ -1928,9 +1928,9 @@ export interface ValidatorValidateTargetOptions<
   Context = unknown,
   ParamsTypes extends ValidatorRuleParams = ValidatorRuleParams,
 > extends Omit<
-    ValidatorValidateOptions<ParamsTypes, Context>,
-    'data' | 'rule' | 'value'
-  > {
+  ValidatorValidateOptions<ParamsTypes, Context>,
+  'data' | 'rule' | 'value'
+> {
   data: ValidatorValidateTargetData<Target>;
   /**
    * The parent data/context for nested validations
@@ -2099,7 +2099,7 @@ export type ValidatorMultiRuleNames = 'OneOf' | 'AllOf';
  *
  * ### Relationship to Validation System
  * - **Created by**: Validation rule functions when they return failure strings
- * - **Processed by**: {@link Validator.validate} and {@link Validator.validateTarget}
+ * - **Processed by**: {@link validate} and {@link Validator.validateTarget}
  * - **Used in**: Error aggregation and reporting throughout the system
  * - **Compatible with**: Standard error handling patterns and logging systems
  *
@@ -2235,8 +2235,9 @@ export interface ValidatorValidationError {
  * @see {@link Validator.validate}
  * @see {@link Validator.isSuccess}
  */
-export interface ValidatorValidateSuccess<Context = unknown>
-  extends BaseData<Context> {
+export interface ValidatorValidateSuccess<
+  Context = unknown,
+> extends BaseData<Context> {
   /** Discriminant for type narrowing - always `true` for success */
   success: true;
 
@@ -2463,8 +2464,9 @@ interface BaseData<Context = unknown> {
  * @see {@link Validator.validate}
  * @see {@link Validator.isFailure}
  */
-export interface ValidatorValidateFailure<Context = unknown>
-  extends BaseData<Context> {
+export interface ValidatorValidateFailure<
+  Context = unknown,
+> extends BaseData<Context> {
   /** Discriminant for type narrowing - always `false` for failure */
   success: false;
 
@@ -2673,8 +2675,10 @@ export type ValidatorValidateResult<Context = unknown> =
  * @see {@link ValidatorValidationError}
  * @see {@link Validator.validateTarget}
  */
-export interface ValidatorValidateTargetFailure<Context = unknown>
-  extends Omit<BaseData<Context>, 'value' | 'data'> {
+export interface ValidatorValidateTargetFailure<Context = unknown> extends Omit<
+  BaseData<Context>,
+  'value' | 'data'
+> {
   /** Discriminant for type narrowing - always `false` for failures */
   success: false;
 
@@ -2836,8 +2840,10 @@ export interface ValidatorValidateTargetFailure<Context = unknown>
  * @see {@link ValidatorValidateSuccess} - Single-value equivalent
  * @see {@link Validator.validateTarget}
  */
-export interface ValidatorValidateTargetSuccess<Context = unknown>
-  extends Omit<BaseData<Context>, 'data'> {
+export interface ValidatorValidateTargetSuccess<Context = unknown> extends Omit<
+  BaseData<Context>,
+  'data'
+> {
   /** Discriminant for type narrowing - always `true` for success */
   success: true;
 
