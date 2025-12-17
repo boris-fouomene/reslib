@@ -12,7 +12,6 @@ import { Logger } from '@logger';
 import { Session as session } from '@session/index';
 import { defaultStr } from '@utils/defaultStr';
 import { interpolate } from '@utils/interpolate';
-import { isEmpty } from '@utils/isEmpty';
 import { isNonNullString } from '@utils/isNonNullString';
 import { isNullable } from '@utils/isNullable';
 import { isPrimitive } from '@utils/isPrimitive';
@@ -446,7 +445,7 @@ export class I18n extends I18nJs implements Observable<I18nEvent> {
    */
   has(scope: Scope, locale?: string): boolean {
     const resolvedTranslation = this.getNestedTranslation(scope, locale);
-    return !isEmpty(resolvedTranslation);
+    return resolvedTranslation !== undefined;
   }
   /**
    * Resolves translation for nested keys.
