@@ -2082,7 +2082,7 @@ export type ValidatorMultiRuleNames = 'OneOf' | 'AllOf';
  * @public
  *
  * @see {@link ValidatorValidateResult}
- * @see {@link ValidatorValidateFailure}
+ * @see {@link ValidatorError}
  * @see {@link Validator.validate}
  * @see {@link Validator.isSuccess}
  */
@@ -2119,7 +2119,7 @@ export interface ValidatorValidateSuccess<
  * ### Purpose
  * Provides a common interface for passing data through the validation pipeline
  * and in the result objects. Used by both {@link ValidatorValidateSuccess}
- * and {@link ValidatorValidateFailure}.
+ * and {@link ValidatorError}.
  *
  * ### Properties
  * - **value**: The actual value being validated (required)
@@ -2138,8 +2138,8 @@ export interface ValidatorValidateSuccess<
  *   duration: 5,
  * };
  *
- * // In ValidatorValidateFailure
- * const failureResult: ValidatorValidateFailure = {
+ * // In ValidatorError
+ * const failureResult: ValidatorError = {
  *   success: false,
  *   value: "invalid-email",     // Value that failed
  *   data: { userId: 123 },      // Available during failure too
@@ -2156,7 +2156,7 @@ export interface ValidatorValidateSuccess<
  *
  * @see {@link ValidatorValidateOptions} - Options passed to validation
  * @see {@link ValidatorValidateSuccess} - Success result type
- * @see {@link ValidatorValidateFailure} - Failure result type
+ * @see {@link ValidatorError} - Failure result type
  */
 interface BaseData<Context = unknown> {
   /**
@@ -2247,7 +2247,7 @@ interface BaseData<Context = unknown> {
   context?: Context;
 }
 
-/* ```
+/**
  * ## Validation Result Type (Discriminated Union)
  *
  * Represents the result of a single-value validation operation.
@@ -2265,7 +2265,7 @@ interface BaseData<Context = unknown> {
  *   console.log(result.validatedAt); // ✓ Available
  *   console.log(result.error);      // ✗ Type error (undefined for success)
  * } else {
- *   // TypeScript knows: ValidatorValidateFailure
+ *   // TypeScript knows: ValidatorError
  *   console.log(result.value);      // ✓ Available
  *   console.log(result.error);      // ✓ Available
  *   console.log(result.validatedAt); // ✗ Type error (undefined for failure)
@@ -2280,8 +2280,8 @@ interface BaseData<Context = unknown> {
  *   // result is ValidatorValidateSuccess<Context>
  *   console.log(result.value);
  *   console.log(result.validatedAt);
- * } else if (Validator.isFailure(result)) {
- *   // result is ValidatorValidateFailure<Context>
+ * } else if (Validator.isValidatorError(result)) {
+ *   // result is ValidatorError<Context>
  *   console.log(result.error.message);
  *   console.log(result.error.ruleName);
  * }
@@ -2303,7 +2303,7 @@ interface BaseData<Context = unknown> {
  *
  * ### Union Members
  * - {@link ValidatorValidateSuccess} - When validation passes (success: true)
- * - {@link ValidatorValidateFailure} - When validation fails (success: false)
+ * - {@link ValidatorError} - When validation fails (success: false)
  *
  * @template Context - Type of the optional validation context
  *
@@ -2323,7 +2323,7 @@ interface BaseData<Context = unknown> {
  * @public
  *
  * @see {@link ValidatorValidateSuccess} - Success variant
- * @see {@link ValidatorValidateFailure} - Failure variant
+ * @see {@link ValidatorError} - Failure variant
  * @see {@link Validator.validate} - Main validation method
  * @see {@link Validator.isSuccess} - Type guard for success
  * @see {@link Validator.isFailure} - Type guard for failure
@@ -2494,7 +2494,7 @@ export interface ValidatorValidateTargetSuccess<Context = unknown> extends Omit<
  *   console.log(result.data);        // Class instance with all fields valid
  *   console.log(result.validatedAt); // Validation timestamp
  * } else {
- *   // result is ValidatorValidateTargetFailure
+ *   // result is ValidatorTargetError
  *   console.log(result.errors);      // Array of field-level errors
  *   console.log(result.failureCount); // Number of failed fields
  * }
@@ -2508,7 +2508,7 @@ export interface ValidatorValidateTargetSuccess<Context = unknown> extends Omit<
  *     await saveToDatabase(result.data);
  *     break;
  *   case "error":
- *     // result is ValidatorValidateTargetFailure
+ *     // result is ValidatorTargetError
  *     logErrors(result.errors);
  *     break;
  * }
@@ -2520,7 +2520,7 @@ export interface ValidatorValidateTargetSuccess<Context = unknown> extends Omit<
  *   // result is ValidatorValidateTargetSuccess
  *   return result.data;
  * }
- * // result is ValidatorValidateTargetFailure
+ * // result is ValidatorTargetError
  * throw new Error(result.message);
  * ```
  *
@@ -2567,14 +2567,14 @@ export interface ValidatorValidateTargetSuccess<Context = unknown> extends Omit<
  *
  * ### Union Members
  * - {@link ValidatorValidateTargetSuccess} - When all fields pass (success: true)
- * - {@link ValidatorValidateTargetFailure} - When one or more fields fail (success: false)
+ * - {@link ValidatorTargetError} - When one or more fields fail (success: false)
  *
  * @template Context - Type of the optional validation context
  *
  * @public
  *
  * @see {@link ValidatorValidateTargetSuccess} - Success variant
- * @see {@link ValidatorValidateTargetFailure} - Failure variant
+ * @see {@link ValidatorTargetError} - Failure variant
  * @see {@link Validator.validateTarget} - Main target validation method
  * @see {@link Validator.isSuccess} - Type guard for success
  * @see {@link Validator.isFailure} - Type guard for failure
