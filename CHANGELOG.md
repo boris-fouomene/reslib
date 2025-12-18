@@ -1,5 +1,19 @@
 ## 1.0.3 (2025-12-09)
 
+## 1.2.0
+
+### Minor Changes
+
+- feat: Introduce a comprehensive validation system with various rules, multi-rules, decorators, and documentation.
+
+  feat: Introduce a comprehensive validation system with various rules, multi-rules, decorators, and documentation.
+
+  feat: Add comprehensive validation and exception handling modules with rules, types, errors, and tests.
+
+  feat: introduce core types for the validation system, including rule definitions and validation results.
+
+  feat: add ValidationError, ValidatorTargetError, and ValidatorBulkError classes with their respective interfaces for structured validation error handling
+
 ## 1.1.1
 
 ### Patch Changes
