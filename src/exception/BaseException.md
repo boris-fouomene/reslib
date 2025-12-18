@@ -65,7 +65,7 @@ This is where `BaseException` shines. You can customize it at four different lev
 If you just need structured data without new logic, use TypeScript interfaces.
 
 ```typescript
-interface PaymentDetails extends BaseExceptionDetails {
+interface PaymentDetails {
   transactionId: string;
   gateway: 'stripe' | 'paypal';
   amount: number;
@@ -174,13 +174,13 @@ A real-world example handling transaction failures, custom properties, and autom
 
 ```typescript
 // 1. Define the shape of your details
-interface TransactionDetails extends BaseExceptionDetails {
+interface TransactionDetails {
   merchantId: string;
   terminal?: string;
 }
 
 // 2. Define custom options
-interface PaymentExceptionOptions extends BaseExceptionOptions<TransactionDetails> {
+interface PaymentExceptionOptions {
   transactionId?: string;
   currency?: string;
 }
@@ -241,7 +241,7 @@ interface ValidationErrorItem {
   message: string;
 }
 
-interface ValidationDetails extends BaseExceptionDetails {
+interface ValidationDetails {
   errors: ValidationErrorItem[];
 }
 

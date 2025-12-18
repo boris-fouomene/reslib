@@ -2,10 +2,11 @@ import { I18n } from '@/i18n';
 import { InputFormatterResult } from '@/inputFormatter/types';
 import { ClassConstructor, Dictionary } from '@/types';
 import {
-  ValidationError,
-  ValidationErrorDetail,
+  ValidatorError,
+  ValidatorErrorDetails,
   ValidatorTargetError,
 } from './errors';
+import { ValidatorRuleName, ValidatorRuleParamTypes } from './rules.types';
 
 /**
  * ## Validator Sync Result
@@ -626,7 +627,6 @@ export type ValidatorSanitizedRule<
  * - **ruleName**: The parsed rule identifier (e.g., "MinLength")
  * - **params**: Array of parameters extracted from the rule (e.g., `[5]`)
  * - **ruleFunction**: The actual validation function to execute
- * - **rawRuleName**: The original unparsed rule string (e.g., {MinLength:[5]})
  *
  * ### Usage in Validation Pipeline
  * ```typescript
@@ -638,7 +638,6 @@ export type ValidatorSanitizedRule<
  *   ruleName: "MinLength",
  *   params: [8],
  *   ruleFunction: minLengthFunction,
- *   rawRuleName: "MinLength"
  * };
  *
  * // During validation
@@ -708,20 +707,6 @@ export interface ValidatorSanitizedRuleObject<
    * @see {@link ValidatorRuleFunction}
    */
   ruleFunction: ValidatorRuleFunction<TParams, Context>;
-
-  /**
-   * The original unparsed rule specification
-   *
-   * The raw rule string as it was originally provided, before parsing.
-   * This is useful for error reporting and debugging, as it shows
-   * exactly what the user specified.
-   *
-   * @type {ValidatorRuleName | string}
-   * @example {MinLength:[5]}
-   * @example "Required"
-   * @example "Email"
-   */
-  rawRuleName: ValidatorRuleName | string;
 }
 /**
  * @typedef ValidatorSanitizedRules
@@ -910,7 +895,6 @@ export type ValidatorRuleParams<
  * - **rules**: Array of validation rules to apply
  * - **ruleParams**: Parameters for the current rule
  * - **ruleName**: Name of the validation rule
- * - **rawRuleName**: Original unparsed rule name
  * - **message**: Custom error message
  * - **fieldName**: Form field identifier
  * - **propertyName**: Object property name
@@ -1023,139 +1007,6 @@ export interface ValidatorNestedRuleFunctionOptions<
 
   data?: Dictionary;
 }
-
-/**
- * @interface ValidatorRuleName
- * Represents the name of a validation rule as defined in the `ValidatorRuleParamTypes`.
- *
- * The `ValidatorRuleName` type is a union of string literal types that correspond to the keys
- * of the `ValidatorRuleParamTypes` interface. This allows for type-safe access to the names of
- * validation rules, ensuring that only valid rule names can be used in contexts where a rule name
- * is required.
- *
- * ### Structure:
- * - The type is derived from the keys of the `ValidatorRuleParamTypes`, meaning it will include
- *   all the rule names defined in that map.
- *
- * ### Example:
- *
- * ```typescript
- * const ruleName: ValidatorRuleName = "required"; // Valid
- * const anotherRuleName: ValidatorRuleName = "minLength"; // Valid
- *
- * // Usage in a function that accepts a rule name
- * function getValidationRule(ruleName: ValidatorRuleName) {
- *     return validationRules[ruleName];
- * }
- *
- * const rule = getValidationRule("maxLength"); // Valid usage
- * // const invalidRule = getValidationRule("unknownRule"); // TypeScript will throw an error
- * ```
- *
- * This type enhances type safety in your code by ensuring that only valid validation rule names
- * can be used, reducing the risk of runtime errors due to typos or invalid rule names.
- */
-export type ValidatorRuleName = keyof ValidatorRuleParamTypes & string;
-/**
- * ## Validation Rules Parameter Map
- *
- * Central type definition mapping validation rule names to their parameter signatures.
- * This interface serves as the authoritative source for all built-in validation rules,
- * defining the exact parameter types each rule accepts.
- *
- * ### Purpose
- * Provides compile-time type safety for validation rule parameters across the entire
- * validation system. Each property represents a built-in validation rule and its
- * expected parameter structure. This is a static interface with no generics.
- *
- * ### Type Structure
- * - **Key**: Rule name (string literal from {@link ValidatorRuleName})
- * - **Value**: Parameter array type (extends {@link ValidatorRuleParams})
- *
- * ### Parameter Type Patterns
- * - **Empty Arrays `[]`**: Rules that take no parameters (e.g., "Required", "Email")
- * - **Complex Parameters**: Rules with mixed required/optional parameters
- *
- * ### Usage in Type System
- * This interface is used throughout the validator to:
- * - Type-check rule parameters at compile time
- * - Generate {@link ValidatorRuleName} union type
- * - Create {@link ValidatorRuleFunctionsMap} registry type
- * - Validate rule definitions in rule implementation files
- *
- * ### Rule Categories
- *
- * #### Presence Validation
- * - **Required**: Ensures value is present and not empty
- * - **Nullable**: Allows null/undefined values (skips validation)
- * - **Optional**: Allows undefined values (skips validation)
- * - **Empty**: Allows empty strings (validation skipped if "")
- *
- * #### Type Validation
- * - **String**: Validates value is a string
- * - **Number**: Validates value is a number
- * - **NonNullString**: Validates value is a non-null string
- *
- * #### String Validation
- * - **MinLength**: Minimum character length requirement
- * - **MaxLength**: Maximum character length limit
- * - **Length**: Exact length or length range (min and optional max)
- * - **FileName**: Valid file name format
- *
- * #### Numeric Validation
- * - **NumberGT**: Value must be greater than specified number
- * - **NumberGTE**: Value must be >= specified number
- * - **NumberLT**: Value must be less than specified number
- * - **NumberLTE**: Value must be <= specified number
- * - **NumberEQ**: Value must equal specified number
- * - **NumberNE**: Value must differ from specified number
- *
- * #### Format Validation
- * - **Email**: Valid email address format
- * - **Url**: Valid URL format
- * - **PhoneNumber**: Valid phone number (with optional country code)
- * - **EmailOrPhoneNumber**: Valid email or phone number
- *
- * ### Parameter Examples
- * ```typescript
- * // Rules with no parameters
- * Required: ValidatorRuleParams<[]>;           // "Required"
- * Email: ValidatorRuleParams<[]>;              // "Email"
- *
- * // Rules with single parameters
- * MinLength: ValidatorRuleParams<[number]>;    // {MinLength:[5]}
- * NumberEQ: ValidatorRuleParams<[number]>;  // "NumberEQ[42]"
- *
- * // Rules with optional parameters
- * PhoneNumber: ValidatorRuleParams<[CountryCode?]>; // "PhoneNumber" or "PhoneNumber[US]"
- *
- * // Rules with multiple parameters
- * Length: ValidatorRuleParams<[number, number?]>; // "Length[5]" or "Length[5,10]"
- * ```
- *
- * ### Extending the Rules Map
- * When adding new validation rules:
- * 1. Add the rule name and parameter type to this interface
- * 2. Implement the rule function in the appropriate rule file
- * 3. Register the rule in the validator's rule registry
- * 4. Update rule name unions and type definitions as needed
- *
- * ### Relationship to Validation System
- * - **Foundation**: Base type for all rule definitions
- * - **Type Safety**: Ensures parameter type checking
- * - **Rule Discovery**: Used to generate valid rule names
- * - **Function Signatures**: Defines parameter types for rule functions
- * - **Runtime Validation**: Parameters validated against these types
- *
- * @public
- * @template Context - Type of the optional validation context
- * @see {@link ValidatorRuleName} - Union type derived from this interface's keys
- * @see {@link ValidatorRuleFunctionsMap} - Registry type using this interface
- * @see {@link ValidatorRuleParams} - Base parameter type for all rules
- * @see {@link Validator} - Main validator class that uses these rules
- */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/no-empty-object-type
-export interface ValidatorRuleParamTypes<Context = unknown> {}
 
 export interface ValidatorValidateOptions<
   TParams extends ValidatorRuleParams = ValidatorRuleParams,
@@ -1273,29 +1124,6 @@ export interface ValidatorValidateOptions<
    * @see {@link ValidatorRuleName}
    */
   ruleName?: ValidatorRuleName;
-
-  /**
-   * The raw rule name as originally specified (before parsing)
-   *
-   * The unparsed rule name including any parameters in brackets.
-   * For example, {MinLength:[5]} or {NumberGT:[0]} before the name
-   * and parameters are extracted into `ruleName` and `ruleParams`.
-   *
-   * @type {string}
-   * @optional
-   *
-   * @example
-   * ```typescript
-   * const options: ValidatorValidateOptions = {
-   *   value: "test",
-   *   rawRuleName: { MinLength: [5] },      // Raw form
-   *   ruleName: "MinLength",               // Parsed name
-   *   ruleParams: [5],                     // Parsed params
-   *   propertyName: "username"
-   * };
-   * ```
-   */
-  rawRuleName?: ValidatorRuleName | string;
 
   /**
    * Custom error message for validation failure
@@ -1768,7 +1596,6 @@ export type ValidatorValidateTargetData<
  * - **rules**: Array of validation rules to apply to the target
  * - **ruleParams**: Parameters for the current rule
  * - **ruleName**: Name of the validation rule
- * - **rawRuleName**: Original unparsed rule name
  * - **message**: Custom error message
  * - **fieldName**: Form field identifier
  * - **propertyName**: Object property name
@@ -1947,9 +1774,10 @@ export interface ValidatorValidateTargetOptions<
   errorMessageBuilder?: (
     translatedPropertyName: string,
     error: string,
-    builderOptions: ValidationErrorDetail & {
+    builderOptions: Omit<ValidatorErrorDetails, 'message'> & {
       propertyName: keyof InstanceType<Target> | string;
       translatedPropertyName: string;
+      error: ValidatorError;
       i18n: I18n;
       separators: {
         multiple: string;
@@ -2330,7 +2158,7 @@ interface BaseData<Context = unknown> {
  */
 export type ValidatorValidateResult<Context = unknown> =
   | ValidatorValidateSuccess<Context>
-  | ValidationError;
+  | ValidatorError;
 
 /**
  * ## Validate Target Result Types
@@ -2666,3 +2494,5 @@ export type ValidatorRuleFunctionsMap<Context = unknown> = {
     Context
   >;
 };
+
+export * from './rules.types';

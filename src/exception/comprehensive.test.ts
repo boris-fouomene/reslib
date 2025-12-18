@@ -1,7 +1,6 @@
 import {
   BaseException,
   BaseExceptionConstructor,
-  BaseExceptionDetails,
   BaseExceptionOptions,
 } from './index';
 
@@ -49,7 +48,7 @@ describe('BaseException - Comprehensive Test Suite', () => {
       }
     }
 
-    interface PaymentDetails extends BaseExceptionDetails {
+    interface PaymentDetails {
       gateway?: string;
       errorCode?: string;
     }
@@ -450,7 +449,7 @@ describe('BaseException - Comprehensive Test Suite', () => {
   // ==================== Type Safety ====================
   describe('Type Safety', () => {
     test('should enforce typed details', () => {
-      interface TypedDetails extends BaseExceptionDetails {
+      interface TypedDetails {
         userId: number;
         action: string;
       }

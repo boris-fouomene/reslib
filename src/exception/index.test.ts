@@ -13,11 +13,11 @@ import {
 /**
  * Simple custom exception that adds a custom prefix to messages
  */
-class PrefixedException extends BaseException {
+class PrefixedException extends BaseException<{ prefix: string }> {
   protected static override parseErrorMessage(
     error: unknown,
     options?: BaseExceptionOptions
-  ): string {
+  ) {
     const baseMessage = super.parseErrorMessage(error, options);
     return `[PREFIXED] ${baseMessage}`;
   }
@@ -27,7 +27,7 @@ class PrefixedException extends BaseException {
 /**
  * Exception that extracts specific fields from API errors
  */
-interface ApiErrorDetails extends BaseExceptionDetails {
+interface ApiErrorDetails {
   endpoint?: string;
   method?: string;
   statusCode?: number;
@@ -35,12 +35,10 @@ interface ApiErrorDetails extends BaseExceptionDetails {
 }
 
 class ApiException extends BaseException<ApiErrorDetails> {
-  protected static override parseErrorDetails<
-    TDetails extends BaseExceptionDetails = ApiErrorDetails,
-  >(
+  protected static override parseErrorDetails<TDetails = ApiErrorDetails>(
     error: unknown,
     options?: BaseExceptionOptions<TDetails>
-  ): BaseExceptionDetails {
+  ) {
     const baseDetails = super.parseErrorDetails(error, options);
     // Extract API-specific fields
     if (typeof error === 'object' && error !== null) {
@@ -62,7 +60,7 @@ class ApiException extends BaseException<ApiErrorDetails> {
 /**
  * Exception that completely customizes the error creation process
  */
-interface DatabaseErrorDetails extends BaseExceptionDetails {
+interface DatabaseErrorDetails {
   query?: string;
   table?: string;
   constraint?: string;
@@ -71,7 +69,7 @@ interface DatabaseErrorDetails extends BaseExceptionDetails {
 
 class DatabaseException extends BaseException<DatabaseErrorDetails> {
   protected static override createFromError<
-    TDetails extends BaseExceptionDetails = DatabaseErrorDetails,
+    TDetails = DatabaseErrorDetails,
     T extends BaseException<TDetails> = BaseException<TDetails>,
   >(
     this: BaseExceptionConstructor<TDetails, T>,
@@ -99,7 +97,7 @@ class DatabaseException extends BaseException<DatabaseErrorDetails> {
             constraint:
               typeof err.constraint === 'string' ? err.constraint : 'unknown',
             severity: 'high',
-          } as unknown as TDetails,
+          } as unknown as BaseExceptionDetails<TDetails>,
           cause: error,
         });
       }
@@ -132,12 +130,10 @@ class DatabaseException extends BaseException<DatabaseErrorDetails> {
  * Exception that extends another custom exception
  */
 class PostgresException extends DatabaseException {
-  protected static override parseErrorDetails<
-    TDetails extends BaseExceptionDetails = DatabaseErrorDetails,
-  >(
+  protected static override parseErrorDetails<TDetails = DatabaseErrorDetails>(
     error: unknown,
     options?: BaseExceptionOptions<TDetails>
-  ): BaseExceptionDetails {
+  ) {
     const baseDetails = super.parseErrorDetails(error, options);
 
     // Add PostgreSQL-specific details
@@ -159,7 +155,7 @@ class PostgresException extends DatabaseException {
 /**
  * Exception for validation errors with field-specific messages
  */
-interface ValidationErrorDetails extends BaseExceptionDetails {
+interface ValidationErrorDetails {
   field?: string;
   value?: unknown;
   rule?: string;
@@ -191,11 +187,8 @@ class ValidationException extends BaseException<ValidationErrorDetails> {
   }
 
   protected static override parseErrorDetails<
-    TDetails extends BaseExceptionDetails = ValidationErrorDetails,
-  >(
-    error: unknown,
-    options?: BaseExceptionOptions<TDetails>
-  ): BaseExceptionDetails {
+    TDetails = ValidationErrorDetails,
+  >(error: unknown, options?: BaseExceptionOptions<TDetails>) {
     const baseDetails = super.parseErrorDetails(error, options);
 
     if (typeof error === 'object' && error !== null) {
@@ -222,7 +215,7 @@ class ValidationException extends BaseException<ValidationErrorDetails> {
  */
 class CustomFromException extends BaseException {
   static override from<
-    TDetails extends BaseExceptionDetails = BaseExceptionDetails,
+    TDetails = unknown,
     T extends BaseException<TDetails> = BaseException<TDetails>,
   >(
     this: new (message: string, options?: BaseExceptionOptions<TDetails>) => T,
@@ -248,7 +241,7 @@ class CustomFromException extends BaseException {
 /**
  * Exception that completely replaces the from() method
  */
-interface HttpErrorDetails extends BaseExceptionDetails {
+interface HttpErrorDetails {
   statusCode: number;
   path?: string;
   method?: string;
@@ -256,7 +249,7 @@ interface HttpErrorDetails extends BaseExceptionDetails {
 
 class HttpException extends BaseException<HttpErrorDetails> {
   static override from<
-    TDetails extends BaseExceptionDetails = HttpErrorDetails,
+    TDetails = HttpErrorDetails,
     T extends BaseException<TDetails> = BaseException<TDetails>,
   >(
     this: new (message: string, options?: BaseExceptionOptions<TDetails>) => T,
@@ -292,7 +285,7 @@ class HttpException extends BaseException<HttpErrorDetails> {
           statusCode,
           path: typeof err.path === 'string' ? err.path : undefined,
           method: typeof err.method === 'string' ? err.method : undefined,
-        } as unknown as TDetails,
+        } as unknown as BaseExceptionDetails<TDetails>,
         cause: error,
       });
     }
@@ -412,11 +405,11 @@ describe('BaseException.from() Extensibility (Inheritance Cases)', () => {
 
     test('should preserve other properties', () => {
       const error = new Error('Test error');
-      const details: BaseExceptionDetails = { extra: 'data' };
+      const details = { extra: 'data' };
       const exception = PrefixedException.from(error, {
         code: 'TEST_CODE',
         statusCode: 400,
-        details,
+        details: details as any,
       });
 
       expect(exception.message).toBe('[PREFIXED] Test error');

@@ -6,14 +6,6 @@ import { defaultNumber } from '@utils/numbers';
 import { isObj } from '@utils/object';
 
 /**
- * Represents a generic dictionary for exception details.
- * Replaces the strict Dictionary type to allow more flexibility.
- */
-export interface BaseExceptionDetails {
-  [key: string | number | symbol]: unknown;
-}
-
-/**
  * Hook function type for intercepting exceptions (e.g., for logging).
  */
 
@@ -51,9 +43,7 @@ export interface SerializationOptions {
  *    }
  * }
  */
-export class BaseException<
-  TDetails extends BaseExceptionDetails = BaseExceptionDetails,
-> extends Error {
+export class BaseException<TDetails = unknown, TCause = unknown> extends Error {
   /**
    * The constant name identifier for this exception class.
    */
@@ -88,7 +78,7 @@ export class BaseException<
   /**
    * The underlying error that caused this exception.
    */
-  public cause?: unknown;
+  public cause?: TCause;
 
   /**
    * Timestamp when the exception was created.
@@ -121,7 +111,7 @@ export class BaseException<
    * @example
    * ```typescript
    * // With typed details
-   * interface PaymentDetails extends BaseExceptionDetails {
+   * interface PaymentDetails  {
    *   transactionId: string;
    *   amount: number;
    * }
@@ -149,7 +139,10 @@ export class BaseException<
    * }
    * ```
    */
-  constructor(message: string, options?: BaseExceptionOptions<TDetails>) {
+  constructor(
+    message: string,
+    options?: BaseExceptionOptions<TDetails, TCause>
+  ) {
     super(message);
 
     // Set the prototype explicitly for proper instanceof checks in older environments
@@ -170,7 +163,7 @@ export class BaseException<
     // Assign optional properties
     this.code = options?.code;
     this.statusCode = options?.statusCode;
-    this.details = options?.details;
+    this.details = options?.details as TDetails;
     this.timestamp = options?.timestamp ?? new Date();
     this.cause = options?.cause; // Error.cause is standard in modern JS, but we keep a public property too.
     this.success = false;
@@ -251,7 +244,7 @@ export class BaseException<
    * @example
    * ```typescript
    * // With custom details
-   * interface PaymentDetails extends BaseExceptionDetails {
+   * interface PaymentDetails  {
    *   transactionId: string;
    *   amount: number;
    * }
@@ -538,7 +531,7 @@ export class BaseException<
    *   public tracker?: TrackedEvent;
    *
    *   protected static override create<
-   *     TDetails extends BaseExceptionDetails = BaseExceptionDetails,
+   *     TDetails = unknown,
    *     T extends BaseException<TDetails> = BaseException<TDetails>
    *   >(
    *     this: BaseExceptionConstructor<TDetails, T>,
@@ -568,7 +561,7 @@ export class BaseException<
    *   }
    *
    *   protected static override create<
-   *     TDetails extends BaseExceptionDetails = BaseExceptionDetails,
+   *     TDetails = unknown,
    *     T extends BaseException<TDetails> = BaseException<TDetails>
    *   >(
    *     this: BaseExceptionConstructor<TDetails, T>,
@@ -620,12 +613,13 @@ export class BaseException<
    * @see {@link from} - Public method that orchestrates the creation flow
    */
   protected static create<
-    TDetails extends BaseExceptionDetails = BaseExceptionDetails,
+    TDetails = unknown,
     TException extends BaseException<TDetails> = BaseException<TDetails>,
+    TCause = unknown,
   >(
     this: BaseExceptionConstructor<TDetails, TException>,
     message: string,
-    options?: BaseExceptionOptions<TDetails>
+    options?: BaseExceptionOptions<TDetails, TCause>
   ): TException {
     return new this(message, options);
   }
@@ -673,12 +667,13 @@ export class BaseException<
    * ```typescript
    * // From plain object (API error responses)\n   * const apiError = {\n   *   message: 'Validation failed',\n   *   code: 'VALIDATION_ERROR',\n   *   statusCode: 400,\n   *   errors: [{ field: 'email', message: 'Invalid format' }]\n   * };\n   *\n   * const exception = BaseException.from(apiError);\n   * console.log(exception.code); // 'VALIDATION_ERROR'\n   * console.log(exception.statusCode); // 400\n   * console.log(exception.details); // Contains the API error details\n   * ```\n   *\n   * @example\n   * ```typescript\n   * // From JSON string\n   * const jsonError = '{\"message\":\"Error\",\"code\":\"ERR_001\"}';\n   * const error = BaseException.from(jsonError);\n   * // Automatically parsed and converted\n   * ```\n   *\n   * @example\n   * ```typescript\n   * // With additional options\n   * const dbError = new Error('Connection timeout');\n   * const appError = BaseException.from(dbError, {\n   *   code: 'DB_CONNECTION_ERROR',\n   *   statusCode: 503,\n   *   details: { database: 'users_db', timeout: 5000 }\n   * });\n   * ```\n   *\n   * @example\n   * ```typescript\n   * // Subclass usage - maintains type\n   * class ApiException extends BaseException<{ endpoint: string }> {\n   *   protected static override parseErrorDetails(error: unknown) {\n   *     const details = super.parseErrorDetails(error);\n   *     return {\n   *       ...details,\n   *       endpoint: typeof error === 'object' && error !== null \n   *         ? (error as any).url || (error as any).endpoint\n   *         : undefined\n   *     };\n   *   }\n   * }\n   *\n   * const apiError = { message: 'Failed', url: '/api/users' };\n   * const exception = ApiException.from(apiError);\n   * // exception is typed as ApiException\n   * console.log(exception.details?.endpoint); // '/api/users'\n   * ```\n   *\n   * @example\n   * ```typescript\n   * // Error chain preservation\n   * const rootCause = new Error('Network timeout');\n   * const wrapped = BaseException.from(rootCause, {\n   *   code: 'NETWORK_ERROR'\n   * });\n   *\n   * console.log(wrapped.cause === rootCause); // true\n   * console.log(wrapped.toJSON().cause); // Serialized root cause\n   * ```\n   *\n   * @example\n   * ```typescript\n   * // Re-using existing exception with new options\n   * const original = new BaseException('Error');\n   * const updated = BaseException.from(original, {\n   *   code: 'UPDATED_CODE'\n   * });\n   *\n   * console.log(updated === original); // true (same instance)\n   * console.log(updated.code); // 'UPDATED_CODE' (merged)\n   * ```\n   *\n   * @remarks\n   * **Behavior**:\n   * - If `error` is already an instance of the calling class, returns it with options merged\n   * - Automatically detects and parses JSON strings\n   * - Extracts `code` and `statusCode` from error objects when available\n   * - Preserves error chains via the `cause` property\n   * - Sets `statusCode` to 500 by default for unknown errors\n  * - Override `parseErrorMessage()` to customize message extraction\n   * - Override `parseErrorDetails()` to extract custom fields\n   * - Override `createFromError()` for complete control over error conversion\n   * - Override `from()` itself for pre/post-processing logic\n   *\n   * @see {@link parseErrorMessage} - Customize message extraction\n   * @see {@link parseErrorDetails} - Customize details extraction\n   * @see {@link createFromError} - Full control over error conversion\n   * @see {@link withOptions} - Merge options into existing exceptions\n   */
   static from<
-    TDetails extends BaseExceptionDetails = BaseExceptionDetails,
+    TDetails = unknown,
     TException extends BaseException<TDetails> = BaseException<TDetails>,
+    TCause = unknown,
   >(
     this: BaseExceptionConstructor<TDetails, TException>,
     error: unknown,
-    options?: BaseExceptionOptions<TDetails>
+    options?: BaseExceptionOptions<TDetails, TCause>
   ): TException {
     // If it's already an instance of the class we are calling from, just reuse/merge
     if (error instanceof this) {
@@ -733,7 +728,7 @@ export class BaseException<
    * @example
    * ```typescript
    * // Database exception with error code detection
-   * interface DbErrorDetails extends BaseExceptionDetails {
+   * interface DbErrorDetails  {
    *   query?: string;
    *   table?: string;
    *   constraint?: string;
@@ -741,7 +736,7 @@ export class BaseException<
    *
    * class DatabaseException extends BaseException<DbErrorDetails> {
    *   protected static override createFromError<
-   *     TDetails extends BaseExceptionDetails = DbErrorDetails,
+   *     TDetails  = DbErrorDetails,
    *     T extends BaseException<TDetails> = BaseException<TDetails>
    *   >(
    *     this: BaseExceptionConstructor<TDetails, T>,
@@ -792,7 +787,7 @@ export class BaseException<
    * @example
    * ```typescript
    * // HTTP exception with status code mapping
-   * interface HttpErrorDetails extends BaseExceptionDetails {
+   * interface HttpErrorDetails  {
    *   statusCode: number;
    *   path?: string;
    *   method?: string;
@@ -801,7 +796,7 @@ export class BaseException<
    *
    * class HttpException extends BaseException<HttpErrorDetails> {
    *   protected static override createFromError<
-   *     TDetails extends BaseExceptionDetails = HttpErrorDetails,
+   *     TDetails  = HttpErrorDetails,
    *     T extends BaseException<TDetails> = BaseException<TDetails>
    *   >(
    *     this: BaseExceptionConstructor<TDetails, T>,
@@ -850,13 +845,13 @@ export class BaseException<
    * @example
    * ```typescript
    * // Validation exception with error aggregation
-   * interface ValidationErrorDetails extends BaseExceptionDetails {
+   * interface ValidationErrorDetails  {
    *   errors: Array<{ field: string; message: string; rule: string }>;
    * }
    *
    * class ValidationException extends BaseException<ValidationErrorDetails> {
    *   protected static override createFromError<
-   *     TDetails extends BaseExceptionDetails = ValidationErrorDetails,
+   *     TDetails  = ValidationErrorDetails,
    *     T extends BaseException<TDetails> = BaseException<TDetails>
    *   >(
    *     this: BaseExceptionConstructor<TDetails, T>,
@@ -972,12 +967,13 @@ export class BaseException<
    * @see {@link parseErrorDetails} - Override for custom detail extraction only
    */
   protected static createFromError<
-    TDetails extends BaseExceptionDetails = BaseExceptionDetails,
+    TDetails = unknown,
     TException extends BaseException<TDetails> = BaseException<TDetails>,
+    TCause = unknown,
   >(
     this: BaseExceptionConstructor<TDetails, TException>,
     error: unknown,
-    options?: BaseExceptionOptions<TDetails>
+    options?: BaseExceptionOptions<TDetails, TCause>
   ): TException {
     // Parse message using protected method (allows override)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -1133,6 +1129,7 @@ export class BaseException<
    * 2. Merges with `options.details` (options take precedence)
    *
    * @template TDetails - Type of the details object
+   * @template TCause - Type of the cause object
    * @param error - The error value to extract details from
    * @param options - Optional configuration with details to merge
    * @returns Object containing extracted details
@@ -1140,7 +1137,7 @@ export class BaseException<
    * @example
    * ```typescript
    * // Extract API-specific fields
-   * interface ApiErrorDetails extends BaseExceptionDetails {
+   * interface ApiErrorDetails  {
    *   endpoint?: string;
    *   method?: string;
    *   requestId?: string;
@@ -1148,11 +1145,11 @@ export class BaseException<
    *
    * class ApiException extends BaseException<ApiErrorDetails> {
    *   protected static override parseErrorDetails<
-   *     TDetails extends BaseExceptionDetails = ApiErrorDetails
+   *     TDetails  = ApiErrorDetails
    *   >(
    *     error: unknown,
    *     options?: BaseExceptionOptions<TDetails>
-   *   ): BaseExceptionDetails {
+   *   ) {
    *     const baseDetails = super.parseErrorDetails(error, options);
    *
    *     if (typeof error === 'object' && error !== null) {
@@ -1173,7 +1170,7 @@ export class BaseException<
    * @example
    * ```typescript
    * // Extract database-specific fields
-   * interface DbErrorDetails extends BaseExceptionDetails {
+   * interface DbErrorDetails  {
    *   query?: string;
    *   table?: string;
    *   constraint?: string;
@@ -1181,11 +1178,11 @@ export class BaseException<
    *
    * class DatabaseException extends BaseException<DbErrorDetails> {
    *   protected static override parseErrorDetails<
-   *     TDetails extends BaseExceptionDetails = DbErrorDetails
+   *     TDetails  = DbErrorDetails
    *   >(
    *     error: unknown,
    *     options?: BaseExceptionOptions<TDetails>
-   *   ): BaseExceptionDetails {
+   *   ) {
    *     const baseDetails = super.parseErrorDetails(error, options);
    *
    *     if (typeof error === 'object' && error !== null) {
@@ -1209,16 +1206,14 @@ export class BaseException<
    * - Called by `createFromError()` during error conversion
    * - Use TypeScript interfaces to ensure type safety of extracted fields
    */
-  protected static parseErrorDetails<
-    TDetails extends BaseExceptionDetails = BaseExceptionDetails,
-  >(
+  protected static parseErrorDetails<TDetails = unknown, TCause = unknown>(
     error: unknown,
-    options?: BaseExceptionOptions<TDetails>
-  ): BaseExceptionDetails {
+    options?: BaseExceptionOptions<TDetails, TCause>
+  ): TDetails {
     return {
       ...(isObj(error) ? error : undefined),
-      ...options?.details,
-    };
+      ...(options?.details ?? {}),
+    } as TDetails;
   }
 
   /**
@@ -1326,7 +1321,7 @@ export class BaseException<
     if (options?.code) error.code = options.code;
     if (options?.statusCode) error.statusCode = options.statusCode;
     if (options?.details) {
-      error.details = { ...error.details, ...options.details };
+      error.details = { ...(error.details ?? {}), ...options.details };
     }
     return error;
   }
@@ -1360,6 +1355,7 @@ export class BaseException<
    *
    * @template TResult - The return type of the operation
    * @template TDetails - Type of exception details
+   * @template TCause - Type of the cause
    * @param operation - Async function to execute
    * @param options - Optional exception metadata to add if an error occurs
    * @returns Promise resolving to the operation result
@@ -1448,12 +1444,9 @@ export class BaseException<
    * @see {@link tryCatchSync} - Sync version that returns error tuples
    * @see {@link from} - The conversion method used internally
    */
-  static async wrap<
-    TResult,
-    TDetails extends BaseExceptionDetails = BaseExceptionDetails,
-  >(
+  static async wrap<TResult, TDetails = unknown, TCause = unknown>(
     operation: () => Promise<TResult>,
-    options?: BaseExceptionOptions<TDetails>
+    options?: BaseExceptionOptions<TDetails, TCause>
   ): Promise<TResult> {
     try {
       return await operation();
@@ -1469,6 +1462,7 @@ export class BaseException<
    * Useful for concise one-liner error throwing with proper conversion.
    *
    * @template TDetails - Type of exception details
+   * @template TCause - Type of exception cause
    * @param error - The error value to convert and throw
    * @param options - Optional exception metadata
    * @throws {BaseException} Always throws
@@ -1513,9 +1507,9 @@ export class BaseException<
    *
    * @see {@link from} - Creates exception without throwing
    */
-  static throw<TDetails extends BaseExceptionDetails = BaseExceptionDetails>(
+  static throw<TDetails = unknown, TCause = unknown>(
     error: unknown,
-    options?: BaseExceptionOptions<TDetails>
+    options?: BaseExceptionOptions<TDetails, TCause>
   ): never {
     throw BaseException.from(error, options);
   }
@@ -1552,6 +1546,7 @@ export class BaseException<
    *
    * @template TResult - The return type of the operation
    * @template TDetails - Type of exception details
+   * @template TCause - Type of exception cause
    * @param this - The exception constructor (auto-bound)
    * @param operation - Synchronous function to execute
    * @param options - Optional exception metadata if an error occurs
@@ -1686,13 +1681,10 @@ export class BaseException<
    * @see {@link tryCatch} - Async version
    * @see {@link wrap} - Async version that throws instead of returning tuple
    */
-  static tryCatchSync<
-    TResult,
-    TDetails extends BaseExceptionDetails = BaseExceptionDetails,
-  >(
+  static tryCatchSync<TResult, TDetails = unknown, TCause = unknown>(
     this: BaseExceptionConstructor<TDetails, BaseException<TDetails>>,
     operation: () => TResult,
-    options?: BaseExceptionOptions<TDetails>
+    options?: BaseExceptionOptions<TDetails, TCause>
   ): [BaseException<TDetails>, null] | [null, TResult] {
     try {
       const result = operation();
@@ -1735,6 +1727,7 @@ export class BaseException<
    *
    * @template TResult - The return type of the async operation
    * @template TDetails - Type of exception details
+   * @template TCause - Type of exception cause
    * @param this - The exception constructor (auto-bound)
    * @param operation - Async function to execute
    * @param options - Optional exception metadata if an error occurs
@@ -1854,13 +1847,10 @@ export class BaseException<
    * @see {@link wrap} - Throws on error instead of returning tuple
    * @see {@link from} - The conversion method used internally
    */
-  static async tryCatch<
-    TResult,
-    TDetails extends BaseExceptionDetails = BaseExceptionDetails,
-  >(
+  static async tryCatch<TResult, TDetails = unknown, TCause = unknown>(
     this: BaseExceptionConstructor<TDetails, BaseException<TDetails>>,
     operation: () => Promise<TResult>,
-    options?: BaseExceptionOptions<TDetails>
+    options?: BaseExceptionOptions<TDetails, TCause>
   ): Promise<[BaseException<TDetails>, null] | [null, TResult]> {
     try {
       const result = await operation();
@@ -1879,7 +1869,8 @@ export class BaseException<
  * exceptions via the constructor, `from()`, or other factory methods. All properties
  * are optional, allowing flexible error creation with varying levels of detail.
  *
- * @template TDetails - Type of the structured details object. Must extend BaseExceptionDetails.
+ * @template TDetails - Type of the structured details object.
+ * @template TCause - Type of the structured cause
  *
  * @example
  * ```typescript
@@ -1895,7 +1886,7 @@ export class BaseException<
  * @example
  * ```typescript
  * // With typed details
- * interface PaymentDetails extends BaseExceptionDetails {
+ * interface PaymentDetails  {
  *   transactionId: string;
  *   amount: number;
  *   currency: string;
@@ -1954,9 +1945,7 @@ export class BaseException<
  * });
  * ```
  */
-export interface BaseExceptionOptions<
-  TDetails extends BaseExceptionDetails = BaseExceptionDetails,
-> {
+export interface BaseExceptionOptions<TDetails = unknown, TCause = unknown> {
   /**
    * Application-specific error code for categorizing errors.
    *
@@ -2045,7 +2034,7 @@ export interface BaseExceptionOptions<
    * }
    * ```
    */
-  details?: TDetails;
+  details?: BaseExceptionDetails<TDetails>;
 
   /**
    * The underlying error that caused this exception.
@@ -2085,7 +2074,7 @@ export interface BaseExceptionOptions<
    * // Includes apiError with its cause networkError
    * ```
    */
-  cause?: unknown;
+  cause?: TCause;
 
   /**
    * Custom timestamp for when the exception occurred.
@@ -2155,7 +2144,7 @@ export interface BaseExceptionOptions<
  * that `this` refers to the constructor being called, enabling proper type inference
  * for subclasses.
  *
- * @template TDetails - The type of the exception details object. Must extend BaseExceptionDetails.
+ * @template TDetails - The type of the exception details object.
  * @template TException - The type of exception instance the constructor creates. Must extend BaseException<TDetails>.
  *
  * @example
@@ -2163,7 +2152,7 @@ export interface BaseExceptionOptions<
  * // Basic usage in a static method
  * class MyException extends BaseException {
  *   static customMethod<
- *     TDetails extends BaseExceptionDetails = BaseExceptionDetails,
+ *     TDetails = unknown,
  *     T extends BaseException<TDetails> = BaseException<TDetails>
  *   >(
  *     this: BaseExceptionConstructor<TDetails, T>,
@@ -2177,7 +2166,7 @@ export interface BaseExceptionOptions<
  * @example
  * ```typescript
  * // Why this is needed: Without proper typing, subclass static methods lose type information
- * interface ApiErrorDetails extends BaseExceptionDetails {
+ * interface ApiErrorDetails  {
  *   endpoint: string;
  * }
  *
@@ -2190,18 +2179,6 @@ export interface BaseExceptionOptions<
  * // ex is typed as ApiException, not BaseException
  * ```
  *
- * @example
- * ```typescript
- * // Constructor type vs instance type comparison
- * type ConstructorType = BaseExceptionConstructor<BaseExceptionDetails>;
- * // This is the TYPE OF THE CLASS itself (new (...) => Instance)
- *
- * type InstanceType = BaseException<BaseExceptionDetails>;
- * // This is the type of an INSTANCE of the class
- *
- * const exampleClass: ConstructorType = BaseException; // ✓ Valid
- * const exampleInstance: InstanceType = new BaseException('error'); // ✓ Valid
- * ```
  *
  * @remarks
  * This follows TypeScript's convention for constructor types, similar to built-in types
@@ -2212,13 +2189,25 @@ export interface BaseExceptionOptions<
  * @see {@link BaseException.createFromError} - Uses this type for proper subclass typing
  */
 export type BaseExceptionConstructor<
-  TDetails extends BaseExceptionDetails = BaseExceptionDetails,
+  TDetails = unknown,
   TException extends BaseException<TDetails> = BaseException<TDetails>,
+  TCause = unknown,
 > = new (
   message: string,
-  options?: BaseExceptionOptions<TDetails>
+  options?: BaseExceptionOptions<TDetails, TCause>
 ) => TException;
 
+/**
+ * Helper type for exception details.
+ * Defaults to a loose dictionary if no specific type is provided.
+ */
+export type BaseExceptionDetails<TDetails = unknown> =
+  // If TDetails is unknown (default), allow any dictionary
+  unknown extends TDetails
+    ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      Record<string, any>
+    : // If TDetails is provided, use it exactly as is (no method stripping to avoid inference issues)
+      TDetails;
 // Helper to check production env
 const isProduction = () => {
   try {
