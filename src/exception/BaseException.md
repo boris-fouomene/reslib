@@ -318,13 +318,13 @@ console.log(JSON.stringify(exception));
 // }
 ```
 
-### Duck Typing (`isBaseException`)
+### Duck Typing (`is`)
 
 Works across packages, versions, and network boundaries.
 
 ```typescript
 // Works even if the object came from a JSON payload!
-if (BaseException.isBaseException(someObject)) {
+if (BaseException.is(someObject)) {
   console.log(someObject.code);
 }
 ```

@@ -221,7 +221,7 @@ export class BaseException<
    * ```typescript
    * // API response usage
    * app.use((err, req, res, next) => {
-   *   if (BaseException.isBaseException(err)) {
+   *   if (BaseException.is(err)) {
    *     res.status(err.statusCode || 500).json(err.toJSON({
    *       stack: process.env.NODE_ENV !== 'production',
    *       cause: true
@@ -300,7 +300,7 @@ export class BaseException<
    */
   private serializeCause(cause: unknown, depth: number): unknown {
     if (depth <= 0) return '[Max Depth Reached]';
-    if (BaseException.isBaseException(cause)) {
+    if (BaseException.is(cause)) {
       return cause.toJSON({
         stack: false,
         cause: true,
@@ -378,7 +378,7 @@ export class BaseException<
    */
 
   /* static [Symbol.hasInstance](obj: any) {
-    return this.isBaseException(obj);
+    return this.is(obj);
   } */
   /**
    * Type guard to check if a value is a BaseException instance or has BaseException structure.
@@ -397,7 +397,7 @@ export class BaseException<
    * ```typescript
    * // Check exception instances
    * const error = new BaseException('Error');
-   * if (BaseException.isBaseException(error)) {
+   * if (BaseException.is(error)) {
    *   console.log(error.code); // TypeScript knows it's a BaseException
    * }
    * ```
@@ -409,14 +409,14 @@ export class BaseException<
    * const json = JSON.stringify(error);
    * const parsed = JSON.parse(json);
    *
-   * BaseException.isBaseException(parsed); // true! (duck-typing)
+   * BaseException.is(parsed); // true! (duck-typing)
    * ```
    *
    * @example
    * ```typescript
    * // Type narrowing in error handlers
    * function handleError(error: unknown) {
-   *   if (BaseException.isBaseException(error)) {
+   *   if (BaseException.is(error)) {
    *     // TypeScript narrows type to BaseException
    *     console.log('Code:', error.code);
    *     console.log('Status:', error.statusCode);
@@ -437,7 +437,7 @@ export class BaseException<
    *   { message: 'plain object' }
    * ];
    *
-   * const baseExceptions = errors.filter(BaseException.isBaseException);
+   * const baseExceptions = errors.filter(BaseException.is);
    * // baseExceptions is typed as BaseException[]
    * ```
    *
@@ -447,7 +447,7 @@ export class BaseException<
    * class ApiException extends BaseException {}
    *
    * const error: unknown = new ApiException('API failed');
-   * if (BaseException.isBaseException<ApiException>(error)) {
+   * if (BaseException.is<ApiException>(error)) {
    *   // error is narrowed to ApiException
    * }
    * ```
@@ -461,7 +461,7 @@ export class BaseException<
    *
    * This ensures compatibility across module boundaries and serialization.
    */
-  static isBaseException<TException extends BaseException>(
+  static is<TException extends BaseException>(
     value: unknown
   ): value is TException {
     try {

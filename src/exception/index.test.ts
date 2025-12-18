@@ -596,14 +596,14 @@ describe('BaseException.from() Extensibility (Inheritance Cases)', () => {
       expect(fromExisting.message).toBe('Original error');
     });
 
-    test('should correctly identify serialized subclasses using isBaseException', () => {
+    test('should correctly identify serialized subclasses using is', () => {
       class PaymentException extends BaseException {
         // Custom name
       }
       const ex = new PaymentException('Payment failed');
       const serialized = JSON.parse(JSON.stringify(ex)); // Simulate network transfer
       // Before the fix, this would fail because name is 'PaymentException' != 'BaseException'
-      expect(BaseException.isBaseException(serialized)).toBe(true);
+      expect(BaseException.is(serialized)).toBe(true);
     });
   });
 

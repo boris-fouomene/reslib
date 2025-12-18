@@ -305,29 +305,29 @@ describe('BaseException - Comprehensive Test Suite', () => {
       });
     });
 
-    describe('isBaseException()', () => {
+    describe('is()', () => {
       test('should identify BaseException instances', () => {
         const ex = new BaseException('Test');
-        expect(BaseException.isBaseException(ex)).toBe(true);
+        expect(BaseException.is(ex)).toBe(true);
       });
 
       test('should identify subclass instances', () => {
         class SubException extends BaseException {}
         const ex = new SubException('Test');
-        expect(BaseException.isBaseException(ex)).toBe(true);
+        expect(BaseException.is(ex)).toBe(true);
       });
 
       test('should identify serialized exceptions', () => {
         const ex = new BaseException('Test');
         const serialized = JSON.parse(JSON.stringify(ex.toJSON()));
-        expect(BaseException.isBaseException(serialized)).toBe(true);
+        expect(BaseException.is(serialized)).toBe(true);
       });
 
       test('should reject non-exceptions', () => {
-        expect(BaseException.isBaseException(null)).toBe(false);
-        expect(BaseException.isBaseException({})).toBe(false);
-        expect(BaseException.isBaseException('string')).toBe(false);
-        expect(BaseException.isBaseException(new Error())).toBe(false);
+        expect(BaseException.is(null)).toBe(false);
+        expect(BaseException.is({})).toBe(false);
+        expect(BaseException.is('string')).toBe(false);
+        expect(BaseException.is(new Error())).toBe(false);
       });
     });
   });
