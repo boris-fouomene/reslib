@@ -77,7 +77,7 @@ const result = await Validator.validate({
 if (result.success) {
   console.log('✅ Valid email!');
 } else {
-  console.error('❌ Error:', result.error.message);
+  console.error('❌ Error:', result.message);
 }
 ```
 
@@ -301,21 +301,26 @@ Validation functions return:
 ### Result Types
 
 ```typescript
-// Success result
+// Success result (ValidatorResult)
 {
   success: true,
+  status: 'success',
   value: any,
   validatedAt: Date,
   duration: number
 }
 
-// Failure result
+// Failure result (ValidatorError)
 {
   success: false,
-  error: ValidatorValidationError,
+  status: 'error',
+  message: string,
+  ruleName: string,
   failedAt: Date,
-  duration: number
+  duration: number,
+  // ... other error details (e.g., code, severity)
 }
+
 ```
 
 ---
@@ -5223,7 +5228,7 @@ const result = await Validator.validateTarget(UserRegistrationDTO, {
   },
 });
 
-if (result.isValid) {
+if (result.success) {
   console.log('✅ Validation passed!');
 } else {
   console.error('❌ Errors:', result.errors);
@@ -5324,13 +5329,23 @@ static async validateTarget<Target extends object, Context = unknown>(
 **Returns:** `Promise<ValidatorTargetResult>`
 
 ```typescript
+// Success (ValidatorTargetSuccess)
 {
-  isValid: boolean;
-  errors: Array<{
-    field: string;
-    message: string;
-  }>;
-  data: Target; // The validated data
+  success: true,
+  status: 'success',
+  data: Target,
+  // ...
+}
+
+// Failure (ValidatorTargetError)
+{
+  success: false,
+  status: 'error',
+  message: string,
+  errors: ValidatorTargetSingleError[]; // Array of errors
+  fieldErrors: Record<string, string>; // Map of field -> error message
+  data: Partial<Target>; // The data that was validated
+  // ...
 }
 ```
 
@@ -5347,7 +5362,7 @@ const result = await Validator.validateTarget(User, {
   data: { email: 'user@example.com' },
 });
 
-if (result.isValid) {
+if (result.success) {
   // result.data is fully validated
   saveUser(result.data);
 }

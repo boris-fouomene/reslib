@@ -26,8 +26,10 @@ const result = await Validator.validate({
   rules: ['Required', 'Email'],
 });
 
-if (result.isValid) {
+if (result.success) {
   console.log('✅ Valid email!');
+} else {
+  console.error('❌ Error:', result.message);
 }
 ```
 
@@ -44,6 +46,16 @@ class UserRegistration {
   @IsRequired()
   @MinLength(8)
   password: string;
+}
+
+const result = await Validator.validateTarget(UserRegistration, {
+  data: { email: 'user@example.com', password: 'password123' },
+});
+
+if (result.success) {
+  console.log('✅ Registration valid');
+} else {
+  console.error('❌ Errors:', result.errors);
 }
 ```
 

@@ -52,13 +52,26 @@ static async validate<Context = unknown>(
 #### Returns
 
 ```typescript
-Promise<ValidatorResult>;
+Promise<ValidatorResult<Context>>;
 
-interface ValidatorResult<Context = unknown> {
-  isValid: boolean;
-  message?: string;
+type ValidatorResult<Context = unknown> =
+  | ValidatorValidateSuccess<Context>
+  | ValidatorError<Context>;
+
+interface ValidatorValidateSuccess<Context> {
+  success: true;
+  status: 'success';
   value: any;
   context?: Context;
+  // ...
+}
+
+interface ValidatorError<Context> {
+  success: false;
+  status: 'error';
+  message: string;
+  ruleName: string;
+  // ...
 }
 ```
 
@@ -72,7 +85,7 @@ const result = await Validator.validate({
   rules: ['Required', 'Email'],
 });
 
-if (result.isValid) {
+if (result.success) {
   console.log('✅ Valid!');
 } else {
   console.log('❌ Error:', result.message);
@@ -136,16 +149,26 @@ static async validateTarget<Target extends object, Context = unknown>(
 #### Returns
 
 ```typescript
-Promise<ValidatorTargetResult>;
+Promise<ValidatorTargetResult<Target, Context>>;
 
-interface ValidatorTargetResult<Target, Context = unknown> {
-  isValid: boolean;
-  errors: Array<{
-    field: string;
-    message: string;
-  }>;
+type ValidatorTargetResult<Target, Context> =
+  | ValidatorTargetSuccess<Target, Context>
+  | ValidatorTargetError<Target>;
+
+interface ValidatorTargetSuccess<Target, Context> {
+  success: true;
+  status: 'success';
   data: Target;
   context?: Context;
+}
+
+interface ValidatorTargetError<Target> {
+  success: false;
+  status: 'error';
+  message: string;
+  errors: ValidatorTargetSingleError[];
+  fieldErrors: Record<keyof Target, string>;
+  data: Partial<Target>;
 }
 ```
 
@@ -171,12 +194,13 @@ const result = await Validator.validateTarget(User, {
   },
 });
 
-if (result.isValid) {
+if (result.success) {
   console.log('✅ All fields valid');
   // result.data is fully validated User object
 } else {
   console.log('❌ Errors:', result.errors);
-  // result.errors: [{ field: 'password', message: '...' }]
+  // result.errors: Array of failure details
+  // result.fieldErrors: { password: '...' }
 }
 ```
 

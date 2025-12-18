@@ -89,8 +89,8 @@ export function formActionFactory<Fields extends FormFields>(
       rules: extractRulesFromFields(fields), // Helper to map your config to rules
     });
 
-    if (!result.isValid) {
-      return { success: false, errors: result.errors };
+    if (!result.success) {
+      return { success: false, errors: [result.message] };
     }
 
     // 3. Execute your business logic
@@ -177,8 +177,8 @@ export async function POST(req: Request) {
     rules: ['IsObject', { Required: [], field: 'eventId' }],
   });
 
-  if (!result.isValid) {
-    return Response.json({ error: result.errors }, { status: 400 });
+  if (!result.success) {
+    return Response.json({ error: result.message }, { status: 400 });
   }
 
   // ...

@@ -67,6 +67,7 @@ export class ValidationPipe implements PipeTransform {
     if (!result.success) {
       throw new BadRequestException(result);
     }
+
     return value;
   }
 
@@ -293,7 +294,7 @@ export class ValidationPipe implements PipeTransform {
       data: dataToValidate,
     });
 
-    if (!result.isValid) {
+    if (!result.success) {
       this.logger.warn(`Validation failed for ${metatype.name}`, result.errors);
 
       throw new BadRequestException({
@@ -348,7 +349,7 @@ export class ValidationPipe implements PipeTransform {
       i18n: this.i18n, // reslib/validator will use this for error messages
     });
 
-    if (!result.isValid) {
+    if (!result.success) {
       throw new BadRequestException({
         message: this.i18n.t('validation.failed'),
         errors: result.errors,
@@ -400,7 +401,7 @@ export class ValidationPipe implements PipeTransform {
       },
     });
 
-    if (!result.isValid) {
+    if (!result.success) {
       throw new BadRequestException({
         message: 'Validation failed',
         errors: result.errors,
