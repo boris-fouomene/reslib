@@ -1,6 +1,11 @@
 import { I18n } from '@/i18n';
 import { InputFormatterResult } from '@/inputFormatter/types';
 import { ClassConstructor, Dictionary } from '@/types';
+import {
+  ValidationError,
+  ValidationErrorDetail,
+  ValidatorTargetError,
+} from './errors';
 
 /**
  * ## Validator Sync Result
@@ -1942,7 +1947,7 @@ export interface ValidatorValidateTargetOptions<
   errorMessageBuilder?: (
     translatedPropertyName: string,
     error: string,
-    builderOptions: ValidatorValidationError & {
+    builderOptions: ValidationErrorDetail & {
       propertyName: keyof InstanceType<Target> | string;
       translatedPropertyName: string;
       i18n: I18n;
@@ -2030,160 +2035,6 @@ export type ValidatorMultiRuleNames = 'OneOf' | 'AllOf';
  * Uses the Either<L, R> pattern where Left represents failure and Right represents success.
  * This provides strong type safety and prevents accessing wrong properties based on the result state.
  */
-
-/**
- * ## Validation Error Details
- *
- * Comprehensive error information structure for validation failures.
- * This interface defines the complete error object that is returned when validation rules fail,
- * providing detailed context about what went wrong and where.
- *
- * ### Purpose
- * Serves as the standardized error format across the entire validation system.
- * Contains all necessary information for error reporting, debugging, and user feedback.
- * Used by both single-value and target validation failure results.
- *
- * ### Key Properties
- * - **status**: Always "error" for type discrimination
- * - **name**: Error class name ("ValidatorValidationError")
- * - **message**: Human-readable error message (translated if available)
- * - **ruleName**: The specific validation rule that failed
- * - **value**: The actual value that failed validation
- * - **propertyName**: Object property name (for target validation)
- * - **fieldName**: Form field identifier
- *
- * ### Usage in Validation Results
- * This interface is used in failure results:
- * - {@link ValidatorValidateFailure.error} - Single value validation failures
- * - {@link ValidatorValidateTargetFailure.errors} - Array of errors in target validation
- *
- * ### Error Message Structure
- * Error messages follow a consistent format:
- * ```
- * "[PropertyName]: Error message from rule"
- * ```
- * For example: `"[Email]: Must be valid email format"`
- *
- * ### Internationalization Support
- * - **translatedPropertyName**: Localized property name for user-facing messages
- * - **message**: Can be translated based on i18n configuration
- * - **timestamp**: When the error occurred (for logging/debugging)
- *
- * ### Metadata and Extensibility
- * - **code**: Programmatic error code for conditional handling
- * - **severity**: Error level ("error", "warning", "info")
- * - **metadata**: Additional error context as key-value pairs
- *
- * ### Example Error Object
- * ```typescript
- * const error: ValidatorValidationError = {
- *   status: "error",
- *   name: "ValidatorValidationError",
- *   message: "[Email]: Must be valid email format",
- *   ruleName: "Email",
- *   ruleParams: [],
- *   rawRuleName: "Email",
- *   propertyName: "email",
- *   fieldName: "email_input",
- *   translatedPropertyName: "Email Address",
- *   value: "invalid-email",
- *   code: "INVALID_EMAIL",
- *   severity: "error",
- *   timestamp: new Date(),
- *   metadata: {
- *     suggestion: "Please use format: user@example.com",
- *     domain: "example.com"
- *   }
- * };
- * ```
- *
- * ### Relationship to Validation System
- * - **Created by**: Validation rule functions when they return failure strings
- * - **Processed by**: {@link validate} and {@link Validator.validateTarget}
- * - **Used in**: Error aggregation and reporting throughout the system
- * - **Compatible with**: Standard error handling patterns and logging systems
- *
- * ### Best Practices
- *
- * #### Error Message Guidelines
- * ```typescript
- * // ✅ Good: Specific, actionable messages
- * message: "[Password]: Must contain at least one uppercase letter"
- *
- * // ❌ Avoid: Generic or unhelpful messages
- * message: "Invalid input"
- * ```
- *
- * #### Using Error Codes
- * ```typescript
- * // Enable programmatic error handling
- * if (error.code === "EMAIL_INVALID_FORMAT") {
- *   highlightEmailField();
- *   showEmailFormatHint();
- * }
- * ```
- *
- * #### Metadata for Rich Errors
- * ```typescript
- * // Provide additional context
- * error.metadata = {
- *   minLength: 8,
- *   actualLength: 5,
- *   missingChars: ["uppercase", "number"]
- * };
- * ```
- *
- * @public
- *
- * @see {@link ValidatorValidateFailure} - Single validation failure result
- * @see {@link ValidatorValidateTargetFailure} - Target validation failure result
- * @see {@link Validator.validate} - Method that creates these errors
- * @see {@link Validator.validateTarget} - Method that creates these errors
- */
-export interface ValidatorValidationError {
-  /** Always 'error' for failures */
-  status: 'error';
-
-  name: 'ValidatorValidationError';
-
-  /** The property name that failed validation (required) */
-  fieldName?: string;
-
-  /** Alias for fieldName (required) */
-  propertyName?: string;
-
-  /** The validation error message (required) */
-  message: string;
-
-  /** Localized field name for user-facing messages */
-  translatedPropertyName?: string;
-
-  /** The specific rule that failed */
-  ruleName?: ValidatorRuleName;
-
-  /** Parameters passed to the failing rule */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  ruleParams: any[];
-
-  /** The value that failed validation */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  value: any;
-
-  /** Raw rule name with parameters (e.g., "minLength[5]") */
-  rawRuleName?: ValidatorRuleName | string;
-
-  /** Error code for programmatic handling */
-  code?: string;
-
-  /** Error severity level */
-  severity?: 'error' | 'warning' | 'info';
-
-  /** When the validation failed */
-  timestamp?: Date;
-
-  /** Additional error metadata */
-  metadata?: Dictionary;
-}
 
 // Single value validation (reuse base types directly)
 /**
@@ -2395,109 +2246,8 @@ interface BaseData<Context = unknown> {
    */
   context?: Context;
 }
-/**
- * ## Single Value Validation Failure Result
- *
- * Represents a failed validation result for a single value.
- * This type is used as the failure branch of the {@link ValidatorValidateResult} discriminated union.
- *
- * ### Type Guard
- * Can be narrowed using {@link Validator.isFailure}:
- * ```typescript
- * if (Validator.isFailure(result)) {
- *   // TypeScript knows: result satisfies ValidatorValidateFailure
- *   // Can safely access result.error, result.failedAt, result.duration
- * }
- * ```
- *
- * ### Properties
- * - **success**: Literal `false` for type discrimination
- * - **error**: Validation error details (name, message, rule info)
- * - **failedAt**: ISO timestamp indicating when validation failed
- * - **duration**: Duration in milliseconds until failure
- * - **validatedAt**: Explicitly `undefined` for failure (aids type narrowing)
- * - **value**: The original value that failed validation
- * - **data**: Optional context data (inherited from BaseData)
- * - **context**: Optional validation context (inherited from BaseData)
- *
- * ### Error Object Structure
- * The `error` property contains:
- * ```typescript
- * {
- *   name: "ValidatorValidationError",
- *   message: "Error message (translated if available)",
- *   ruleName: "Email",              // Name of failing rule
- *   ruleParams: [],                 // Parameters passed to rule
- *   rawRuleName: "Email",           // Original rule specification
- *   fieldName: "email_field",       // Optional field identifier
- *   propertyName: "email",          // Optional property name
- *   translatedPropertyName?: "Email Address", // Translated name
- *   value: "invalid@",              // Value that failed
- * }
- * ```
- *
- * ### Example
- * ```typescript
- * const result = await Validator.validate({
- *   value: "not-an-email",
- *   rules: ["Required", "Email"],
- * });
- *
- * if (!result.success) {
- *   // result is ValidatorValidateFailure
- *   console.error("Validation failed:");
- *   console.error("  Value:", result.value);
- *   console.error("  Error:", result.error.message);
- *   console.error("  Rule:", result.error.ruleName);
- *   console.error("  Failed at:", result.failedAt.toISOString());
- *   console.error("  Duration:", result.duration, "ms");
- * }
- * ```
- *
- * @template Context - Type of the optional validation context
- *
- * @public
- *
- * @see {@link ValidatorValidateResult}
- * @see {@link ValidatorValidateSuccess}
- * @see {@link ValidatorValidationError}
- * @see {@link Validator.validate}
- * @see {@link Validator.isFailure}
- */
-export interface ValidatorValidateFailure<
-  Context = unknown,
-> extends BaseData<Context> {
-  /** Discriminant for type narrowing - always `false` for failure */
-  success: false;
 
-  /**
-   * The validation error details
-   *
-   * Contains complete information about what validation rule failed
-   * and why, including the rule name, parameters, and error message.
-   *
-   * @type {ValidatorValidationError}
-   * @see {@link ValidatorValidationError}
-   */
-  error: ValidatorValidationError;
-
-  /**
-   * ISO timestamp indicating when validation failed
-   * @example "2024-11-08T10:30:45.118Z"
-   */
-  failedAt?: Date;
-
-  /**
-   * Duration of validation before failure in milliseconds
-   * @example 2 (milliseconds - failed quickly on first rule)
-   */
-  duration?: number;
-
-  /** Always undefined for failure results (type narrowing aid) */
-  validatedAt?: undefined;
-}
-
-/**
+/* ```
  * ## Validation Result Type (Discriminated Union)
  *
  * Represents the result of a single-value validation operation.
@@ -2580,7 +2330,7 @@ export interface ValidatorValidateFailure<
  */
 export type ValidatorValidateResult<Context = unknown> =
   | ValidatorValidateSuccess<Context>
-  | ValidatorValidateFailure<Context>;
+  | ValidationError;
 
 /**
  * ## Validate Target Result Types
@@ -2595,163 +2345,6 @@ export type ValidatorValidateResult<Context = unknown> =
  * - **Class-Based**: Works with decorated class properties rather than single values
  * - **FieldMeta Mapping**: Maps validated data back to class structure with proper typing
  */
-
-/**
- * ## Class Validation Failure Result
- *
- * Represents a failed multi-field validation result when using {@link Validator.validateTarget}.
- * Unlike single-value validation, this accumulates errors from all fields that fail.
- *
- * ### Type Guard
- * Can be narrowed by checking the `success` property:
- * ```typescript
- * const result = await Validator.validateTarget(UserForm, data);
- *
- * if (!result.success) {
- *   // result is ValidatorValidateTargetFailure
- *   console.log(result.errors);      // Array of field errors
- *   console.log(result.failureCount); // Number of failed fields
- *   console.log(result.message);     // Summary message
- * }
- * ```
- *
- * ### Properties
- * - **success**: Literal `false` for type discrimination
- * - **errors**: Array of ValidatorValidationError, one per failed field
- * - **failureCount**: Number of fields that failed validation
- * - **message**: Summary message (e.g., "Validation failed for 3 fields")
- * - **status**: Always "error" for consistency
- * - **failedAt**: ISO timestamp of when validation failed
- * - **duration**: Milliseconds elapsed during validation
- * - **data**: Always `undefined` for target failures
- * - **value**: Always `undefined` for target (use `errors` instead)
- * - **context**: Optional validation context provided
- *
- * ### Error Array Structure
- * Each error in the `errors` array contains:
- * ```typescript
- * {
- *   name: "ValidatorValidationError",
- *   status: "error",
- *   fieldName: "email_field",       // Form field identifier
- *   propertyName: "email",          // Class property name
- *   message: "[Email]: Must be valid email",  // Formatted error message
- *   ruleName: "Email",              // Name of failing rule
- *   ruleParams: [],                 // Rule parameters
- *   value: "invalid@",              // Value that failed
- * }
- * ```
- *
- * ### Example
- * ```typescript
- * class UserForm {
- *   @IsRequired()
- *   @IsEmail()
- *   email: string;
- *
- *   @IsRequired()
- *   @MinLength(3)
- *   name: string;
- * }
- *
- * const result = await Validator.validateTarget(UserForm, {
- *   email: "invalid-email",
- *   name: "ab",  // Too short
- * });
- *
- * if (!result.success) {
- *   // result.failureCount === 2
- *   // result.errors.length === 2
- *   result.errors.forEach(error => {
- *     console.error(`${error.propertyName}: ${error.message}`);
- *   });
- * }
- * ```
- * @template Context - Type of the optional validation context
- *
- * @public
- *
- * @see {@link ValidatorValidateTargetResult}
- * @see {@link ValidatorValidationError}
- * @see {@link Validator.validateTarget}
- */
-export interface ValidatorValidateTargetFailure<Context = unknown> extends Omit<
-  BaseData<Context>,
-  'value' | 'data'
-> {
-  /** Discriminant for type narrowing - always `false` for failures */
-  success: false;
-
-  /**
-   * Summary message describing the failure
-   *
-   * Typically formatted as "Validation failed for N fields" where N is the number of failures.
-   * Can be customized via i18n translations.
-   *
-   * @type {string}
-   * @example "Validation failed for 3 fields"
-   */
-  message: string;
-
-  /**
-   * Array of validation errors for each field that failed
-   *
-   * Contains one error object per field that failed validation.
-   * Each error includes the field name, error message, rule name, and value.
-   *
-   * @type {ValidatorValidationError[]}
-   * @see {@link ValidatorValidationError}
-   */
-  errors: ValidatorValidationError[];
-
-  /**
-   * Number of fields that failed validation
-   *
-   * Equal to errors.length. Provided for convenience.
-   *
-   * @type {number}
-   * @example 3
-   */
-  failureCount: number;
-
-  /**
-   * Status indicator for this result
-   *
-   * Always "error" for failures. Provided for consistency with HTTP and API conventions.
-   *
-   * @type {"error"}
-   */
-  status: 'error';
-
-  /**
-   * ISO timestamp of when validation failed
-   *
-   * Indicates the exact time validation completed with failures.
-   *
-   * @type {Date | undefined}
-   * @example new Date("2024-11-08T10:30:45.523Z")
-   */
-  failedAt?: Date;
-
-  /**
-   * Duration of validation in milliseconds
-   *
-   * Measures time from validation start until failures were detected.
-   * Note: All fields are validated in parallel, so this is not the sum of individual field times.
-   *
-   * @type {number | undefined}
-   * @example 45 (milliseconds)
-   */
-  duration?: number;
-
-  /** Validation context (if provided) */
-  context?: Context;
-
-  /** Always `undefined` for target failures (type narrowing aid) */
-  validatedAt?: undefined;
-
-  data: Dictionary;
-}
 
 /**
  * ## Class Validation Success Result
@@ -2887,7 +2480,8 @@ export interface ValidatorValidateTargetSuccess<Context = unknown> extends Omit<
  * ## Class Validation Result Type (Discriminated Union)
  *
  * Discriminated union type representing the result of a {@link Validator.validateTarget} operation.
- * Can be either {@link ValidatorValidateTargetSuccess} or {@link ValidatorValidateTargetFailure}.
+ * Discriminated union type representing the result of a {@link Validator.validateTarget} operation.
+ * Can be either {@link ValidatorValidateTargetSuccess} or {@link ValidatorTargetError}.
  *
  * ### Type Narrowing Strategies
  *
@@ -2986,9 +2580,11 @@ export interface ValidatorValidateTargetSuccess<Context = unknown> extends Omit<
  * @see {@link Validator.isFailure} - Type guard for failure
  * @see {@link ValidatorValidateResult} - Single-value equivalent
  */
-export type ValidatorValidateTargetResult<Context = unknown> =
-  | ValidatorValidateTargetSuccess<Context>
-  | ValidatorValidateTargetFailure<Context>;
+export type ValidatorValidateTargetResult<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  Target extends ClassConstructor = any,
+  Context = unknown,
+> = ValidatorValidateTargetSuccess<Context> | ValidatorTargetError<Target>;
 
 /**
  * ## Validator Rule Functions Map
