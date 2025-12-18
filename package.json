@@ -23,6 +23,11 @@
       "import": "./lib/esm/i18n.mjs",
       "require": "./lib/cjs/i18n.js"
     },
+    "./exception":{
+      "types": "./build/exception/index.d.ts",
+      "import": "./lib/esm/exception.mjs",
+      "require": "./lib/cjs/exception.js"
+    },
     "./inputFormatter": {
       "types": "./build/inputFormatter/index.d.ts",
       "import": "./lib/esm/inputFormatter.mjs",

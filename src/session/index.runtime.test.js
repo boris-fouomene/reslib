@@ -2,10 +2,9 @@
 import 'reflect-metadata';
 
 // Test file designed to work with compiled JavaScript environment
-import { Session, AttachSessionStorage } from "./index";
 import { Platform } from '../platform';
 import { JsonHelper } from '../utils/json';
-import isPromise from "../utils/isPromise";
+import { AttachSessionStorage, Session } from "./index";
 
 // Create spy objects that work with the compiled modules
 const platformSpy = jest.spyOn(Platform, 'isClientSide').mockReturnValue(false);

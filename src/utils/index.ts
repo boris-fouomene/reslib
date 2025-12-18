@@ -9,7 +9,6 @@ export { defaultBool } from './defaultBool';
 export { defaultStr } from './defaultStr';
 export { defaultVal } from './defaultVal';
 export * from './dom';
-export * from './exception';
 export * from './image';
 export * from './isHexadecimal';
 export * from './isMongoId';
