@@ -9,7 +9,9 @@ import { isObj } from '@utils/object';
  * Represents a generic dictionary for exception details.
  * Replaces the strict Dictionary type to allow more flexibility.
  */
-export type BaseExceptionDetails = Record<string | number | symbol, unknown>;
+export interface BaseExceptionDetails {
+  [key: string | number | symbol]: unknown;
+}
 
 /**
  * Hook function type for intercepting exceptions (e.g., for logging).
