@@ -483,21 +483,34 @@ export class BaseException<
   // --- Factory Methods with proper inheritance support ---
 
   /**
-   * Protected factory method to create an exception instance.
+   * Protected factory method to create a new exception instance.
    *
-   * This is a low-level helper method used internally by `from()` and `createFromError()`.
-   * It uses the polymorphic `this` parameter to ensure that when called on subclasses,
-   * it returns an instance of the subclass, not BaseException.
+   * **Purpose**: Low-level factory that creates a NEW exception instance from a message and options.
+   * This is the final step in the exception creation chain used by `createFromError()`.
    *
-   * **Protected**: This method is not part of the public API. Use `from()` or the constructor
-   * directly. Override this in subclasses only if you need to customize instance creation
-   * (e.g., for dependency injection or custom initialization logic).
+   * **Key Differences from Related Methods**:
+   * - **`create(message, options)`** ← YOU ARE HERE
+   *   - Creates NEW instance from known message + options
+   *   - Simple: `new this(message, options)`
+   *   - Override for: post-construction logic (DI, logging, tracking)
+   *
+   * - **`createFromError(error, options)`** ← Higher-level
+   *   - Converts UNKNOWN error → extracts data → calls `create()`
+   *   - Complex: error detection, parsing, then calls create()
+   *   - Override for: domain-specific error detection (DB codes, HTTP status)
+   *
+   * - **`withOptions(exception, options)`** ← Different purpose
+   *   - Mutates EXISTING instance (no new instance created)
+   *   - Updates properties on already-created exception
+   *   - Use for: adding metadata to existing exceptions
+   *
+   * **Flow**: `from(error)` → `createFromError(error)` → `parseErrorMessage()` + `parseErrorDetails()` → **`create(message, options)`** → `new this()`
    *
    * @template TDetails - Type of the details object
    * @template TException - The exception type being created
    * @param this - The exception constructor (auto-bound)
-   * @param message - The error message
-   * @param options - Optional exception metadata
+   * @param message - The error message (already extracted/formatted)
+   * @param options - Optional exception metadata (code, statusCode, details, etc.)
    * @returns A new exception instance of the calling class type
    *
    * @example
@@ -573,22 +586,36 @@ export class BaseException<
    * ```
    *
    * @remarks
-   * **When to override**:
-   * - Custom initialization logic needed after construction
-   * - Dependency injection or service location
-   * - Automatic tracking/logging on creation
-   * - Default property values based on context
+   * **When to override `create()`**:
+   * - Post-construction initialization (add tracking IDs, timestamps)
+   * - Dependency injection (inject logger, metrics service)
+   * - Automatic logging/monitoring on every exception creation
+   * - Set default properties based on application context
    *
-   * **When NOT to override**:
-   * - For custom error conversion logic (use `createFromError` instead)
-   * - For message formatting (use `parseErrorMessage` instead)
-   * - For detail extraction (use `parseErrorDetails` instead)
+   * **When NOT to override `create()` (use other methods)**:
+   * - Error detection/parsing → use `createFromError()` instead
+   * - Message extraction → use `parseErrorMessage()` instead
+   * - Detail extraction → use `parseErrorDetails()` instead
+   * - Updating existing exceptions → use `withOptions()` instead
    *
-   * The default implementation simply calls `new this(message, options)`, which
-   * correctly creates instances of subclasses due to the polymorphic `this` typing.
+   * **Default implementation**: `new this(message, options)` - Creates instance with polymorphic type.
    *
-   * @see {@link from} - Public factory method that uses create internally
-   * @see {@link createFromError} - Override this for error conversion logic
+   * **Method Comparison**:
+   * ```typescript
+   * // create: NEW instance from message
+   * const ex1 = create('Error', { code: 'ERR' });  // NEW BaseException
+   *
+   * // createFromError: EXTRACT data from error, then create
+   * const ex2 = createFromError(dbError, {});      // Extracts → create()
+   *
+   * // withOptions: MUTATE existing instance
+   * const ex3 = withOptions(ex1, { code: 'NEW' }); // Same instance, code changed
+   * console.log(ex3 === ex1); // true (mutated, not new)
+   * ```
+   *
+   * @see {@link createFromError} - Use this for error conversion logic
+   * @see {@link withOptions} - Use this to update existing exceptions
+   * @see {@link from} - Public method that orchestrates the creation flow
    */
   protected static create<
     TDetails extends BaseExceptionDetails = BaseExceptionDetails,
@@ -869,16 +896,49 @@ export class BaseException<
    * ```
    *
    * @remarks
-   * **When to override this method**:
-   * - You need domain-specific error detection (e.g., database error codes)
-   * - You want to map error types to standardized codes/messages
-   * - You need to aggregate or transform complex error structures
-   * - You want complete control over the conversion logic
+   * **When to override `createFromError()`**:
+   * - Domain-specific error detection (e.g., database error codes, HTTP status)
+   * - Map error types to standardized codes/messages
+   * - Aggregate or transform complex error structures
+   * - Complete control over error-to-exception conversion
    *
-   * **When to use helper methods instead**:
-   * - Only need custom message formatting → override `parseErrorMessage`
-   * - Only need custom detail extraction → override `parseErrorDetails`
-   * - Need simple pre/post processing → override `from` itself
+   * **When NOT to override `createFromError()` (use other methods)**:
+   * - Only custom message formatting → use `parseErrorMessage()` instead
+   * - Only custom detail extraction → use `parseErrorDetails()` instead
+   * - Simple pre/post processing → override `from()` itself
+   * - Post-construction logic → use `create()` instead
+   *
+   * **Key Differences from Related Methods**:
+   * - **`createFromError(error, options)`** ← YOU ARE HERE
+   *   - Converts UNKNOWN error → extracts data → creates NEW instance
+   *   - Complex: detects error type, parses fields, calls `create()`
+   *   - Override for: error detection (DB codes, HTTP status, validation)
+   *
+   * - **`create(message, options)`** ← Lower-level
+   *   - Creates NEW instance from KNOWN message + options
+   *   - Simple: `new this(message, options)`
+   *   - Override for: post-construction logic only
+   *
+   * - **`withOptions(exception, options)`** ← Different purpose
+   *   - Mutates EXISTING instance (no creation)
+   *   - Just updates properties
+   *   - Use for: modifying already-created exceptions
+   *
+   * **Flow in action**:
+   * ```typescript
+   * // User calls:
+   * BaseException.from(unknownError)
+   *   ↓
+   * // Internally:
+   * createFromError(unknownError)  // ← YOU ARE HERE (detect & extract)
+   *   ↓
+   * parseErrorMessage(unknownError) // Extract message
+   * parseErrorDetails(unknownError) // Extract details
+   *   ↓
+   * create(message, options)        // Create new instance
+   *   ↓
+   * new this(message, options)      // Constructor
+   * ```
    *
    * **Implementation tips**:
    * - Always fall back to `super.createFromError()` for unknown error types
@@ -887,10 +947,27 @@ export class BaseException<
    * - Return specific status codes (400 for client errors, 500 for server errors)
    * - Include relevant context in details for troubleshooting
    *
+   * **Method Comparison Example**:
+   * ```typescript
+   * const dbError = { code: '23505', message: 'Duplicate key' };
+   *
+   * // createFromError: DETECTS + EXTRACTS + CREATES
+   * const ex1 = createFromError(dbError, {});
+   * // Detects code 23505 → sets code='DB_DUPLICATE', status=409, etc.
+   *
+   * // create: Just CREATES (you provide everything)
+   * const ex2 = create('Duplicate key', { code: 'DB_DUPLICATE', statusCode: 409 });
+   * // No detection, you already know what to set
+   *
+   * // withOptions: MUTATES existing
+   * const ex3 = withOptions(ex2, { code: 'NEW_CODE' });
+   * // ex3 === ex2 (same instance, just code changed)
+   * ```
+   *
    * @see {@link from} - Public method that calls this after handling JSON/instances
+   * @see {@link create} - Lower-level method for creating instances
    * @see {@link parseErrorMessage} - Override for custom message extraction only
    * @see {@link parseErrorDetails} - Override for custom detail extraction only
-   * @see {@link create} - The method used to instantiate the exception
    */
   protected static createFromError<
     TDetails extends BaseExceptionDetails = BaseExceptionDetails,
@@ -1189,10 +1266,56 @@ export class BaseException<
    * ```
    *
    * @remarks
-   * **Mutates** the input exception instance. This is intentional for performance
-   * when reusing existing exceptions via `from()`.
+   * **IMPORTANT: This method MUTATES the input exception instance.**
+   * Unlike `create()` and `createFromError()` which create NEW instances,
+   * `withOptions()` modifies the existing exception in-place for performance.
    *
-   * @see {@link from} - Calls this when converting existing exceptions
+   * **Key Differences from Related Methods**:
+   * - **`withOptions(exception, options)`** ← YOU ARE HERE
+   *   - **MUTATES** existing instance (no new instance created)
+   *   - Just updates: `error.code = ...; error.statusCode = ...`
+   *   - Use for: merging options into already-created exceptions
+   *   - Returns: THE SAME instance (not a copy)
+   *
+   * - **`create(message, options)`** ← Creates NEW
+   *   - Creates NEW instance from known message + options
+   *   - Simple: `new this(message, options)`
+   *   - Returns: NEW exception instance
+   *
+   * - **`createFromError(error, options)`** ← Converts + Creates NEW
+   *   - Converts unknown error → extracts data → creates NEW instance
+   *   - Complex: detects, parses, then creates
+   *   - Returns: NEW exception instance
+   *
+   * **When this is called**:
+   * - Automatically by `from()` when the error is already an instance of the target class
+   * - For merging additional options into an existing exception without recreating it
+   *
+   * **Method Comparison Example**:
+   * ```typescript
+   * const original = new BaseException('Error', { code: 'ORIG' });
+   *
+   * // withOptions: MUTATES (same instance)
+   * const updated = BaseException.withOptions(original, { code: 'NEW' });
+   * console.log(updated === original);  // true (same instance!)
+   * console.log(original.code);         // 'NEW' (original was mutated)
+   *
+   * // create: NEW instance
+   * const created = BaseException.create('Error', { code: 'CREATED' });
+   * console.log(created === original);  // false (different instance)
+   *
+   * // createFromError: NEW instance from error
+   * const converted = BaseException.createFromError(someError, {});
+   * console.log(converted === original); // false (different instance)
+   * ```
+   *
+   * **Performance reasoning**:
+   * Mutation is intentional to avoid unnecessary object creation when reusing
+   * exceptions via `from()`. If you need a copy, create a new instance instead.
+   *
+   * @see {@link from} - Calls this when error is already an instance of target class
+   * @see {@link create} - Creates new instances (doesn't mutate)
+   * @see {@link createFromError} - Converts errors to new instances (doesn't mutate)
    */
   static withOptions<TException extends BaseException>(
     error: TException,
