@@ -115,14 +115,12 @@ export class ValidatorTargetError<
     data: {
       errors: ValidationErrorDetail[];
 
-      data?: ValidatorTargetData<Target>;
-      message?: string;
+      data: ValidatorTargetData<Target>;
+      message: string;
     },
     options?: BaseExceptionOptions<ValidatorTargetErrorDetails<Target>>
   ) {
     const failureCount = data.errors.length;
-    const message =
-      data.message || `Validation failed for ${failureCount} fields`;
 
     const details: ValidatorTargetErrorDetails<Target> = {
       errors: data.errors,
@@ -130,7 +128,7 @@ export class ValidatorTargetError<
       data: data.data,
     };
 
-    super(message, {
+    super(data.message, {
       ...options,
       details,
       code: 'VALIDATOR_TARGET_ERROR',
