@@ -332,14 +332,6 @@ describe('BaseException - Comprehensive Test Suite', () => {
     });
   });
 
-  // ==================== Hooks System ====================
-  describe('Hooks System', () => {
-    // Note: registerHook is documented but not yet implemented
-    // These tests are placeholder until the implementation is complete
-
-    test.todo('should execute hooks on exception creation');
-  });
-
   // ==================== Serialization ====================
   describe('Serialization', () => {
     test('should serialize with toJSON', () => {
