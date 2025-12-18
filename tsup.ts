@@ -19,7 +19,7 @@ export default function createConfig(
     sourcemap: false,
     clean: true, // Clears dist before building
     dts: false,
-    minify: true, // Optimizes performance
+    minify: !isTest, // Disable minification in tests to preserve class names
     target: 'es2015',
     treeshake: true,
     bundle: true, // ❌ Disable bundling to keep file structure
