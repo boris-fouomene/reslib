@@ -1333,14 +1333,35 @@ export class BaseException<
    * Wraps an async operation, converting any thrown errors into BaseException.
    *
    * Executes the operation and returns its result if successful. If it throws,
-   * converts the error to a BaseException using `from()` and throws that instead.
+   * converts the error to a BaseException using `from()` and **RE-THROWS** it.
+   *
+   * **Error Handling Pattern**: Traditional exception throwing (try/catch pattern)
+   *
+   * **Key Differences from Related Methods**:
+   * - **`wrap(operation, options)`** ← YOU ARE HERE
+   *   - **ASYNC ONLY** (returns Promise)
+   *   - **THROWS** BaseException on error (traditional exception pattern)
+   *   - Use when: You want exceptions to bubble up to error handlers
+   *   - Pattern: try/catch or framework error handlers catch it
+   *
+   * - **`tryCatch(operation, options)`** ← Returns errors instead of throwing
+   *   - **ASYNC** (returns Promise<[error, null] | [null, result]>)
+   *   - **RETURNS** error tuple (Result/Either pattern, Go-style)
+   *   - Use when: You want explicit error handling without try/catch
+   *   - Pattern: `const [error, result] = await tryCatch(...)`
+   *
+   * - **`tryCatchSync(operation, options)`** ← Sync version of tryCatch
+   *   - **SYNC** (returns [error, null] | [null, result])
+   *   - **RETURNS** error tuple (Result/Either pattern)
+   *   - Use when: Synchronous operations, prefer explicit errors
+   *   - Pattern: `const [error, result] = tryCatchSync(...)`
    *
    * @template TResult - The return type of the operation
    * @template TDetails - Type of exception details
    * @param operation - Async function to execute
    * @param options - Optional exception metadata to add if an error occurs
    * @returns Promise resolving to the operation result
-   * @throws {BaseException} If the operation throws
+   * @throws {BaseException} If the operation throws (converted from original error)
    *
    * @example
    * ```typescript
@@ -1381,10 +1402,48 @@ export class BaseException<
    * ```
    *
    * @remarks
-   * Prefer `tryCatch()` if you need error handling without throwing.
-   * This method always throws on error after conversion.
+   * **Error Handling Pattern**: THROWS exceptions (traditional)
+   * - Errors bubble up to framework error handlers or try/catch blocks
+   * - Good for: Express/NestJS middleware, API routes, service layers
+   * - Clean syntax when you don't need inline error handling
    *
-   * @see {@link tryCatch} - Returns error tuple instead of throwing
+   * **When to use `wrap()` vs `tryCatch()`**:
+   * - Use `wrap()` when exceptions should bubble up (APIs, middleware)
+   * - Use `tryCatch()` when you need explicit error handling inline
+   *
+   * **Comparison Example**:
+   * ```typescript
+   * // wrap: THROWS (traditional exception)
+   * async function fetchUser1(id: number) {
+   *   return BaseException.wrap(
+   *     async () => db.users.findById(id),
+   *     { code: 'USER_FETCH_ERROR' }
+   *   );
+   *   // On error: throws BaseException, caller must try/catch
+   * }
+   *
+   * // tryCatch: RETURNS error (Result pattern)
+   * async function fetchUser2(id: number) {
+   *   const [error, user] = await BaseException.tryCatch(
+   *     async () => db.users.findById(id),
+   *     { code: 'USER_FETCH_ERROR' }
+   *   );
+   *   if (error) return null; // Handle inline
+   *   return user;
+   * }
+   *
+   * // Usage:
+   * try {
+   *   const user = await fetchUser1(123); // May throw
+   * } catch (e) {
+   *   // Handle error here
+   * }
+   *
+   * const user = await fetchUser2(123); // Never throws, returns null on error
+   * ```
+   *
+   * @see {@link tryCatch} - Async version that returns error tuples instead of throwing
+   * @see {@link tryCatchSync} - Sync version that returns error tuples
    * @see {@link from} - The conversion method used internally
    */
   static async wrap<
@@ -1462,9 +1521,30 @@ export class BaseException<
   /**
    * Safely executes a synchronous operation and returns a Result tuple.
    *
-   * This method implements the Result/Either pattern, returning a tuple of
+   * This method implements the **Result/Either pattern**, returning a tuple of
    * `[error, null]` if the operation fails, or `[null, result]` if it succeeds.
    * This eliminates the need for try-catch blocks and makes error handling explicit.
+   *
+   * **Error Handling Pattern**: Returns error tuples (Go/Rust-style)
+   *
+   * **Key Differences from Related Methods**:
+   * - **`tryCatchSync(operation, options)`** ← YOU ARE HERE
+   *   - **SYNC** (returns immediately)
+   *   - **RETURNS** error tuple: `[error, null] | [null, result]`
+   *   - Use when: Synchronous operations, explicit error handling
+   *   - Pattern: `const [error, result] = tryCatchSync(...)`
+   *
+   * - **`tryCatch(operation, options)`** ← Async version
+   *   - **ASYNC** (returns Promise<[error, null] | [null, result]>)
+   *   - **RETURNS** error tuple (same pattern, but async)
+   *   - Use when: Async operations, explicit error handling
+   *   - Pattern: `const [error, result] = await tryCatch(...)`
+   *
+   * - **`wrap(operation, options)`** ← Different error pattern
+   *   - **ASYNC ONLY**
+   *   - **THROWS** BaseException on error (traditional exceptions)
+   *   - Use when: You want errors to bubble up to handlers
+   *   - Pattern: `try { await wrap(...) } catch (e) { ... }`
    *
    * **Type-safe**: When called on subclasses, returns that subclass type in the error position.
    *
@@ -1473,7 +1553,7 @@ export class BaseException<
    * @param this - The exception constructor (auto-bound)
    * @param operation - Synchronous function to execute
    * @param options - Optional exception metadata if an error occurs
-   * @returns Tuple of `[error, null]` or `[null, result]`
+   * @returns Tuple of `[error, null]` or `[null, result]` (never throws)
    *
    * @example
    * ```typescript
@@ -1553,14 +1633,56 @@ export class BaseException<
    * ```
    *
    * @remarks
-   * **Result Pattern**: Returns `[error, null] | [null, result]`
+   * **Result Pattern**: Returns `[error, null] | [null, result]` (NEVER THROWS)
    * - Eliminates try-catch blocks
    * - Makes error handling explicit and type-safe
    * - Works well with destructuring
    * - Inspired by Go's error handling
    *
+   * **When to use `tryCatchSync()` vs `wrap()` vs `tryCatch()`**:
+   * - Use `tryCatchSync()`: SYNC operations, prefer explicit errors (no exceptions)
+   * - Use `tryCatch()`: ASYNC operations, prefer explicit errors (no exceptions)
+   * - Use `wrap()`: ASYNC operations, want traditional exceptions to bubble up
+   *
+   * **Pattern Comparison**:
+   * ```typescript
+   * // tryCatchSync: SYNC + RETURNS error
+   * const [error, result] = BaseException.tryCatchSync(() =>
+   *   JSON.parse(jsonString)
+   * );
+   * if (error) {
+   *   console.error('Parse failed:', error.message);
+   *   return defaultValue;
+   * }
+   * return result;
+   *
+   * // tryCatch: ASYNC + RETURNS error
+   * const [error, data] = await BaseException.tryCatch(async () =>
+   *   fetch('/api/data').then(r => r.json())
+   * );
+   * if (error) return handleError(error);
+   * return processData(data);
+   *
+   * // wrap: ASYNC + THROWS error
+   * try {
+   *   const data = await BaseException.wrap(
+   *     async () => fetch('/api/data').then(r => r.json())
+   *   );
+   *   return processData(data);
+   * } catch (error) {
+   *   return handleError(error); // Must use try/catch
+   * }
+   * ```
+   *
+   * **Advantages over try/catch**:
+   * - No nested blocks (flatter code)
+   * - Error variable is properly scoped
+   * - TypeScript narrows types correctly
+   * - Works great with early returns
+   * - Composable (map over arrays, etc.)
+   *
    * @see {@link tryCatch} - Async version
-   * @see {@link wrap} - Throws on error instead of returning tuple
+   * @see {@link wrap} - Async version that throws instead of returning tuple
    */
   static tryCatchSync<
     TResult,
@@ -1583,8 +1705,29 @@ export class BaseException<
    * Safely executes an async operation and returns a Result tuple Promise.
    *
    * Async version of `tryCatchSync`. Returns a Promise that resolves to a tuple of
-   * `[error, null]` if the operation fails, or `[null, result]` if it succeeds.
+   * `[error, null]` if the operation fails, or `[null, result]` if it succeeds.\
    * Eliminates async try-catch blocks and makes async error handling explicit.
+   *
+   * **Error Handling Pattern**: Returns error tuples (Go/Rust-style)
+   *
+   * **Key Differences from Related Methods**:
+   * - **`tryCatch(operation, options)`** ← YOU ARE HERE
+   *   - **ASYNC** (returns Promise<[error, null] | [null, result]>)
+   *   - **RETURNS** error tuple (Result/Either pattern)
+   *   - Use when: Async operations, explicit error handling
+   *   - Pattern: `const [error, result] = await tryCatch(...)`
+   *
+   * - **`tryCatchSync(operation, options)`** ← Sync version
+   *   - **SYNC** (returns [error, null] | [null, result] immediately)
+   *   - **RETURNS** error tuple (same pattern, synchronous)
+   *   - Use when: Synchronous operations, explicit error handling
+   *   - Pattern: `const [error, result] = tryCatchSync(...)`
+   *
+   * - **`wrap(operation, options)`** ← Different error pattern
+   *   - **ASYNC ONLY**
+   *   - **THROWS** BaseException on error (traditional exceptions)
+   *   - Use when: You want errors to bubble up to handlers
+   *   - Pattern: `try { await wrap(...) } catch (e) { ... }`
    *
    * **Type-safe**: When called on subclasses, returns that subclass type in the error position.
    *
@@ -1593,7 +1736,7 @@ export class BaseException<
    * @param this - The exception constructor (auto-bound)
    * @param operation - Async function to execute
    * @param options - Optional exception metadata if an error occurs
-   * @returns Promise resolving to tuple of `[error, null]` or `[null, result]`
+   * @returns Promise resolving to tuple of `[error, null]` or `[null, result]` (never throws)
    *
    * @example
    * ```typescript
