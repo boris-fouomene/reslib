@@ -8,7 +8,7 @@ import { isNonNullString } from '@utils/isNonNullString';
 import { isRegExp } from '@utils/isRegex';
 import { isUrl, IsUrlOptions } from '@utils/uri';
 import type { ValidatorRuleParams, ValidatorRuleParamTypes } from '../types';
-import { ValidatorResult, ValidatorValidateOptions } from '../types';
+import { ValidatorRuleResult, ValidatorValidateOptions } from '../types';
 import { Validator } from '../validator';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -1116,7 +1116,7 @@ export const IsUUID = Validator.buildRuleDecorator<
   translatedPropertyName,
   i18n,
   ...rest
-}: ValidatorValidateOptions): ValidatorResult {
+}: ValidatorValidateOptions): ValidatorRuleResult {
   return new Promise((resolve, reject) => {
     if (typeof value !== 'string') {
       const message = i18n.t('validator.uuid', {
@@ -1297,7 +1297,7 @@ export const IsJSON = Validator.buildRuleDecorator<
   translatedPropertyName,
   i18n,
   ...rest
-}: ValidatorValidateOptions): ValidatorResult {
+}: ValidatorValidateOptions): ValidatorRuleResult {
   if (typeof value !== 'string') {
     const message = i18n.t('validator.json', {
       field: translatedPropertyName || fieldName,
@@ -1465,7 +1465,7 @@ export const IsBase64 = Validator.buildRuleDecorator<
   translatedPropertyName,
   i18n,
   ...rest
-}: ValidatorValidateOptions): ValidatorResult {
+}: ValidatorValidateOptions): ValidatorRuleResult {
   if (typeof value !== 'string') {
     const message = i18n.t('validator.base64', {
       field: translatedPropertyName || fieldName,
@@ -1636,7 +1636,7 @@ export const IsHexColor = Validator.buildRuleDecorator<
   translatedPropertyName,
   i18n,
   ...rest
-}: ValidatorValidateOptions): ValidatorResult {
+}: ValidatorValidateOptions): ValidatorRuleResult {
   if (typeof value !== 'string') {
     const message = i18n.t('validator.hexColor', {
       field: translatedPropertyName || fieldName,
@@ -1816,7 +1816,7 @@ export const IsCreditCard = Validator.buildRuleDecorator<
   translatedPropertyName,
   i18n,
   ...rest
-}: ValidatorValidateOptions): ValidatorResult {
+}: ValidatorValidateOptions): ValidatorRuleResult {
   if (typeof value !== 'string') {
     const message = i18n.t('validator.creditCard', {
       field: translatedPropertyName || fieldName,
@@ -2045,7 +2045,7 @@ export const IsIP = Validator.buildRuleDecorator<ValidatorRuleParamTypes['IP']>(
     translatedPropertyName,
     i18n,
     ...rest
-  }: ValidatorValidateOptions<string[]>): ValidatorResult {
+  }: ValidatorValidateOptions<string[]>): ValidatorRuleResult {
     if (typeof value !== 'string') {
       const message = i18n.t('validator.ip', {
         field: translatedPropertyName || fieldName,
@@ -2253,7 +2253,7 @@ export const IsMACAddress = Validator.buildRuleDecorator<
   translatedPropertyName,
   i18n,
   ...rest
-}): ValidatorResult {
+}): ValidatorRuleResult {
   if (typeof value !== 'string') {
     const message = i18n.t('validator.macAddress', {
       field: translatedPropertyName || fieldName,
@@ -2451,7 +2451,7 @@ export const Matches = Validator.buildRuleDecorator<
   translatedPropertyName,
   i18n,
   ...rest
-}): ValidatorResult {
+}): ValidatorRuleResult {
   if (typeof value !== 'string') {
     const message = i18n.t('validator.matches', {
       field: translatedPropertyName || fieldName,

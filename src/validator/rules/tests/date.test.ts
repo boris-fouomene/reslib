@@ -79,7 +79,7 @@ describe('Date Validation Rules', () => {
           rules: ['Date'],
         });
         expect(result.success).toBe(false);
-        expect((result as any).error?.message).toContain('date');
+        expect(result.message).toContain('date');
       }
     });
 
@@ -102,7 +102,7 @@ describe('Date Validation Rules', () => {
           rules: ['Date'],
         });
         expect(result.success).toBe(false);
-        expect((result as any).error?.message).toContain('date');
+        expect(result.message).toContain('date');
       }
     });
 
@@ -112,7 +112,7 @@ describe('Date Validation Rules', () => {
         rules: ['Date'],
       });
       expect(result.success).toBe(false);
-      expect((result as any).error?.message).toContain('date');
+      expect(result.message).toContain('date');
     });
 
     // Decorator test
@@ -186,7 +186,7 @@ describe('Date Validation Rules', () => {
         rules: [{ DateAfter: [now] }],
       });
       expect(result.success).toBe(false);
-      expect((result as any).error?.message).toContain('after');
+      expect(result.message).toContain('after');
     });
 
     it('should fail when date equals reference date', async () => {
@@ -195,7 +195,7 @@ describe('Date Validation Rules', () => {
         rules: [{ DateAfter: [now] }],
       });
       expect(result.success).toBe(false);
-      expect((result as any).error?.message).toContain('after');
+      expect(result.message).toContain('after');
     });
 
     it('should fail for invalid date values', async () => {
@@ -204,7 +204,7 @@ describe('Date Validation Rules', () => {
         rules: [{ DateAfter: [now] }],
       });
       expect(result.success).toBe(false);
-      expect((result as any).error?.message).toContain('after');
+      expect(result.message).toContain('after');
     });
 
     it('should fail for invalid reference date', async () => {
@@ -213,7 +213,7 @@ describe('Date Validation Rules', () => {
         rules: [{ DateAfter: ['invalid'] }],
       });
       expect(result.success).toBe(false);
-      expect((result as any).error?.message).toContain('Invalid parameters');
+      expect(result.message).toContain('Invalid parameters');
     });
 
     // Decorator test
@@ -266,7 +266,7 @@ describe('Date Validation Rules', () => {
         rules: [{ DateBefore: [now] }],
       });
       expect(result.success).toBe(false);
-      expect((result as any).error?.message).toContain('before');
+      expect(result.message).toContain('before');
     });
 
     it('should fail when date equals reference date', async () => {
@@ -275,7 +275,7 @@ describe('Date Validation Rules', () => {
         rules: [{ DateBefore: [now] }],
       });
       expect(result.success).toBe(false);
-      expect((result as any).error?.message).toContain('before');
+      expect(result.message).toContain('before');
     });
 
     // Decorator test
@@ -345,7 +345,7 @@ describe('Date Validation Rules', () => {
         rules: [{ DateBetween: [pastDate, futureDate] }],
       });
       expect(result.success).toBe(false);
-      expect((result as any).error?.message).toContain('between');
+      expect(result.message).toContain('between');
     });
 
     it('should fail when date is after max date', async () => {
@@ -355,7 +355,7 @@ describe('Date Validation Rules', () => {
         rules: [{ DateBetween: [pastDate, futureDate] }],
       });
       expect(result.success).toBe(false);
-      expect((result as any).error?.message).toContain('between');
+      expect(result.message).toContain('between');
     });
 
     it('should fail for invalid parameters', async () => {
@@ -364,7 +364,7 @@ describe('Date Validation Rules', () => {
         rules: [{ DateBetween: ['invalid' as any, 'invalidDate' as any] }],
       });
       expect(result.success).toBe(false);
-      expect((result as any).error?.message).toContain('Invalid parameters');
+      expect(result.message).toContain('Invalid parameters');
     });
 
     // Decorator test
@@ -419,7 +419,7 @@ describe('Date Validation Rules', () => {
         rules: [{ SameDate: [pastDate] }],
       });
       expect(result.success).toBe(false);
-      expect((result as any).error?.message).toContain('equal to');
+      expect(result.message).toContain('equal to');
     });
 
     // Decorator test
@@ -455,7 +455,7 @@ describe('Date Validation Rules', () => {
         rules: ['FutureDate'],
       });
       expect(result.success).toBe(false);
-      expect((result as any).error?.message).toContain('date in the future');
+      expect(result.message).toContain('date in the future');
     });
 
     it('should fail for current date (not strictly future)', async () => {
@@ -499,7 +499,7 @@ describe('Date Validation Rules', () => {
         rules: ['PastDate'],
       });
       expect(result.success).toBe(false);
-      expect((result as any).error?.message).toContain('date in the past');
+      expect(result.message).toContain('date in the past');
     });
 
     it('should fail for current date (not strictly past)', async () => {

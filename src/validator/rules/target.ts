@@ -86,7 +86,7 @@ import { Validator } from '../validator';
  * @param options - Configuration object containing the target class constructor
  *   The nested class must have validation decorators to be useful
  *
- * @returns Promise<ValidatorValidateTargetResult> containing:
+ * @returns Promise<ValidatorTargetResult> containing:
  *   - isValid: boolean indicating if validation passed
  *   - errors: object mapping field names to error arrays (includes nested path info)
  *   - data: the original validated data on success

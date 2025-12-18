@@ -39,7 +39,7 @@ describe('Array Validation Rules', () => {
           rules: ['Array'],
         });
         expect(result.success).toBe(false);
-        expect(result.error?.message).toContain('This field must be an array');
+        expect(result.message).toContain('This field must be an array');
       }
     });
 
@@ -93,7 +93,7 @@ describe('Array Validation Rules', () => {
         rules: [{ ArrayMinLength: [2] }],
       });
       expect(result.success).toBe(false);
-      expect(result.error?.message).toContain('at least 2 items');
+      expect(result.message).toContain('at least 2 items');
     });
 
     it('should fail for non-arrays', async () => {
@@ -102,7 +102,7 @@ describe('Array Validation Rules', () => {
         rules: [{ ArrayMinLength: [1] }],
       });
       expect(result.success).toBe(false);
-      expect(result.error?.message).toContain('must be an array');
+      expect(result.message).toContain('must be an array');
     });
 
     it('should fail for invalid parameters', async () => {
@@ -111,7 +111,7 @@ describe('Array Validation Rules', () => {
         rules: [{ ArrayMinLength: [-1] }],
       });
       expect(result.success).toBe(false);
-      expect(result.error?.message).toContain('Invalid parameters for rule');
+      expect(result.message).toContain('Invalid parameters for rule');
     });
 
     // Decorator test
@@ -166,7 +166,7 @@ describe('Array Validation Rules', () => {
         rules: [{ ArrayMaxLength: [3] }],
       });
       expect(result.success).toBe(false);
-      expect(result.error?.message).toContain('at most 3 items');
+      expect(result.message).toContain('at most 3 items');
     });
 
     it('should pass for empty arrays', async () => {
@@ -183,7 +183,7 @@ describe('Array Validation Rules', () => {
         rules: [{ ArrayMaxLength: [-1] }],
       });
       expect(result.success).toBe(false);
-      expect(result.error?.message).toContain('Invalid parameters for rule');
+      expect(result.message).toContain('Invalid parameters for rule');
     });
 
     // Decorator test
@@ -236,7 +236,7 @@ describe('Array Validation Rules', () => {
         rules: [{ ArrayLength: [3] }],
       });
       expect(result.success).toBe(false);
-      expect(result.error?.message).toContain('exactly 3 items');
+      expect(result.message).toContain('exactly 3 items');
     });
 
     it('should fail for empty arrays when length > 0', async () => {
@@ -305,9 +305,7 @@ describe('Array Validation Rules', () => {
         rules: [{ ArrayContains: [2, 4] }],
       });
       expect(result.success).toBe(false);
-      expect(result.error?.message).toContain(
-        'contain all of the following values'
-      );
+      expect(result.message).toContain('contain all of the following values');
     });
 
     it('should work with objects using deep equality', async () => {
@@ -334,7 +332,7 @@ describe('Array Validation Rules', () => {
         rules: [{ ArrayContains: [] }],
       });
       expect(result.success).toBe(false);
-      expect(result.error?.message).toContain('Invalid parameters for rule');
+      expect(result.message).toContain('Invalid parameters for rule');
     });
 
     // Decorator test
@@ -405,7 +403,7 @@ describe('Array Validation Rules', () => {
         rules: ['ArrayUnique'],
       });
       expect(result.success).toBe(false);
-      expect(result.error?.message).toContain('contain only unique values');
+      expect(result.message).toContain('contain only unique values');
     });
 
     it('should work with objects', async () => {
@@ -511,7 +509,7 @@ describe('Array Validation Rules', () => {
           rules: ['ArrayAllStrings'],
         });
         expect(result.success).toBe(false);
-        expect(result.error?.message).toContain('array of strings');
+        expect(result.message).toContain('array of strings');
       }
     });
 
@@ -581,7 +579,7 @@ describe('Array Validation Rules', () => {
         rules: ['ArrayAllNumbers'],
       });
       expect(result.success).toBe(false);
-      expect(result.error?.message).toContain('array of numbers');
+      expect(result.message).toContain('array of numbers');
     });
 
     it('should fail for arrays containing non-numbers', async () => {
@@ -598,7 +596,7 @@ describe('Array Validation Rules', () => {
           rules: ['ArrayAllNumbers'],
         });
         expect(result.success).toBe(false);
-        expect(result.error?.message).toContain('array of numbers');
+        expect(result.message).toContain('array of numbers');
       }
     });
 

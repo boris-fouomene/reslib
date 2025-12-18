@@ -56,7 +56,7 @@ describe('String Validation Rules', () => {
           rules: ['String'],
         });
         expect(result.success).toBe(false);
-        expect((result as any).error?.message).toContain('string');
+        expect(result.message).toContain('string');
       }
     });
 
@@ -120,7 +120,7 @@ describe('String Validation Rules', () => {
         rules: ['NonNullString'],
       });
       expect(result.success).toBe(false);
-      expect((result as any).error?.message).toContain('non null string');
+      expect(result.message).toContain('non null string');
     });
 
     it('should fail for non-string values', async () => {
@@ -131,7 +131,7 @@ describe('String Validation Rules', () => {
           rules: ['NonNullString'],
         });
         expect(result.success).toBe(false);
-        expect((result as any).error?.message).toContain('non null string');
+        expect(result.message).toContain('non null string');
       }
     });
 
@@ -199,7 +199,7 @@ describe('String Validation Rules', () => {
           rules: [{ MinLength: [min] }],
         });
         expect(result.success).toBe(false);
-        expect((result as any).error?.message).toContain('at least');
+        expect(result.message).toContain('at least');
       }
     });
 
@@ -209,7 +209,7 @@ describe('String Validation Rules', () => {
         rules: [{ MinLength: [3] }],
       });
       expect(result.success).toBe(false);
-      expect((result as any).error?.message).toContain('at least');
+      expect(result.message).toContain('at least');
     });
 
     // Decorator test
@@ -275,7 +275,7 @@ describe('String Validation Rules', () => {
           rules: [{ MaxLength: [max] }],
         });
         expect(result.success).toBe(false);
-        expect((result as any).error?.message).toContain('at most');
+        expect(result.message).toContain('at most');
       }
     });
 
@@ -343,7 +343,7 @@ describe('String Validation Rules', () => {
           rules: [{ Length: [length] }],
         });
         expect(result.success).toBe(false);
-        expect((result as any).error?.message).toContain('exactly');
+        expect(result.message).toContain('exactly');
       }
     });
 
@@ -408,7 +408,7 @@ describe('String Validation Rules', () => {
           rules: [{ StartsWithOneOf: prefixes }],
         });
         expect(result.success).toBe(false);
-        expect((result as any).error?.message).toContain(
+        expect(result.message).toContain(
           'start with one of the following values'
         );
       }
@@ -420,7 +420,7 @@ describe('String Validation Rules', () => {
         rules: [{ StartsWithOneOf: [] }],
       });
       expect(result.success).toBe(false);
-      expect((result as any).error?.message).toContain('Invalid parameters');
+      expect(result.message).toContain('Invalid parameters');
     });
 
     // Decorator test
@@ -487,7 +487,7 @@ describe('String Validation Rules', () => {
           rules: [{ EndsWithOneOf: suffixes }],
         });
         expect(result.success).toBe(false);
-        expect((result as any).error?.message).toContain(
+        expect(result.message).toContain(
           'end with one of the following values'
         );
       }

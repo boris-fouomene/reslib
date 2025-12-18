@@ -119,14 +119,14 @@ const result = await Validator.validateTarget(User, {
 
 The main `Validator` class provides static methods for validation:
 
-| Method             | Purpose                 | Returns                                  |
-| ------------------ | ----------------------- | ---------------------------------------- |
-| `validate()`       | Validate a single value | `Promise<ValidatorValidateResult>`       |
-| `validateTarget()` | Validate class instance | `Promise<ValidatorValidateTargetResult>` |
-| `registerRule()`   | Register custom rule    | `void`                                   |
-| `getRule()`        | Get registered rule     | `ValidatorRuleFunction \| undefined`     |
-| `getRules()`       | Get all rules           | `ValidatorRuleFunctionsMap`              |
-| `hasRule()`        | Check rule exists       | `boolean`                                |
+| Method             | Purpose                 | Returns                              |
+| ------------------ | ----------------------- | ------------------------------------ |
+| `validate()`       | Validate a single value | `Promise<ValidatorResult>`           |
+| `validateTarget()` | Validate class instance | `Promise<ValidatorTargetResult>`     |
+| `registerRule()`   | Register custom rule    | `void`                               |
+| `getRule()`        | Get registered rule     | `ValidatorRuleFunction \| undefined` |
+| `getRules()`       | Get all rules           | `ValidatorRuleFunctionsMap`          |
+| `hasRule()`        | Check rule exists       | `boolean`                            |
 
 ### Validation Rules
 
@@ -5284,7 +5284,7 @@ Both approaches use the same validation logic underneath!
 ```typescript
 static async validate<Context = unknown>(
   options: ValidatorValidateOptions<Context>
-): Promise<ValidatorValidateResult<Context>>
+): Promise<ValidatorResult<Context>>
 ```
 
 **Parameters:**
@@ -5297,7 +5297,7 @@ static async validate<Context = unknown>(
 | `fieldName` | `string`         | ❌       | Field name for errors |
 | `i18n`      | `I18n`           | ❌       | i18n instance         |
 
-**Returns:** `Promise<ValidatorValidateResult>`
+**Returns:** `Promise<ValidatorResult>`
 
 ---
 
@@ -5308,8 +5308,8 @@ static async validate<Context = unknown>(
 ```typescript
 static async validateTarget<Target extends object, Context = unknown>(
   TargetClass: new () => Target,
-  options: ValidatorValidateTargetOptions<Target, Context>
-): Promise<ValidatorValidateTargetResult<Target, Context>>
+  options: ValidatorTargetOptions<Target, Context>
+): Promise<ValidatorTargetResult<Target, Context>>
 ```
 
 **Parameters:**
@@ -5321,7 +5321,7 @@ static async validateTarget<Target extends object, Context = unknown>(
 | `options.context` | `Context` | ❌       | Optional validation context      |
 | `options.i18n`    | `I18n`    | ❌       | i18n instance                    |
 
-**Returns:** `Promise<ValidatorValidateTargetResult>`
+**Returns:** `Promise<ValidatorTargetResult>`
 
 ```typescript
 {
@@ -5376,7 +5376,7 @@ static registerRule<Params extends ValidatorRuleParams = []>(
 **Rule Function Signature:**
 
 ```typescript
-(options: ValidatorValidateOptions<Params>) => ValidatorResult;
+(options: ValidatorValidateOptions<Params>) => ValidatorRuleResult;
 ```
 
 **Example:**

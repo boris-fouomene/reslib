@@ -39,7 +39,7 @@ describe('Enum Validation Rules', () => {
         rules: [{ Enum: Object.values(Status) }],
       });
       expect(result.success).toBe(false);
-      expect((result as any).error?.message).toContain('must be one of');
+      expect(result.message).toContain('must be one of');
     });
 
     it('should fail for invalid numeric values', async () => {
@@ -48,7 +48,7 @@ describe('Enum Validation Rules', () => {
         rules: [{ Enum: Object.values(Priority) }],
       });
       expect(result.success).toBe(false);
-      expect((result as any).error?.message).toContain('must be one of');
+      expect(result.message).toContain('must be one of');
     });
 
     it('should fail for null', async () => {
@@ -57,7 +57,7 @@ describe('Enum Validation Rules', () => {
         rules: [{ Enum: Object.values(Status) }],
       });
       expect(result.success).toBe(false);
-      expect((result as any).error?.message).toContain('must be one of');
+      expect(result.message).toContain('must be one of');
     });
 
     it('should fail for undefined', async () => {
@@ -66,7 +66,7 @@ describe('Enum Validation Rules', () => {
         rules: [{ Enum: Object.values(Status) }],
       });
       expect(result.success).toBe(false);
-      expect((result as any).error?.message).toContain('must be one of');
+      expect(result.message).toContain('must be one of');
     });
 
     it('should fail for objects', async () => {
@@ -75,7 +75,7 @@ describe('Enum Validation Rules', () => {
         rules: [{ Enum: Object.values(Status) }],
       });
       expect(result.success).toBe(false);
-      expect((result as any).error?.message).toContain('must be one of');
+      expect(result.message).toContain('must be one of');
     });
 
     it('should fail for arrays', async () => {
@@ -84,7 +84,7 @@ describe('Enum Validation Rules', () => {
         rules: [{ Enum: Object.values(Status) }],
       });
       expect(result.success).toBe(false);
-      expect((result as any).error?.message).toContain('must be one of');
+      expect(result.message).toContain('must be one of');
     });
 
     it('should work with string enums', async () => {
@@ -174,7 +174,7 @@ describe('Enum Validation Rules', () => {
         rules: [{ Enum: ['not-an-enum'] }],
       });
       expect(result.success).toBe(false);
-      expect((result as any).error?.message).toContain('must be one of');
+      expect(result.message).toContain('must be one of');
     });
 
     it('should fail when no enum provided', async () => {
@@ -183,9 +183,7 @@ describe('Enum Validation Rules', () => {
         rules: [{ Enum: [] }],
       });
       expect(result.success).toBe(false);
-      expect((result as any).error?.message).toContain(
-        'Invalid parameters for rule Enum'
-      );
+      expect(result.message).toContain('Invalid parameters for rule Enum');
     });
 
     // Decorator test

@@ -64,7 +64,7 @@ describe('Format Validation Rules', () => {
           rules: ['Email'],
         });
         expect(result.success).toBe(false);
-        expect((result as any).error?.message).toContain('email');
+        expect(result.message).toContain('email');
       }
     });
 
@@ -143,9 +143,7 @@ describe('Format Validation Rules', () => {
           rules: ['Url'],
         });
         expect(result.success).toBe(false);
-        expect((result as any).error?.message).toContain(
-          'This field must be a valid URL'
-        );
+        expect(result.message).toContain('This field must be a valid URL');
       }
     });
 
@@ -226,7 +224,7 @@ describe('Format Validation Rules', () => {
           rules: ['PhoneNumber'],
         });
         expect(result.success).toBe(false);
-        expect((result as any).error?.message).toContain('valid phone number');
+        expect(result.message).toContain('valid phone number');
       }
     });
 
@@ -291,9 +289,7 @@ describe('Format Validation Rules', () => {
           rules: ['EmailOrPhoneNumber'],
         });
         expect(result.success).toBe(false);
-        expect((result as any).error?.message).toContain(
-          'valid email or phone number'
-        );
+        expect(result.message).toContain('valid email or phone number');
       }
     });
 
@@ -371,7 +367,7 @@ describe('Format Validation Rules', () => {
           rules: ['FileName'],
         });
         expect(result.success).toBe(false);
-        expect((result as any).error?.message).toContain('valid file name');
+        expect(result.message).toContain('valid file name');
       }
     });
 
@@ -444,7 +440,7 @@ describe('Format Validation Rules', () => {
           rules: ['UUID'],
         });
         expect(result.success).toBe(false);
-        expect((result as any).error?.message).toContain('valid UUID');
+        expect(result.message).toContain('valid UUID');
       }
     });
 
@@ -523,7 +519,7 @@ describe('Format Validation Rules', () => {
           rules: ['JSON'],
         });
         expect(result.success).toBe(false);
-        expect((result as any).error?.message).toContain('valid JSON');
+        expect(result.message).toContain('valid JSON');
       }
     });
 
@@ -596,9 +592,7 @@ describe('Format Validation Rules', () => {
           rules: ['Base64'],
         });
         expect(result.success).toBe(false);
-        expect((result as any).error?.message).toContain(
-          'valid Base64 encoded data'
-        );
+        expect(result.message).toContain('valid Base64 encoded data');
       }
     });
 
@@ -680,9 +674,7 @@ describe('Format Validation Rules', () => {
           rules: ['HexColor'],
         });
         expect(result.success).toBe(false);
-        expect((result as any).error?.message).toContain(
-          'valid hexadecimal color code'
-        );
+        expect(result.message).toContain('valid hexadecimal color code');
       }
     });
 
@@ -758,9 +750,7 @@ describe('Format Validation Rules', () => {
           rules: ['CreditCard'],
         });
         expect(result.success).toBe(false);
-        expect((result as any).error?.message).toContain(
-          'valid credit card number'
-        );
+        expect(result.message).toContain('valid credit card number');
       }
     });
 
@@ -842,7 +832,7 @@ describe('Format Validation Rules', () => {
           rules: ['IP'],
         });
         expect(result.success).toBe(false);
-        expect((result as any).error?.message).toContain('valid IP address');
+        expect(result.message).toContain('valid IP address');
       }
     });
 
@@ -921,7 +911,7 @@ describe('Format Validation Rules', () => {
           // eslint-disable-next-line jest/no-conditional-expect
           expect(result.success).toBe(false);
           // eslint-disable-next-line jest/no-conditional-expect
-          expect((result as any).error?.message).toContain('valid MAC address');
+          expect(result.message).toContain('valid MAC address');
         }
       }
     });
@@ -976,7 +966,7 @@ describe('Format Validation Rules', () => {
         rules: [{ Matches: [/^[a-z]+\d+$/] }],
       });
       expect(result.success).toBe(false);
-      expect((result as any).error?.message).toContain('field must match');
+      expect(result.message).toContain('field must match');
     });
 
     it('should work with string patterns', async () => {
@@ -993,7 +983,7 @@ describe('Format Validation Rules', () => {
         rules: [{ Matches: ['[invalid'] }],
       });
       expect(result.success).toBe(false);
-      expect((result as any).error?.message).toContain('Invalid parameters');
+      expect(result.message).toContain('Invalid parameters');
     });
 
     it('should fail for empty pattern array', async () => {
@@ -1002,7 +992,7 @@ describe('Format Validation Rules', () => {
         rules: [{ Matches: [/abc/] }],
       });
       expect(result.success).toBe(false);
-      expect((result as any).error?.message).toContain('field must match');
+      expect(result.message).toContain('field must match');
     });
 
     // Decorator test
@@ -1073,9 +1063,7 @@ describe('Format Validation Rules', () => {
         expect(result.success).toBe(false);
         if (!result.success) {
           // eslint-disable-next-line jest/no-conditional-expect
-          expect((result as any).error?.message).toContain(
-            'valid MongoDB ObjectId'
-          );
+          expect(result.message).toContain('valid MongoDB ObjectId');
         }
       }
     });
@@ -1147,9 +1135,7 @@ describe('Format Validation Rules', () => {
         expect(result.success).toBe(false);
         if (!result.success) {
           // eslint-disable-next-line jest/no-conditional-expect
-          expect((result as any).error?.message).toContain(
-            'valid hexadecimal value'
-          );
+          expect(result.message).toContain('valid hexadecimal value');
         }
       }
     });

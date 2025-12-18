@@ -50,7 +50,7 @@ describe('Numeric Validation Rules', () => {
           rules: ['Number'],
         });
         expect(result.success).toBe(false);
-        expect(result.error?.message).toContain('number');
+        expect(result.message).toContain('number');
       }
     });
 
@@ -77,7 +77,7 @@ describe('Numeric Validation Rules', () => {
           rules: ['Number'],
         });
         expect(result.success).toBe(false);
-        expect(result.error?.message).toContain('number');
+        expect(result.message).toContain('number');
       }
     });
 
@@ -145,7 +145,7 @@ describe('Numeric Validation Rules', () => {
         rules: [{ NumberGT: [5] }],
       });
       expect(result.success).toBe(false);
-      expect(result.error?.message).toContain('greater than');
+      expect(result.message).toContain('greater than');
     });
 
     it('should fail when number is less than threshold', async () => {
@@ -154,7 +154,7 @@ describe('Numeric Validation Rules', () => {
         rules: [{ NumberGT: [5] }],
       });
       expect(result.success).toBe(false);
-      expect(result.error?.message).toContain('greater than');
+      expect(result.message).toContain('greater than');
     });
 
     it('should fail for non-numeric values', async () => {
@@ -163,7 +163,7 @@ describe('Numeric Validation Rules', () => {
         rules: [{ NumberGT: [5] }],
       });
       expect(result.success).toBe(false);
-      expect(result.error?.message).toContain('greater than');
+      expect(result.message).toContain('greater than');
     });
 
     it('should fail for invalid parameters', async () => {
@@ -172,7 +172,7 @@ describe('Numeric Validation Rules', () => {
         rules: [{ NumberGT: ['invalid' as any] }],
       });
       expect(result.success).toBe(false);
-      expect(result.error?.message).toContain('Invalid parameters for rule');
+      expect(result.message).toContain('Invalid parameters for rule');
     });
 
     // Decorator test
@@ -228,7 +228,7 @@ describe('Numeric Validation Rules', () => {
         rules: [{ NumberGTE: [5] }],
       });
       expect(result.success).toBe(false);
-      expect(result.error?.message).toContain('greater than or equal to');
+      expect(result.message).toContain('greater than or equal to');
     });
 
     // Decorator test
@@ -280,7 +280,7 @@ describe('Numeric Validation Rules', () => {
         rules: [{ NumberLT: [5] }],
       });
       expect(result.success).toBe(false);
-      expect(result.error?.message).toContain('less than');
+      expect(result.message).toContain('less than');
     });
 
     // Decorator test
@@ -319,7 +319,7 @@ describe('Numeric Validation Rules', () => {
         rules: [{ NumberLTE: [5] }],
       });
       expect(result.success).toBe(false);
-      expect(result.error?.message).toContain('less than or equal to');
+      expect(result.message).toContain('less than or equal to');
     });
 
     // Decorator test
@@ -357,7 +357,7 @@ describe('Numeric Validation Rules', () => {
           rules: [{ NumberEQ: [5] }],
         });
         expect(result.success).toBe(false);
-        expect(result.error?.message).toContain('equal to');
+        expect(result.message).toContain('equal to');
       }
     });
 
@@ -397,7 +397,7 @@ describe('Numeric Validation Rules', () => {
         rules: [{ NumberNE: [5] }],
       });
       expect(result.success).toBe(false);
-      expect(result.error?.message).toContain('different from');
+      expect(result.message).toContain('different from');
     });
 
     // Decorator test
@@ -436,7 +436,7 @@ describe('Numeric Validation Rules', () => {
         rules: [{ NumberBetween: [5, 15] }],
       });
       expect(result.success).toBe(false);
-      expect(result.error?.message).toContain('between');
+      expect(result.message).toContain('between');
     });
 
     it('should fail when number is above max', async () => {
@@ -445,7 +445,7 @@ describe('Numeric Validation Rules', () => {
         rules: [{ NumberBetween: [5, 15] }],
       });
       expect(result.success).toBe(false);
-      expect(result.error?.message).toContain('between');
+      expect(result.message).toContain('between');
     });
 
     it('should fail for invalid parameters', async () => {
@@ -454,7 +454,7 @@ describe('Numeric Validation Rules', () => {
         rules: [{ NumberBetween: [25, 5] }], // min > max
       });
       expect(result.success).toBe(false);
-      expect(result.error?.message).toContain('Invalid parameters for rule');
+      expect(result.message).toContain('Invalid parameters for rule');
     });
 
     // Decorator test
@@ -495,7 +495,7 @@ describe('Numeric Validation Rules', () => {
           rules: ['Integer'],
         });
         expect(result.success).toBe(false);
-        expect(result.error?.message).toContain('integer');
+        expect(result.message).toContain('integer');
       }
     });
 
@@ -507,7 +507,7 @@ describe('Numeric Validation Rules', () => {
           rules: ['Integer'],
         });
         expect(result.success).toBe(false);
-        expect(result.error?.message).toContain('must be a valid integer');
+        expect(result.message).toContain('must be a valid integer');
       }
     });
 
@@ -528,7 +528,7 @@ describe('Numeric Validation Rules', () => {
         rules: ['Integer'],
       });
       expect(result.success).toBe(false);
-      expect(result.error?.message).toContain('integer');
+      expect(result.message).toContain('integer');
     });
 
     // Decorator test
@@ -584,7 +584,7 @@ describe('Numeric Validation Rules', () => {
           rules: ['EvenNumber'],
         });
         expect(result.success).toBe(false);
-        expect(result.error?.message).toContain('even integer');
+        expect(result.message).toContain('even integer');
       }
     });
 
@@ -607,7 +607,7 @@ describe('Numeric Validation Rules', () => {
           rules: ['EvenNumber'],
         });
         expect(result.success).toBe(false);
-        expect(result.error?.message).toContain('must be a valid integer');
+        expect(result.message).toContain('must be a valid integer');
       }
     });
 
@@ -648,7 +648,7 @@ describe('Numeric Validation Rules', () => {
           rules: ['OddNumber'],
         });
         expect(result.success).toBe(false);
-        expect(result.error?.message).toContain('odd integer');
+        expect(result.message).toContain('odd integer');
       }
     });
 
@@ -701,7 +701,7 @@ describe('Numeric Validation Rules', () => {
           rules: [{ MultipleOf: [divisor] }],
         });
         expect(result.success).toBe(false);
-        expect(result.error?.message).toContain('multiple');
+        expect(result.message).toContain('multiple');
       }
     });
 
@@ -711,7 +711,7 @@ describe('Numeric Validation Rules', () => {
         rules: [{ MultipleOf: [0] }],
       });
       expect(result.success).toBe(false);
-      expect(result.error?.message).toContain(
+      expect(result.message).toContain(
         'Invalid parameters for rule MultipleOf'
       );
     });
@@ -763,7 +763,7 @@ describe('Numeric Validation Rules', () => {
           rules: [{ DecimalPlaces: [places] }],
         });
         expect(result.success).toBe(false);
-        expect(result.error?.message).toContain('decimal places');
+        expect(result.message).toContain('decimal places');
       }
     });
 

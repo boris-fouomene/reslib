@@ -426,9 +426,7 @@ describe('Target Validation Rules', () => {
         rules: [Validator.validateNested(Address)],
       });
       expect(result.success).toBe(false);
-      expect((result as any).error?.message).toContain(
-        'must be a non null string'
-      );
+      expect(result.message).toContain('must be a non null string');
     });
 
     it('should handle primitive values in direct validation', async () => {
@@ -442,7 +440,7 @@ describe('Target Validation Rules', () => {
         rules: [Validator.validateNested(Address)],
       });
       expect(result.success).toBe(false);
-      expect((result as any).error?.message).toContain('must be an object');
+      expect(result.message).toContain('must be an object');
     });
   });
 });

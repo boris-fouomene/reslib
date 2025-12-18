@@ -1,6 +1,6 @@
 import { DateHelper } from '@utils/date';
 import type { ValidatorRuleParams } from '../types';
-import { ValidatorResult, ValidatorRuleParamTypes } from '../types';
+import { ValidatorRuleParamTypes, ValidatorRuleResult } from '../types';
 import { Validator } from '../validator';
 
 /**
@@ -35,7 +35,7 @@ export const IsDate = Validator.buildRuleDecorator<
   translatedPropertyName,
   i18n,
   ...rest
-}): ValidatorResult {
+}): ValidatorRuleResult {
   if (value instanceof Date && !isNaN(value.getTime())) {
     return true;
   } else if (typeof value === 'string' || typeof value === 'number') {
@@ -95,7 +95,7 @@ export const IsDateAfter = Validator.buildRuleDecorator<
   translatedPropertyName,
   i18n,
   ...rest
-}): ValidatorResult {
+}): ValidatorRuleResult {
   if (!isValidDate(value)) {
     const message = i18n.t('validator.dateAfter', {
       field: translatedPropertyName || fieldName,
@@ -187,7 +187,7 @@ export const IsDateBefore = Validator.buildRuleDecorator<
   translatedPropertyName,
   i18n,
   ...rest
-}): ValidatorResult {
+}): ValidatorRuleResult {
   if (!isValidDate(value)) {
     const message = i18n.t('validator.dateBefore', {
       field: translatedPropertyName || fieldName,
@@ -281,7 +281,7 @@ export const IsDateBetween = Validator.buildRuleDecorator<
   translatedPropertyName,
   i18n,
   ...rest
-}): ValidatorResult {
+}): ValidatorRuleResult {
   if (!isValidDate(value)) {
     const message = i18n.t('validator.dateBetween', {
       field: translatedPropertyName || fieldName,
@@ -380,7 +380,7 @@ export const IsSameDate = Validator.buildRuleDecorator<
   translatedPropertyName,
   i18n,
   ...rest
-}): ValidatorResult {
+}): ValidatorRuleResult {
   if (!isValidDate(value)) {
     const message = i18n.t('validator.dateEquals', {
       field: translatedPropertyName || fieldName,
@@ -481,7 +481,7 @@ export const IsFutureDate = Validator.buildRuleDecorator<
   translatedPropertyName,
   i18n,
   ...rest
-}): ValidatorResult {
+}): ValidatorRuleResult {
   if (!isValidDate(value)) {
     const message = i18n.t('validator.futureDate', {
       field: translatedPropertyName || fieldName,
@@ -545,7 +545,7 @@ export const IsPastDate = Validator.buildRuleDecorator<
   translatedPropertyName,
   i18n,
   ...rest
-}): ValidatorResult {
+}): ValidatorRuleResult {
   if (!isValidDate(value)) {
     const message = i18n.t('validator.pastDate', {
       field: translatedPropertyName || fieldName,

@@ -2207,7 +2207,13 @@ export type BaseExceptionDetails<TDetails = unknown> =
     ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
       Record<string, any>
     : // If TDetails is provided, use it exactly as is (no method stripping to avoid inference issues)
-      TDetails;
+      {
+        [K in keyof TDetails as TDetails[K] extends (
+          ...args: unknown[]
+        ) => unknown
+          ? never
+          : K]: TDetails[K];
+      };
 // Helper to check production env
 const isProduction = () => {
   try {

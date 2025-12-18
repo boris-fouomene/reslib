@@ -14,10 +14,13 @@ import {
 } from '@utils/index';
 import { I18n, i18n as defaultI18n } from '../i18n';
 import {
+  ValidatorBaseError,
+  ValidatorBulkError,
+  ValidatorCreateBulkErrorPayload,
+  ValidatorCreateErrorPayload,
+  ValidatorCreateTargetErrorPayload,
   ValidatorError,
-  ValidatorErrorDetails,
   ValidatorTargetError,
-  ValidatorTargetKeys,
   ValidatorTargetSingleError,
 } from './errors';
 import { VALIDATOR_RULE_MARKERS } from './rulesMarkers';
@@ -34,15 +37,16 @@ import {
   ValidatorRuleName,
   ValidatorRuleObject,
   ValidatorRuleParams,
+  ValidatorRuleResult,
   ValidatorRules,
   ValidatorSanitizedRuleObject,
   ValidatorSanitizedRules,
+  ValidatorTargetKeys,
+  ValidatorTargetOptions,
+  ValidatorTargetResult,
   ValidatorValidateMultiRuleOptions,
   ValidatorValidateOptions,
-  ValidatorValidateResult,
   ValidatorValidateSuccess,
-  ValidatorValidateTargetOptions,
-  ValidatorValidateTargetResult,
 } from './types';
 
 /**
@@ -140,7 +144,7 @@ export class Validator {
    *   context?: Context;
    *   fieldName?: string;
    *   translatedPropertyName?: string;
-   * }) => ValidatorResult
+   * }) => ValidatorRuleResult
    * ```
    *
    * ### Rule Return Values
@@ -1203,7 +1207,7 @@ export class Validator {
   }: MakeOptional<
     ValidatorValidateOptions<ValidatorDefaultArray, Context>,
     'i18n' | 'ruleParams'
-  >): Promise<ValidatorValidateResult<Context>> {
+  >): Promise<ValidatorResult<Context>> {
     const i18n = this.getI18n(extra);
     const startTime = Date.now();
     const { sanitizedRules, invalidRules } =
@@ -1228,18 +1232,14 @@ export class Validator {
           })
         )
         .join(separators.multiple);
-      return ValidatorError.from(message, {
-        details: {
-          value,
-          startTime,
-          fieldName: extra.fieldName,
-          propertyName: extra.propertyName,
-          translatedPropertyName: extra.translatedPropertyName,
-          ruleParams: [],
-          ruleName: 'N/A',
-          message,
-          failedAt: new Date(),
-        },
+      return Validator.createError(message, {
+        value,
+        startTime,
+        fieldName: extra.fieldName,
+        propertyName: extra.propertyName,
+        translatedPropertyName: extra.translatedPropertyName,
+        ruleParams: [],
+        ruleName: 'N/A',
       });
     }
 
@@ -1300,7 +1300,7 @@ export class Validator {
           ruleName,
           ruleParams,
         };
-        const errorDetails: Omit<ValidatorErrorDetails, 'message'> = {
+        const errorDetails: ValidatorCreateErrorPayload = {
           value,
           startTime,
           fieldName: extra.fieldName,
@@ -1308,7 +1308,6 @@ export class Validator {
           translatedPropertyName: extra.translatedPropertyName,
           ruleParams,
           ruleName: defaultStr(ruleName),
-          failedAt: new Date(),
         };
         const validateOptions = {
           ...extra,
@@ -1319,7 +1318,7 @@ export class Validator {
           i18n,
         };
         const handleResult = (result: unknown) => {
-          if (Validator.isFailure(result)) {
+          if (Validator.isError(result)) {
             resolve(result);
           }
           result =
@@ -1330,25 +1329,9 @@ export class Validator {
               : result;
           if (result === false) {
             const message = i18n.t('validator.invalidMessage', i18nRuleOptions);
-            return resolve(
-              ValidatorError.from(message, {
-                details: {
-                  ...errorDetails,
-                  message,
-                  failedAt: new Date(),
-                },
-              })
-            );
+            return resolve(Validator.createError(message, errorDetails));
           } else if (isNonNullString(result)) {
-            return resolve(
-              ValidatorError.from(result, {
-                details: {
-                  ...errorDetails,
-                  message: result,
-                  failedAt: new Date(),
-                },
-              })
-            );
+            return resolve(Validator.createError(result, errorDetails));
           } else if (
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             (result as any) instanceof Error ||
@@ -1357,30 +1340,14 @@ export class Validator {
             isNonNullString(result)
           ) {
             const message = stringify(result);
-            return resolve(
-              ValidatorError.from(message, {
-                details: {
-                  ...errorDetails,
-                  message,
-                  failedAt: new Date(),
-                },
-              })
-            );
+            return resolve(Validator.createError(message, errorDetails));
           }
           return next();
         };
 
         if (typeof ruleFunc !== 'function') {
           const message = i18n.t('validator.invalidRule', i18nRuleOptions);
-          return resolve(
-            ValidatorError.from(message, {
-              details: {
-                ...errorDetails,
-                message,
-                failedAt: new Date(),
-              },
-            })
-          );
+          return resolve(Validator.createError(message, errorDetails));
         }
         try {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -1495,7 +1462,7 @@ export class Validator {
    * @template Context - Optional type for validation context
    * @template RulesFunctions - Array of sub-rules to evaluate
    * @param options - Multi-rule validation options
-   * @returns `ValidatorResult` (`ValidatorAsyncResult`)
+   * @returns `ValidatorRuleResult` (`ValidatorAsyncResult`)
    * @example
    * const res = await Validator.validateOneOfRule({
    *   value: "user@example.com",
@@ -1511,7 +1478,7 @@ export class Validator {
       ValidatorDefaultMultiRule<Context>,
   >(
     options: ValidatorValidateMultiRuleOptions<Context, RulesFunctions>
-  ): ValidatorResult {
+  ): ValidatorRuleResult {
     return this.validateMultiRule<Context, RulesFunctions>('OneOf', options);
   }
 
@@ -1526,7 +1493,7 @@ export class Validator {
    * @template Context - Optional type for validation context
    * @template RulesFunctions - Array of sub-rules to evaluate
    * @param options - Multi-rule validation options
-   * @returns `ValidatorResult` (`ValidatorAsyncResult`)
+   * @returns `ValidatorRuleResult` (`ValidatorAsyncResult`)
    * @example
    * const res = await Validator.validateAllOfRule({
    *   value: "hello",
@@ -1542,7 +1509,7 @@ export class Validator {
       ValidatorDefaultMultiRule<Context>,
   >(
     options: ValidatorValidateMultiRuleOptions<Context, RulesFunctions>
-  ): ValidatorResult {
+  ): ValidatorRuleResult {
     return this.validateMultiRule<Context, RulesFunctions>('AllOf', options);
   }
 
@@ -1561,7 +1528,7 @@ export class Validator {
    * @template Context - Optional type for validation context
    * @template RulesFunctions - Array of sub-rules applied to each item
    * @param options - Multi-rule validation options
-   * @returns `ValidatorResult` (`ValidatorAsyncResult`) - `true` if all items pass; otherwise an aggregated error string
+   * @returns `ValidatorRuleResult` (`ValidatorAsyncResult`) - `true` if all items pass; otherwise an aggregated error string
    * @example
    * const res = await Validator.validateArrayOfRule({
    *   value: ["user@example.com", "admin@example.com"],
@@ -1880,7 +1847,7 @@ export class Validator {
    * @param options.translatedPropertyName - Optional localized property name for error messages
    * @param options.i18n - Optional i18n instance used to localize the error label
    *
-   * @returns ValidatorResult
+   * @returns ValidatorRuleResult
    * - `true` when validation succeeds (any sub-rule for `OneOf`, all sub-rules for `AllOf`)
    * - `string` containing aggregated error messages when validation fails
    *
@@ -2351,7 +2318,7 @@ export class Validator {
    * 1. Extracts the data property from validation options
    * 2. Creates a shallow copy of the data using `Object.assign`
    * 3. Calls `validateNestedRule` with the combined parameters
-   * 4. Properly types the data as `ValidatorValidateTargetData<Target>`
+   * 4. Properly types the data as `ValidatorTargetData<Target>`
    * 5. Delegates to validateTarget via validateNestedRule which expects options.data
    *
    * ### Error Message Format
@@ -2434,7 +2401,7 @@ export class Validator {
    * @see {@link ValidateNested} - Decorator using this factory
    * @see {@link validateTarget} - Multi-field class validation (signature: validateTarget<T, Context>(target, options))
    * @see {@link ValidatorValidateOptions} - Validation options interface for rule functions
-   * @see {@link ValidatorValidateTargetOptions} - Target validation options interface
+   * @see {@link ValidatorTargetOptions} - Target validation options interface
    * @see {@link oneOf} - Similar factory for OneOf rule creation
    * @see {@link allOf} - Similar factory for AllOf rule creation
    * @see {@link arrayOf} - Similar factory for ArrayOf rule creation
@@ -2456,13 +2423,92 @@ export class Validator {
   }
 
   static isSuccess<Context = unknown>(
-    result: ValidatorValidateResult<Context>
+    result: ValidatorResult<Context>
   ): result is ValidatorValidateSuccess<Context> {
     return isObj(result) && result.success === true;
   }
-
-  static isFailure(result: unknown): result is ValidatorError {
-    return ValidatorError.is(result);
+  private static getBaseError({
+    startTime,
+  }: {
+    startTime: number;
+  }): Omit<ValidatorBaseError, 'message'> {
+    const failedAt = new Date();
+    return {
+      __validatorBaseName: 'ValidatorBaseError',
+      failedAt,
+      startTime,
+      duration: Date.now() - startTime,
+      success: false,
+      status: 'error',
+      statusCode: 422,
+      errorCode: 'ERR_VALIDATION_FAILED',
+    };
+  }
+  private static isBaseError(value: unknown): value is ValidatorBaseError {
+    if (!isObj(value)) {
+      return false;
+    }
+    return (
+      value.__validatorBaseName === 'ValidatorBaseError' &&
+      value.success === false &&
+      value.failedAt &&
+      value.statusCode === 422 &&
+      value.errorCode === 'ERR_VALIDATION_FAILED'
+    );
+  }
+  static createError(
+    message: string,
+    details: ValidatorCreateErrorPayload
+  ): ValidatorError {
+    return {
+      ...this.getBaseError(details),
+      ...details,
+      failedAt: new Date(),
+      message,
+      name: 'ValidatorError',
+    };
+  }
+  static createTargetError(
+    message: string,
+    details: ValidatorCreateTargetErrorPayload
+  ): ValidatorTargetError {
+    return {
+      ...this.getBaseError(details),
+      ...details,
+      message,
+      name: 'ValidatorTargetError',
+      failedAt: new Date(),
+    };
+  }
+  static createBulkError(
+    message: string,
+    details: ValidatorCreateBulkErrorPayload
+  ): ValidatorBulkError {
+    return {
+      ...this.getBaseError(details),
+      ...details,
+      message,
+      name: 'ValidatorBulkError',
+      failedAt: new Date(),
+    };
+  }
+  static isError(result: unknown): result is ValidatorError {
+    return (
+      this.isBaseError(result) &&
+      (result as ValidatorError).name == 'ValidatorError'
+    );
+  }
+  static isTargetError(result: unknown): result is ValidatorTargetError {
+    return (
+      this.isBaseError(result) &&
+      (result as ValidatorTargetError).name == 'ValidatorTargetError'
+    );
+  }
+  static isBulkError(result: unknown): result is ValidatorBulkError {
+    return (
+      this.isBaseError(result) &&
+      (result as ValidatorBulkError).name == 'ValidatorBulkError'
+    );
   }
 
   static async validateTarget<
@@ -2471,12 +2517,12 @@ export class Validator {
   >(
     target: Target,
     options: Omit<
-      ValidatorValidateTargetOptions<Target, Context>,
+      ValidatorTargetOptions<Target, Context>,
       'i18n' | 'ruleParams'
     > & {
       i18n?: I18n;
     }
-  ): Promise<ValidatorValidateTargetResult<Target, Context>> {
+  ): Promise<ValidatorTargetResult<Target, Context>> {
     const startTime = Date.now();
     const targetRules = Validator.getTargetRules<Target>(target);
     const { context, errorMessageBuilder, ...restOptions } = Object.assign(
@@ -2496,7 +2542,7 @@ export class Validator {
     const validationErrors: ValidatorTargetSingleError[] = [];
     const fieldErrors: Partial<Record<ValidatorTargetKeys<Target>, string>> =
       {};
-    const validationPromises: Promise<ValidatorValidateResult<Context>>[] = [];
+    const validationPromises: Promise<ValidatorResult<Context>>[] = [];
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     let validatedFieldCount = 0;
 
@@ -2534,28 +2580,31 @@ export class Validator {
             validatedFieldCount++;
           } else {
             const errorMessage = stringify(validationResult.message);
-            const errorDetails = {
-              separators: messageSeparators,
-              data,
+            const error = Validator.createError(errorMessage, {
               propertyName: propertyKey,
               translatedPropertyName: translatedPropertyName,
               ruleParams: [],
               ruleName: 'validateTarget',
-              i18n,
-              failedAt: new Date(),
               startTime,
               value,
-              error: validationResult,
-            };
+            });
+
             const formattedMessage = buildErrorMessage(
               translatedPropertyName,
               errorMessage,
-              errorDetails
+              {
+                ...error,
+                propertyName: String(propertyKey),
+                separators: messageSeparators,
+                data,
+                translatedPropertyName: translatedPropertyName,
+                i18n,
+                cause: validationResult,
+              }
             );
             fieldErrors[propertyKey] = formattedMessage;
             validationErrors.push({
-              ...errorDetails,
-              message: formattedMessage,
+              ...error,
               cause: validationResult,
             });
           }
@@ -2564,44 +2613,41 @@ export class Validator {
       );
     }
 
-    return new Promise<ValidatorValidateTargetResult<Target, Context>>(
-      (resolve) => {
-        return Promise.all(validationPromises).then(() => {
-          const isValidationSuccessful = !validationErrors.length;
-          if (isValidationSuccessful) {
-            resolve({
-              ...createSuccessResult<Context>(
-                {
-                  data,
-                  value: undefined,
-                  context,
-                },
-                startTime
-              ),
-              status: 'success',
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              data: data as any,
-            });
-          } else {
-            const message = i18n.translate('validator.failedForNFields', {
-              count: validationErrors.length,
-            });
-            resolve(
-              ValidatorTargetError.from(message, {
-                details: {
-                  errors: validationErrors,
-                  fieldErrors,
-                  failureCount: validationErrors.length,
-                  failedAt: new Date(),
-                  duration: Date.now() - startTime,
-                  data,
-                },
-              })
-            );
-          }
-        });
-      }
-    );
+    return new Promise<ValidatorTargetResult<Target, Context>>((resolve) => {
+      return Promise.all(validationPromises).then(() => {
+        const isValidationSuccessful = !validationErrors.length;
+        if (isValidationSuccessful) {
+          resolve({
+            ...createSuccessResult<Context>(
+              {
+                data,
+                value: undefined,
+                context,
+              },
+              startTime
+            ),
+            message: undefined,
+            status: 'success',
+
+            data: data,
+          });
+        } else {
+          const message = i18n.translate('validator.failedForNFields', {
+            count: validationErrors.length,
+          });
+          resolve(
+            Validator.createTargetError(message, {
+              startTime,
+              errors: validationErrors,
+              fieldErrors,
+              failureCount: validationErrors.length,
+              duration: Date.now() - startTime,
+              data,
+            })
+          );
+        }
+      });
+    });
   }
 
   /**
@@ -2743,7 +2789,7 @@ export class Validator {
   public static getValidateTargetOptions<T extends ClassConstructor>(
     target: T
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  ): ValidatorValidateTargetOptions<T, any> {
+  ): ValidatorTargetOptions<T, any> {
     return Object.assign(
       {},
       Reflect.getMetadata(VALIDATOR_TARGET_OPTIONS_METADATA_KEY, target) || {}
@@ -4252,7 +4298,7 @@ export class Validator {
  */
 export function ValidationTargetOptions(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  validationOptions: ValidatorValidateTargetOptions<any, any>
+  validationOptions: ValidatorTargetOptions<any, any>
 ): ClassDecorator {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
   return function (targetClass: Function) {
@@ -4273,6 +4319,7 @@ function createSuccessResult<Context = unknown>(
   startTime: number
 ): ValidatorValidateSuccess<Context> {
   return {
+    message: undefined,
     ...options,
     success: true,
     validatedAt: new Date(),

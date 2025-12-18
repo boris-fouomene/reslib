@@ -39,7 +39,7 @@ describe('Object Validation Rules', () => {
           rules: ['Object'],
         });
         expect(result.success).toBe(false);
-        expect(result.error?.message).toContain('This field must be an object');
+        expect(result.message).toContain('This field must be an object');
       }
     });
 
@@ -53,23 +53,9 @@ describe('Object Validation Rules', () => {
         rules: ['Object'],
       });
       expect(result.success).toBe(false);
-      expect(result.error?.message).toContain('This field must be an object');
+      expect(result.message).toContain('This field must be an object');
     });
 
-    // Decorator test
-    it('should work with IsObject decorator', async () => {
-      class TestClass {
-        @IsObject()
-        config!: Record<string, any>;
-      }
-
-      const instance = new TestClass();
-      instance.config = { setting: 'value' };
-
-      const result = await Validator.validateTarget(TestClass, {
-        data: instance,
-      });
-    });
     it('should work with IsObject decorator 2', async () => {
       class TestClass {
         @IsObject()

@@ -1,6 +1,6 @@
 import { defaultStr } from '@utils/defaultStr';
 import { isNumber } from '@utils/isNumber';
-import { ValidatorResult, ValidatorValidateOptions } from '../types';
+import { ValidatorRuleResult, ValidatorValidateOptions } from '../types';
 import { Validator } from '../validator';
 import { toNumber } from './utils';
 
@@ -18,7 +18,7 @@ function compareNumer(
   translateKey: string,
   { value, ruleParams, i18n, ...rest }: ValidatorValidateOptions,
   ruleName: ValidatorRuleName
-): ValidatorResult {
+): ValidatorRuleResult {
   ruleParams = Array.isArray(ruleParams) ? ruleParams : [];
   const rParams = ruleParams ? ruleParams : [];
   translateKey = defaultStr(translateKey);
@@ -173,7 +173,7 @@ export const IsNumberLTE = Validator.buildRuleDecorator<
  *   - `ruleParams`: An array where the first element is the value to compare against.
  *
  * ### Return Value:
- * - `ValidatorResult`: Resolves to `true` if the value is less than the specified comparison value,
+ * - `ValidatorRuleResult`: Resolves to `true` if the value is less than the specified comparison value,
  *   otherwise rejects with an error message indicating the validation failure.
  *
  * ### Example Usage:
@@ -213,7 +213,7 @@ export const IsNumberLT = Validator.buildRuleDecorator<
  *   - `ruleParams`: An array where the first element is the value to compare against.
  *
  * ### Return Value:
- * - `ValidatorResult`: Resolves to `true` if the value is greater than or equal to the specified comparison value,
+ * - `ValidatorRuleResult`: Resolves to `true` if the value is greater than or equal to the specified comparison value,
  *   otherwise rejects with an error message indicating the validation failure.
  *
  * ### Example Usage:
@@ -253,7 +253,7 @@ export const IsNumberGTE = Validator.buildRuleDecorator<
  *   - `ruleParams`: An array where the first element is the value to compare against.
  *
  * ### Return Value:
- * - `ValidatorResult`: Resolves to `true` if the value is greater than the specified comparison value,
+ * - `ValidatorRuleResult`: Resolves to `true` if the value is greater than the specified comparison value,
  *   otherwise rejects with an error message indicating the validation failure.
  *
  * ### Example Usage:
@@ -295,7 +295,7 @@ export const IsNumberGT = Validator.buildRuleDecorator<
  *   - `ruleParams`: An array where the first element is the value to compare against.
  *
  * ### Return Value:
- * - `ValidatorResult`: Resolves to `true` if the value is equal to the specified comparison value,
+ * - `ValidatorRuleResult`: Resolves to `true` if the value is equal to the specified comparison value,
  *   otherwise rejects with an error message indicating the validation failure.
  *
  * ### Example Usage:
@@ -440,7 +440,7 @@ export const IsNumberBetween = Validator.buildRuleDecorator<
   translatedPropertyName,
   i18n,
   ...rest
-}: ValidatorValidateOptions<[number, number]>): ValidatorResult {
+}: ValidatorValidateOptions<[number, number]>): ValidatorRuleResult {
   if (!ruleParams || ruleParams.length < 2) {
     const message = i18n.t('validator.invalidRuleParams', {
       rule: 'NumberBetween',
@@ -525,7 +525,7 @@ export const HasDecimalPlaces = Validator.buildRuleDecorator<
   translatedPropertyName,
   i18n,
   ...rest
-}): ValidatorResult {
+}): ValidatorRuleResult {
   if (!Array.isArray(ruleParams) || !ruleParams.length) {
     const message = i18n.t('validator.invalidRuleParams', {
       rule: 'DecimalPlaces',
@@ -619,7 +619,7 @@ export const IsInteger = Validator.buildRuleDecorator<
   translatedPropertyName,
   i18n,
   ...rest
-}: ValidatorValidateOptions): ValidatorResult {
+}: ValidatorValidateOptions): ValidatorRuleResult {
   if (!isNumber(value) || !Number.isInteger(value)) {
     const message = i18n.t('validator.integer', {
       field: translatedPropertyName || fieldName,
@@ -675,7 +675,7 @@ export const IsEvenNumber = Validator.buildRuleDecorator<
   translatedPropertyName,
   i18n,
   ...rest
-}: ValidatorValidateOptions): ValidatorResult {
+}: ValidatorValidateOptions): ValidatorRuleResult {
   if (!isNumber(value)) {
     const message = i18n.t('validator.number', {
       field: translatedPropertyName || fieldName,
@@ -746,7 +746,7 @@ export const IsOddNumber = Validator.buildRuleDecorator<
   translatedPropertyName,
   i18n,
   ...rest
-}: ValidatorValidateOptions): ValidatorResult {
+}: ValidatorValidateOptions): ValidatorRuleResult {
   if (!isNumber(value)) {
     const message = i18n.t('validator.number', {
       field: translatedPropertyName || fieldName,
@@ -814,7 +814,7 @@ export const IsMultipleOf = Validator.buildRuleDecorator<
   translatedPropertyName,
   i18n,
   ...rest
-}: ValidatorValidateOptions<[number]>): ValidatorResult {
+}: ValidatorValidateOptions<[number]>): ValidatorRuleResult {
   if (!ruleParams || !ruleParams.length) {
     const message = i18n.t('validator.invalidRuleParams', {
       rule: 'MultipleOf',

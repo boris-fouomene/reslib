@@ -1,5 +1,6 @@
+import { ValidatorError } from '@validator/errors';
 import { i18n } from '../../i18n';
-import { Validator } from '../index';
+import { Validator, ValidatorValidateSuccess } from '../index';
 
 describe('Validator.validate() - Either Pattern Tests', () => {
   beforeAll(async () => {
@@ -170,7 +171,9 @@ describe('Validator.validate() - Either Pattern Tests', () => {
       });
 
       expect(result.success).toBe(true);
-      expect(result.validatedAt).toBeInstanceOf(Date);
+      expect((result as ValidatorValidateSuccess).validatedAt).toBeInstanceOf(
+        Date
+      );
     });
 
     it('should return result with duration in milliseconds', async () => {
@@ -194,8 +197,7 @@ describe('Validator.validate() - Either Pattern Tests', () => {
       });
 
       expect(result.success).toBe(false);
-      expect(result.error).toBeDefined();
-      expect(result.error?.message).toBeDefined();
+      expect(result.message).toBeDefined();
     });
 
     it('should fail MinLength rule when value is too short', async () => {
@@ -205,8 +207,8 @@ describe('Validator.validate() - Either Pattern Tests', () => {
       });
 
       expect(result.success).toBe(false);
-      expect(result.error?.ruleName).toBe('MinLength');
-      expect(result.error?.ruleParams).toContain(10);
+      expect((result as ValidatorError).ruleName).toBe('MinLength');
+      expect((result as ValidatorError).ruleParams).toContain(10);
     });
 
     it('should fail MaxLength rule when value is too long', async () => {
@@ -216,7 +218,7 @@ describe('Validator.validate() - Either Pattern Tests', () => {
       });
 
       expect(result.success).toBe(false);
-      expect(result.error?.ruleName).toBe('MaxLength');
+      expect((result as ValidatorError).ruleName).toBe('MaxLength');
     });
 
     it('should fail Email rule with invalid email', async () => {
@@ -226,7 +228,7 @@ describe('Validator.validate() - Either Pattern Tests', () => {
       });
 
       expect(result.success).toBe(false);
-      expect(result.error?.ruleName).toBe('Email');
+      expect((result as ValidatorError).ruleName).toBe('Email');
     });
 
     it('should fail Url rule with invalid URL', async () => {
@@ -236,7 +238,7 @@ describe('Validator.validate() - Either Pattern Tests', () => {
       });
 
       expect(result.success).toBe(false);
-      expect(result.error?.ruleName).toBe('Url');
+      expect((result as ValidatorError).ruleName).toBe('Url');
     });
 
     it('should fail NumberGT when value is too small', async () => {
@@ -246,7 +248,7 @@ describe('Validator.validate() - Either Pattern Tests', () => {
       });
 
       expect(result.success).toBe(false);
-      expect(result.error?.ruleName).toBe('NumberGT');
+      expect((result as ValidatorError).ruleName).toBe('NumberGT');
     });
 
     it('should fail NumberLT when value is too large', async () => {
@@ -256,7 +258,7 @@ describe('Validator.validate() - Either Pattern Tests', () => {
       });
 
       expect(result.success).toBe(false);
-      expect(result.error?.ruleName).toBe('NumberLT');
+      expect((result as ValidatorError).ruleName).toBe('NumberLT');
     });
 
     it("should fail NumberEQ when values don't match", async () => {
@@ -266,7 +268,7 @@ describe('Validator.validate() - Either Pattern Tests', () => {
       });
 
       expect(result.success).toBe(false);
-      expect(result.error?.ruleName).toBe('NumberEQ');
+      expect((result as ValidatorError).ruleName).toBe('NumberEQ');
     });
 
     it('should fail with invalid rule name', async () => {
@@ -276,7 +278,7 @@ describe('Validator.validate() - Either Pattern Tests', () => {
       });
 
       expect(result.success).toBe(false);
-      expect(result.error?.message).toContain('NonExistentRule');
+      expect(result.message).toContain('NonExistentRule');
     });
 
     it('should fail custom rule that returns false', async () => {
@@ -286,7 +288,7 @@ describe('Validator.validate() - Either Pattern Tests', () => {
       });
 
       expect(result.success).toBe(false);
-      expect(result.error?.message).toBe('Value mismatch');
+      expect(result.message).toBe('Value mismatch');
     });
 
     it('should stop at first failing rule in a chain', async () => {
@@ -296,7 +298,7 @@ describe('Validator.validate() - Either Pattern Tests', () => {
       });
 
       expect(result.success).toBe(false);
-      expect(result.error?.ruleName).toBe('MinLength');
+      expect((result as ValidatorError).ruleName).toBe('MinLength');
     });
 
     it('should fail NumberGTE at boundary minus one', async () => {
@@ -324,7 +326,7 @@ describe('Validator.validate() - Either Pattern Tests', () => {
       });
 
       expect(result.success).toBe(false);
-      expect(result.error?.ruleName).toBe('Number');
+      expect((result as ValidatorError).ruleName).toBe('Number');
     });
 
     it('should fail NonNullString rule with null value', async () => {
@@ -364,7 +366,7 @@ describe('Validator.validate() - Either Pattern Tests', () => {
       });
 
       expect(result.success).toBe(false);
-      expect(result.error?.fieldName).toBe('email');
+      expect((result as ValidatorError).fieldName).toBe('email');
     });
 
     it('should include propertyName in error if provided', async () => {
@@ -375,7 +377,7 @@ describe('Validator.validate() - Either Pattern Tests', () => {
       });
 
       expect(result.success).toBe(false);
-      expect(result.error?.propertyName).toBe('userName');
+      expect((result as ValidatorError).propertyName).toBe('userName');
     });
 
     it('should handle async rule error gracefully', async () => {
@@ -390,7 +392,7 @@ describe('Validator.validate() - Either Pattern Tests', () => {
       });
 
       expect(result.success).toBe(false);
-      expect(result.error?.message).toBe('Async error message');
+      expect(result.message).toBe('Async error message');
     });
 
     it('should handle async rule rejection gracefully', async () => {
@@ -405,7 +407,7 @@ describe('Validator.validate() - Either Pattern Tests', () => {
       });
 
       expect(result.success).toBe(false);
-      expect(result.error?.message).toContain('Async rejection');
+      expect(result.message).toContain('Async rejection');
     });
 
     it('should fail NumberNE when values are equal', async () => {
@@ -415,7 +417,7 @@ describe('Validator.validate() - Either Pattern Tests', () => {
       });
 
       expect(result.success).toBe(false);
-      expect(result.error?.ruleName).toBe('NumberNE');
+      expect((result as ValidatorError).ruleName).toBe('NumberNE');
     });
 
     it('should pass NumberNE when values are different', async () => {
@@ -453,7 +455,7 @@ describe('Validator.validate() - Either Pattern Tests', () => {
       });
 
       expect(result.success).toBe(false);
-      expect(result.error?.ruleParams).toContain(15);
+      expect((result as ValidatorError).ruleParams).toContain(15);
     });
 
     it('should include translatedPropertyName in error', async () => {
@@ -464,7 +466,9 @@ describe('Validator.validate() - Either Pattern Tests', () => {
       });
 
       expect(result.success).toBe(false);
-      expect(result.error?.translatedPropertyName).toBe('User Email Address');
+      expect((result as ValidatorError).translatedPropertyName).toBe(
+        'User Email Address'
+      );
     });
   });
 
@@ -489,7 +493,7 @@ describe('Validator.validate() - Either Pattern Tests', () => {
       });
 
       expect(result.success).toBe(false);
-      expect(result.error?.ruleName).toBe('MaxLength');
+      expect((result as ValidatorError).ruleName).toBe('MaxLength');
     });
 
     it('should validate number range with multiple rules', async () => {

@@ -55,7 +55,7 @@ describe('Default Validation Rules', () => {
         rules: ['Required'],
       });
       expect(result.success).toBe(false);
-      expect((result as any).error?.message).toContain('required');
+      expect(result.message).toContain('required');
     });
 
     it('should fail for undefined', async () => {
@@ -64,7 +64,7 @@ describe('Default Validation Rules', () => {
         rules: ['Required'],
       });
       expect(result.success).toBe(false);
-      expect((result as any).error?.message).toContain('required');
+      expect(result.message).toContain('required');
     });
 
     it('should fail for empty strings', async () => {
@@ -73,7 +73,7 @@ describe('Default Validation Rules', () => {
         rules: ['Required'],
       });
       expect(result.success).toBe(false);
-      expect((result as any).error?.message).toContain('required');
+      expect(result.message).toContain('required');
     });
 
     // Decorator test
@@ -379,7 +379,7 @@ describe('Default Validation Rules', () => {
         rules: ['Nullable', 'Required'],
       });
       expect(result2.success).toBe(false);
-      expect(result2.error?.message).toContain('required');
+      expect((result2 as any)?.message).toContain('required');
     });
 
     it('should handle Optional + Required combination', async () => {
@@ -396,7 +396,7 @@ describe('Default Validation Rules', () => {
         rules: ['Optional', 'Required'],
       });
       expect(result2.success).toBe(false);
-      expect(result2.error?.message).toContain('required');
+      expect(result2.message).toContain('required');
     });
   });
 });

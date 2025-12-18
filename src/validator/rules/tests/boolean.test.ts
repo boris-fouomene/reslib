@@ -72,7 +72,7 @@ describe('Boolean Validation Rules', () => {
           rules: ['Boolean'],
         });
         expect(result.success).toBe(false);
-        expect(result.error?.message).toContain('Boolean');
+        expect(result.message).toContain('Boolean');
       }
     });
 
@@ -84,7 +84,7 @@ describe('Boolean Validation Rules', () => {
           rules: ['Boolean'],
         });
         expect(result.success).toBe(false);
-        expect(result.error?.message).toContain('Boolean');
+        expect(result.message).toContain('Boolean');
       }
     });
 
@@ -94,7 +94,7 @@ describe('Boolean Validation Rules', () => {
         rules: ['Boolean'],
       });
       expect(result.success).toBe(false);
-      expect(result.error?.message).toContain('Boolean');
+      expect(result.message).toContain('Boolean');
     });
 
     it('should fail for undefined', async () => {
@@ -103,7 +103,7 @@ describe('Boolean Validation Rules', () => {
         rules: ['Boolean'],
       });
       expect(result.success).toBe(false);
-      expect(result.error?.message).toContain('Boolean');
+      expect(result.message).toContain('Boolean');
     });
 
     it('should fail for objects', async () => {
@@ -112,7 +112,7 @@ describe('Boolean Validation Rules', () => {
         rules: ['Boolean'],
       });
       expect(result.success).toBe(false);
-      expect(result.error?.message).toContain('Boolean');
+      expect(result.message).toContain('Boolean');
     });
 
     it('should fail for arrays', async () => {
@@ -121,7 +121,7 @@ describe('Boolean Validation Rules', () => {
         rules: ['Boolean'],
       });
       expect(result.success).toBe(false);
-      expect(result.error?.message).toContain('Boolean');
+      expect(result.message).toContain('Boolean');
     });
 
     // Decorator test

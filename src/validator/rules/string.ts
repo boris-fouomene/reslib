@@ -2,9 +2,9 @@ import { defaultStr } from '@utils/defaultStr';
 import { isNonNullString } from '@utils/isNonNullString';
 import { isNumber } from '@utils/isNumber';
 import type {
-  ValidatorResult,
   ValidatorRuleParams,
   ValidatorRuleParamTypes,
+  ValidatorRuleResult,
   ValidatorValidateOptions,
 } from '../types';
 import { Validator } from '../validator';
@@ -237,7 +237,7 @@ export const EndsWithOneOf = Validator.buildRuleDecorator<(string | number)[]>(
     translatedPropertyName,
     i18n,
     ...rest
-  }): ValidatorResult {
+  }): ValidatorRuleResult {
     return new Promise((resolve, reject) => {
       if (typeof value !== 'string') {
         const message = i18n.t('validator.endsWithOneOf', {
@@ -378,7 +378,7 @@ export const StartsWithOneOf = Validator.buildRuleDecorator<
   translatedPropertyName,
   i18n,
   ...rest
-}: ValidatorValidateOptions<string[]>): ValidatorResult {
+}: ValidatorValidateOptions<string[]>): ValidatorRuleResult {
   return new Promise((resolve, reject) => {
     if (typeof value !== 'string') {
       const message = i18n.t('validator.startsWithOneOf', {
@@ -450,7 +450,7 @@ export const IsString = Validator.buildRuleDecorator<
   translatedPropertyName,
   i18n,
   ...rest
-}: ValidatorValidateOptions): ValidatorResult {
+}: ValidatorValidateOptions): ValidatorRuleResult {
   return typeof value === 'string'
     ? true
     : i18n.t('validator.string', {

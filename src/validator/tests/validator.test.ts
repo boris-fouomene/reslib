@@ -1,7 +1,8 @@
 import { i18n } from '../../i18n';
-import { IsEmail, Validator } from '../index';
+import { ensureRulesRegistered, IsEmail, Validator } from '../index';
 import { ValidatorRuleFunction, ValidatorRuleName } from '../types';
 
+ensureRulesRegistered();
 describe('Validator', () => {
   beforeAll(async () => {
     await i18n.setLocale('en');
@@ -47,12 +48,12 @@ describe('Validator', () => {
         { MinLength: [2] },
         { MaxLength: [10] },
       ]);
+      console.log(sanitizedRules, ' are sanitized rules');
       expect(sanitizedRules).toEqual({
         invalidRules: [],
         sanitizedRules: [
           {
             ruleName: 'Required',
-            rawRuleName: 'Required',
             params: [],
             ruleFunction: expect.any(Function),
           },
@@ -60,11 +61,9 @@ describe('Validator', () => {
             ruleName: 'MinLength',
             params: [2],
             ruleFunction: expect.any(Function),
-            rawRuleName: 'MinLength',
           },
           {
             ruleName: 'MaxLength',
-            rawRuleName: 'MaxLength',
             params: [10],
             ruleFunction: expect.any(Function),
           },
@@ -104,7 +103,7 @@ describe('Validator', () => {
       expect(result.success).toBe(true);
 
       expect(result.value).toBe(4);
-      expect(result.validatedAt).toBeDefined();
+      expect((result as any).validatedAt).toBeDefined();
       expect(result.duration).toBeDefined();
     });
 
@@ -237,8 +236,7 @@ describe('Validator', () => {
       });
 
       expect(result.success).toBe(false);
-      expect(result.error).toBeDefined();
-      expect(result.error?.message).toContain('invalidRule');
+      expect(result.message).toContain('invalidRule');
       expect(result.failedAt).toBeDefined();
     });
 
@@ -249,7 +247,7 @@ describe('Validator', () => {
       });
 
       expect(result.success).toBe(false);
-      expect(result.error?.message).toBeDefined();
+      expect(result.message).toBeDefined();
     });
 
     it('should return failure for MinLength rule when value is too short', async () => {
@@ -259,8 +257,8 @@ describe('Validator', () => {
       });
 
       expect(result.success).toBe(false);
-      expect(result.error?.message).toBeDefined();
-      expect(result.error?.ruleName).toBe('MinLength');
+      expect(result.message).toBeDefined();
+      expect((result as any)?.ruleName).toBe('MinLength');
     });
 
     it('should return failure for MaxLength rule when value is too long', async () => {
@@ -270,7 +268,7 @@ describe('Validator', () => {
       });
 
       expect(result.success).toBe(false);
-      expect(result.error?.ruleName).toBe('MaxLength');
+      expect((result as any)?.ruleName).toBe('MaxLength');
     });
 
     it('should return failure for invalid email', async () => {
@@ -280,7 +278,7 @@ describe('Validator', () => {
       });
 
       expect(result.success).toBe(false);
-      expect(result.error?.ruleName).toBe('Email');
+      expect((result as any)?.ruleName).toBe('Email');
     });
 
     it('should return failure for invalid URL', async () => {
@@ -290,7 +288,7 @@ describe('Validator', () => {
       });
 
       expect(result.success).toBe(false);
-      expect(result.error?.ruleName).toBe('Url');
+      expect((result as any)?.ruleName).toBe('Url');
     });
 
     it('should return failure for NumberGT when value is too small', async () => {
@@ -300,7 +298,7 @@ describe('Validator', () => {
       });
 
       expect(result.success).toBe(false);
-      expect(result.error?.ruleName).toBe('NumberGT');
+      expect((result as any)?.ruleName).toBe('NumberGT');
     });
 
     it('should return failure for NumberLT when value is too large', async () => {
@@ -310,7 +308,7 @@ describe('Validator', () => {
       });
 
       expect(result.success).toBe(false);
-      expect(result.error?.ruleName).toBe('NumberLT');
+      expect((result as any)?.ruleName).toBe('NumberLT');
     });
 
     it("should return failure for NumberEQ when value doesn't match", async () => {
@@ -320,7 +318,7 @@ describe('Validator', () => {
       });
 
       expect(result.success).toBe(false);
-      expect(result.error?.ruleName).toBe('NumberEQ');
+      expect((result as any)?.ruleName).toBe('NumberEQ');
     });
 
     it('should stop at first failing rule in multiple rules', async () => {
@@ -330,7 +328,7 @@ describe('Validator', () => {
       });
 
       expect(result.success).toBe(false);
-      expect(result.error?.ruleName).toBe('MinLength');
+      expect((result as any)?.ruleName).toBe('MinLength');
     });
 
     it('should return failure for custom error message from rule function', async () => {
@@ -342,7 +340,7 @@ describe('Validator', () => {
       });
 
       expect(result.success).toBe(false);
-      expect(result.error?.message).toBe('This value is forbidden');
+      expect(result.message).toBe('This value is forbidden');
     });
 
     it('should return failure for async rule that returns error', async () => {
@@ -357,7 +355,7 @@ describe('Validator', () => {
       });
 
       expect(result.success).toBe(false);
-      expect(result.error?.message).toBe('Async validation failed');
+      expect(result.message).toBe('Async validation failed');
     });
 
     it('should return failure for async rule that throws error', async () => {
@@ -372,7 +370,7 @@ describe('Validator', () => {
       });
 
       expect(result.success).toBe(false);
-      expect(result.error?.message).toContain('Async error');
+      expect(result.message).toContain('Async error');
     });
   });
 
@@ -384,16 +382,16 @@ describe('Validator', () => {
       });
 
       expect(Validator.isSuccess(result)).toBe(true);
-      expect(Validator.isFailure(result)).toBe(false);
+      expect(Validator.isError(result)).toBe(false);
     });
 
-    it('should identify failure results with isFailure', async () => {
+    it('should identify failure results with isError', async () => {
       const result = await Validator.validate({
         rules: ['Required'],
         value: '',
       });
 
-      expect(Validator.isFailure(result)).toBe(true);
+      expect(Validator.isError(result)).toBe(true);
       expect(Validator.isSuccess(result)).toBe(false);
     });
   });
@@ -407,7 +405,7 @@ describe('Validator', () => {
       });
 
       expect(result.success).toBe(false);
-      expect(result.error?.fieldName).toBe('email');
+      expect((result as any)?.fieldName).toBe('email');
     });
 
     it('should capture property name in result', async () => {
@@ -418,7 +416,7 @@ describe('Validator', () => {
       });
 
       expect(result.success).toBe(false);
-      expect(result.error?.propertyName).toBe('userName');
+      expect((result as any)?.propertyName).toBe('userName');
     });
 
     it('should capture translated property name', async () => {
@@ -429,7 +427,7 @@ describe('Validator', () => {
       });
 
       expect(result.success).toBe(false);
-      expect(result.error?.translatedPropertyName).toBe('User Email');
+      expect((result as any)?.translatedPropertyName).toBe('User Email');
     });
 
     it('should pass context to rule function', async () => {
@@ -456,7 +454,7 @@ describe('Validator', () => {
       });
 
       expect(result.success).toBe(false);
-      expect(result.error?.ruleParams).toEqual([10]);
+      expect((result as any)?.ruleParams).toEqual([10]);
     });
   });
 

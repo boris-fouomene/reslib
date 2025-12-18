@@ -25,7 +25,7 @@ describe('Multi-Rules Validation', () => {
         rules: [Validator.oneOf(['Email', 'Url'])],
       });
       expect(result.success).toBe(false);
-      expect((result as any).error?.message).toContain('must be a valid URL');
+      expect(result.message).toContain('must be a valid URL');
     });
 
     it('should pass when multiple rules pass', async () => {
@@ -117,9 +117,7 @@ describe('Multi-Rules Validation', () => {
         rules: [Validator.allOf(['Email', { MaxLength: [5] }])],
       });
       expect(result.success).toBe(false);
-      expect((result as any).error?.message).toContain(
-        'be at most 5 characters long'
-      );
+      expect(result.message).toContain('be at most 5 characters long');
     });
 
     it('should fail when all rules fail', async () => {
@@ -128,7 +126,7 @@ describe('Multi-Rules Validation', () => {
         rules: [Validator.allOf(['Email', 'Url'])],
       });
       expect(result.success).toBe(false);
-      expect((result as any).error?.message).toContain('be a valid URL');
+      expect(result.message).toContain('be a valid URL');
     });
 
     it('should work with complex rule combinations', async () => {
@@ -199,9 +197,7 @@ describe('Multi-Rules Validation', () => {
         rules: [Validator.arrayOf(['Email'])],
       });
       expect(result.success).toBe(false);
-      expect((result as any).error?.message).toContain(
-        'must be a valid email addres'
-      );
+      expect(result.message).toContain('must be a valid email addres');
     });
 
     it('should fail for non-arrays', async () => {
@@ -210,7 +206,7 @@ describe('Multi-Rules Validation', () => {
         rules: [Validator.arrayOf(['Email'])],
       });
       expect(result.success).toBe(false);
-      expect((result as any).error?.message).toContain('must be an array');
+      expect(result.message).toContain('must be an array');
     });
 
     it('should pass for empty arrays', async () => {

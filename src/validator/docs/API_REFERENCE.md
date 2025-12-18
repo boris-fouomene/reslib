@@ -17,10 +17,10 @@
   - [Validator.hasRule()](#validatorhasrule)
 - [Types](#types)
   - [ValidatorValidateOptions](#validatorvalidateoptions)
-  - [ValidatorValidateResult](#validatorvalidateresult)
-  - [ValidatorValidateTargetResult](#validatorvalidatetargetresult)
+  - [ValidatorResult](#validatorvalidateresult)
+  - [ValidatorTargetResult](#validatorvalidatetargetresult)
   - [ValidatorRules](#validatorrules)
-  - [ValidatorResult](#validatorresult)
+  - [ValidatorRuleResult](#validatorresult)
 
 ---
 
@@ -35,7 +35,7 @@ The main `Validator` class provides static methods for validation.
 ```typescript
 static async validate<Context = unknown>(
   options: ValidatorValidateOptions<Context>
-): Promise<ValidatorValidateResult<Context>>
+): Promise<ValidatorResult<Context>>
 ```
 
 #### Parameters
@@ -52,9 +52,9 @@ static async validate<Context = unknown>(
 #### Returns
 
 ```typescript
-Promise<ValidatorValidateResult>;
+Promise<ValidatorResult>;
 
-interface ValidatorValidateResult<Context = unknown> {
+interface ValidatorResult<Context = unknown> {
   isValid: boolean;
   message?: string;
   value: any;
@@ -120,8 +120,8 @@ const result = await Validator.validate({
 ```typescript
 static async validateTarget<Target extends object, Context = unknown>(
   TargetClass: new () => Target,
-  options: ValidatorValidateTargetOptions<Target, Context>
-): Promise<ValidatorValidateTargetResult<Target, Context>>
+  options: ValidatorTargetOptions<Target, Context>
+): Promise<ValidatorTargetResult<Target, Context>>
 ```
 
 #### Parameters
@@ -136,9 +136,9 @@ static async validateTarget<Target extends object, Context = unknown>(
 #### Returns
 
 ```typescript
-Promise<ValidatorValidateTargetResult>;
+Promise<ValidatorTargetResult>;
 
-interface ValidatorValidateTargetResult<Target, Context = unknown> {
+interface ValidatorTargetResult<Target, Context = unknown> {
   isValid: boolean;
   errors: Array<{
     field: string;
@@ -244,9 +244,9 @@ static registerRule<Params extends ValidatorRuleParams = []>(
 ```typescript
 type ValidatorRuleFunction<Params> = (
   options: ValidatorValidateOptions<Params>
-) => ValidatorResult | Promise<ValidatorResult>;
+) => ValidatorRuleResult | Promise<ValidatorRuleResult>;
 
-type ValidatorResult = true | string | Promise<true | string>;
+type ValidatorRuleResult = true | string | Promise<true | string>;
 ```
 
 #### Examples
@@ -416,10 +416,10 @@ interface ValidatorValidateOptions<Context = unknown> {
 }
 ```
 
-### ValidatorValidateResult
+### ValidatorResult
 
 ```typescript
-interface ValidatorValidateResult<Context = unknown> {
+interface ValidatorResult<Context = unknown> {
   isValid: boolean;
   message?: string;
   value: any;
@@ -427,10 +427,10 @@ interface ValidatorValidateResult<Context = unknown> {
 }
 ```
 
-### ValidatorValidateTargetResult
+### ValidatorTargetResult
 
 ```typescript
-interface ValidatorValidateTargetResult<Target, Context = unknown> {
+interface ValidatorTargetResult<Target, Context = unknown> {
   isValid: boolean;
   errors: Array<{
     field: string;
@@ -451,10 +451,10 @@ type ValidatorRules = Array<
 >;
 ```
 
-### ValidatorResult
+### ValidatorRuleResult
 
 ```typescript
-type ValidatorResult =
+type ValidatorRuleResult =
   | true // Validation passed
   | string // Validation failed (error message)
   | Promise<true | string>; // Async validation

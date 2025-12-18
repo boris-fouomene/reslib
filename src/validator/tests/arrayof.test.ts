@@ -123,7 +123,7 @@ describe('ArrayOf Validation Rules', () => {
         i18n,
       });
       expect(result.success).toBe(false);
-      expect(result?.error?.message).toContain('Validation failed for');
+      expect(result.message).toContain('Validation failed for');
     });
   });
 

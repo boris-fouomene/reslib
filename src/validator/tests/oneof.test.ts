@@ -1,6 +1,10 @@
 import { i18n } from '../../i18n';
 import { ensureRulesRegistered } from '../index';
-import { ValidatorAsyncResult, ValidatorResult, ValidatorRule } from '../types';
+import {
+  ValidatorAsyncResult,
+  ValidatorRule,
+  ValidatorRuleResult,
+} from '../types';
 
 import { OneOf } from '../rules/multiRules';
 import { Validator } from '../validator';
@@ -469,7 +473,7 @@ describe('OneOf Validation Rules', () => {
       });
 
       it('should create rule from mixed rule types', async () => {
-        const customRule = ({ value }: any): ValidatorResult =>
+        const customRule = ({ value }: any): ValidatorRuleResult =>
           typeof value === 'string' ? true : 'Invlaid string';
 
         const rule = Validator.oneOf(['Email', { MinLength: [5] }, customRule]);
@@ -1151,7 +1155,8 @@ describe('OneOf Validation Rules', () => {
         class EmptyStringTest {
           @OneOf([
             'Email',
-            ({ value }): ValidatorResult => (value === '' ? true : 'Not empty'),
+            ({ value }): ValidatorRuleResult =>
+              value === '' ? true : 'Not empty',
           ])
           value: string = '';
         }
@@ -1221,7 +1226,7 @@ describe('OneOf Validation Rules', () => {
             'PhoneNumber',
             'UUID',
             'Number',
-            ({ value }): ValidatorResult =>
+            ({ value }): ValidatorRuleResult =>
               typeof value === 'string' && value.length > 0
                 ? true
                 : 'Invalid string',

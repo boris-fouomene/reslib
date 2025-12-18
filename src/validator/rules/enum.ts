@@ -1,4 +1,4 @@
-import { ValidatorResult } from '../types';
+import { ValidatorRuleResult } from '../types';
 import { Validator } from '../validator';
 
 import type { ValidatorRuleParams, ValidatorRuleParamTypes } from '../types';
@@ -59,7 +59,7 @@ export const IsEnum = Validator.buildRuleDecorator<
   translatedPropertyName,
   i18n,
   ...rest
-}): ValidatorResult {
+}): ValidatorRuleResult {
   if (!ruleParams || !ruleParams.length) {
     const message = i18n.t('validator.invalidRuleParams', {
       rule: 'Enum',
