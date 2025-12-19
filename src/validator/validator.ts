@@ -27,14 +27,15 @@ import { VALIDATOR_RULE_MARKERS } from './rulesMarkers';
 import {
   ValidateMultiRuleOptions,
   ValidateOptions,
+  ValidateResult,
   ValidateSuccess,
   ValidateTargetOptions,
+  ValidateTargetResult,
   ValidatorAsyncRuleResult,
   ValidatorDefaultMultiRule,
   ValidatorMultiRuleFunction,
   ValidatorMultiRuleNames,
   ValidatorNestedRuleFunctionOptions,
-  ValidatorResult,
   ValidatorRule,
   ValidatorRuleFunction,
   ValidatorRuleFunctionsMap,
@@ -46,7 +47,6 @@ import {
   ValidatorSanitizedRuleObject,
   ValidatorSanitizedRules,
   ValidatorTargetKeys,
-  ValidatorTargetResult,
 } from './types';
 
 export class Validator {
@@ -939,6 +939,25 @@ export class Validator {
     }
     return result;
   }
+  /**
+   * ## Check if Object is Sanitized Rule
+   *
+   * Type guard that determines whether a given value matches the structure of a
+   * `ValidatorSanitizedRuleObject`. This ensures that the object has all the necessary
+   * properties (ruleName, ruleFunction, params) to be safely used by the validation engine.
+   *
+   * ### Type Guard Checks
+   * 1. **Is Object**: The value must be a non-null object.
+   * 2. **Has Function**: `ruleFunction` must be a callable function.
+   * 3. **Has Name**: `ruleName` must be a string.
+   * 4. **Has Parameters**: `params` must be an array.
+   *
+   * @template TRuleParams - Parameter types for the rule
+   * @template Context - Validation context type
+   *
+   * @param rule - The value to check
+   * @returns `true` if the value matches the sanitized rule structure, `false` otherwise
+   */
   static isSanitizedRuleObject<
     TRuleParams extends ValidatorDefaultArray = ValidatorDefaultArray,
     Context = unknown,
@@ -964,7 +983,7 @@ export class Validator {
   }: MakeOptional<
     ValidateOptions<ValidatorDefaultArray, Context>,
     'i18n' | 'ruleParams'
-  >): Promise<ValidatorResult<Context>> {
+  >): Promise<ValidateResult<Context>> {
     const i18n = this.getI18n(extra);
     const startTime = Date.now();
     const { sanitizedRules, invalidRules } =
@@ -2200,95 +2219,6 @@ export class Validator {
     };
   }
 
-  static isSuccess<Context = unknown>(
-    result: ValidatorResult<Context>
-  ): result is ValidateSuccess<Context> {
-    return isObj(result) && result.success === true;
-  }
-  private static getBaseError({
-    startTime,
-  }: {
-    startTime: number;
-  }): Omit<ValidatorBaseError, 'message'> {
-    const failedAt = new Date();
-    return {
-      __validatorBaseName: 'ValidatorBaseError',
-      failedAt,
-      startTime,
-      duration: Date.now() - startTime,
-      success: false,
-      status: 'error',
-      statusCode: 422,
-      errorCode: 'ERR_VALIDATION_FAILED',
-    };
-  }
-  private static isBaseError(value: unknown): value is ValidatorBaseError {
-    if (!isObj(value)) {
-      return false;
-    }
-    return (
-      value.__validatorBaseName === 'ValidatorBaseError' &&
-      value.success === false &&
-      value.failedAt &&
-      value.statusCode === 422 &&
-      value.errorCode === 'ERR_VALIDATION_FAILED'
-    );
-  }
-  static createError(
-    message: string,
-    details: ValidatorCreateErrorPayload
-  ): ValidatorError {
-    return {
-      ...this.getBaseError(details),
-      ...details,
-      failedAt: new Date(),
-      message,
-      name: 'ValidatorError',
-    };
-  }
-  static createTargetError(
-    message: string,
-    details: ValidatorCreateTargetErrorPayload
-  ): ValidatorTargetError {
-    return {
-      ...this.getBaseError(details),
-      ...details,
-      message,
-      name: 'ValidatorTargetError',
-      failedAt: new Date(),
-    };
-  }
-  static createBulkError(
-    message: string,
-    details: ValidatorCreateBulkErrorPayload
-  ): ValidatorBulkError {
-    return {
-      ...this.getBaseError(details),
-      ...details,
-      message,
-      name: 'ValidatorBulkError',
-      failedAt: new Date(),
-    };
-  }
-  static isError(result: unknown): result is ValidatorError {
-    return (
-      this.isBaseError(result) &&
-      (result as ValidatorError).name == 'ValidatorError'
-    );
-  }
-  static isTargetError(result: unknown): result is ValidatorTargetError {
-    return (
-      this.isBaseError(result) &&
-      (result as ValidatorTargetError).name == 'ValidatorTargetError'
-    );
-  }
-  static isBulkError(result: unknown): result is ValidatorBulkError {
-    return (
-      this.isBaseError(result) &&
-      (result as ValidatorBulkError).name == 'ValidatorBulkError'
-    );
-  }
-
   static async validateTarget<
     Target extends ClassConstructor = ClassConstructor,
     Context = unknown,
@@ -2300,7 +2230,7 @@ export class Validator {
     > & {
       i18n?: I18n;
     }
-  ): Promise<ValidatorTargetResult<Target, Context>> {
+  ): Promise<ValidateTargetResult<Target, Context>> {
     const startTime = Date.now();
     const targetRules = Validator.getTargetRules<Target>(target);
     const { context, errorMessageBuilder, ...restOptions } = Object.assign(
@@ -2320,7 +2250,7 @@ export class Validator {
     const validationErrors: ValidatorTargetSingleError[] = [];
     const fieldErrors: Partial<Record<ValidatorTargetKeys<Target>, string>> =
       {};
-    const validationPromises: Promise<ValidatorResult<Context>>[] = [];
+    const validationPromises: Promise<ValidateResult<Context>>[] = [];
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     let validatedFieldCount = 0;
 
@@ -2391,7 +2321,7 @@ export class Validator {
       );
     }
 
-    return new Promise<ValidatorTargetResult<Target, Context>>((resolve) => {
+    return new Promise<ValidateTargetResult<Target, Context>>((resolve) => {
       return Promise.all(validationPromises).then(() => {
         const isValidationSuccessful = !validationErrors.length;
         if (isValidationSuccessful) {
@@ -3133,6 +3063,181 @@ export class Validator {
         symbolMarker
       );
     };
+  }
+  static isSuccess<Context = unknown>(
+    result: ValidateResult<Context>
+  ): result is ValidateSuccess<Context> {
+    return isObj(result) && result.success === true;
+  }
+  /**
+   * ## Get Base Error Properties
+   *
+   * Helper method that constructs the foundational properties shared by all validation errors.
+   * This ensures consistency across different error types (single, target, bulk) by centralizing
+   * the creation of timestamp, duration, status code, and error identification fields.
+   *
+   * @param options.startTime - The timestamp when validation started (for duration calculation)
+   * @returns An object containing common error fields (success status, error codes, timings)
+   * @private
+   */
+  private static getBaseError({
+    startTime,
+  }: {
+    startTime: number;
+  }): Omit<ValidatorBaseError, 'message'> {
+    const failedAt = new Date();
+    return {
+      __validatorBaseName: 'ValidatorBaseError',
+      failedAt,
+      startTime,
+      duration: Date.now() - startTime,
+      success: false,
+      status: 'error',
+      statusCode: 422,
+      errorCode: 'ERR_VALIDATION_FAILED',
+    };
+  }
+
+  /**
+   * ## Check Base Error Structure
+   *
+   * Type guard that verifies if an unknown value matches the structure of a `ValidatorBaseError`.
+   * Checks for specific marker properties and error codes that all validation errors inherit.
+   *
+   * @param value - The value to check
+   * @returns `true` if it's a validation error base structure
+   * @private
+   */
+  private static isBaseError(value: unknown): value is ValidatorBaseError {
+    if (!isObj(value)) {
+      return false;
+    }
+    return (
+      value.__validatorBaseName === 'ValidatorBaseError' &&
+      value.success === false &&
+      value.failedAt &&
+      value.statusCode === 422 &&
+      value.errorCode === 'ERR_VALIDATION_FAILED'
+    );
+  }
+
+  /**
+   * ## Create Single Validation Error
+   *
+   * Factory method for creating a `ValidatorError`.
+   * Represents a failure in a simple, single-value validation context.
+   *
+   * @param message - Human-readable error message
+   * @param details - Contextual details (value, startTime, etc.)
+   * @returns A structured `ValidatorError` object
+   */
+  static createError(
+    message: string,
+    details: ValidatorCreateErrorPayload
+  ): ValidatorError {
+    return {
+      ...this.getBaseError(details),
+      ...details,
+      failedAt: new Date(),
+      message,
+      name: 'ValidatorError',
+      // Explicitly ensures name is set correctly for discrimination
+    };
+  }
+
+  /**
+   * ## Create Target Validation Error
+   *
+   * Factory method for creating a `ValidatorTargetError`.
+   * Represents a failure when validating a class instance or complex object target,
+   * containing a map of field-specific errors.
+   *
+   * @param message - General summary message
+   * @param details - Context including the `errors` map for specific fields
+   * @returns A structured `ValidatorTargetError` object
+   */
+  static createTargetError(
+    message: string,
+    details: ValidatorCreateTargetErrorPayload
+  ): ValidatorTargetError {
+    return {
+      ...this.getBaseError(details),
+      ...details,
+      message,
+      name: 'ValidatorTargetError',
+      failedAt: new Date(),
+    };
+  }
+
+  /**
+   * ## Create Bulk Validation Error
+   *
+   * Factory method for creating a `ValidatorBulkError`.
+   * Represents a failure when validating an array of items, mapping indices to specific errors.
+   *
+   * @param message - General summary message
+   * @param details - Context including the `errors` map (index -> error)
+   * @returns A structured `ValidatorBulkError` object
+   */
+  static createBulkError(
+    message: string,
+    details: ValidatorCreateBulkErrorPayload
+  ): ValidatorBulkError {
+    return {
+      ...this.getBaseError(details),
+      ...details,
+      message,
+      name: 'ValidatorBulkError',
+      failedAt: new Date(),
+    };
+  }
+
+  /**
+   * ## Check for Single Validation Error
+   *
+   * Type guard to determine if a result is specifically a `ValidatorError`.
+   * Useful for distinguishing between simple value errors and complex target/bulk errors.
+   *
+   * @param result - The value to check
+   * @returns `true` if it's a single value validation error
+   */
+  static isError(result: unknown): result is ValidatorError {
+    return (
+      this.isBaseError(result) &&
+      (result as ValidatorError).name == 'ValidatorError'
+    );
+  }
+
+  /**
+   * ## Check for Target Validation Error
+   *
+   * Type guard to determine if a result is a `ValidatorTargetError`.
+   * Identifies errors resulting from class/object validation (e.g., `validateTarget`).
+   *
+   * @param result - The value to check
+   * @returns `true` if it's a target object validation error
+   */
+  static isTargetError(result: unknown): result is ValidatorTargetError {
+    return (
+      this.isBaseError(result) &&
+      (result as ValidatorTargetError).name == 'ValidatorTargetError'
+    );
+  }
+
+  /**
+   * ## Check for Bulk Validation Error
+   *
+   * Type guard to determine if a result is a `ValidatorBulkError`.
+   * Identifies errors resulting from array bulk validation.
+   *
+   * @param result - The value to check
+   * @returns `true` if it's a bulk validation error
+   */
+  static isBulkError(result: unknown): result is ValidatorBulkError {
+    return (
+      this.isBaseError(result) &&
+      (result as ValidatorBulkError).name == 'ValidatorBulkError'
+    );
   }
   private static _prepareRuleDecorator<
     TRuleParams extends ValidatorRuleParams = ValidatorRuleParams,

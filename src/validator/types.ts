@@ -1377,7 +1377,7 @@ export interface ValidateOptions<
  * @see {@link Validator.validateOneOfRule} - Method that uses this interface
  * @see {@link ValidateOptions} - Base options interface being extended
  * @see {@link ValidatorRuleFunction} - Type of functions in ruleParams array
- * @see {@link ValidatorResult} - Result type returned by validation
+ * @see {@link ValidateResult} - Result type returned by validation
  */
 export interface ValidateMultiRuleOptions<
   Context = unknown,
@@ -1568,7 +1568,7 @@ export type ValidatorMultiRuleFunction<
  * - **Used by**: {@link Validator.validateTarget} as input data type
  * - **Mapped from**: Class constructor type via `InstanceType<Target>`
  * - **Validated by**: Decorator-based rules on class properties
- * - **Returns**: {@link ValidatorTargetResult} with validated instance
+ * - **Returns**: {@link ValidateTargetResult} with validated instance
  *
  * @template Target - The class constructor type being validated
  *
@@ -1576,7 +1576,7 @@ export type ValidatorMultiRuleFunction<
  *
  * @see {@link Validator.validateTarget} - Method that accepts this data type
  * @see {@link ValidateTargetOptions} - Options type that includes this
- * @see {@link ValidatorTargetResult} - Result type returned after validation
+ * @see {@link ValidateTargetResult} - Result type returned after validation
  * @see {@link ClassConstructor} - Base constructor type constraint
  */
 export type ValidatorTargetData<
@@ -1703,7 +1703,7 @@ export type ValidatorMultiRuleNames = 'OneOf' | 'AllOf';
  * ## Single Value Validation Success Result
  *
  * Represents a successful validation result for a single value.
- * This type is used as the success branch of the {@link ValidatorResult} discriminated union.
+ * This type is used as the success branch of the {@link ValidateResult} discriminated union.
  *
  * ### Type Guard
  * Can be narrowed using {@link Validator.isSuccess}:
@@ -1743,7 +1743,7 @@ export type ValidatorMultiRuleNames = 'OneOf' | 'AllOf';
  *
  * @public
  *
- * @see {@link ValidatorResult}
+ * @see {@link ValidateResult}
  * @see {@link ValidatorError}
  * @see {@link Validator.validate}
  * @see {@link Validator.isSuccess}
@@ -1975,7 +1975,7 @@ interface BaseData<Context = unknown> {
  *   userId: number;
  * }
  *
- * const result: ValidatorResult<MyContext> = await Validator.validate({
+ * const result: ValidateResult<MyContext> = await Validator.validate({
  *   value: "test@example.com",
  *   rules: ["Required", "Email"],
  *   context: { userId: 123 },
@@ -1990,7 +1990,7 @@ interface BaseData<Context = unknown> {
  * @see {@link Validator.isSuccess} - Type guard for success
  * @see {@link Validator.isFailure} - Type guard for failure
  */
-export type ValidatorResult<Context = unknown> =
+export type ValidateResult<Context = unknown> =
   | ValidateSuccess<Context>
   | ValidatorError;
 
@@ -2077,7 +2077,7 @@ export type ValidatorResult<Context = unknown> =
  *
  * @public
  *
- * @see {@link ValidatorTargetResult}
+ * @see {@link ValidateTargetResult}
  * @see {@link ValidateSuccess} - Single-value equivalent
  */
 export interface ValidatorTargetSuccess<
@@ -2225,9 +2225,9 @@ export interface ValidatorTargetSuccess<
  * @see {@link Validator.validateTarget} - Main target validation method
  * @see {@link Validator.isSuccess} - Type guard for success
  * @see {@link Validator.isFailure} - Type guard for failure
- * @see {@link ValidatorResult} - Single-value equivalent
+ * @see {@link ValidateResult} - Single-value equivalent
  */
-export type ValidatorTargetResult<
+export type ValidateTargetResult<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   Target extends ClassConstructor = any,
   Context = unknown,

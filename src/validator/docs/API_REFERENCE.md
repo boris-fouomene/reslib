@@ -17,8 +17,8 @@
   - [Validator.hasRule()](#validatorhasrule)
 - [Types](#types)
   - [ValidateOptions](#validatorvalidateoptions)
-  - [ValidatorResult](#validatorvalidateresult)
-  - [ValidatorTargetResult](#validatorvalidatetargetresult)
+  - [ValidateResult](#validatorvalidateresult)
+  - [ValidateTargetResult](#validatorvalidatetargetresult)
   - [ValidatorRules](#validatorrules)
   - [ValidatorRuleResult](#validatorresult)
 
@@ -35,7 +35,7 @@ The main `Validator` class provides static methods for validation.
 ```typescript
 static async validate<Context = unknown>(
   options: ValidateOptions<Context>
-): Promise<ValidatorResult<Context>>
+): Promise<ValidateResult<Context>>
 ```
 
 #### Parameters
@@ -52,9 +52,9 @@ static async validate<Context = unknown>(
 #### Returns
 
 ```typescript
-Promise<ValidatorResult<Context>>;
+Promise<ValidateResult<Context>>;
 
-type ValidatorResult<Context = unknown> =
+type ValidateResult<Context = unknown> =
   | ValidateSuccess<Context>
   | ValidatorError<Context>;
 
@@ -134,7 +134,7 @@ const result = await Validator.validate({
 static async validateTarget<Target extends object, Context = unknown>(
   TargetClass: new () => Target,
   options: ValidateTargetOptions<Target, Context>
-): Promise<ValidatorTargetResult<Target, Context>>
+): Promise<ValidateTargetResult<Target, Context>>
 ```
 
 #### Parameters
@@ -149,9 +149,9 @@ static async validateTarget<Target extends object, Context = unknown>(
 #### Returns
 
 ```typescript
-Promise<ValidatorTargetResult<Target, Context>>;
+Promise<ValidateTargetResult<Target, Context>>;
 
-type ValidatorTargetResult<Target, Context> =
+type ValidateTargetResult<Target, Context> =
   | ValidatorTargetSuccess<Target, Context>
   | ValidatorTargetError<Target>;
 
@@ -440,10 +440,10 @@ interface ValidateOptions<Context = unknown> {
 }
 ```
 
-### ValidatorResult
+### ValidateResult
 
 ```typescript
-interface ValidatorResult<Context = unknown> {
+interface ValidateResult<Context = unknown> {
   isValid: boolean;
   message?: string;
   value: any;
@@ -451,10 +451,10 @@ interface ValidatorResult<Context = unknown> {
 }
 ```
 
-### ValidatorTargetResult
+### ValidateTargetResult
 
 ```typescript
-interface ValidatorTargetResult<Target, Context = unknown> {
+interface ValidateTargetResult<Target, Context = unknown> {
   isValid: boolean;
   errors: Array<{
     field: string;

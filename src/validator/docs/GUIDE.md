@@ -121,8 +121,8 @@ The main `Validator` class provides static methods for validation:
 
 | Method             | Purpose                 | Returns                              |
 | ------------------ | ----------------------- | ------------------------------------ |
-| `validate()`       | Validate a single value | `Promise<ValidatorResult>`           |
-| `validateTarget()` | Validate class instance | `Promise<ValidatorTargetResult>`     |
+| `validate()`       | Validate a single value | `Promise<ValidateResult>`            |
+| `validateTarget()` | Validate class instance | `Promise<ValidateTargetResult>`      |
 | `registerRule()`   | Register custom rule    | `void`                               |
 | `getRule()`        | Get registered rule     | `ValidatorRuleFunction \| undefined` |
 | `getRules()`       | Get all rules           | `ValidatorRuleFunctionsMap`          |
@@ -301,7 +301,7 @@ Validation functions return:
 ### Result Types
 
 ```typescript
-// Success result (ValidatorResult)
+// Success result (ValidateResult)
 {
   success: true,
   status: 'success',
@@ -5289,7 +5289,7 @@ Both approaches use the same validation logic underneath!
 ```typescript
 static async validate<Context = unknown>(
   options: ValidateOptions<Context>
-): Promise<ValidatorResult<Context>>
+): Promise<ValidateResult<Context>>
 ```
 
 **Parameters:**
@@ -5302,7 +5302,7 @@ static async validate<Context = unknown>(
 | `fieldName` | `string`         | ❌       | Field name for errors |
 | `i18n`      | `I18n`           | ❌       | i18n instance         |
 
-**Returns:** `Promise<ValidatorResult>`
+**Returns:** `Promise<ValidateResult>`
 
 ---
 
@@ -5314,7 +5314,7 @@ static async validate<Context = unknown>(
 static async validateTarget<Target extends object, Context = unknown>(
   TargetClass: new () => Target,
   options: ValidateTargetOptions<Target, Context>
-): Promise<ValidatorTargetResult<Target, Context>>
+): Promise<ValidateTargetResult<Target, Context>>
 ```
 
 **Parameters:**
@@ -5326,7 +5326,7 @@ static async validateTarget<Target extends object, Context = unknown>(
 | `options.context` | `Context` | ❌       | Optional validation context      |
 | `options.i18n`    | `I18n`    | ❌       | i18n instance                    |
 
-**Returns:** `Promise<ValidatorTargetResult>`
+**Returns:** `Promise<ValidateTargetResult>`
 
 ```typescript
 // Success (ValidatorTargetSuccess)

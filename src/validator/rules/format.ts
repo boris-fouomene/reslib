@@ -157,7 +157,7 @@ type t = ValidatorRuleParams;
  *
  * @returns {PropertyDecorator} A property decorator that validates email format
  *
- * @throws {ValidationError} When validation fails, containing localized error message
+ * @throws {ValidatorError} When validation fails, containing localized error message
  *
  * @example
  * ```typescript
@@ -429,7 +429,7 @@ export const IsHexadecimal = Validator.buildRuleDecorator<
  * @param options.allowedProtocols - Array of allowed protocols without colons
  * @returns A property decorator that validates URL format
  *
- * @throws {ValidationError} When validation fails, containing localized error message
+ * @throws {ValidatorError} When validation fails, containing localized error message
  *
  * @example
  * ```typescript
@@ -596,7 +596,7 @@ export const IsUrl = Validator.buildRuleDecorator<
  * @param options.countryCode - Country code to validate against specific country's format
  * @returns A property decorator that validates phone number format
  *
- * @throws {ValidationError} When validation fails, containing localized error message
+ * @throws {ValidatorError} When validation fails, containing localized error message
  *
  * @example
  * ```typescript
@@ -778,7 +778,7 @@ export const IsPhoneNumber = Validator.buildRuleDecorator<
  * @param options.phoneNumber - Phone validation options with country code
  * @returns A property decorator that validates email or phone number format
  *
- * @throws {ValidationError} When validation fails, containing localized error message
+ * @throws {ValidatorError} When validation fails, containing localized error message
  *
  * @example
  * ```typescript
@@ -932,7 +932,7 @@ export const IsEmailOrPhone = Validator.buildRuleDecorator<
  *
  * @returns A property decorator that validates file name format
  *
- * @throws {ValidationError} When validation fails, containing localized error message
+ * @throws {ValidatorError} When validation fails, containing localized error message
  *
  * @example
  * ```typescript
@@ -1085,7 +1085,7 @@ export const IsFileName = Validator.buildRuleDecorator<
  *
  * @returns A property decorator that validates UUID format
  *
- * @throws {ValidationError} When validation fails, containing localized error message
+ * @throws {ValidatorError} When validation fails, containing localized error message
  *
  * @example
  * ```typescript
@@ -1266,7 +1266,7 @@ export const IsUUID = Validator.buildRuleDecorator<
  *
  * @returns A property decorator that validates JSON format
  *
- * @throws {ValidationError} When validation fails, containing localized error message
+ * @throws {ValidatorError} When validation fails, containing localized error message
  *
  * @example
  * ```typescript
@@ -1434,7 +1434,7 @@ export const IsJSON = Validator.buildRuleDecorator<
  *
  * @returns A property decorator that validates Base64 format
  *
- * @throws {ValidationError} When validation fails, containing localized error message
+ * @throws {ValidatorError} When validation fails, containing localized error message
  *
  * @example
  * ```typescript
@@ -1605,7 +1605,7 @@ export const IsBase64 = Validator.buildRuleDecorator<
  *
  * @returns A property decorator that validates hexadecimal color format
  *
- * @throws {ValidationError} When validation fails, containing localized error message
+ * @throws {ValidatorError} When validation fails, containing localized error message
  *
  * @example
  * ```typescript
@@ -1785,7 +1785,7 @@ export const IsHexColor = Validator.buildRuleDecorator<
  *
  * @returns A property decorator that validates credit card number format and checksum
  *
- * @throws {ValidationError} When validation fails, containing localized error message
+ * @throws {ValidatorError} When validation fails, containing localized error message
  *
  * @example
  * ```typescript
@@ -2009,7 +2009,7 @@ export const IsCreditCard = Validator.buildRuleDecorator<
  * @param ruleParams[0] - IP version: "4" (IPv4 only), "6" (IPv6 only), or "4/6" (both, default)
  * @returns A property decorator that validates IP address format
  *
- * @throws {ValidationError} When validation fails, containing localized error message
+ * @throws {ValidatorError} When validation fails, containing localized error message
  *
  * @example
  * ```typescript
@@ -2222,7 +2222,7 @@ export const IsIP = Validator.buildRuleDecorator<ValidatorRuleParamTypes['IP']>(
  *
  * @returns A property decorator that validates MAC address format
  *
- * @throws {ValidationError} When validation fails, containing localized error message
+ * @throws {ValidatorError} When validation fails, containing localized error message
  *
  * @example
  * ```typescript
@@ -2414,7 +2414,7 @@ export const IsMACAddress = Validator.buildRuleDecorator<
  * @param ruleParams[1] - Optional custom error message key for i18n translation
  * @returns A property decorator that validates string patterns using regular expressions
  *
- * @throws {ValidationError} When validation fails, containing localized error message
+ * @throws {ValidatorError} When validation fails, containing localized error message
  *
  * @example
  * ```typescript
