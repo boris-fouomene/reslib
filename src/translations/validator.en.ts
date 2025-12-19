@@ -104,6 +104,19 @@ export const validator = {
   hexadecimal: 'This field must be a valid hexadecimal value',
   object: 'This field must be an object',
   isObject: 'This field must be an object',
+  invalidBulkData: 'Invalid bulk data: an array is required',
+
+  // Bulk validation messages with detailed context
+  bulkValidationFailed: {
+    one: 'Bulk validation failed: 1 of %{totalCount} items failed',
+    other:
+      'Bulk validation failed: %{failureCount} of %{totalCount} items failed',
+  },
+  bulkValidationAllFailed: {
+    one: 'Validation failed for the single item',
+    other: 'All %{totalCount} items failed validation',
+  },
+  bulkValidationPartialFailure: '%{failureCount} items failed validation',
   /**
    * Configuration for separators used to join multiple error messages on a single field.
    *

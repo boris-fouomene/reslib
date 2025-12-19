@@ -1,7 +1,11 @@
 import { I18n } from '@/i18n';
 import { InputFormatterResult } from '@/inputFormatter/types';
 import { ClassConstructor, Dictionary, MakeRequired } from '@/types';
-import { ValidatorClassError, ValidatorError } from './errors';
+import {
+  ValidatorBulkError,
+  ValidatorClassError,
+  ValidatorError,
+} from './errors';
 import {
   ValidatorClassInput,
   ValidatorRuleName,
@@ -1016,7 +1020,7 @@ export type ValidatorRuleParams<
  *   ↳ extends Omit<ValidatorClassOptions<TClass, Context, [classInstance: TClass]>, "data">
  *     ↳ extends Omit<ValidatorOptions<TParams, Context>, "data" | "rule" | "value">
  *       ↳ extends Omit<Partial<InputFormatterResult>, "value">
- *         ↳ extends ValidatorBaseOptions<Context>
+ *         ↳ extends ValidatorBaseSuccess<Context>
  * ```
  *
  * ### Generic Parameters
@@ -1152,7 +1156,7 @@ export interface ValidatorOptions<
 >
   extends
     Omit<Partial<InputFormatterResult>, 'value'>,
-    ValidatorBaseOptions<Context> {
+    ValidatorBaseSuccess<Context> {
   /**
    * The list of validation rules to apply
    *
@@ -1632,10 +1636,13 @@ export interface ValidatorClassOptions<
  *
  * Configuration for bulk validation operations (validating an array of class instances).
  * Extends `ValidatorClassOptions` but accepts an array of data objects instead of a single one.
+ * @template TClass - The class constructor type to validate
+ * @template Context - The context type for validation
  */
 export interface ValidatorBulkOptions<
   TClass extends ClassConstructor = ClassConstructor,
-> extends Omit<ValidatorClassOptions<TClass>, 'data'> {
+  Context = unknown,
+> extends Omit<ValidatorClassOptions<TClass, Context>, 'data'> {
   data: ValidatorClassInput<TClass>[];
 }
 
@@ -1737,8 +1744,8 @@ export type ValidatorMultiRuleNames = 'OneOf' | 'AllOf';
  * - **duration**: Duration in milliseconds from validation start to completion
  * - **error**: Explicitly `undefined` for success (aids type narrowing)
  * - **failedAt**: Explicitly `undefined` for success (aids type narrowing)
- * - **data**: Optional context data (inherited from ValidatorBaseOptions)
- * - **context**: Optional validation context (inherited from ValidatorBaseOptions)
+ * - **data**: Optional context data (inherited from ValidatorBaseSuccess)
+ * - **context**: Optional validation context (inherited from ValidatorBaseSuccess)
  *
  * ### Example
  * ```typescript
@@ -1766,7 +1773,7 @@ export type ValidatorMultiRuleNames = 'OneOf' | 'AllOf';
  */
 export interface ValidatorSuccess<
   Context = unknown,
-> extends ValidatorBaseOptions<Context> {
+> extends ValidatorBaseSuccess<Context> {
   /** Discriminant for type narrowing - always `true` for success */
   success: true;
 
@@ -1965,21 +1972,11 @@ export type ValidatorResult<Context = unknown> =
 export interface ValidatorClassSuccess<
   TClass extends ClassConstructor = ClassConstructor,
   Context = unknown,
-> extends Omit<ValidatorBaseOptions<Context>, 'data'> {
+> extends Omit<ValidatorBaseSuccess<Context>, 'data' | 'value'> {
   /** Discriminant for type narrowing - always `true` for success */
   success: true;
 
   message?: undefined;
-
-  /**
-   * Status indicator for this result
-   *
-   * Always "success" for successful validations. Provided for consistency with HTTP
-   * and API conventions.
-   *
-   * @type {"success"}
-   */
-  status: 'success';
 
   /**
    * ISO timestamp of when validation succeeded
@@ -2109,11 +2106,239 @@ export interface ValidatorClassSuccess<
  * @see {@link ValidatorResult} - Single-value equivalent
  */
 export type ValidatorClassResult<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  TClass extends ClassConstructor = any,
+  TClass extends ClassConstructor = ClassConstructor,
   Context = unknown,
 > = ValidatorClassSuccess<TClass, Context> | ValidatorClassError<TClass>;
 
+/**
+ * ## Validator Bulk Success
+ *
+ * Represents a successful bulk validation result when validating an array of class instances.
+ * This interface extends the single-item success structure but operates on arrays of data.
+ *
+ * ### Purpose
+ * Provides a structured success response for batch validation operations, indicating that
+ * all items in the input array passed validation successfully. This is the success variant
+ * of the discriminated union {@link ValidatorBulkResult}.
+ *
+ * ### Key Characteristics
+ * - **success**: Always `true` for this type
+ * - **data**: Contains the validated array of items (all items passed validation)
+ * - **Inherits**: All properties from {@link ValidatorClassSuccess} except `data`
+ *
+ * ### Usage Scenarios
+ * - Batch user registration validation
+ * - Bulk data import validation
+ * - CSV/Excel file validation
+ * - API batch endpoint validation
+ * - Mass data migration validation
+ *
+ * @template TClass - The class constructor type being validated
+ * @template Context - Optional context type for validation
+ *
+ * @example
+ * ```typescript
+ * class User {
+ *   @IsRequired()
+ *   @IsEmail()
+ *   email: string;
+ *
+ *   @IsRequired()
+ *   @MinLength(3)
+ *   name: string;
+ * }
+ *
+ * const users = [
+ *   { email: 'user1@example.com', name: 'Alice' },
+ *   { email: 'user2@example.com', name: 'Bob' }
+ * ];
+ *
+ * const result = await Validator.validateBulk(User, { data: users });
+ *
+ * if (result.success) {
+ *   // Type: ValidatorBulkSuccess<typeof User>
+ *   console.log(`All ${result.data.length} users are valid`);
+ *   result.data.forEach(user => {
+ *     // Process validated user data
+ *   });
+ * }
+ * ```
+ *
+ * @example
+ * ```typescript
+ * // With context
+ * interface ValidationContext {
+ *   organizationId: string;
+ * }
+ *
+ * const result = await Validator.validateBulk<typeof User, ValidationContext>(
+ *   User,
+ *   {
+ *     data: users,
+ *     context: { organizationId: '123' }
+ *   }
+ * );
+ *
+ * if (result.success) {
+ *   // All items validated successfully
+ *   console.log('Validation duration:', result.duration);
+ * }
+ * ```
+ *
+ * @see {@link ValidatorBulkResult} - The discriminated union type
+ * @see {@link ValidatorBulkError} - The failure variant
+ * @see {@link ValidatorClassSuccess} - Single-item success type
+ * @see {@link Validator.validateBulk} - Method that returns this type
+ * @public
+ */
+export interface ValidatorBulkSuccess<
+  TClass extends ClassConstructor = ClassConstructor,
+  Context = unknown,
+> extends Omit<ValidatorClassSuccess<TClass, Context>, 'data'> {
+  /**
+   * The validated array of data items.
+   * All items in this array have passed validation successfully.
+   */
+  data: ValidatorClassInput<TClass>[];
+}
+
+/**
+ * ## Validator Bulk Result
+ *
+ * Discriminated union type representing the outcome of a bulk validation operation.
+ * This type can be either a success (all items valid) or an error (one or more items failed).
+ *
+ * ### Purpose
+ * Provides type-safe handling of bulk validation results through TypeScript's discriminated
+ * union pattern. The `success` property acts as the discriminant, allowing TypeScript to
+ * narrow the type automatically in conditional branches.
+ *
+ * ### Type Structure
+ * - **Success case**: {@link ValidatorBulkSuccess} - All items passed validation
+ * - **Failure case**: {@link ValidatorBulkError} - One or more items failed validation
+ *
+ * ### Discriminant Property
+ * The `success` boolean property serves as the type discriminant:
+ * - `success: true` → Type narrows to `ValidatorBulkSuccess`
+ * - `success: false` → Type narrows to `ValidatorBulkError`
+ *
+ * ### Usage Patterns
+ *
+ * **Type Narrowing with if/else:**
+ * ```typescript
+ * const result = await Validator.validateBulk(User, { data: users });
+ *
+ * if (result.success) {
+ *   // TypeScript knows: result is ValidatorBulkSuccess
+ *   result.data.forEach(user => processUser(user));
+ * } else {
+ *   // TypeScript knows: result is ValidatorBulkError
+ *   console.error(`${result.failureCount} items failed`);
+ *   result.failures.forEach(failure => {
+ *     console.log(`Item ${failure.index}: ${failure.message}`);
+ *   });
+ * }
+ * ```
+ *
+ * **Type Guards:**
+ * ```typescript
+ * if (Validator.isSuccess(result)) {
+ *   // result is ValidatorBulkSuccess
+ *   return result.data;
+ * }
+ *
+ * if (Validator.isFailure(result)) {
+ *   // result is ValidatorBulkError
+ *   throw new Error(result.message);
+ * }
+ * ```
+ *
+ * **Exhaustive Handling:**
+ * ```typescript
+ * const result = await Validator.validateBulk(User, { data: users });
+ *
+ * switch (result.success) {
+ *   case true:
+ *     // Handle success
+ *     return { validated: result.data };
+ *   case false:
+ *     // Handle failure
+ *     return { errors: result.failures };
+ * }
+ * ```
+ *
+ * @template TClass - The class constructor type being validated
+ * @template Context - Optional context type for validation
+ *
+ * @example
+ * ```typescript
+ * class Product {
+ *   @IsRequired()
+ *   name: string;
+ *
+ *   @IsNumber()
+ *   @NumberGTE(0)
+ *   price: number;
+ * }
+ *
+ * async function importProducts(
+ *   products: Array<{ name: string; price: number }>
+ * ): Promise<ValidatorBulkResult<typeof Product>> {
+ *   return Validator.validateBulk(Product, { data: products });
+ * }
+ *
+ * // Usage
+ * const result = await importProducts([
+ *   { name: 'Widget', price: 10 },
+ *   { name: 'Gadget', price: -5 }, // Invalid: negative price
+ * ]);
+ *
+ * if (result.success) {
+ *   console.log('All products valid');
+ * } else {
+ *   console.log(`${result.failureCount} products failed validation`);
+ * }
+ * ```
+ *
+ * @example
+ * ```typescript
+ * // API endpoint example
+ * async function bulkCreateUsers(
+ *   req: Request,
+ *   res: Response
+ * ): Promise<void> {
+ *   const result = await Validator.validateBulk(User, {
+ *     data: req.body.users
+ *   });
+ *
+ *   if (result.success) {
+ *     const created = await db.users.insertMany(result.data);
+ *     res.json({ success: true, count: created.length });
+ *   } else {
+ *     res.status(400).json({
+ *       success: false,
+ *       message: result.message,
+ *       failures: result.failures.map(f => ({
+ *         index: f.index,
+ *         errors: f.errors
+ *       }))
+ *     });
+ *   }
+ * }
+ * ```
+ *
+ * @see {@link ValidatorBulkSuccess} - Success variant
+ * @see {@link ValidatorBulkError} - Failure variant
+ * @see {@link ValidatorClassResult} - Single-item equivalent
+ * @see {@link Validator.validateBulk} - Method that returns this type
+ * @see {@link Validator.isSuccess} - Type guard for success
+ * @see {@link Validator.isFailure} - Type guard for failure
+ * @public
+ */
+export type ValidatorBulkResult<
+  TClass extends ClassConstructor = ClassConstructor,
+  Context = unknown,
+> = ValidatorBulkSuccess<TClass, Context> | ValidatorBulkError<TClass>;
 /**
  * ## Validator Rule Functions Map
  *
@@ -2217,7 +2442,7 @@ export type ValidatorRuleFunctionsMap<Context = unknown> = {
  * @template Context - Type of the optional application context
  * @public
  */
-export interface ValidatorBaseOptions<Context = unknown> {
+export interface ValidatorBaseSuccess<Context = unknown> {
   /**
    * The value to use for performing the validation.
    * This is the actual data that will be validated against the specified rules.
@@ -2304,4 +2529,16 @@ export interface ValidatorBaseOptions<Context = unknown> {
    * - Commonly used for permission-based or user-specific validations
    */
   context?: Context;
+
+  /**
+   * Status indicator for this result
+   *
+   * Always "success" for successful validations. Provided for consistency with HTTP
+   * and API conventions.
+   *
+   * @type {"success"}
+   */
+  status: 'success';
+
+  name: 'ValidatorSuccessResult';
 }

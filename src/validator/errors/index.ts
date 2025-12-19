@@ -141,7 +141,7 @@ export interface ValidatorCreateClassErrorPayload extends Omit<
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface ValidatorCreateBulkErrorPayload extends Omit<
   ValidatorBulkError,
-  ValidatorCreateErrorPartialKeys
+  ValidatorCreateErrorPartialKeys | 'failureCount'
 > {}
 
 /**
@@ -153,9 +153,9 @@ export interface ValidatorCreateBulkErrorPayload extends Omit<
  * @template TClass - The class constructor of the items being validated
  * @public
  */
-export interface ValidatorBulkFailureItem<
+export interface ValidatorBulkErrorItem<
   TClass extends ClassConstructor = ClassConstructor,
-> {
+> extends ValidatorClassError<TClass> {
   /**
    * The zero-based index of the item in the original input array.
    * Use this to correlate the error back to the specific row or item in the source data.
@@ -164,18 +164,6 @@ export interface ValidatorBulkFailureItem<
    * @example 5 (Sixth item failed)
    */
   index: number;
-
-  /**
-   * The collection of validation errors that occurred for this specific item.
-   * An item might fail multiple rules simultaneously.
-   */
-  errors: ValidatorError[];
-
-  /**
-   * The original data object that failed validation.
-   * Captured here to provide immediate context without needing to look up the original array.
-   */
-  data?: ValidatorClassInput<TClass>;
 }
 
 /**
@@ -199,7 +187,7 @@ export interface ValidatorBulkError<
    * A list of all items that failed validation, with their specific errors.
    * Items that passed validation are not included in this list.
    */
-  failures: ValidatorBulkFailureItem<TClass>[];
+  failures: ValidatorBulkErrorItem<TClass>[];
 
   /**
    * The total count of items that were processed in the batch.

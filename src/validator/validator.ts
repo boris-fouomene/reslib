@@ -17,6 +17,7 @@ import { I18n, i18n as defaultI18n } from '../i18n';
 import {
   ValidatorBaseError,
   ValidatorBulkError,
+  ValidatorBulkErrorItem,
   ValidatorClassError,
   ValidatorClassItemError,
   ValidatorCreateBulkErrorPayload,
@@ -27,6 +28,8 @@ import {
 import { VALIDATOR_RULE_MARKERS } from './rulesMarkers';
 import {
   ValidatorAsyncRuleResult,
+  ValidatorBulkOptions,
+  ValidatorBulkResult,
   ValidatorClassKeys,
   ValidatorClassOptions,
   ValidatorClassResult,
@@ -2390,6 +2393,306 @@ export class Validator {
   }
 
   /**
+   * ## Validate Bulk
+   *
+   * Validates an array of class instances in a single batch operation, providing detailed
+   * feedback on which items passed or failed validation. This method is optimized for
+   * bulk data processing scenarios like CSV imports, batch API requests, or mass data migrations.
+   *
+   * ### Purpose
+   * Enables efficient validation of multiple data items against a class schema, with:
+   * - **Parallel validation**: All items are validated concurrently for performance
+   * - **Detailed failure tracking**: Each failed item includes its index and specific errors
+   * - **Contextual error messages**: Different messages for partial vs complete failures
+   * - **Type-safe results**: Discriminated union for success/failure handling
+   *
+   * ### Validation Behavior
+   * - **All items pass**: Returns {@link ValidatorBulkSuccess} with validated data array
+   * - **Some items fail**: Returns {@link ValidatorBulkError} with failure details
+   * - **All items fail**: Returns {@link ValidatorBulkError} with specialized message
+   * - **Invalid input**: Returns {@link ValidatorBulkError} if data is not an array
+   *
+   * ### Performance Characteristics
+   * - **Concurrent validation**: Uses `Promise.all()` for parallel processing
+   * - **Memory efficient**: Collects only failures, not all results
+   * - **Early validation**: Input type checking before processing
+   * - **Optimized for large datasets**: Suitable for thousands of items
+   *
+   * @template TClass - The class constructor type to validate against
+   * @template Context - Optional context type for validation rules
+   *
+   * @param target - The class constructor containing validation decorators
+   * @param options - Bulk validation options
+   * @param options.data - Array of data objects to validate
+   * @param options.startTime - Optional start timestamp (defaults to Date.now())
+   * @param options.context - Optional context passed to validation rules
+   * @param options.i18n - Optional i18n instance for custom translations
+   *
+   * @returns Promise resolving to {@link ValidatorBulkResult}
+   *
+   * @throws Never throws - Always returns a result object (success or error)
+   *
+   * @example
+   * ```typescript
+   * // Basic usage - User registration batch
+   * class User {
+   *   @IsRequired()
+   *   @IsEmail()
+   *   email: string;
+   *
+   *   @IsRequired()
+   *   @MinLength(3)
+   *   name: string;
+   *
+   *   @IsOptional()
+   *   @NumberGTE(18)
+   *   age?: number;
+   * }
+   *
+   * const users = [
+   *   { email: 'alice@example.com', name: 'Alice', age: 25 },
+   *   { email: 'invalid-email', name: 'Bob', age: 30 },
+   *   { email: 'charlie@example.com', name: 'C', age: 17 }, // Too short, too young
+   * ];
+   *
+   * const result = await Validator.validateBulk(User, { data: users });
+   *
+   * if (result.success) {
+   *   console.log(`All ${result.data.length} users are valid`);
+   *   // Process valid users
+   *   await db.users.insertMany(result.data);
+   * } else {
+   *   console.error(result.message);
+   *   // "Bulk validation failed: 2 of 3 items failed"
+   *
+   *   result.failures.forEach(failure => {
+   *     console.log(`Item ${failure.index}:`, failure.errors);
+   *     // Item 2: [{ field: 'email', message: '...' }]
+   *     // Item 3: [{ field: 'name', message: '...' }, { field: 'age', message: '...' }]
+   *   });
+   * }
+   * ```
+   *
+   * @example
+   * ```typescript
+   * // CSV Import with context
+   * class Product {
+   *   @IsRequired()
+   *   name: string;
+   *
+   *   @IsNumber()
+   *   @NumberGTE(0)
+   *   price: number;
+   *
+   *   @IsRequired()
+   *   @CustomRule((value, { context }) => {
+   *     // Validate against organization's catalog
+   *     return context.catalog.includes(value) || 'Invalid category';
+   *   })
+   *   category: string;
+   * }
+   *
+   * interface ValidationContext {
+   *   catalog: string[];
+   *   organizationId: string;
+   * }
+   *
+   * const csvData = [
+   *   { name: 'Widget', price: 10, category: 'Tools' },
+   *   { name: 'Gadget', price: -5, category: 'Electronics' }, // Invalid price
+   * ];
+   *
+   * const result = await Validator.validateBulk<typeof Product, ValidationContext>(
+   *   Product,
+   *   {
+   *     data: csvData,
+   *     context: {
+   *       catalog: ['Tools', 'Electronics', 'Home'],
+   *       organizationId: 'org-123'
+   *     }
+   *   }
+   * );
+   * ```
+   *
+   * @example
+   * ```typescript
+   * // API endpoint - Batch user creation
+   * app.post('/api/users/batch', async (req, res) => {
+   *   const result = await Validator.validateBulk(User, {
+   *     data: req.body.users
+   *   });
+   *
+   *   if (result.success) {
+   *     const created = await db.users.insertMany(result.data);
+   *     res.json({
+   *       success: true,
+   *       count: created.length,
+   *       message: `Successfully created ${created.length} users`
+   *     });
+   *   } else {
+   *     res.status(400).json({
+   *       success: false,
+   *       message: result.message,
+   *       failureCount: result.failureCount,
+   *       totalCount: result.totalCount,
+   *       failures: result.failures.map(f => ({
+   *         index: f.index,
+   *         errors: f.errors.map(e => ({
+   *           field: e.field,
+   *           message: e.message
+   *         }))
+   *       }))
+   *     });
+   *   }
+   * });
+   * ```
+   *
+   * @example
+   * ```typescript
+   * // Error handling patterns
+   * const result = await Validator.validateBulk(User, { data: users });
+   *
+   * // Pattern 1: Type narrowing with if/else
+   * if (result.success) {
+   *   // TypeScript knows: result is ValidatorBulkSuccess
+   *   result.data.forEach(user => processUser(user));
+   * } else {
+   *   // TypeScript knows: result is ValidatorBulkError
+   *   logErrors(result.failures);
+   * }
+   *
+   * // Pattern 2: Using type guards
+   * if (Validator.isSuccess(result)) {
+   *   return result.data;
+   * }
+   *
+   * // Pattern 3: Extracting valid items
+   * const validIndices = new Set(
+   *   result.success ?
+   *     result.data.map((_, i) => i) :
+   *     users.map((_, i) => i).filter(i =>
+   *       !result.failures.some(f => f.index === i + 1)
+   *     )
+   * );
+   * ```
+   *
+   * @example
+   * ```typescript
+   * // Handling different failure scenarios
+   * const result = await Validator.validateBulk(User, { data: users });
+   *
+   * if (!result.success) {
+   *   const { failureCount, totalCount } = result;
+   *
+   *   if (failureCount === totalCount) {
+   *     // All items failed
+   *     console.error('Complete validation failure');
+   *     // Message: "All 10 items failed validation"
+   *   } else if (failureCount === 1) {
+   *     // Single item failed
+   *     console.warn('One item failed validation');
+   *     // Message: "Bulk validation failed: 1 of 10 items failed"
+   *   } else {
+   *     // Partial failure
+   *     const successRate = ((totalCount - failureCount) / totalCount * 100).toFixed(1);
+   *     console.warn(`${successRate}% success rate`);
+   *     // Message: "Bulk validation failed: 3 of 10 items failed"
+   *   }
+   * }
+   * ```
+   *
+   * ### Common Use Cases
+   * - **CSV/Excel imports**: Validate uploaded file data before insertion
+   * - **Batch API endpoints**: Validate multiple items in a single request
+   * - **Data migrations**: Validate data before moving between systems
+   * - **Form arrays**: Validate dynamic form fields (e.g., multiple addresses)
+   * - **Bulk updates**: Validate changes before applying to database
+   *
+   * ### Error Message Localization
+   * The method uses contextual i18n keys for different scenarios:
+   * - `validator.invalidBulkData`: When input is not an array
+   * - `validator.bulkValidationFailed`: When some items fail (with pluralization)
+   * - `validator.bulkValidationAllFailed`: When all items fail (with pluralization)
+   *
+   * ### Performance Tips
+   * - **Large datasets**: Consider chunking (e.g., 1000 items per batch)
+   * - **Complex validations**: Use context to cache expensive lookups
+   * - **Memory constraints**: Process results incrementally, don't accumulate all
+   * - **Progress tracking**: Wrap in a progress indicator for user feedback
+   *
+   * @see {@link ValidatorBulkResult} - Return type documentation
+   * @see {@link ValidatorBulkSuccess} - Success result structure
+   * @see {@link ValidatorBulkError} - Error result structure
+   * @see {@link ValidatorBulkOptions} - Options interface
+   * @see {@link validateClass} - Single-item validation method
+   * @public
+   * @since 1.2.0
+   */
+  static async validateBulk<
+    TClass extends ClassConstructor = ClassConstructor,
+    Context = unknown,
+  >(
+    target: TClass,
+    { data, startTime, ...options }: ValidatorBulkOptions<TClass, Context>
+  ): Promise<ValidatorBulkResult<TClass, Context>> {
+    const i18n = this.getI18n(options);
+    startTime = isNumber(startTime) ? startTime : Date.now();
+    const failures: ValidatorBulkErrorItem<TClass>[] = [];
+    if (!Array.isArray(data)) {
+      return this.createBulkError<TClass>(i18n.t('validator.invalidBulkData'), {
+        startTime,
+        failures,
+        totalCount: 0,
+      });
+    }
+    const promises = data.map(async (item, index) => {
+      const result = await Validator.validateClass<TClass, Context>(target, {
+        ...options,
+        data: item,
+        startTime,
+      });
+      if (result.success !== true) {
+        failures.push({ ...result, index: index + 1 });
+      }
+      return result;
+    });
+
+    await Promise.all(promises);
+
+    if (failures.length > 0) {
+      const failureCount = failures.length;
+      const totalCount = data.length;
+
+      // Choose appropriate message based on failure ratio
+      const messageKey =
+        failureCount === totalCount
+          ? 'validator.bulkValidationAllFailed'
+          : 'validator.bulkValidationFailed';
+
+      return Validator.createBulkError(
+        i18n.t(messageKey, {
+          count: failureCount, // Used for pluralization (one/other)
+          failureCount,
+          totalCount,
+        }),
+        {
+          failures,
+          startTime,
+          totalCount,
+        }
+      );
+    }
+    return {
+      name: 'ValidatorSuccessResult',
+      duration: Date.now() - startTime,
+      validatedAt: new Date(),
+      data,
+      status: 'success',
+      success: true,
+    };
+  }
+
+  /**
    * ## Extract Validation Rules from Class
    *
    * Retrieves all validation rules that have been applied to a class through property
@@ -3098,7 +3401,12 @@ export class Validator {
   static isSuccess<Context = unknown>(
     result: ValidatorResult<Context>
   ): result is ValidatorSuccess<Context> {
-    return isObj(result) && result.success === true;
+    return (
+      isObj(result) &&
+      result.success === true &&
+      result.status == 'success' &&
+      result.name == 'ValidatorSuccessResult'
+    );
   }
   /**
    * ## Get Base Error Properties
@@ -3206,17 +3514,21 @@ export class Validator {
    * Factory method for creating a `ValidatorBulkError`.
    * Represents a failure when validating an array of items, mapping indices to specific errors.
    *
+   * @template TClass - The Target class type
    * @param message - General summary message
    * @param details - Context including the `errors` map (index -> error)
    * @returns A structured `ValidatorBulkError` object
    */
-  static createBulkError(
+  static createBulkError<TClass extends ClassConstructor = ClassConstructor>(
     message: string,
     details: ValidatorCreateBulkErrorPayload
-  ): ValidatorBulkError {
+  ): ValidatorBulkError<TClass> {
+    const failures = Array.isArray(details.failures) ? details.failures : [];
     return {
       ...this.getBaseError(details),
       ...details,
+      failures,
+      failureCount: failures.length,
       message,
       name: 'ValidatorBulkError',
       failedAt: new Date(),
@@ -4233,8 +4545,9 @@ function createSuccessResult<Context = unknown>(
   startTime: number
 ): ValidatorSuccess<Context> {
   return {
-    message: undefined,
     ...options,
+    status: 'success',
+    name: 'ValidatorSuccessResult',
     success: true,
     validatedAt: new Date(),
     duration: Date.now() - startTime,
