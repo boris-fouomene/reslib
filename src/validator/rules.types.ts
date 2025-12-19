@@ -146,30 +146,30 @@ export type ValidatorRuleName = keyof ValidatorRuleParamTypes & string;
 export interface ValidatorRuleParamTypes<Context = unknown> {}
 
 /**
- * ## Validator Target Data
+ * ## Validator Class Input
  *
- * Represents a partial data object corresponding to a target class.
- * Used for describing the data involved in validation errors without requiring
+ * Represents a partial data object corresponding to a target class structure.
+ * Used for describing the input data for class-based validation without requiring
  * a full instance of the class.
  *
- * @template Target - The class constructor
+ * @template TClass - The class constructor
  *
  * @public
  */
 export type ValidatorClassInput<
-  Target extends ClassConstructor = ClassConstructor,
+  TClass extends ClassConstructor = ClassConstructor,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-> = Partial<Record<ValidatorClassKeys<Target>, any>>;
+> = Partial<Record<ValidatorClassKeys<TClass>, any>>;
 
 /**
- * ## Validator Target Keys
+ * ## Validator Class Keys
  *
  * Type alias for extracting the valid property keys from a target class or constructor.
- * Used to ensure type safety when referencing properties of validated objects.
+ * Used to ensure type safety when referencing properties of validated class instances.
  *
- * @template Target - The class constructor
+ * @template TClass - The class constructor
  *
  * @public
  */
-export type ValidatorClassKeys<Target extends ClassConstructor> =
-  keyof InstanceType<Target>;
+export type ValidatorClassKeys<TClass extends ClassConstructor> =
+  keyof InstanceType<TClass>;

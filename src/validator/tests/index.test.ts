@@ -379,7 +379,7 @@ describe('Validator Rules', () => {
       aString?: string;
     }
 
-    const allRules = Validator.getTargetRules(Entity);
+    const allRules = Validator.getClassRules(Entity);
     it('Getting validation rules', async () => {
       expect(getRuleNames(allRules.id)).toEqual(['Number', 'NumberNE']);
       expect(getRuleNames(allRules.name)).toEqual([
@@ -499,7 +499,7 @@ describe('Validator Rules', () => {
         }
 
         it('should register Empty rule in target rules', () => {
-          const rules = Validator.getTargetRules(TestEntity);
+          const rules = Validator.getClassRules(TestEntity);
           expect(getRuleNames(rules.emptyField)).toContain('Empty');
           expect(getRuleNames(rules.optionalEmail)).toContain('Empty');
         });
@@ -630,7 +630,7 @@ describe('Validator Rules', () => {
         }
 
         it('should register Nullable rule in target rules', () => {
-          const rules = Validator.getTargetRules(TestEntity);
+          const rules = Validator.getClassRules(TestEntity);
           expect(getRuleNames(rules.nullableField)).toEqual([
             'Nullable',
             'Required',
@@ -806,7 +806,7 @@ describe('Validator Rules', () => {
         }
 
         it('should register Optional rule in target rules', () => {
-          const rules = Validator.getTargetRules(TestEntity);
+          const rules = Validator.getClassRules(TestEntity);
 
           expect(getRuleNames(rules.sometimesField)).toEqual([
             'Optional',

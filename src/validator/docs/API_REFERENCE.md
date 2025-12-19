@@ -8,19 +8,48 @@
 
 ## Table of Contents
 
-- [Validator Class](#validator-class)
-  - [Validator.validate()](#validatorvalidate)
-  - [Validator.validateClass()](#validatorvalidatetarget)
-  - [Validator.registerRule()](#validatorregisterrule)
-  - [Validator.getRule()](#validatorgetrule)
-  - [Validator.getRules()](#validatorgetrules)
-  - [Validator.hasRule()](#validatorhasrule)
-- [Types](#types)
-  - [ValidatorOptions](#validatorvalidateoptions)
-  - [ValidatorResult](#validatorvalidateresult)
-  - [ValidatorClassResult](#validatorvalidatetargetresult)
-  - [ValidatorRules](#validatorrules)
-  - [ValidatorRuleResult](#validatorresult)
+- [API Reference](#api-reference)
+  - [Table of Contents](#table-of-contents)
+  - [Validator Class](#validator-class)
+    - [Validator.validate()](#validatorvalidate)
+      - [Parameters](#parameters)
+      - [Returns](#returns)
+      - [Examples](#examples)
+    - [Validator.validateClass()](#validatorvalidateclass)
+      - [Parameters](#parameters-1)
+      - [Returns](#returns-1)
+      - [Examples](#examples-1)
+    - [Validator.registerRule()](#validatorregisterrule)
+      - [Parameters](#parameters-2)
+      - [Rule Function Signature](#rule-function-signature)
+      - [Examples](#examples-2)
+    - [Validator.getRule()](#validatorgetrule)
+      - [Parameters](#parameters-3)
+      - [Returns](#returns-2)
+      - [Example](#example)
+    - [Validator.getRules()](#validatorgetrules)
+      - [Returns](#returns-3)
+      - [Example](#example-1)
+    - [Validator.hasRule()](#validatorhasrule)
+      - [Parameters](#parameters-4)
+      - [Returns](#returns-4)
+      - [Example](#example-2)
+  - [Types](#types)
+    - [ValidatorOptions](#validatoroptions)
+    - [ValidatorResult](#validatorresult)
+    - [ValidatorClassResult](#validatorclassresult)
+    - [ValidatorRules](#validatorrules)
+    - [ValidatorRuleResult](#validatorruleresult)
+  - [Decorators](#decorators)
+    - [Decorator Naming Convention](#decorator-naming-convention)
+    - [Example Decorators](#example-decorators)
+  - [Error Handling](#error-handling)
+    - [Validation Errors](#validation-errors)
+    - [Class Validation Errors](#class-validation-errors)
+  - [Best Practices](#best-practices)
+    - [✅ Do's](#-dos)
+    - [❌ Don'ts](#-donts)
+  - [Next Steps](#next-steps)
 
 ---
 
@@ -131,17 +160,17 @@ const result = await Validator.validate({
 **Validate class instances using decorator-based rules.**
 
 ```typescript
-static async validateClass<Target extends object, Context = unknown>(
-  TargetClass: new () => Target,
-  options: ValidateClassOptions<Target, Context>
-): Promise<ValidatorClassResult<Target, Context>>
+static async validateClass<TClass extends object, Context = unknown>(
+  targetClass: new () => TClass,
+  options: ValidateClassOptions<TClass, Context>
+): Promise<ValidatorClassResult<TClass, Context>>
 ```
 
 #### Parameters
 
 | Parameter         | Type      | Required | Description                                  |
 | ----------------- | --------- | -------- | -------------------------------------------- |
-| `TargetClass`     | `class`   | ✅       | Class constructor with validation decorators |
+| `targetClass`     | `class`   | ✅       | Class constructor with validation decorators |
 | `options.data`    | `object`  | ✅       | Data to validate against class schema        |
 | `options.context` | `Context` | ❌       | Optional validation context                  |
 | `options.i18n`    | `I18n`    | ❌       | i18n instance for translations               |
@@ -149,26 +178,26 @@ static async validateClass<Target extends object, Context = unknown>(
 #### Returns
 
 ```typescript
-Promise<ValidatorClassResult<Target, Context>>;
+Promise<ValidatorClassResult<TClass, Context>>;
 
-type ValidatorClassResult<Target, Context> =
-  | ValidatorClassSuccess<Target, Context>
-  | ValidatorClassError<Target>;
+type ValidatorClassResult<TClass, Context> =
+  | ValidatorClassSuccess<TClass, Context>
+  | ValidatorClassError<TClass>;
 
-interface ValidatorClassSuccess<Target, Context> {
+interface ValidatorClassSuccess<TClass, Context> {
   success: true;
   status: 'success';
-  data: Target;
+  data: TClass;
   context?: Context;
 }
 
-interface ValidatorClassError<Target> {
+interface ValidatorClassError<TClass> {
   success: false;
   status: 'error';
   message: string;
   errors: ValidatorClassItemError[];
-  fieldErrors: Record<keyof Target, string>;
-  data: Partial<Target>;
+  fieldErrors: Record<keyof TClass, string>;
+  data: Partial<TClass>;
 }
 ```
 
@@ -454,13 +483,13 @@ interface ValidatorResult<Context = unknown> {
 ### ValidatorClassResult
 
 ```typescript
-interface ValidatorClassResult<Target, Context = unknown> {
+interface ValidatorClassResult<TClass, Context = unknown> {
   isValid: boolean;
   errors: Array<{
     field: string;
     message: string;
   }>;
-  data: Target;
+  data: TClass;
   context?: Context;
 }
 ```
@@ -549,7 +578,7 @@ if (!result.isValid) {
 }
 ```
 
-### Target Validation Errors
+### Class Validation Errors
 
 ```typescript
 const result = await Validator.validateClass(UserDTO, {

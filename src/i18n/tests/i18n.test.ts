@@ -69,7 +69,7 @@ describe('I18n', () => {
     // the default singleton should at least have the core methods
     expect(typeof instance?.getLocale).toBe('function');
     expect(typeof instance?.translate).toBe('function');
-    expect(typeof instance?.translateTarget).toBe('function');
+    expect(typeof instance?.translateClass).toBe('function');
 
     // verify the default exported instance is recognized as I18n
     expect(defaultI18n instanceof I18n).toBe(true);
@@ -80,7 +80,7 @@ describe('I18n', () => {
     const fakeI18n = {
       getLocale: () => 'en',
       translate: () => 'x',
-      translateTarget: () => ({}),
+      translateClass: () => ({}),
     } as any;
     expect((I18n as any)[Symbol.hasInstance](fakeI18n)).toBe(true);
     // and for new instances
@@ -161,7 +161,7 @@ describe('I18n', () => {
   });
 
   it('Expect translated options of my component', () => {
-    const translatedOptions = i18n.translateTarget(MyComponent);
+    const translatedOptions = i18n.translateClass(MyComponent);
     expect(translatedOptions).toEqual({
       greeting: 'Hello!',
       nestedExample: 'Nested Example',

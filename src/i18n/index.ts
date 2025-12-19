@@ -113,7 +113,7 @@ export class I18n extends I18nJs implements Observable<I18nEvent> {
     return (
       typeof obj.getLocale === 'function' &&
       typeof obj.translate === 'function' &&
-      typeof obj.translateTarget === 'function'
+      typeof obj.translateClass === 'function'
     );
   }
   /**
@@ -160,11 +160,11 @@ export class I18n extends I18nJs implements Observable<I18nEvent> {
    * @returns The translated keys.
    */
 
-  translateTarget<T extends ClassConstructor>(
+  translateClass<T extends ClassConstructor>(
     target: T,
     options?: TranslateOptions
   ): Record<keyof T, string> {
-    const translationKeys = I18n.getTargetTanslationKeys(target);
+    const translationKeys = I18n.getClassTanslationKeys(target);
     for (let i in translationKeys) {
       if (isNonNullString(translationKeys[i])) {
         translationKeys[i] = this.translate(translationKeys[i], options);
@@ -244,7 +244,7 @@ export class I18n extends I18nJs implements Observable<I18nEvent> {
    * @note This method is particularly useful for translating configuration objects, form labels,
    *       button texts, or any structured data containing translation keys.
    *
-   * @see {@link translateTarget} for translating class properties decorated with @Translate
+   * @see {@link translateClass} for translating class properties decorated with @Translate
    * @see {@link t} for translating individual keys with interpolation support
    *
    */
@@ -269,7 +269,7 @@ export class I18n extends I18nJs implements Observable<I18nEvent> {
    * @returns the translation keys for the target class
    */
 
-  static getTargetTanslationKeys<T extends ClassConstructor>(
+  static getClassTanslationKeys<T extends ClassConstructor>(
     target: T
   ): Record<keyof T, string> {
     return getDecoratedProperties(target, TRANSLATION_KEY);

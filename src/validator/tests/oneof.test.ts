@@ -618,7 +618,7 @@ describe('OneOf Validation Rules', () => {
           contact: string = '';
         }
 
-        const rules = Validator.getTargetRules(TestEntity);
+        const rules = Validator.getClassRules(TestEntity);
         expect(rules.contact).toBeDefined();
       });
     });
@@ -655,7 +655,7 @@ describe('OneOf Validation Rules', () => {
           field: string = '';
         }
 
-        expect(Validator.getTargetRules(TestEntity).field).toBeDefined();
+        expect(Validator.getClassRules(TestEntity).field).toBeDefined();
       });
 
       it('should create decorator for function rules', () => {
@@ -673,7 +673,7 @@ describe('OneOf Validation Rules', () => {
           field: string = '';
         }
 
-        expect(Validator.getTargetRules(TestEntity).field).toBeDefined();
+        expect(Validator.getClassRules(TestEntity).field).toBeDefined();
       });
     });
 
@@ -695,7 +695,7 @@ describe('OneOf Validation Rules', () => {
           field: string = '';
         }
 
-        expect(Validator.getTargetRules(TestEntity).field).toBeDefined();
+        expect(Validator.getClassRules(TestEntity).field).toBeDefined();
       });
     });
 
@@ -801,7 +801,7 @@ describe('OneOf Validation Rules', () => {
           contact: string = '';
         }
 
-        const rules = Validator.getTargetRules(User);
+        const rules = Validator.getClassRules(User);
         expect(rules.contact).toBeDefined();
       });
 

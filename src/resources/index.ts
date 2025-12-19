@@ -1248,7 +1248,7 @@ export class ResourcesManager {
    * @param {any} target - The target class or instance from which to retrieve the metadata.
    * @returns {Resource} An object containing the resource metadata for the given target.
    */
-  public static getMetaDataFromTarget(
+  public static getMetaDataFromClass(
     target: ClassConstructor
   ): ResourceBase | undefined {
     return Object.assign(

@@ -2,7 +2,11 @@ import { I18n } from '@/i18n';
 import { InputFormatterResult } from '@/inputFormatter/types';
 import { ClassConstructor, Dictionary } from '@/types';
 import { ValidatorClassError, ValidatorError } from './errors';
-import { ValidatorRuleName, ValidatorRuleParamTypes } from './rules.types';
+import {
+  ValidatorClassInput,
+  ValidatorRuleName,
+  ValidatorRuleParamTypes,
+} from './rules.types';
 
 export * from './rules.types';
 
@@ -877,7 +881,7 @@ export type ValidatorRuleParams<
  *
  * Configuration interface for validating nested objects or complex data structures
  * within the validation system. This interface is specifically designed for rule functions
- * that need to validate target objects (classes with decorators) rather than simple values.
+ * that need to validate class objects (classes with decorators) rather than simple values.
  *
  * ### Purpose
  * Provides a specialized options interface for validation rule functions that operate on
@@ -886,22 +890,22 @@ export type ValidatorRuleParams<
  * work with entire class instances or nested object hierarchies.
  *
  * ### Key Differences from ValidatorOptions
- * - **Extends from ValidateClassOptions**: Inherits target-specific properties
+ * - **Extends from ValidateClassOptions**: Inherits class-specific properties
  * - **Omits "data" property**: Uses its own `data` property instead
- * - **Optional value property**: Accepts target data instead of single values
+ * - **Optional value property**: Accepts class data instead of single values
  * - **Flexible data property**: Allows any record structure for nested validation
  *
  * ### Inheritance Structure
  * ```
  * ValidatorNestedRuleFunctionOptions
- *   ↳ extends Omit<ValidateClassOptions<Target, Context, [target: Target]>, "data">
+ *   ↳ extends Omit<ValidateClassOptions<TClass, Context, [target: TClass]>, "data">
  *     ↳ extends Omit<ValidatorOptions<TParams, Context>, "data" | "rule" | "value">
  *       ↳ extends Omit<Partial<InputFormatterResult>, "value">
  *         ↳ extends BaseData<Context>
  * ```
  *
  * ### Generic Parameters
- * - **Target**: The class constructor type being validated (extends `ClassConstructor`)
+ * - **TClass**: The class constructor type being validated (extends `ClassConstructor`)
  * - **Context**: Optional context type for validation (defaults to `unknown`)
  *
  * ### Properties Overview
@@ -995,31 +999,22 @@ export type ValidatorRuleParams<
  * - **Flexible data structures** for complex validation scenarios
  *
  * ### Performance Considerations
- * - **Target validation overhead**: More expensive than single-value validation
+ * - **TClass validation overhead**: More expensive than single-value validation
  * - **Parallel processing**: Multiple nested validations can run concurrently
  * - **Memory usage**: Larger data structures require more memory
  * - **Serialization**: Complex objects may need special handling
  *
- * @template Target - The class constructor type being validated (must extend ClassConstructor)
- * @template Context - Optional context type for validation (defaults to unknown)
- *
- * @public
- *
- * @see {@link ValidateClassOptions} - Base target validation options
- * @see {@link ValidatorOptions} - Single-value validation options
- * @see {@link Validator.validateNestedRule} - Method that uses this interface
- * @see {@link ValidatorClassInput} - Target data type
  * @see {@link ClassConstructor} - Class constructor constraint
  */
 export interface ValidatorNestedRuleFunctionOptions<
-  Target extends ClassConstructor = ClassConstructor,
+  TClass extends ClassConstructor = ClassConstructor,
   Context = unknown,
 > extends Omit<
   ValidateClassOptions<
-    Target,
+    TClass,
     Context,
     [
-      target: Target,
+      target: TClass,
       options?: {
         /**
          * The custom error message to use when validation fails.
@@ -1031,7 +1026,7 @@ export interface ValidatorNestedRuleFunctionOptions<
   >,
   'data'
 > {
-  value?: ValidatorClassInput<Target>;
+  value?: ValidatorClassInput<TClass>;
 
   data?: Dictionary;
 }
@@ -1502,7 +1497,7 @@ export type ValidatorMultiRuleFunction<
 > = ValidatorRuleFunction<RulesFunctions, Context>;
 
 /**
- * ## Target Validation Data Type
+ * ## Class Validation Data Type
  *
  * A mapped type representing the data structure expected for class-based validation using
  * {@link Validator.validateClass}. This type creates a partial record mapping class properties
@@ -1515,14 +1510,14 @@ export type ValidatorMultiRuleFunction<
  *
  * ### Type Construction
  * ```typescript
- * Partial<Record<keyof InstanceType<Target>, any>>
+ * Partial<Record<keyof InstanceType<TClass>, any>>
  * ```
- * - **Target**: Class constructor type (must extend `ClassConstructor`)
- * - **InstanceType<Target>**: Properties of the class instance
+ * - **TClass**: Class constructor type (must extend `ClassConstructor`)
+ * - **InstanceType<TClass>**: Properties of the class instance
  * - **Partial**: All properties are optional (validation fills in defaults)
  * - **Record<..., any>**: Values can be any type (validation will check)
  *
- * ### Usage in Target Validation
+ * ### Usage in TClass Validation
  * ```typescript
  * class UserForm {
  *   @IsRequired()
@@ -1554,7 +1549,7 @@ export type ValidatorMultiRuleFunction<
  * - **Flexible Values**: Accepts any value type (validation rules determine validity)
  *
  * ### Comparison with Single-Value Validation
- * | Aspect | Target Data | Single Value |
+ * | Aspect | TClass Data | Single Value |
  * |--------|-------------|--------------|
  * | Structure | Object with multiple properties | Single value |
  * | Validation | Multiple fields simultaneously | One value at a time |
@@ -1568,33 +1563,32 @@ export type ValidatorMultiRuleFunction<
  *
  * ### Relationship to Validation System
  * - **Used by**: {@link Validator.validateClass} as input data type
- * - **Mapped from**: Class constructor type via `InstanceType<Target>`
+ * - **Mapped from**: Class constructor type via `InstanceType<TClass>`
  * - **Validated by**: Decorator-based rules on class properties
  * - **Returns**: {@link ValidatorClassResult} with validated instance
  *
- * @template Target - The class constructor type being validated
- *
- * @public
- *
- * @see {@link Validator.validateClass} - Method that accepts this data type
- * @see {@link ValidateClassOptions} - Options type that includes this
- * @see {@link ValidatorClassResult} - Result type returned after validation
- * @see {@link ClassConstructor} - Base constructor type constraint
- */
-export type ValidatorClassInput<
-  Target extends ClassConstructor = ClassConstructor,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-> = Partial<Record<keyof InstanceType<Target>, any>>;
 
+
+/**
+ * ## Validator Class Options
+ *
+ * Configuration options for performing class-based validation (`Validator.validateClass`).
+ * These options control the behavior of the validation process, including context injection,
+ * error handling, and internationalization.
+ *
+ * ### Inheritance
+ * Extends `ValidatorOptions` but excludes single-value specific properties (`value`, `rule`)
+  // in favor of class-instance specific properties (`data`).
+ */
 export interface ValidateClassOptions<
-  Target extends ClassConstructor = ClassConstructor,
+  TClass extends ClassConstructor = ClassConstructor,
   Context = unknown,
   ParamsTypes extends ValidatorRuleParams = ValidatorRuleParams,
 > extends Omit<
   ValidatorOptions<ParamsTypes, Context>,
   'data' | 'rule' | 'value'
 > {
-  data: ValidatorClassInput<Target>;
+  data: ValidatorClassInput<TClass>;
   /**
    * The parent data/context for nested validations
    *
@@ -1606,7 +1600,7 @@ export interface ValidateClassOptions<
     translatedPropertyName: string,
     error: string,
     builderOptions: Omit<ValidatorError, 'message'> & {
-      propertyName: keyof InstanceType<Target> | string;
+      propertyName: keyof InstanceType<TClass> | string;
       translatedPropertyName: string;
       cause: ValidatorError;
       i18n: I18n;
@@ -1615,14 +1609,21 @@ export interface ValidateClassOptions<
         single: string;
       };
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      data: Partial<Record<keyof InstanceType<Target>, any>>;
+      data: Partial<Record<keyof InstanceType<TClass>, any>>;
     }
   ) => string;
 }
+
+/**
+ * ## Validator Bulk Options
+ *
+ * Configuration for bulk validation operations (validating an array of class instances).
+ * Extends `ValidateClassOptions` but accepts an array of data objects instead of a single one.
+ */
 export interface ValidateBulkOptions<
-  Target extends ClassConstructor = ClassConstructor,
-> extends Omit<ValidateClassOptions<Target>, 'data'> {
-  data: ValidatorClassInput<Target>[];
+  TClass extends ClassConstructor = ClassConstructor,
+> extends Omit<ValidateClassOptions<TClass>, 'data'> {
+  data: ValidatorClassInput<TClass>[];
 }
 
 /**
@@ -1916,7 +1917,7 @@ export type ValidatorResult<Context = unknown> =
  * ```
  *
  * ### Comparison with Single-Value Success
- * | Aspect | Single-Value | Target |
+ * | Aspect | Single-Value | TClass |
  * |--------|-------------|--------|
  * | Property | `value` | `data` |
  * | Validates | One value | Multiple fields |
@@ -1947,7 +1948,7 @@ export type ValidatorResult<Context = unknown> =
  * @see {@link ValidatorSuccess} - Single-value equivalent
  */
 export interface ValidatorClassSuccess<
-  Target extends ClassConstructor = ClassConstructor,
+  TClass extends ClassConstructor = ClassConstructor,
   Context = unknown,
 > extends Omit<BaseData<Context>, 'data'> {
   /** Discriminant for type narrowing - always `true` for success */
@@ -1986,13 +1987,12 @@ export interface ValidatorClassSuccess<
    */
   duration?: number;
 
-  data: ValidatorClassInput<Target>;
+  data: ValidatorClassInput<TClass>;
 }
 
 /**
  * ## Class Validation Result Type (Discriminated Union)
  *
- * Discriminated union type representing the result of a {@link Validator.validateClass} operation.
  * Discriminated union type representing the result of a {@link Validator.validateClass} operation.
  * Can be either {@link ValidatorClassSuccess} or {@link ValidatorClassError}.
  *
@@ -2038,7 +2038,7 @@ export interface ValidatorClassSuccess<
  * ```
  *
  * ### Comparison with Single-Value Result
- * | Aspect | Single-Value | Target |
+ * | Aspect | Single-Value | TClass |
  * |--------|-------------|--------|
  * | Success Property | `value` | `data` |
  * | On Failure | Single error | Array of errors |
@@ -2088,16 +2088,16 @@ export interface ValidatorClassSuccess<
  *
  * @see {@link ValidatorClassSuccess} - Success variant
  * @see {@link ValidatorClassError} - Failure variant
- * @see {@link Validator.validateClass} - Main target validation method
+ * @see {@link Validator.validateClass} - Main class validation method
  * @see {@link Validator.isSuccess} - Type guard for success
  * @see {@link Validator.isFailure} - Type guard for failure
  * @see {@link ValidatorResult} - Single-value equivalent
  */
 export type ValidatorClassResult<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  Target extends ClassConstructor = any,
+  TClass extends ClassConstructor = any,
   Context = unknown,
-> = ValidatorClassSuccess<Target, Context> | ValidatorClassError<Target>;
+> = ValidatorClassSuccess<TClass, Context> | ValidatorClassError<TClass>;
 
 /**
  * ## Validator Rule Functions Map

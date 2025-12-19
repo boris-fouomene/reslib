@@ -27,7 +27,7 @@
   - [Enum Rules](#enum-rules) - 1 rule
   - [Object Rules](#object-rules) - 1 rule
   - [Multi Rules](#multi-rules) - 3 rules
-  - [Target Rules](#target-rules) - 1 rule
+  - [Class Rules](#target-rules) - 1 rule
 - [Advanced Usage](#advanced-usage)
   - [Custom Rules](#custom-rules)
   - [Module Augmentation](#module-augmentation)
@@ -5064,7 +5064,7 @@ class User {
 
 ---
 
-## Target Rules
+## Class Rules
 
 ✅ **SCANNED FROM:** `src/validator/rules/target.ts`
 
@@ -5311,17 +5311,17 @@ static async validate<Context = unknown>(
 **Validate class instances using decorator-based rules.**
 
 ```typescript
-static async validateClass<Target extends object, Context = unknown>(
-  TargetClass: new () => Target,
-  options: ValidateClassOptions<Target, Context>
-): Promise<ValidatorClassResult<Target, Context>>
+static async validateClass<TClass extends object, Context = unknown>(
+  targetClass: new () => TClass,
+  options: ValidateClassOptions<TClass, Context>
+): Promise<ValidatorClassResult<TClass, Context>>
 ```
 
 **Parameters:**
 
 | Parameter         | Type      | Required | Description                      |
 | ----------------- | --------- | -------- | -------------------------------- |
-| `TargetClass`     | `class`   | ✅       | Class with validation decorators |
+| `targetClass`     | `class`   | ✅       | Class with validation decorators |
 | `options.data`    | `object`  | ✅       | Data to validate                 |
 | `options.context` | `Context` | ❌       | Optional validation context      |
 | `options.i18n`    | `I18n`    | ❌       | i18n instance                    |
@@ -5333,7 +5333,7 @@ static async validateClass<Target extends object, Context = unknown>(
 {
   success: true,
   status: 'success',
-  data: Target,
+  data: TClass,
   // ...
 }
 
@@ -5344,7 +5344,7 @@ static async validateClass<Target extends object, Context = unknown>(
   message: string,
   errors: ValidatorClassItemError[]; // Array of errors
   fieldErrors: Record<string, string>; // Map of field -> error message
-  data: Partial<Target>; // The data that was validated
+  data: Partial<TClass>; // The data that was validated
   // ...
 }
 ```
@@ -5589,7 +5589,7 @@ rules: ['Email']; // ✅ Works!
 - [x] **Enum Rules** (IsEnum) - 1 rule
 - [x] **Object Rules** (IsObject) - 1 rule
 - [x] **Multi Rules** (OneOf, AllOf, ArrayOf) - 3 rules
-- [x] **Target Rules** (ValidateNested) - 1 rule
+- [x] **Class Rules** (ValidateNested) - 1 rule
 
 **Total Rules Documented:** 67 / 70+ (**100% COMPLETE! 🎉🎉🎉🎊**)
 
@@ -5600,7 +5600,7 @@ rules: ['Email']; // ✅ Works!
 ### Supplementary Files
 
 - `FORMAT_RULES_REFERENCE.md` - Format validators reference
-- `ADDITIONAL_RULES.md` - Enum, Object, Multi, Target rules details
+- `ADDITIONAL_RULES.md` - Enum, Object, Multi, Class rules details
 
 ### Additional Resources
 

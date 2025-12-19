@@ -89,7 +89,7 @@ describe('Array Validation Rules', () => {
       }
 
       it('should register Array rule in target rules', () => {
-        const rules = Validator.getTargetRules(TestEntity);
+        const rules = Validator.getClassRules(TestEntity);
         expect(rules.items).toEqual([
           expect.objectContaining({
             params: [],
@@ -188,7 +188,7 @@ describe('Array Validation Rules', () => {
       }
 
       it('should register ArrayMinLength rule in target rules', () => {
-        const rules = Validator.getTargetRules(TestEntity);
+        const rules = Validator.getClassRules(TestEntity);
         expect(rules).toEqual({
           items: [
             expect.objectContaining({
@@ -639,7 +639,7 @@ describe('Array Validation Rules', () => {
       }
 
       it('registers decorator and validates', async () => {
-        const rules = Validator.getTargetRules(StringList);
+        const rules = Validator.getClassRules(StringList);
         expect(rules).toEqual({
           items: [
             expect.objectContaining({
@@ -754,7 +754,7 @@ describe('Array Validation Rules', () => {
       }
 
       it('registers decorator and validates', async () => {
-        const rules = Validator.getTargetRules(NumberList);
+        const rules = Validator.getClassRules(NumberList);
         expect(rules).toEqual({
           values: [
             expect.objectContaining({

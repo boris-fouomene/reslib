@@ -126,7 +126,7 @@ export class UsersController {
 | **Multi**   | 3 rules  | OneOf, AllOf, ArrayOf (rule composition)               |
 | **Enum**    | 1 rule   | Enum (value in set)                                    |
 | **Object**  | 1 rule   | IsObject                                               |
-| **Target**  | 1 rule   | ValidateNested                                         |
+| **Class**   | 1 rule   | ValidateNested                                         |
 
 **No other library has this many format validators built-in!**
 

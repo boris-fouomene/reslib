@@ -16,7 +16,7 @@ import {
 // Ensure rules are registered
 ensureRulesRegistered();
 
-describe('Target Validation Rules', () => {
+describe('Class Validation Rules', () => {
   describe('ValidateNested', () => {
     it('should pass when nested object validates successfully', async () => {
       class Address {

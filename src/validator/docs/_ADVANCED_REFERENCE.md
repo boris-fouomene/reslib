@@ -1,6 +1,6 @@
 # Additional Validation Rules - Complete Documentation
 
-## Enum, Object, Multi, and Target Rules
+## Enum, Object, Multi, and Class Rules
 
 This document contains the complete documentation for the 4 specialized rule categories.
 
@@ -114,7 +114,7 @@ class User {
 
 ---
 
-## Target Rules
+## Class Rules
 
 ✅ **SCANNED FROM:** `src/validator/rules/target.ts`
 
@@ -151,7 +151,7 @@ class User {
 - Enum: 1 rule
 - Object: 1 rule
 - Multi: 3 rules (OneOf, AllOf, ArrayOf)
-- Target: 1 rule
+- Class: 1 rule
 
 **Grand Total: 61 + 6 = 67 rules fully documented! 🎉**
 

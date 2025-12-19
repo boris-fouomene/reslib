@@ -19,7 +19,7 @@
 - [Enum Rules](#enum-rules) (1 rule)
 - [Object Rules](#object-rules) (1 rule)
 - [Multi Rules](#multi-rules) (3 rules)
-- [Target Rules](#target-rules) (1 rule)
+- [Class Rules](#target-rules) (1 rule)
 
 ---
 
@@ -351,7 +351,7 @@ class User {
 }
 ```
 
-### Target Rules (1 rule)
+### Class Rules (1 rule)
 
 | Rule                | Description                     |
 | ------------------- | ------------------------------- |

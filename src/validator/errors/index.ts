@@ -121,13 +121,13 @@ export interface ValidatorCreateErrorPayload extends Omit<
 > {}
 
 /**
- * ## Create Target Error Payload
+ * ## Create Class Error Payload
  *
- * Helper type used when creating a `ValidatorClassError` using `Validator.createTargetError`.
+ * Helper type used when creating a `ValidatorClassError` using `Validator.createClassError`.
  * It excludes properties that are automatically generated.
  */
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
-export interface ValidatorCreateTargetErrorPayload extends Omit<
+export interface ValidatorCreateClassErrorPayload extends Omit<
   ValidatorClassError,
   ValidatorCreateErrorPartialKeys
 > {}
@@ -150,11 +150,11 @@ export interface ValidatorCreateBulkErrorPayload extends Omit<
  * Represents the failure details for a single item within a bulk validation operation.
  * It maps the specific item from the original array (by index) to the errors it triggered.
  *
- * @template Target - The class constructor of the items being validated
+ * @template TClass - The class constructor of the items being validated
  * @public
  */
 export interface ValidatorBulkFailureItem<
-  Target extends ClassConstructor = ClassConstructor,
+  TClass extends ClassConstructor = ClassConstructor,
 > {
   /**
    * The zero-based index of the item in the original input array.
@@ -175,7 +175,7 @@ export interface ValidatorBulkFailureItem<
    * The original data object that failed validation.
    * Captured here to provide immediate context without needing to look up the original array.
    */
-  data?: ValidatorClassInput<Target>;
+  data?: ValidatorClassInput<TClass>;
 }
 
 /**
@@ -187,11 +187,11 @@ export interface ValidatorBulkFailureItem<
  * This is crucial for batch processing where you want to report "Items 3, 5, and 10 failed"
  * rather than just "Validation failed".
  *
- * @template Target - The class constructor of the items being validated
+ * @template TClass - The class constructor of the items being validated
  * @public
  */
 export interface ValidatorBulkError<
-  Target extends ClassConstructor = ClassConstructor,
+  TClass extends ClassConstructor = ClassConstructor,
 > extends ValidatorBaseError {
   name: 'ValidatorBulkError';
 
@@ -199,7 +199,7 @@ export interface ValidatorBulkError<
    * A list of all items that failed validation, with their specific errors.
    * Items that passed validation are not included in this list.
    */
-  failures: ValidatorBulkFailureItem<Target>[];
+  failures: ValidatorBulkFailureItem<TClass>[];
 
   /**
    * The total count of items that were processed in the batch.
@@ -283,19 +283,19 @@ export interface ValidatorBaseError {
 }
 
 /**
- * ## Target Validation Error
+ * ## Validator Class Error
  *
- * Represents validation failures for a complex target object (like a DTO or entity class).
- * Unlike simple errors, a Target Error aggregates multiple failures across different fields
- * of the same object.
+ * Represents validation failures for a complex class instance or object target.
+ * Unlike simple errors, a Class Error aggregates multiple failures across different fields
+ * of the same object/instance.
  *
  * It provides both a flat list of errors and a mapped structure (`fieldErrors`)
  * for easy UI integration.
  *
- * @template Target - The class constructor of the validated target
+ * @template TClass - The class constructor of the validated target
  */
 export interface ValidatorClassError<
-  Target extends ClassConstructor = ClassConstructor,
+  TClass extends ClassConstructor = ClassConstructor,
 > extends ValidatorBaseError {
   name: 'ValidatorClassError';
 
@@ -313,7 +313,7 @@ export interface ValidatorClassError<
    * }
    * ```
    */
-  fieldErrors: Partial<Record<ValidatorClassKeys<Target>, string>>;
+  fieldErrors: Partial<Record<ValidatorClassKeys<TClass>, string>>;
 
   /**
    * A flat list of ALL individual validation errors that occurred on this target.
@@ -330,16 +330,16 @@ export interface ValidatorClassError<
    * The original data object that was validated.
    * Attached for context.
    */
-  data: ValidatorClassInput<Target>;
+  data: ValidatorClassInput<TClass>;
 }
 
 /**
- * ## Target Single Error
+ * ## Class Single Error Item
  *
- * A specialized wrapper for a validation error that occurred within a Target/Object validation context.
- * It links the specific `ValidatorError` (`cause`) to the broader target failure.
+ * A specialized wrapper for a validation error that occurred within a Class/Object validation context.
+ * It links the specific `ValidatorError` (`cause`) to the broader class validation failure.
  *
- * Use this to drill down into the specifics of why a particular field on an object failed.
+ * Use this to drill down into the specifics of why a particular field on an instance failed.
  */
 export interface ValidatorClassItemError extends ValidatorError {
   /**

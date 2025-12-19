@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 import '../types';
-import { FieldMeta, getFieldsFromTarget } from './index';
+import { FieldMeta, getFieldsFromClass } from './index';
 
 declare module '../types' {
   // eslint-disable-next-line jest/no-export
@@ -15,7 +15,7 @@ declare module '../types' {
     label?: string;
   }
 }
-describe('FieldMeta Decorator and getFieldsFromTarget Function', () => {
+describe('FieldMeta Decorator and getFieldsFromClass Function', () => {
   // Test class with decorated properties
   class TestClass {
     @FieldMeta({ type: 'text', label: 'Username' })
@@ -36,7 +36,7 @@ describe('FieldMeta Decorator and getFieldsFromTarget Function', () => {
 
   // Test 1: Verify that the FieldMeta decorator attaches metadata correctly
   it('should attach metadata to class properties', () => {
-    const metadata = getFieldsFromTarget(TestClass);
+    const metadata = getFieldsFromClass(TestClass);
 
     expect(metadata).toBeDefined();
     expect(metadata.username).toEqual({
@@ -66,9 +66,9 @@ describe('FieldMeta Decorator and getFieldsFromTarget Function', () => {
     });
   });
 
-  // Test 2: Verify that getFieldsFromTarget retrieves the correct metadata
-  it('should retrieve metadata using getFieldsFromTarget', () => {
-    const fields = getFieldsFromTarget(TestClass);
+  // Test 2: Verify that getFieldsFromClass retrieves the correct metadata
+  it('should retrieve metadata using getFieldsFromClass', () => {
+    const fields = getFieldsFromClass(TestClass);
     expect(fields).toBeDefined();
     expect(fields.username).toEqual({
       name: 'username',
@@ -104,7 +104,7 @@ describe('FieldMeta Decorator and getFieldsFromTarget Function', () => {
       defaultField?: string;
     }
 
-    const metadata = getFieldsFromTarget(DefaultTypeClass);
+    const metadata = getFieldsFromClass(DefaultTypeClass);
 
     expect(metadata).toBeDefined();
     expect(metadata.defaultField).toEqual({
@@ -114,12 +114,12 @@ describe('FieldMeta Decorator and getFieldsFromTarget Function', () => {
     });
   });
 
-  // Test 4: Verify that getFieldsFromTarget returns an empty object if no metadata exists
+  // Test 4: Verify that getFieldsFromClass returns an empty object if no metadata exists
   it('should return an empty object if no metadata exists', () => {
     class NoMetadataClass {
       noMetadataField?: string;
     }
-    const fields = getFieldsFromTarget(NoMetadataClass);
+    const fields = getFieldsFromClass(NoMetadataClass);
     expect(fields).toEqual({});
   });
 });

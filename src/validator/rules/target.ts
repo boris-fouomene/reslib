@@ -119,7 +119,7 @@ import { Validator } from '../validator';
  * - Simple delegation with minimal wrapper overhead
  *
  * Implementation:
- * Created using Validator.buildTargetRuleDecorator() which:
+ * Created using Validator.buildClassRuleDecorator() which:
  * - Attaches validation metadata to the class property
  * - Enables property validation when validateClass() is called
  * - Works seamlessly with other validation decorators
@@ -134,10 +134,10 @@ import { Validator } from '../validator';
  * - Errors include nested field information for clarity
  * @see Validator.validateNestedRule - Core validation logic
  * @see Validator.validateClass - Parent validation method
- * @see Validator.buildTargetRuleDecorator - Decorator factory
+ * @see Validator.buildClassRuleDecorator - Decorator factory
  * @public
  */
-export const ValidateNested = Validator.buildTargetRuleDecorator(
+export const ValidateNested = Validator.buildClassRuleDecorator(
   function ValidateNested(options) {
     return Validator.validateNestedRule(options);
   },

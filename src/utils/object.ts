@@ -608,10 +608,10 @@ export function extendObj<T extends Record<any, any> = any>(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ...sources: any[]
 ): T {
-  const isTargetArray = Array.isArray(target);
-  const isTargetObj = isObj(target);
+  const isClassArray = Array.isArray(target);
+  const isClassObj = isObj(target);
   // Return if no target provided
-  if (target == null || (!isTargetArray && !isTargetObj)) {
+  if (target == null || (!isClassArray && !isClassObj)) {
     target = {};
   }
   // For each source object
@@ -627,7 +627,7 @@ export function extendObj<T extends Record<any, any> = any>(
     if (!isSourceObj && !isSourceArr) {
       continue;
     }
-    if (isTargetArray) {
+    if (isClassArray) {
       if (isSourceArr) {
         mergeTwoArray(target, source);
       } else {
@@ -656,9 +656,9 @@ export function extendObj<T extends Record<any, any> = any>(
       }
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const targetValue = (target as any)[j];
-      const isTargetValueArr = Array.isArray(targetValue);
+      const isClassValueArr = Array.isArray(targetValue);
       const isSrcArr = Array.isArray(srcValue);
-      if (isTargetValueArr) {
+      if (isClassValueArr) {
         if (isSrcArr) {
           mergeTwoArray(target[j], srcValue);
         } else {
