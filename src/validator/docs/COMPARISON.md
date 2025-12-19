@@ -14,7 +14,8 @@ reslib/validator is the **only validation library** that offers:
 
 ✅ **Dual API** - Both decorators AND functional validation in one library  
 ✅ **Framework Ready** - Production-tested NestJS + Next.js integration  
-✅ **67 Built-in Rules** - Most comprehensive out-of-the-box validators  
+✅ **70+ Built-in Rules** - Most comprehensive out-of-the-box validators  
+✅ **High-Performance Bulk Operations** - `validateBulk` for large data processing  
 ✅ **Built-in i18n** - No extra setup needed  
 ✅ **TypeScript First** - Full type safety with decorators + module augmentation  
 ✅ **Zero Dependencies** - No external validator dependencies
@@ -28,7 +29,7 @@ reslib/validator is the **only validation library** that offers:
 | **Type Safety**           | ⭐⭐⭐ Excellent (decorators + augmentation)           | ⭐⭐⭐ Excellent (inference)  | ⭐⭐ Good                                                       | ⭐⭐ Good                             | ⭐ Basic                 |
 | **Decorator Support**     | ✅ Yes (67 decorators)                                 | ❌ No                         | ✅ Yes                                                          | ❌ No                                 | ❌ No                    |
 | **Functional/Schema API** | ✅ Yes (array rules + functional)                      | ✅ Yes                        | ⚠️ Limited                                                      | ✅ Yes                                | ✅ Yes                   |
-| **Built-in Rules**        | ⭐⭐⭐ 67 comprehensive rules                          | ⭐⭐ ~40 methods              | ⭐⭐ ~80 decorators                                             | ⭐⭐ ~30 methods                      | ⭐⭐⭐ ~100 methods      |
+| **Built-in Rules**        | ⭐⭐⭐ 70+ comprehensive rules                         | ⭐⭐ ~40 methods              | ⭐⭐ ~80 decorators                                             | ⭐⭐ ~30 methods                      | ⭐⭐⭐ ~100 methods      |
 | **NestJS Integration**    | ⭐⭐⭐ Excellent (production-ready pipe)               | ⚠️ Custom pipe needed         | ⭐⭐⭐ Excellent (default)                                      | ⚠️ Custom implementation              | ⚠️ Custom implementation |
 | **Next.js Integration**   | ⭐⭐⭐ Excellent (Server Actions)                      | ⭐⭐⭐ Excellent (tRPC)       | ⚠️ Limited                                                      | ⚠️ Limited                            | ❌ Server-only           |
 | **Async Validation**      | ✅ Built-in                                            | ✅ Built-in                   | ✅ Built-in                                                     | ✅ Built-in                           | ✅ Built-in              |
@@ -37,7 +38,7 @@ reslib/validator is the **only validation library** that offers:
 | **i18n Support**          | ⭐⭐⭐ Built-in (zero setup)                           | ⚠️ Manual setup               | ⚠️ Manual setup                                                 | ⚠️ Manual setup                       | ✅ Built-in              |
 | **Nested Validation**     | ✅ `@ValidateNested`                                   | ✅ Schema composition         | ✅ `@ValidateNested`                                            | ✅ Schema nesting                     | ✅ Schema nesting        |
 | **Type Inference**        | ✅ Via decorators + augmentation                       | ⭐⭐⭐ Automatic `z.infer`    | ⚠️ Manual                                                       | ⭐⭐ `InferType<>`                    | ❌ Manual                |
-| **Framework Integration** | ⭐⭐⭐ NestJS ready + Next.js planned                  | ⭐⭐⭐ tRPC/Next.js ecosystem | ⭐⭐⭐ NestJS default                                           | ⭐⭐ Formik                           | ⚠️ Limited               |
+| **Framework Integration** | ⭐⭐⭐ NestJS ready + Next.js ready                    | ⭐⭐⭐ tRPC/Next.js ecosystem | ⭐⭐⭐ NestJS default                                           | ⭐⭐ Formik                           | ⚠️ Limited               |
 | **Bundle Size**           | ~85KB (estimated)                                      | ~58KB                         | ~20KB                                                           | ~45KB                                 | ~145KB                   |
 | **Dependencies**          | ✅ Zero validator deps                                 | ✅ Zero                       | ✅ Zero validator deps                                          | ✅ Zero                               | ⚠️ Some                  |
 | **Learning Curve**        | ⭐⭐ Moderate                                          | ⭐ Easy                       | ⭐⭐ Moderate                                                   | ⭐ Easy                               | ⭐⭐ Moderate            |
@@ -506,7 +507,10 @@ What's your primary need?
 │  └─→ Zod (best ecosystem)
 │
 ├─ Most built-in validators
-│  └─→ reslib/validator (67 rules)
+│  └─→ reslib/validator (70+ rules)
+│
+├─ High-performance Batch/Bulk processing
+│  └─→ reslib/validator (`validateBulk`) ✅
 │
 ├─ Smallest bundle
 │  └─→ class-validator (20KB)
@@ -528,12 +532,13 @@ What's your primary need?
 
 1. ⭐⭐⭐ **Only library with dual API** (decorators + functional)
 2. ⭐⭐⭐ **Production-ready NestJS integration** (battle-tested)
-3. ⭐⭐⭐ **67 comprehensive built-in rules** (most complete)
-4. ⭐⭐⭐ **Built-in i18n** (zero configuration)
-5. ⭐⭐⭐ **Format validators** (15 built-in: Email, Phone, UUID, IP, MAC, etc.)
-6. ⭐⭐⭐ **File validation** (6 built-in rules)
-7. ⭐⭐⭐ **Context-aware** (first-class context support)
-8. ⭐⭐⭐ **Zero dependencies** (no external validators)
+3. ⭐⭐⭐ **70+ comprehensive built-in rules** (most complete)
+4. ⭐⭐⭐ **High-performance Batch Validation** (`validateBulk`)
+5. ⭐⭐⭐ **Built-in i18n** (zero configuration)
+6. ⭐⭐⭐ **Format validators** (15 built-in: Email, Phone, UUID, IP, MAC, etc.)
+7. ⭐⭐⭐ **File validation** (6 built-in rules)
+8. ⭐⭐⭐ **Context-aware** (first-class context support)
+9. ⭐⭐⭐ **Zero dependencies** (no external validators)
 
 **Best For:**
 
@@ -542,6 +547,7 @@ What's your primary need?
 - Projects needing comprehensive validation
 - Teams wanting one library for all validation needs
 - Applications requiring i18n
+- Batch processing and imports
 - File upload handling
 
 **Trade-offs:**
@@ -555,11 +561,11 @@ What's your primary need?
 ## 🔙 Back to Documentation
 
 - 📖 **[User Guide](./GUIDE.md)** - Complete documentation
-- 📋 **[Rules Reference](./RULES.md)** - All 67 validation rules
+- 📋 **[Rules Reference](./RULES.md)** - All validation rules
 - 🔧 **[API Reference](./API_REFERENCE.md)** - API documentation
 - 🏠 **[Back to README](../README.md)** - Main page
 
 ---
 
-**Last Updated:** 2025-12-15  
-**Status:** Production-ready with NestJS, Next.js integration in progress
+**Last Updated:** 2025-12-19  
+**Status:** Production-ready with NestJS and Next.js integration

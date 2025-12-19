@@ -19,20 +19,24 @@
       - [Parameters](#parameters-1)
       - [Returns](#returns-1)
       - [Examples](#examples-1)
-    - [Validator.registerRule()](#validatorregisterrule)
+    - [Validator.validateBulk()](#validatorvalidatebulk)
       - [Parameters](#parameters-2)
-      - [Rule Function Signature](#rule-function-signature)
-      - [Examples](#examples-2)
-    - [Validator.getRule()](#validatorgetrule)
-      - [Parameters](#parameters-3)
       - [Returns](#returns-2)
+      - [Examples](#examples-2)
+    - [Validator.registerRule()](#validatorregisterrule)
+      - [Parameters](#parameters-3)
+      - [Rule Function Signature](#rule-function-signature)
+      - [Examples](#examples-3)
+    - [Validator.getRule()](#validatorgetrule)
+      - [Parameters](#parameters-4)
+      - [Returns](#returns-3)
       - [Example](#example)
     - [Validator.getRules()](#validatorgetrules)
-      - [Returns](#returns-3)
+      - [Returns](#returns-4)
       - [Example](#example-1)
     - [Validator.hasRule()](#validatorhasrule)
-      - [Parameters](#parameters-4)
-      - [Returns](#returns-4)
+      - [Parameters](#parameters-5)
+      - [Returns](#returns-5)
       - [Example](#example-2)
   - [Types](#types)
     - [ValidatorOptions](#validatoroptions)
@@ -40,9 +44,6 @@
     - [ValidatorClassResult](#validatorclassresult)
     - [ValidatorRules](#validatorrules)
     - [ValidatorRuleResult](#validatorruleresult)
-  - [Decorators](#decorators)
-    - [Decorator Naming Convention](#decorator-naming-convention)
-    - [Example Decorators](#example-decorators)
   - [Error Handling](#error-handling)
     - [Validation Errors](#validation-errors)
     - [Class Validation Errors](#class-validation-errors)
@@ -90,17 +91,24 @@ type ValidatorResult<Context = unknown> =
 interface ValidatorSuccess<Context> {
   success: true;
   status: 'success';
+  name: 'ValidatorSuccessResult';
   value: any;
   context?: Context;
-  // ...
+  duration: number;
+  validatedAt: Date;
 }
 
 interface ValidatorError<Context> {
   success: false;
   status: 'error';
+  name: 'ValidatorError';
   message: string;
   ruleName: string;
-  // ...
+  value: any;
+  propertyName?: string;
+  fieldName?: string;
+  errorCode: string;
+  statusCode: number;
 }
 ```
 
@@ -187,17 +195,23 @@ type ValidatorClassResult<TClass, Context> =
 interface ValidatorClassSuccess<TClass, Context> {
   success: true;
   status: 'success';
+  name: 'ValidatorSuccessResult';
   data: TClass;
   context?: Context;
+  duration: number;
+  validatedAt: Date;
 }
 
 interface ValidatorClassError<TClass> {
   success: false;
   status: 'error';
+  name: 'ValidatorError';
   message: string;
-  errors: ValidatorClassItemError[];
+  errors: ValidatorError[];
   fieldErrors: Record<keyof TClass, string>;
   data: Partial<TClass>;
+  duration: number;
+  failedAt: Date;
 }
 ```
 
@@ -270,6 +284,85 @@ const result = await Validator.validateClass(UserDTO, {
   data: userData,
   context: { userId: currentUser.id, mode: 'strict' },
 });
+```
+
+---
+
+### Validator.validateBulk()
+
+**Validate an array of class instances in a single batch operation.**
+
+```typescript
+static async validateBulk<TClass extends ClassConstructor, Context = unknown>(
+  targetClass: TClass,
+  options: ValidatorBulkOptions<TClass, Context>
+): Promise<ValidatorBulkResult<TClass, Context>>
+```
+
+#### Parameters
+
+| Parameter           | Type       | Required | Description                                  |
+| :------------------ | :--------- | :------- | :------------------------------------------- |
+| `targetClass`       | `class`    | ✅       | Class constructor with validation decorators |
+| `options.data`      | `object[]` | ✅       | Array of data objects to validate            |
+| `options.context`   | `Context`  | ❌       | Optional validation context                  |
+| `options.i18n`      | `I18n`     | ❌       | i18n instance for translations               |
+| `options.startTime` | `number`   | ❌       | Custom start time (performance tracking)     |
+
+#### Returns
+
+```typescript
+Promise<ValidatorBulkResult<TClass, Context>>;
+
+type ValidatorBulkResult<TClass, Context> =
+  | ValidatorBulkSuccess<TClass, Context>
+  | ValidatorBulkError<TClass>;
+
+interface ValidatorBulkSuccess<TClass, Context> {
+  success: true;
+  status: 'success';
+  name: 'ValidatorSuccessResult';
+  data: TClass[];
+  duration: number;
+  validatedAt: Date;
+}
+
+interface ValidatorBulkError<TClass> {
+  success: false;
+  status: 'error';
+  name: 'ValidatorBulkError';
+  message: string;
+  failures: ValidatorBulkErrorItem[];
+  failureCount: number;
+  totalCount: number;
+  duration: number;
+}
+
+interface ValidatorBulkErrorItem extends ValidatorClassError<any> {
+  index: number; // 1-based index of the failed item
+}
+```
+
+#### Examples
+
+**Bulk validation with partial success:**
+
+```typescript
+const result = await Validator.validateBulk(User, {
+  data: [
+    { email: 'valid@test.com', name: 'Valid' },
+    { email: 'invalid', name: 'X' }, // Will fail
+  ],
+});
+
+if (result.success) {
+  processData(result.data);
+} else {
+  console.log(`Failed: ${result.failureCount} of ${result.totalCount}`);
+  result.failures.forEach((f) => {
+    console.log(`Item at index ${f.index} failed:`, f.fieldErrors);
+  });
+}
 ```
 
 ---
@@ -506,12 +599,43 @@ type ValidatorRules = Array<
 
 ### ValidatorRuleResult
 
-```typescript
+````typescript
 type ValidatorRuleResult =
   | true // Validation passed
   | string // Validation failed (error message)
   | Promise<true | string>; // Async validation
-```
+
+### ValidatorRuleConfig
+
+When providing rules complex rules, you can specify custom messages and parameters.
+
+```typescript
+interface ValidatorRuleConfig {
+  /** Parameters for the rule */
+  params?: any[];
+
+  /**
+   * Custom error message or translator function
+   * @since 1.2.0
+   */
+  message?: string | ((options: ValidatorOptions) => string);
+}
+
+// Example usage
+const rules: ValidatorRules = [
+  {
+    MinLength: {
+      params: [8],
+      message: ({ fieldName, ruleParams }) =>
+        `${fieldName} must be at least ${ruleParams[0]} characters long`
+    }
+  }
+];
+````
+
+---
+
+````
 
 ---
 
@@ -557,7 +681,7 @@ All 67 validation rules have corresponding decorators.
 @AllOf(...rules)
 @ArrayOf(...rules)
 @ValidateNested(Class)
-```
+````
 
 📋 **[See All Rules →](./RULES.md)**
 
@@ -573,7 +697,7 @@ const result = await Validator.validate({
   rules: ['Required', 'Email'],
 });
 
-if (!result.isValid) {
+if (!result.success) {
   console.error(result.message); // "Must be a valid email"
 }
 ```
@@ -585,9 +709,9 @@ const result = await Validator.validateClass(UserDTO, {
   data: invalidData,
 });
 
-if (!result.isValid) {
+if (!result.success) {
   result.errors.forEach((error) => {
-    console.error(`${error.field}: ${error.message}`);
+    console.error(`${error.propertyName}: ${error.message}`);
   });
 }
 ```

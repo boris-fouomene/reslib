@@ -299,7 +299,7 @@ export class ValidationPipe implements PipeTransform {
 
       throw new BadRequestException({
         statusCode: 400,
-        message: 'Validation failed',
+        message: result.message,
         errors: result.errors,
         timestamp: new Date().toISOString(),
       });
@@ -1011,6 +1011,26 @@ export class AppModule {}
 For a complete working example, see:
 
 - **FinLedger AI Shared Package** - Production implementation reference
+
+---
+
+## 📦 Bulk Operations
+
+For endpoints that accept arrays of data, you can use `Validator.validateBulk()` to get a performance boost and better error reporting.
+
+```typescript
+@Post('import')
+async importData(@Body() data: any[]) {
+  const result = await Validator.validateBulk(CreateUserDto, { data });
+
+  if (!result.success) {
+    // Returns failure statistics and specific row errors
+    throw new BadRequestException(result);
+  }
+
+  return this.usersService.bulkCreate(result.data);
+}
+```
 
 ---
 

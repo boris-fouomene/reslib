@@ -30,9 +30,10 @@ This directory contains comprehensive documentation for `reslib/validator`.
 **Contents:**
 
 - Core concepts and architecture
-- All 67 validation rules (detailed documentation)
+- All 70+ validation rules (detailed documentation)
+- Batch validation (`validateBulk`)
 - Advanced usage patterns
-- Custom rule development
+- Custom rule & message development
 - Decorator patterns
 - TypeScript integration
 - Best practices
@@ -44,7 +45,7 @@ This directory contains comprehensive documentation for `reslib/validator`.
 
 ### **[RULES.md](./RULES.md)** - Validation Rules Reference
 
-**Quick reference for all 67 validation rules** (~500 lines)
+**Quick reference for all 70+ validation rules** (~500 lines)
 
 **Contents:**
 
@@ -68,6 +69,7 @@ This directory contains comprehensive documentation for `reslib/validator`.
 
 - `Validator.validate()` - detailed API
 - `Validator.validateClass()` - class validation
+- `Validator.validateBulk()` - batch validation
 - `Validator.registerRule()` - custom rules
 - All helper methods
 - Type definitions
@@ -115,7 +117,9 @@ README.md ←―――――― You are here!
 | **Learn a specific rule**        | [GUIDE.md](./GUIDE.md)                 | Rule categories    |
 | **Use decorators**               | [README.md](../README.md)              | Decorator examples |
 | **Validate a class**             | [API_REFERENCE.md](./API_REFERENCE.md) | validateClass()    |
+| **Validate an array/batch**      | [GUIDE.md](./GUIDE.md)                 | Batch Validation   |
 | **Create custom rules**          | [GUIDE.md](./GUIDE.md)                 | Custom Rules       |
+| **Custom error messages**        | [GUIDE.md](./GUID.md)                  | Custom Messages    |
 | **Check method signatures**      | [API_REFERENCE.md](./API_REFERENCE.md) | API Reference      |
 | **See common patterns**          | [README.md](../README.md)              | Common Patterns    |
 | **Troubleshoot issues**          | [GUIDE.md](./GUIDE.md)                 | Troubleshooting    |
@@ -153,7 +157,7 @@ You can navigate freely between documents!
 
 ## ✅ Documentation Quality
 
-- ✅ **100% Complete** - All 67 rules documented
+- ✅ **100% Complete** - All 70+ rules documented
 - ✅ **Production-Ready** - Professional quality
 - ✅ **Well-Structured** - Clear hierarchy
 - ✅ **Interconnected** - Easy navigation

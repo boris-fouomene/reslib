@@ -1,6 +1,6 @@
 # Validation Rules Reference
 
-**Complete reference for all 67 validation rules in reslib/validator**
+**Complete reference for all 70+ validation rules in reslib/validator**
 
 🔙 **[Back to README](../README.md)** | 📖 **[User Guide](./GUIDE.md)** | 🔧 **[API Reference](./API_REFERENCE.md)**
 
@@ -386,6 +386,24 @@ const result = await Validator.validate({
 });
 ```
 
+### Configuration Format (v1.2.0)
+
+For custom messages or advanced options:
+
+```typescript
+const result = await Validator.validate({
+  value: 'short',
+  rules: [
+    {
+      MinLength: {
+        params: [8],
+        message: ({ fieldName }) => `${fieldName} is way too short`,
+      },
+    },
+  ],
+});
+```
+
 ### Decorator Format
 
 ```typescript
@@ -408,6 +426,18 @@ class User {
 | `@IsRequired()` | `'Required'`  | `rules: ['Required']`         |
 | `@IsEmail()`    | `'Email'`     | `rules: ['Email']`            |
 | `@MinLength(8)` | `'MinLength'` | `rules: [{ MinLength: [8] }]` |
+
+---
+
+## Batch Validation
+
+The library provides a specialized method for validating arrays of data:
+
+```typescript
+const result = await Validator.validateBulk(UserDto, { data: items });
+```
+
+📖 **[Learn More →](./GUIDE.md#batch-validation)**
 
 📖 **[Learn More →](./GUIDE.md#decorator-vs-rule-name)**
 

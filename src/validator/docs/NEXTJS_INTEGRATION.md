@@ -14,7 +14,8 @@ While `reslib/validator` handles the actual data validation, the integration wit
 ✅ **React 19** - Compatible with `useActionState` hook  
 ✅ **Client & Server** - Shared validation rules  
 ✅ **Type Safety** - Full TypeScript support  
-✅ **Zero Config** - 67+ built-in rules ready to use
+✅ **Zero Config** - 70+ built-in rules ready to use
+✅ **Bulk Imports** - Easy CSV/JSON batch processing with `validateBulk`
 
 ---
 
@@ -165,7 +166,7 @@ export const updateProfile = formActionFactory(
 
 Use `reslib/validator` directly in API routes or Server Components:
 
-```typescript
+````typescript
 // app/api/webhook/route.ts
 import { Validator } from 'reslib/validator';
 
@@ -183,6 +184,26 @@ export async function POST(req: Request) {
 
   // ...
 }
+
+### Bulk Data Processing
+
+For handling file imports (CSV, JSON) in Next.js Server Actions:
+
+```typescript
+export async function importUsers(data: any[]) {
+  const result = await Validator.validateBulk(UserDto, { data });
+
+  if (!result.success) {
+    return {
+      error: result.message,
+      failures: result.failures.map(f => ({ row: f.index, errors: f.fieldErrors }))
+    };
+  }
+
+  return { success: true, validatedCount: result.data.length };
+}
+````
+
 ```
 
 ---
@@ -193,3 +214,4 @@ export async function POST(req: Request) {
 2.  **Built-in Rules**: 67+ rules mean you don't need to write custom regex for Phones, IPs, UUIDs, etc.
 3.  **i18n**: Zero-config internationalization for error messages.
 4.  **No Schema Duplication**: Define rules in a JSON-serializable format that can be shared or generated dynamically.
+```

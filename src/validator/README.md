@@ -3,7 +3,7 @@
 [![npm version](https://img.shields.io/npm/v/reslib.svg)](https://www.npmjs.com/package/reslib)
 [![License](https://img.shields.io/npm/l/reslib.svg)](https://github.com/your-org/reslib/blob/main/LICENSE)
 
-A powerful, type-safe validation library with 67+ built-in rules and full TypeScript support.
+A powerful, type-safe validation library with 70+ built-in rules and full TypeScript support.
 
 ---
 
@@ -69,16 +69,20 @@ if (result.success) {
 - **[⚡ Next.js Integration](./docs/NEXTJS_INTEGRATION.md)** - Modern Server Actions guide
 - **[📋 Rules Reference](./docs/RULES.md)** - All 67 validation rules
 - **[🔧 API Reference](./docs/API_REFERENCE.md)** - Detailed API documentation
+- **[📦 Batch Validation](./docs/GUIDE.md#batch-validation)** - Validating arrays of objects
+- **[💬 Custom Messages](./docs/GUIDE.md#custom-messages)** - Dynamic error messages
 - **[🗺️ Documentation Index](./docs/INDEX.md)** - Navigation guide
 
 ---
 
 ## ✨ Features
 
-- ✅ **67+ Built-in Rules** - Email, URL, phone, dates, files, and more
+- ✅ **70+ Built-in Rules** - Email, URL, phone, dates, files, and more
 - ✅ **Type-Safe** - Full TypeScript support
+- ✅ **Batch Validation** - High-performance parallel array validation
 - ✅ **Decorator Support** - Clean, declarative validation
 - ✅ **Async Validation** - Built-in async rule support
+- ✅ **Custom Messages** - Dynamic functions for error messages
 - ✅ **Custom Rules** - Easy to extend
 - ✅ **i18n Ready** - Built-in internationalization
 - ✅ **Nested Validation** - Complex object structures
@@ -109,6 +113,17 @@ class User {
   )
   password: string;
 }
+```
+
+### Batch (Bulk) Validation
+
+```typescript
+const result = await Validator.validateBulk(UserDto, {
+  data: [
+    { name: 'John', email: 'john@example.com' },
+    { name: 'Alice', email: 'alice@example.com' },
+  ],
+});
 ```
 
 ### File Upload

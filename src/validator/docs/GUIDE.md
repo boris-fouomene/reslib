@@ -1,8 +1,8 @@
 # reslib/validator - Complete Documentation
 
-**Version:** 1.1.0  
+**Version:** 1.2.0  
 **Status:** ✅ Complete and Production-Ready  
-**Last Updated:** 2025-12-15
+**Last Updated:** 2025-12-19
 
 ---
 
@@ -28,8 +28,10 @@
   - [Object Rules](#object-rules) - 1 rule
   - [Multi Rules](#multi-rules) - 3 rules
   - [Class Rules](#target-rules) - 1 rule
+- [Batch Validation](#batch-validation)
 - [Advanced Usage](#advanced-usage)
   - [Custom Rules](#custom-rules)
+  - [Custom Messages](#custom-messages)
   - [Module Augmentation](#module-augmentation)
   - [Async Validation](#async-validation)
   - [Context Usage](#context-usage)
@@ -54,6 +56,7 @@ The `reslib/validator` is an enterprise-grade, type-safe validation system for T
 - ✅ **Rule Composition**: Combine multiple validation rules (OneOf, AllOf, ArrayOf)
 - ✅ **Nested Validation**: Validate complex nested object structures
 - ✅ **Context Propagation**: Pass context data through validation hierarchy
+- ✅ **Batch Processing**: Industry-leading performance with `validateBulk` for arrays
 
 ---
 
@@ -71,7 +74,21 @@ import { Validator } from 'reslib/validator';
 // Simple validation
 const result = await Validator.validate({
   value: 'test@example.com',
-  rules: ['IsRequired', 'IsEmail'],
+  rules: ['Required', 'Email', { MaxLength: [100] }],
+});
+
+// Configuration Format (With custom messages)
+const result2 = await Validator.validate({
+  value: 'short',
+  rules: [
+    {
+      MinLength: {
+        params: [8],
+        message: ({ propertyName }) => `${propertyName} is too short!`,
+      },
+    },
+  ],
+  propertyName: 'Password',
 });
 
 if (result.success) {
@@ -106,8 +123,12 @@ class User {
 }
 
 const result = await Validator.validateClass(User, {
-  email: 'user@example.com',
-  name: 'John',
+  data: { email: 'user@example.com', name: 'John' },
+});
+
+// Batch validation
+const results = await Validator.validateBulk(User, {
+  data: [{ email: 'a@a.com' }, { email: 'b@b.com' }],
 });
 ```
 
@@ -123,6 +144,7 @@ The main `Validator` class provides static methods for validation:
 | ----------------- | ----------------------- | ------------------------------------ |
 | `validate()`      | Validate a single value | `Promise<ValidatorResult>`           |
 | `validateClass()` | Validate class instance | `Promise<ValidatorClassResult>`      |
+| `validateBulk()`  | Validate array of data  | `Promise<ValidatorBulkResult>`       |
 | `registerRule()`  | Register custom rule    | `void`                               |
 | `getRule()`       | Get registered rule     | `ValidatorRuleFunction \| undefined` |
 | `getRules()`      | Get all rules           | `ValidatorRuleFunctionsMap`          |
@@ -176,8 +198,8 @@ rules: ['Required']; // ✅ This works!
 | Decorator         | Rule Name     | Usage                         |
 | ----------------- | ------------- | ----------------------------- |
 | `@IsRequired()`   | `'Required'`  | `rules: ['Required']`         |
-| `@IsEmpty()`      | `'Empty'`     | `rules: ['Empty']`            |
-| `@IsOptional()`   | `'Optional'`  | `rules: ['Optional']`         |
+| `@IsEmail()`      | `'Email'`     | `rules: ['Email']`            |
+| `@MinLength(8)`   | `'MinLength'` | `rules: [{ MinLength: [8] }]` |
 | `@IsNullable()`   | `'Nullable'`  | `rules: ['Nullable']`         |
 | `@IsBoolean()`    | `'Boolean'`   | `rules: ['Boolean']`          |
 | `@IsNumber()`     | `'Number'`    | `rules: ['Number']`           |
@@ -187,6 +209,12 @@ rules: ['Required']; // ✅ This works!
 | `@IsNumberGTE(n)` | `'NumberGTE'` | `rules: [{ NumberGTE: [n] }]` |
 
 **Rule:** Most decorators drop the `"Is"` prefix for the rule name, but not always! Always check the second parameter of `buildRuleDecorator()` in the source code.
+
+### Batch Validation
+
+Batch validation is supported via `Validator.validateBulk(Class, { data: [] })`.
+
+📖 **[Learn More →](./GUIDE.md#batch-validation)**
 
 ---
 
@@ -288,6 +316,26 @@ rules: [
 ];
 ```
 
+#### 5. Configuration Format (Advanced)
+
+Since version 1.2.0, you can provide a configuration object to specify both parameters and custom messages.
+
+```typescript
+rules: [
+  {
+    MinLength: {
+      params: [8],
+      message: 'Must be at least 8 chars',
+    },
+  },
+  {
+    Email: {
+      message: ({ value, fieldName }) => `${fieldName} ("${value}") is invalid`,
+    },
+  },
+];
+```
+
 ### Return Values
 
 Validation functions return:
@@ -305,6 +353,7 @@ Validation functions return:
 {
   success: true,
   status: 'success',
+  name: 'ValidatorSuccessResult',
   value: any,
   validatedAt: Date,
   duration: number
@@ -314,11 +363,17 @@ Validation functions return:
 {
   success: false,
   status: 'error',
+  name: 'ValidatorError',
   message: string,
   ruleName: string,
+  propertyName: string,
+  fieldName: string,
+  value: any,
+  params: any[],
+  errorCode: string,
+  statusCode: number,
   failedAt: Date,
-  duration: number,
-  // ... other error details (e.g., code, severity)
+  duration: number
 }
 
 ```
@@ -5118,7 +5173,38 @@ const result = await Validator.validate({
 });
 ```
 
-### Module Augmentation
+#### Custom Messages
+
+Validator rules support custom error messages via the `message` property in rule configuration.
+
+#### Formatting Options
+
+1. **Static String**: `{ Required: { message: 'This is required' } }`
+2. **Dynamic Function**: `{ MinLength: { params: [8], message: ({ fieldName, ruleParams }) => `${fieldName} must be at least ${ruleParams[0]} chars` } }`
+
+#### The Message Function
+
+The message function receives a `ValidatorOptions` object containing:
+
+- `value`: The current field value
+- `fieldName`: The name of the field
+- `ruleParams`: Parameters passed to the rule
+- `context`: The validation context
+- `i18n`: The translator instance
+
+Example of i18n in message:
+
+```typescript
+{
+  Required: {
+    message: ({ i18n }) => i18n.t('my.custom.key');
+  }
+}
+```
+
+---
+
+## Module Augmentation
 
 **Extend TypeScript types for custom rules with full type safety.**
 
@@ -5417,6 +5503,86 @@ const result = await Validator.validate({
 declare module 'reslib/validator' {
   interface ValidatorRuleParamTypes {
     IsPositive: [];
+  }
+}
+```
+
+---
+
+## Batch Validation
+
+The `Validator.validateBulk()` method allows you to validate an array of objects against a class schema in a single batch.
+
+### Features
+
+- **Blazing Fast**: Uses `Promise.all` for concurrent validation of all items.
+- **Ordered Results**: Failure reports and success data maintain the original input order.
+- **Detailed Failures**: Each failed item provided with its index (1-based) and specific errors.
+- **Smart Messaging**: Generates localized summaries like "All items failed" or "2 of 10 items failed".
+
+### Example
+
+```typescript
+const result = await Validator.validateBulk(UserDto, {
+  data: myDataArray,
+  context: { appMode: 'production' },
+});
+
+if (result.success) {
+  // result is ValidatorBulkSuccess
+  console.log(`Validated ${result.data.length} items`);
+} else {
+  // result is ValidatorBulkError
+  console.log(result.message); // e.g., "5 of 100 items failed validation"
+  console.log(`Failure count: ${result.failureCount}`);
+
+  // Specific failures
+  result.failures.forEach((fail) => {
+    console.log(`Item at index ${fail.index} had errors:`, fail.fieldErrors);
+  });
+}
+```
+
+---
+
+## Custom Messages
+
+Reslib Validator supports highly flexible error message customization.
+
+### 1. Static Messages
+
+Provide a simple string in the rule configuration.
+
+```typescript
+{
+  Required: {
+    message: 'Username is mandatory';
+  }
+}
+```
+
+### 2. Dynamic Message Functions (v1.2.0)
+
+Use a function to generate messages based on current validation context.
+
+```typescript
+{
+  MinLength: {
+    params: [8],
+    message: ({ fieldName, ruleParams, value }) =>
+      `${fieldName} must be at least ${ruleParams[0]} characters. You provided ${value.length}.`
+  }
+}
+```
+
+### 3. Translator Integration
+
+Access the i18n instance within the message function for full localization.
+
+```typescript
+{
+  Required: {
+    message: ({ i18n }) => i18n.t('errors.required_field');
   }
 }
 ```
