@@ -78,7 +78,7 @@ describe('Format Validation Rules', () => {
       const instance = new TestClass();
       instance.email = 'test@example.com';
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(true);
@@ -93,7 +93,7 @@ describe('Format Validation Rules', () => {
       const instance = new TestClass();
       instance.email = 'invalid-email';
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(false);
@@ -157,7 +157,7 @@ describe('Format Validation Rules', () => {
       const instance = new TestClass();
       instance.website = 'https://example.com';
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(true);
@@ -172,7 +172,7 @@ describe('Format Validation Rules', () => {
       const instance = new TestClass();
       instance.website = 'not-a-url';
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(false);
@@ -238,7 +238,7 @@ describe('Format Validation Rules', () => {
       const instance = new TestClass();
       instance.phone = '+1 202 555 0185';
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(true);
@@ -253,7 +253,7 @@ describe('Format Validation Rules', () => {
       const instance = new TestClass();
       instance.phone = 'invalid-phone';
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(false);
@@ -303,7 +303,7 @@ describe('Format Validation Rules', () => {
       const instance = new TestClass();
       instance.contact = 'test@example.com';
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(true);
@@ -318,7 +318,7 @@ describe('Format Validation Rules', () => {
       const instance = new TestClass();
       instance.contact = '+1 202 555 0185';
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(true);
@@ -381,7 +381,7 @@ describe('Format Validation Rules', () => {
       const instance = new TestClass();
       instance.filename = 'document.pdf';
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(true);
@@ -396,7 +396,7 @@ describe('Format Validation Rules', () => {
       const instance = new TestClass();
       instance.filename = 'invalid<file>.txt';
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(false);
@@ -454,7 +454,7 @@ describe('Format Validation Rules', () => {
       const instance = new TestClass();
       instance.id = '123e4567-e89b-12d3-a456-426614174000';
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(true);
@@ -469,7 +469,7 @@ describe('Format Validation Rules', () => {
       const instance = new TestClass();
       instance.id = 'invalid-uuid';
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(false);
@@ -533,7 +533,7 @@ describe('Format Validation Rules', () => {
       const instance = new TestClass();
       instance.data = '{"key": "value"}';
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(true);
@@ -548,7 +548,7 @@ describe('Format Validation Rules', () => {
       const instance = new TestClass();
       instance.data = '{invalid}';
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(false);
@@ -606,7 +606,7 @@ describe('Format Validation Rules', () => {
       const instance = new TestClass();
       instance.encodedData = 'SGVsbG8gV29ybGQ=';
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(true);
@@ -621,7 +621,7 @@ describe('Format Validation Rules', () => {
       const instance = new TestClass();
       instance.encodedData = 'invalid-base64!';
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(false);
@@ -688,7 +688,7 @@ describe('Format Validation Rules', () => {
       const instance = new TestClass();
       instance.color = '#ff0000';
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(true);
@@ -703,7 +703,7 @@ describe('Format Validation Rules', () => {
       const instance = new TestClass();
       instance.color = 'invalid-color';
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(false);
@@ -764,7 +764,7 @@ describe('Format Validation Rules', () => {
       const instance = new TestClass();
       instance.cardNumber = '4111111111111111';
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(true);
@@ -779,7 +779,7 @@ describe('Format Validation Rules', () => {
       const instance = new TestClass();
       instance.cardNumber = 'invalid-card';
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(false);
@@ -846,7 +846,7 @@ describe('Format Validation Rules', () => {
       const instance = new TestClass();
       instance.ipAddress = '192.168.1.1';
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(true);
@@ -861,7 +861,7 @@ describe('Format Validation Rules', () => {
       const instance = new TestClass();
       instance.ipAddress = 'invalid-ip';
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(false);
@@ -926,7 +926,7 @@ describe('Format Validation Rules', () => {
       const instance = new TestClass();
       instance.macAddress = '00:11:22:33:44:55';
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(true);
@@ -941,7 +941,7 @@ describe('Format Validation Rules', () => {
       const instance = new TestClass();
       instance.macAddress = 'invalid-mac';
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(false);
@@ -1005,7 +1005,7 @@ describe('Format Validation Rules', () => {
       const instance = new TestClass();
       instance.ssn = '123-45-6789';
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(true);
@@ -1020,7 +1020,7 @@ describe('Format Validation Rules', () => {
       const instance = new TestClass();
       instance.ssn = 'invalid-ssn';
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(false);
@@ -1078,7 +1078,7 @@ describe('Format Validation Rules', () => {
       const instance = new TestClass();
       instance.id = '507f1f77bcf86cd799439011';
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(true);
@@ -1093,7 +1093,7 @@ describe('Format Validation Rules', () => {
       const instance = new TestClass();
       instance.id = 'invalid-id';
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(false);
@@ -1150,7 +1150,7 @@ describe('Format Validation Rules', () => {
       const instance = new TestClass();
       instance.hex = '1a2b3c';
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(true);
@@ -1165,7 +1165,7 @@ describe('Format Validation Rules', () => {
       const instance = new TestClass();
       instance.hex = '1a2b3g';
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(false);

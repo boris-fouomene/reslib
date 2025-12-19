@@ -196,7 +196,7 @@ describe('Enum Validation Rules', () => {
       const instance = new TestClass();
       instance.status = Status.ACTIVE;
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(true);
@@ -211,7 +211,7 @@ describe('Enum Validation Rules', () => {
       const instance = new TestClass();
       instance.status = 'active' as any;
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(true);
@@ -226,7 +226,7 @@ describe('Enum Validation Rules', () => {
       const instance = new TestClass();
       instance.priority = 1;
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(true);
@@ -241,7 +241,7 @@ describe('Enum Validation Rules', () => {
       const instance = new TestClass();
       instance.status = 'invalid' as any;
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(false);

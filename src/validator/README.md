@@ -48,7 +48,7 @@ class UserRegistration {
   password: string;
 }
 
-const result = await Validator.validateTarget(UserRegistration, {
+const result = await Validator.validateClass(UserRegistration, {
   data: { email: 'user@example.com', password: 'password123' },
 });
 

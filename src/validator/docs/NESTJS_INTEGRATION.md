@@ -8,20 +8,20 @@
 
 ## 🎯 Overview
 
-This guide shows you how to integrate **reslib/validator** with **NestJS** by creating a custom `ValidationPipe` that uses `Validator.validateTarget()`.
+This guide shows you how to integrate **reslib/validator** with **NestJS** by creating a custom `ValidationPipe` that uses `Validator.validateClass()`.
 
 ### Architecture
 
 ```
 Your NestJS App
 ├── Custom ValidationPipe (you create this)
-│   └── Calls Validator.validateTarget()
+│   └── Calls Validator.validateClass()
 │       └── From reslib/validator ✨
 ├── DTOs with reslib decorators
 └── Controllers using the pipe
 ```
 
-**Key Point:** You create the `ValidationPipe` in your project. reslib/validator provides the `Validator.validateTarget()` method that does the actual validation.
+**Key Point:** You create the `ValidationPipe` in your project. reslib/validator provides the `Validator.validateClass()` method that does the actual validation.
 
 ---
 
@@ -35,7 +35,7 @@ npm install reslib
 
 ### Step 2: Create ValidationPipe
 
-Create a custom pipe in your project that uses `Validator.validateTarget()`:
+Create a custom pipe in your project that uses `Validator.validateClass()`:
 
 ```typescript
 // src/pipes/validation.pipe.ts
@@ -59,7 +59,7 @@ export class ValidationPipe implements PipeTransform {
     }
 
     // Validate using reslib/validator
-    const result = await Validator.validateTarget(metatype, {
+    const result = await Validator.validateClass(metatype, {
       data: value,
     });
 
@@ -149,7 +149,7 @@ export class UsersController {
    ↓
 3. Your ValidationPipe.transform() is called
    ↓
-4. Pipe calls Validator.validateTarget(DTO, { data })
+4. Pipe calls Validator.validateClass(DTO, { data })
    ↓
 5. reslib/validator validates using DTO decorators
    ↓
@@ -162,7 +162,7 @@ export class UsersController {
 | Component                            | Source               | Purpose                            |
 | ------------------------------------ | -------------------- | ---------------------------------- |
 | `ValidationPipe`                     | **Your code**        | NestJS pipe that integrates reslib |
-| `Validator.validateTarget()`         | **reslib/validator** | Validates data against DTO class   |
+| `Validator.validateClass()`          | **reslib/validator** | Validates data against DTO class   |
 | DTO decorators (`@IsRequired`, etc.) | **reslib/validator** | Define validation rules            |
 
 ---
@@ -290,7 +290,7 @@ export class ValidationPipe implements PipeTransform {
     const dataToValidate = Array.isArray(value) ? value : value;
 
     // Validate using reslib/validator
-    const result = await Validator.validateTarget(metatype, {
+    const result = await Validator.validateClass(metatype, {
       data: dataToValidate,
     });
 
@@ -344,7 +344,7 @@ export class ValidationPipe implements PipeTransform {
     }
 
     // Pass i18n instance to validator
-    const result = await Validator.validateTarget(metatype, {
+    const result = await Validator.validateClass(metatype, {
       data: value,
       i18n: this.i18n, // reslib/validator will use this for error messages
     });
@@ -393,7 +393,7 @@ export class ValidationPipe implements PipeTransform {
     const context = this.getContext();
 
     // Validate with context
-    const result = await Validator.validateTarget(metatype, {
+    const result = await Validator.validateClass(metatype, {
       data: value,
       context: {
         userId: context?.user?.id,
@@ -888,7 +888,7 @@ async transform(value: any, metadata: ArgumentMetadata) {
   }
 
   // Handle both single objects and arrays
-  const result = await Validator.validateTarget(metatype, {
+  const result = await Validator.validateClass(metatype, {
     data: value,  // Works for both object and array
   });
 
@@ -936,7 +936,7 @@ export class ValidationPipe implements PipeTransform {
 
     try {
       // Validate using reslib/validator
-      const result = await Validator.validateTarget(metatype, {
+      const result = await Validator.validateClass(metatype, {
         data: value,
       });
 
@@ -1014,6 +1014,6 @@ For a complete working example, see:
 
 ---
 
-**Integration Type:** Custom ValidationPipe using `Validator.validateTarget()`
+**Integration Type:** Custom ValidationPipe using `Validator.validateClass()`
 **Framework:** NestJS v10+
 **Last Updated:** 2025-12-15

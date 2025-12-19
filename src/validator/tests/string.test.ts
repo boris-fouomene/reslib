@@ -105,7 +105,7 @@ describe('String Validation Rules', () => {
           text: string = '';
         }
 
-        const result = await Validator.validateTarget(TestClass, {
+        const result = await Validator.validateClass(TestClass, {
           data: {
             text: 'hello',
           },
@@ -120,7 +120,7 @@ describe('String Validation Rules', () => {
           text: string = '';
         }
 
-        const result = await Validator.validateTarget(TestClass, {
+        const result = await Validator.validateClass(TestClass, {
           data: {
             text: 123,
           },
@@ -136,7 +136,7 @@ describe('String Validation Rules', () => {
           text: string = '';
         }
 
-        const result = await Validator.validateTarget(TestClass, {
+        const result = await Validator.validateClass(TestClass, {
           data: {
             text: '',
           },
@@ -231,7 +231,7 @@ describe('String Validation Rules', () => {
           title: string = '';
         }
 
-        const result = await Validator.validateTarget(TestClass, {
+        const result = await Validator.validateClass(TestClass, {
           data: {
             title: 'My Title',
           },
@@ -246,7 +246,7 @@ describe('String Validation Rules', () => {
           title: string = '';
         }
 
-        const result = await Validator.validateTarget(TestClass, {
+        const result = await Validator.validateClass(TestClass, {
           data: {
             title: '',
           },
@@ -261,7 +261,7 @@ describe('String Validation Rules', () => {
           title: string = '';
         }
 
-        const result = await Validator.validateTarget(TestClass, {
+        const result = await Validator.validateClass(TestClass, {
           data: {
             title: null,
           },
@@ -314,7 +314,7 @@ describe('String Validation Rules', () => {
           username: string = '';
         }
 
-        const result = await Validator.validateTarget(TestClass, {
+        const result = await Validator.validateClass(TestClass, {
           data: {
             username: 'john_doe',
           },
@@ -329,7 +329,7 @@ describe('String Validation Rules', () => {
           username: string = '';
         }
 
-        const result = await Validator.validateTarget(TestClass, {
+        const result = await Validator.validateClass(TestClass, {
           data: {
             username: 'bob',
           },
@@ -382,7 +382,7 @@ describe('String Validation Rules', () => {
           bio: string = '';
         }
 
-        const result = await Validator.validateTarget(TestClass, {
+        const result = await Validator.validateClass(TestClass, {
           data: {
             bio: 'My bio',
           },
@@ -397,7 +397,7 @@ describe('String Validation Rules', () => {
           bio: string = '';
         }
 
-        const result = await Validator.validateTarget(TestClass, {
+        const result = await Validator.validateClass(TestClass, {
           data: {
             bio: 'This is a very long bio',
           },
@@ -476,7 +476,7 @@ describe('String Validation Rules', () => {
           code: string = '';
         }
 
-        const result = await Validator.validateTarget(TestClass, {
+        const result = await Validator.validateClass(TestClass, {
           data: {
             code: 'abc123',
           },
@@ -491,7 +491,7 @@ describe('String Validation Rules', () => {
           code: string = '';
         }
 
-        const result = await Validator.validateTarget(TestClass, {
+        const result = await Validator.validateClass(TestClass, {
           data: {
             code: 'ab',
           },
@@ -506,7 +506,7 @@ describe('String Validation Rules', () => {
           code: string = '';
         }
 
-        const result = await Validator.validateTarget(TestClass, {
+        const result = await Validator.validateClass(TestClass, {
           data: {
             code: 'abcdefghij',
           },
@@ -611,7 +611,7 @@ describe('String Validation Rules', () => {
           apiUrl: string = '';
         }
 
-        const result = await Validator.validateTarget(ApiConfig, {
+        const result = await Validator.validateClass(ApiConfig, {
           data: {
             apiUrl: 'https://api.example.com',
           },
@@ -626,7 +626,7 @@ describe('String Validation Rules', () => {
           apiUrl: string = '';
         }
 
-        const result = await Validator.validateTarget(ApiConfig, {
+        const result = await Validator.validateClass(ApiConfig, {
           data: {
             apiUrl: 'ftp://files.example.com',
           },
@@ -641,7 +641,7 @@ describe('String Validation Rules', () => {
           environmentName: string = '';
         }
 
-        const result = await Validator.validateTarget(Environment, {
+        const result = await Validator.validateClass(Environment, {
           data: {
             environmentName: 'staging-server-01',
           },
@@ -750,7 +750,7 @@ describe('String Validation Rules', () => {
           imageFile: string = '';
         }
 
-        const result = await Validator.validateTarget(FileUpload, {
+        const result = await Validator.validateClass(FileUpload, {
           data: {
             imageFile: 'photo.jpg',
           },
@@ -765,7 +765,7 @@ describe('String Validation Rules', () => {
           imageFile: string = '';
         }
 
-        const result = await Validator.validateTarget(FileUpload, {
+        const result = await Validator.validateClass(FileUpload, {
           data: {
             imageFile: 'document.pdf',
           },
@@ -785,7 +785,7 @@ describe('String Validation Rules', () => {
         username: string = '';
       }
 
-      const result = await Validator.validateTarget(Profile, {
+      const result = await Validator.validateClass(Profile, {
         data: {
           username: 'john_doe',
         },
@@ -802,7 +802,7 @@ describe('String Validation Rules', () => {
         username: string = '';
       }
 
-      const result = await Validator.validateTarget(Profile, {
+      const result = await Validator.validateClass(Profile, {
         data: {
           username: 'bob',
         },
@@ -826,7 +826,7 @@ describe('String Validation Rules', () => {
         filename: string = '';
       }
 
-      const result = await Validator.validateTarget(Document, {
+      const result = await Validator.validateClass(Document, {
         data: {
           title: 'My Document',
           content: 'Document content...',

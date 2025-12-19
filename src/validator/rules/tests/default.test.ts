@@ -86,7 +86,7 @@ describe('Default Validation Rules', () => {
       const instance = new TestClass();
       instance.name = 'John';
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(true);
@@ -101,7 +101,7 @@ describe('Default Validation Rules', () => {
       const instance = new TestClass();
       instance.name = null as any;
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(false);
@@ -117,7 +117,7 @@ describe('Default Validation Rules', () => {
       const instance = new TestClass();
       // name is undefined
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(false);
@@ -193,7 +193,7 @@ describe('Default Validation Rules', () => {
       const instance = new TestClass();
       instance.name = '';
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(true); // Should pass because Empty allows empty and skips Required
@@ -209,7 +209,7 @@ describe('Default Validation Rules', () => {
       const instance = new TestClass();
       instance.name = 'John';
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(true);
@@ -247,7 +247,7 @@ describe('Default Validation Rules', () => {
       const instance = new TestClass();
       instance.name = null as any;
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(true); // Should pass because Nullable allows null and skips Required
@@ -263,7 +263,7 @@ describe('Default Validation Rules', () => {
       const instance = new TestClass();
       instance.name = '';
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(false); // Should fail because Required fails for empty string
@@ -302,7 +302,7 @@ describe('Default Validation Rules', () => {
       const instance = new TestClass();
       // name is undefined
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(true); // Should pass because Optional allows undefined and skips validation
@@ -318,7 +318,7 @@ describe('Default Validation Rules', () => {
       const instance = new TestClass();
       instance.name = '';
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(false); // Should fail because Required fails for empty string
@@ -340,7 +340,7 @@ describe('Default Validation Rules', () => {
         // name is omitted
       };
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(true); // Should pass because name is optional and omitted

@@ -136,13 +136,13 @@ describe('ArrayOf Validation Rules', () => {
         @ArrayOf(['Email']) emails: string[] = [];
       }
 
-      const ok = await Validator.validateTarget(TestEntity, {
+      const ok = await Validator.validateClass(TestEntity, {
         data: { emails: ['a@b.com', 'c@d.com'] },
         i18n,
       });
       expect(ok.success).toBe(true);
 
-      const ko = await Validator.validateTarget(TestEntity, {
+      const ko = await Validator.validateClass(TestEntity, {
         data: { emails: ['not-email', 'c@d.com'] },
         i18n,
       });

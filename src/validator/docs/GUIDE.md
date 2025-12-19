@@ -105,7 +105,7 @@ class User {
   name: string;
 }
 
-const result = await Validator.validateTarget(User, {
+const result = await Validator.validateClass(User, {
   email: 'user@example.com',
   name: 'John',
 });
@@ -119,14 +119,14 @@ const result = await Validator.validateTarget(User, {
 
 The main `Validator` class provides static methods for validation:
 
-| Method             | Purpose                 | Returns                              |
-| ------------------ | ----------------------- | ------------------------------------ |
-| `validate()`       | Validate a single value | `Promise<ValidatorResult>`           |
-| `validateTarget()` | Validate class instance | `Promise<ValidatorTargetResult>`     |
-| `registerRule()`   | Register custom rule    | `void`                               |
-| `getRule()`        | Get registered rule     | `ValidatorRuleFunction \| undefined` |
-| `getRules()`       | Get all rules           | `ValidatorRuleFunctionsMap`          |
-| `hasRule()`        | Check rule exists       | `boolean`                            |
+| Method            | Purpose                 | Returns                              |
+| ----------------- | ----------------------- | ------------------------------------ |
+| `validate()`      | Validate a single value | `Promise<ValidatorResult>`           |
+| `validateClass()` | Validate class instance | `Promise<ValidatorClassResult>`      |
+| `registerRule()`  | Register custom rule    | `void`                               |
+| `getRule()`       | Get registered rule     | `ValidatorRuleFunction \| undefined` |
+| `getRules()`      | Get all rules           | `ValidatorRuleFunctionsMap`          |
+| `hasRule()`       | Check rule exists       | `boolean`                            |
 
 ### Validation Rules
 
@@ -414,7 +414,7 @@ class User {
   bio?: string;
 }
 
-const result = await Validator.validateTarget(User, {
+const result = await Validator.validateClass(User, {
   data: { username: 'john_doe', email: 'john@example.com' },
 });
 // ✅ Success
@@ -487,12 +487,12 @@ class User {
   bio: string;
 }
 
-const result1 = await Validator.validateTarget(User, {
+const result1 = await Validator.validateClass(User, {
   data: { email: 'user@example.com', bio: '' },
 });
 // ✅ Success (MinLength skipped for empty bio)
 
-const result2 = await Validator.validateTarget(User, {
+const result2 = await Validator.validateClass(User, {
   data: { email: 'user@example.com', bio: 'Hi' },
 });
 // ❌ Fails (MinLength requires at least 3 characters)
@@ -565,12 +565,12 @@ class User {
   website?: string;
 }
 
-const result1 = await Validator.validateTarget(User, {
+const result1 = await Validator.validateClass(User, {
   data: { email: 'user@example.com', website: null },
 });
 // ✅ Success (IsUrl skipped)
 
-const result2 = await Validator.validateTarget(User, {
+const result2 = await Validator.validateClass(User, {
   data: { email: 'user@example.com', website: 'invalid-url' },
 });
 // ❌ Fails (IsUrl validation runs)
@@ -644,13 +644,13 @@ class User {
   website?: string;
 }
 
-const result1 = await Validator.validateTarget(User, {
+const result1 = await Validator.validateClass(User, {
   data: { email: 'user@example.com' },
   // website is omitted (undefined) -> skipped
 });
 // ✅ Success
 
-const result2 = await Validator.validateTarget(User, {
+const result2 = await Validator.validateClass(User, {
   data: { email: 'user@example.com', website: 'invalid-url' },
 });
 // ❌ Fails (IsUrl validation runs)
@@ -799,7 +799,7 @@ class User {
   password: string;
 }
 
-const result = await Validator.validateTarget(User, {
+const result = await Validator.validateClass(User, {
   data: { username: 'john', password: 'secure123' },
 });
 // ✅ Success
@@ -913,7 +913,7 @@ class SecuritySettings {
   username: string;
 }
 
-const result = await Validator.validateTarget(SecuritySettings, {
+const result = await Validator.validateClass(SecuritySettings, {
   data: { pinCode: '1234', username: 'john_doe_123' },
 });
 // ✅ Success
@@ -1059,7 +1059,7 @@ class Article {
   author: string; // Whitespace not allowed
 }
 
-const result1 = await Validator.validateTarget(Article, {
+const result1 = await Validator.validateClass(Article, {
   data: {
     title: 'My Article',
     content: 'Lorem ipsum...',
@@ -1068,7 +1068,7 @@ const result1 = await Validator.validateTarget(Article, {
 });
 // ✅ Success
 
-const result2 = await Validator.validateTarget(Article, {
+const result2 = await Validator.validateClass(Article, {
   data: {
     title: '', // ❌ Empty
     content: '   ', // ❌ Whitespace only
@@ -1141,7 +1141,7 @@ class User {
   userId: string;
 }
 
-const result = await Validator.validateTarget(ApiConfig, {
+const result = await Validator.validateClass(ApiConfig, {
   data: {
     baseUrl: 'https://api.example.com',
     environment: 'prod_v1',
@@ -1219,7 +1219,7 @@ class FileUpload {
   websiteUrl: string;
 }
 
-const result = await Validator.validateTarget(FileUpload, {
+const result = await Validator.validateClass(FileUpload, {
   data: {
     imageFile: 'avatar.png',
     documentFile: 'resume.pdf',
@@ -1393,7 +1393,7 @@ class Product {
   weight: number;
 }
 
-const result = await Validator.validateTarget(Product, {
+const result = await Validator.validateClass(Product, {
   data: { price: 19.99, quantity: 5, weight: 2.5 },
 });
 // ✅ Success
@@ -2308,7 +2308,7 @@ class UserSettings {
 }
 
 // Valid data - all these work
-const settings1 = await Validator.validateTarget(UserSettings, {
+const settings1 = await Validator.validateClass(UserSettings, {
   data: {
     isActive: true,
     emailNotifications: 1,
@@ -2317,7 +2317,7 @@ const settings1 = await Validator.validateTarget(UserSettings, {
 });
 // ✅ Success (mixed formats accepted)
 
-const settings2 = await Validator.validateTarget(UserSettings, {
+const settings2 = await Validator.validateClass(UserSettings, {
   data: {
     isActive: 'TRUE',
     emailNotifications: '0',
@@ -2327,7 +2327,7 @@ const settings2 = await Validator.validateTarget(UserSettings, {
 // ✅ Success (case-insensitive, all formats)
 
 // Invalid data
-const settings3 = await Validator.validateTarget(UserSettings, {
+const settings3 = await Validator.validateClass(UserSettings, {
   data: {
     isActive: 'yes',
     emailNotifications: true,
@@ -5219,8 +5219,8 @@ class UserRegistrationDTO {
   phoneNumber?: string;
 }
 
-// Validate with validateTarget
-const result = await Validator.validateTarget(UserRegistrationDTO, {
+// Validate with validateClass
+const result = await Validator.validateClass(UserRegistrationDTO, {
   data: {
     email: 'user@example.com',
     password: 'SecurePass123',
@@ -5306,15 +5306,15 @@ static async validate<Context = unknown>(
 
 ---
 
-### Validator.validateTarget()
+### Validator.validateClass()
 
 **Validate class instances using decorator-based rules.**
 
 ```typescript
-static async validateTarget<Target extends object, Context = unknown>(
+static async validateClass<Target extends object, Context = unknown>(
   TargetClass: new () => Target,
-  options: ValidateTargetOptions<Target, Context>
-): Promise<ValidatorTargetResult<Target, Context>>
+  options: ValidateClassOptions<Target, Context>
+): Promise<ValidatorClassResult<Target, Context>>
 ```
 
 **Parameters:**
@@ -5326,10 +5326,10 @@ static async validateTarget<Target extends object, Context = unknown>(
 | `options.context` | `Context` | ❌       | Optional validation context      |
 | `options.i18n`    | `I18n`    | ❌       | i18n instance                    |
 
-**Returns:** `Promise<ValidatorTargetResult>`
+**Returns:** `Promise<ValidatorClassResult>`
 
 ```typescript
-// Success (ValidatorTargetSuccess)
+// Success (ValidatorClassSuccess)
 {
   success: true,
   status: 'success',
@@ -5337,12 +5337,12 @@ static async validateTarget<Target extends object, Context = unknown>(
   // ...
 }
 
-// Failure (ValidatorTargetError)
+// Failure (ValidatorClassError)
 {
   success: false,
   status: 'error',
   message: string,
-  errors: ValidatorTargetSingleError[]; // Array of errors
+  errors: ValidatorClassItemError[]; // Array of errors
   fieldErrors: Record<string, string>; // Map of field -> error message
   data: Partial<Target>; // The data that was validated
   // ...
@@ -5358,7 +5358,7 @@ class User {
   email: string;
 }
 
-const result = await Validator.validateTarget(User, {
+const result = await Validator.validateClass(User, {
   data: { email: 'user@example.com' },
 });
 

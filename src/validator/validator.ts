@@ -16,18 +16,20 @@ import { I18n, i18n as defaultI18n } from '../i18n';
 import {
   ValidatorBaseError,
   ValidatorBulkError,
+  ValidatorClassError,
+  ValidatorClassItemError,
   ValidatorCreateBulkErrorPayload,
   ValidatorCreateErrorPayload,
   ValidatorCreateTargetErrorPayload,
   ValidatorError,
-  ValidatorTargetError,
-  ValidatorTargetSingleError,
 } from './errors';
 import { VALIDATOR_RULE_MARKERS } from './rulesMarkers';
 import {
+  ValidateClassOptions,
   ValidateMultiRuleOptions,
-  ValidateTargetOptions,
   ValidatorAsyncRuleResult,
+  ValidatorClassKeys,
+  ValidatorClassResult,
   ValidatorDefaultMultiRule,
   ValidatorMultiRuleFunction,
   ValidatorMultiRuleNames,
@@ -45,8 +47,6 @@ import {
   ValidatorSanitizedRuleObject,
   ValidatorSanitizedRules,
   ValidatorSuccess,
-  ValidatorTargetKeys,
-  ValidatorTargetResult,
 } from './types';
 
 export class Validator {
@@ -541,7 +541,7 @@ export class Validator {
    *
    * @remarks
    * - Separators are loaded from i18n key `validator.separators` with fallback defaults
-   * - Method is used internally by `validate()` and `validateTarget()` for filtering error formatting
+   * - Method is used internally by `validate()` and `validateClass()` for filtering error formatting
    * - Supports both built-in i18n and custom I18n instances
    * - Thread-safe and stateless - can be called multiple times without side effects
    * - Default separators ensure English-compatible formatting when i18n unavailable
@@ -549,7 +549,7 @@ export class Validator {
    *   Nested error structure formatting (e.g. nested objects) is handled separately via `translateNestedErrorResult`.
    *
    * @see {@link validate} - Uses these separators for formatting validation error messages
-   * @see {@link validateTarget} - Uses these separators for multi-field validation errors
+   * @see {@link validateClass} - Uses these separators for multi-field validation errors
    * @see {@link validateMultiRule} - Uses separators for OneOf/AllOf error aggregation
    * @see {@link validateArrayOfRule} - Uses separators for array item error formatting
    * @see {@link I18n} - Internationalization system for custom separator configuration
@@ -1170,7 +1170,7 @@ export class Validator {
    *
    *
    * @see {@link validate} - Uses this method to conditionally skip validation
-   * @see {@link validateTarget} - Also uses this method for class-based validation
+   * @see {@link validateClass} - Also uses this method for class-based validation
    * @public
    */
   static shouldSkipValidation<Context = unknown>({
@@ -1398,7 +1398,7 @@ export class Validator {
    *
    * Internal rule function that validates a nested object against a class constructor with
    * validation decorators. This method is the workhorse for nested class validation, delegating
-   * to {@link validateTarget} for the actual multi-field validation logic.
+   * to {@link validateClass} for the actual multi-field validation logic.
    *
    * ### Purpose
    * This method implements the core logic for the `ValidateNested` rule, enabling validation of
@@ -1408,7 +1408,7 @@ export class Validator {
    *
    * ### Validation Flow
    * 1. **Parameter Extraction**: Extracts the target class constructor from `ruleParams[0]`
-   * 2. **Validation**: Calls `validateTarget()` to validate the nested object against the class
+   * 2. **Validation**: Calls `validateClass()` to validate the nested object against the class
    * 3. **Error Aggregation**: Collects nested validation errors with property path information
    * 4. **Result Formatting**: Returns either `true` (success) or error message string (failure)
    *
@@ -1455,7 +1455,7 @@ export class Validator {
    *
    * // When validating a User instance with an Address property,
    * // validateNestedRule is called to validate the address against the Address class
-   * const result = await Validator.validateTarget(User, {
+   * const result = await Validator.validateClass(User, {
    * data : {
    *   name: "John",
    *   address: { street: "123 Main St", postalCode: "12345" }
@@ -1463,7 +1463,7 @@ export class Validator {
    * ```
    *
    * ### Key Features
-   * - **DRY Principle**: Reuses existing `validateTarget` logic to avoid code duplication
+   * - **DRY Principle**: Reuses existing `validateClass` logic to avoid code duplication
    * - **Error Context**: Preserves field hierarchy information in error messages
    * - **i18n Integration**: Uses translation system for localized error messages
    * - **Context Propagation**: Passes validation context through to nested validators
@@ -1493,17 +1493,17 @@ export class Validator {
    *
    * @remarks
    * - This is an internal method primarily used by the `validateNested` factory
-   * - Accepts ValidatorNestedRuleFunctionOptions which omits validateTarget's i18n parameter
-   * - Delegates directly to validateTarget(target, options) maintaining all context
+   * - Accepts ValidatorNestedRuleFunctionOptions which omits validateClass's i18n parameter
+   * - Delegates directly to validateClass(target, options) maintaining all context
    * - Nested validation errors include property names for clear error tracing
    * - The method integrates seamlessly with the multi-rule validation system
    * - Supports recursive nesting of arbitrarily deep object structures
-   * - Performance: Delegates to validateTarget which validates fields in parallel
+   * - Performance: Delegates to validateClass which validates fields in parallel
    * - Error aggregation uses nested field paths for hierarchical clarity
    *
    *
    * @see {@link validateNested} - Factory function that creates rule functions using this method
-   * @see {@link validateTarget} - The underlying class-based validation method (accepts options with data)
+   * @see {@link validateClass} - The underlying class-based validation method (accepts options with data)
    * @see {@link ValidateNested} - Decorator that uses this method via the factory
    * @see {@link ValidatorNestedRuleFunctionOptions} - Options interface for this method
    * @see {@link buildMultiRuleDecorator} - Decorator builder for complex multi-rule scenarios
@@ -1553,8 +1553,8 @@ export class Validator {
 
     //extra.data = extra.data ?? Object.assign({}, extra.data);
 
-    // Delegate to validateTarget for nested class validation
-    const nestedResult = await this.validateTarget<Target, Context>(target, {
+    // Delegate to validateClass for nested class validation
+    const nestedResult = await this.validateClass<Target, Context>(target, {
       ...options,
       data: value,
       parentData: extra.data,
@@ -1586,7 +1586,7 @@ export class Validator {
     });
   }
   static translateNestedErrorResult(
-    nestedErrorResult: ValidatorTargetError,
+    nestedErrorResult: ValidatorClassError,
     customI18n?: I18n
   ) {
     const nestedErrors = nestedErrorResult.errors || [];
@@ -2088,7 +2088,7 @@ export class Validator {
    * }
    *
    * // When context is provided during validation
-   * const result = await Validator.validateTarget(User, {
+   * const result = await Validator.validateClass(User, {
    *  data: userData,
    *   context: { userId: 1, isAdmin: true }
    * });
@@ -2115,8 +2115,8 @@ export class Validator {
    * 1. Extracts the data property from validation options
    * 2. Creates a shallow copy of the data using `Object.assign`
    * 3. Calls `validateNestedRule` with the combined parameters
-   * 4. Properly types the data as `ValidatorTargetData<Target>`
-   * 5. Delegates to validateTarget via validateNestedRule which expects options.data
+   * 4. Properly types the data as `ValidatorClassInput<Target>`
+   * 5. Delegates to validateClass via validateNestedRule which expects options.data
    *
    * ### Error Message Format
    * When nested validation fails, error messages include field-level details:
@@ -2126,7 +2126,7 @@ export class Validator {
    *
    * ### Performance Characteristics
    * - **Lazy Evaluation**: Parameters are captured but not executed until rule runs
-   * - **Efficient Nesting**: Reuses validateTarget's parallel field validation
+   * - **Efficient Nesting**: Reuses validateClass's parallel field validation
    * - **Memory Efficient**: Shallow copy of data prevents unnecessary object duplication
    * - **Async Optimized**: Properly awaits nested async validation rules
    *
@@ -2185,7 +2185,7 @@ export class Validator {
    *   }
    * };
    *
-   * const result = await Validator.validateTarget(Person, {data:person});
+   * const result = await Validator.validateClass(Person, {data:person});
    * if (result.success) {
    *   console.log("Valid person with contact", result.data);
    * } else {
@@ -2194,11 +2194,11 @@ export class Validator {
    * ```
    *
    *
-   * @see {@link validateNestedRule} - The underlying validation executor that delegates to validateTarget
+   * @see {@link validateNestedRule} - The underlying validation executor that delegates to validateClass
    * @see {@link ValidateNested} - Decorator using this factory
-   * @see {@link validateTarget} - Multi-field class validation (signature: validateTarget<T, Context>(target, options))
+   * @see {@link validateClass} - Multi-field class validation (signature: validateClass<T, Context>(target, options))
    * @see {@link ValidatorOptions} - Validation options interface for rule functions
-   * @see {@link ValidateTargetOptions} - Target validation options interface
+   * @see {@link ValidateClassOptions} - Target validation options interface
    * @see {@link oneOf} - Similar factory for OneOf rule creation
    * @see {@link allOf} - Similar factory for AllOf rule creation
    * @see {@link arrayOf} - Similar factory for ArrayOf rule creation
@@ -2219,23 +2219,23 @@ export class Validator {
     };
   }
 
-  static async validateTarget<
+  static async validateClass<
     Target extends ClassConstructor = ClassConstructor,
     Context = unknown,
   >(
     target: Target,
     options: Omit<
-      ValidateTargetOptions<Target, Context>,
+      ValidateClassOptions<Target, Context>,
       'i18n' | 'ruleParams'
     > & {
       i18n?: I18n;
     }
-  ): Promise<ValidatorTargetResult<Target, Context>> {
+  ): Promise<ValidatorClassResult<Target, Context>> {
     const startTime = Date.now();
     const targetRules = Validator.getTargetRules<Target>(target);
     const { context, errorMessageBuilder, ...restOptions } = Object.assign(
       {},
-      Validator.getValidateTargetOptions(target),
+      Validator.getValidateClassOptions(target),
       options
     );
     const data = Object.assign({}, options.data);
@@ -2247,9 +2247,8 @@ export class Validator {
         : (translatedPropertyName: string, error: string) =>
             `[${String(translatedPropertyName)}] : ${error}`;
 
-    const validationErrors: ValidatorTargetSingleError[] = [];
-    const fieldErrors: Partial<Record<ValidatorTargetKeys<Target>, string>> =
-      {};
+    const validationErrors: ValidatorClassItemError[] = [];
+    const fieldErrors: Partial<Record<ValidatorClassKeys<Target>, string>> = {};
     const validationPromises: Promise<ValidatorResult<Context>>[] = [];
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     let validatedFieldCount = 0;
@@ -2292,7 +2291,7 @@ export class Validator {
               propertyName: propertyKey,
               translatedPropertyName: translatedPropertyName,
               ruleParams: [],
-              ruleName: 'validateTarget',
+              ruleName: 'validateClass',
               startTime,
               value,
             });
@@ -2321,7 +2320,7 @@ export class Validator {
       );
     }
 
-    return new Promise<ValidatorTargetResult<Target, Context>>((resolve) => {
+    return new Promise<ValidatorClassResult<Target, Context>>((resolve) => {
       return Promise.all(validationPromises).then(() => {
         const isValidationSuccessful = !validationErrors.length;
         if (isValidationSuccessful) {
@@ -2435,7 +2434,7 @@ export class Validator {
    * @returns Record mapping property names to their validation rules
    *
    *
-   * @see {@link validateTarget} - Uses this method to get validation rules
+   * @see {@link validateClass} - Uses this method to get validation rules
    * @see {@link buildPropertyDecorator} - How rules are attached to properties
    * @public
    */
@@ -2453,7 +2452,7 @@ export class Validator {
    *
    * Retrieves validation options that have been configured for a specific class
    * through the `@ValidationTargetOptions` decorator. These options control how
-   * validation behaves when `validateTarget` is called on the class.
+   * validation behaves when `validateClass` is called on the class.
    *
    * ### Configuration Options
    * Options can include custom error message builders, validation contexts,
@@ -2475,11 +2474,11 @@ export class Validator {
    * }
    *
    * // Get the configured options
-   * const options = Validator.getValidateTargetOptions(CustomUser);
+   * const options = Validator.getValidateClassOptions(CustomUser);
    * console.log(typeof options.errorMessageBuilder); // 'function'
    *
    * // These options will be automatically used when validating
-   * const result = await Validator.validateTarget(CustomUser, userData);
+   * const result = await Validator.validateClass(CustomUser, userData);
    * // Error messages will use the custom format
    * ```
    *
@@ -2490,14 +2489,14 @@ export class Validator {
    * @returns Validation options object, or empty object if none configured
    *
    *
-   * @see {@link validateTarget} - Uses these options during validation
+   * @see {@link validateClass} - Uses these options during validation
    * @see {@link ValidationTargetOptions} - Decorator to set these options
    * @public
    */
-  public static getValidateTargetOptions<T extends ClassConstructor>(
+  public static getValidateClassOptions<T extends ClassConstructor>(
     target: T
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  ): ValidateTargetOptions<T, any> {
+  ): ValidateClassOptions<T, any> {
     return Object.assign(
       {},
       Reflect.getMetadata(VALIDATOR_TARGET_OPTIONS_METADATA_KEY, target) || {}
@@ -2796,7 +2795,7 @@ export class Validator {
    * - Rule functions are reused across multiple property applications
    *
    * #### Runtime Performance
-   * - Validation execution is deferred until `validateTarget()` is called
+   * - Validation execution is deferred until `validateClass()` is called
    * - Parameter binding happens during decoration, not validation
    * - No reflection overhead during actual validation
    *
@@ -2850,7 +2849,7 @@ export class Validator {
    *
    * #### Context Propagation
    * ```typescript
-   * const result = await Validator.validateTarget(UserClass, {
+   * const result = await Validator.validateClass(UserClass, {
    *   data: userData,
    *   context: { userId: 123, permissions: ['read'] },
    *   errorMessageBuilder: (field, error) => `${field}: ${error}`
@@ -2938,7 +2937,7 @@ export class Validator {
    * - Wrap single parameters: `[value]` instead of `value`
    *
    * #### Async rule not working
-   * - Ensure `validateTarget()` is called with `await`
+   * - Ensure `validateClass()` is called with `await`
    * - Check that validation context includes required services
    * - Verify async rule returns Promise<string | false | undefined>
    *
@@ -2952,7 +2951,7 @@ export class Validator {
    *
    * - {@link ValidatorTupleAllowsEmpty} - Type for conditional parameter optionality
    * - {@link ValidatorRuleFunction} - Rule function interface
-   * - {@link validateTarget} - Main validation execution method
+   * - {@link validateClass} - Main validation execution method
    * - {@link ValidationOptions} - Complete validation context interface
    *
    * @template TRuleParams - Tuple type defining the exact parameter structure for the rule.
@@ -3148,23 +3147,23 @@ export class Validator {
   /**
    * ## Create Target Validation Error
    *
-   * Factory method for creating a `ValidatorTargetError`.
+   * Factory method for creating a `ValidatorClassError`.
    * Represents a failure when validating a class instance or complex object target,
    * containing a map of field-specific errors.
    *
    * @param message - General summary message
    * @param details - Context including the `errors` map for specific fields
-   * @returns A structured `ValidatorTargetError` object
+   * @returns A structured `ValidatorClassError` object
    */
   static createTargetError(
     message: string,
     details: ValidatorCreateTargetErrorPayload
-  ): ValidatorTargetError {
+  ): ValidatorClassError {
     return {
       ...this.getBaseError(details),
       ...details,
       message,
-      name: 'ValidatorTargetError',
+      name: 'ValidatorClassError',
       failedAt: new Date(),
     };
   }
@@ -3211,16 +3210,16 @@ export class Validator {
   /**
    * ## Check for Target Validation Error
    *
-   * Type guard to determine if a result is a `ValidatorTargetError`.
-   * Identifies errors resulting from class/object validation (e.g., `validateTarget`).
+   * Type guard to determine if a result is a `ValidatorClassError`.
+   * Identifies errors resulting from class/object validation (e.g., `validateClass`).
    *
    * @param result - The value to check
    * @returns `true` if it's a target object validation error
    */
-  static isTargetError(result: unknown): result is ValidatorTargetError {
+  static isTargetError(result: unknown): result is ValidatorClassError {
     return (
       this.isBaseError(result) &&
-      (result as ValidatorTargetError).name == 'ValidatorTargetError'
+      (result as ValidatorClassError).name == 'ValidatorClassError'
     );
   }
 
@@ -3334,7 +3333,7 @@ export class Validator {
    * const validateNestedRule = ({ value, ruleParams, context }) => {
    *   const [TargetClass] = ruleParams;
    *   // Validate value against TargetClass schema
-   *   return Validator.validateTarget(TargetClass, {
+   *   return Validator.validateClass(TargetClass, {
    *     data: value,
    *     context: context
    *   });
@@ -3390,7 +3389,7 @@ export class Validator {
    * }
    *
    * // Validate with context
-   * const result = await Validator.validateTarget(Event, {
+   * const result = await Validator.validateClass(Event, {
    *   data: eventData,
    *   context: { userId: 123, permissions: ['edit'] },
    *   errorMessageBuilder: (fieldName, error) => `${fieldName}: ${error}`
@@ -3422,7 +3421,7 @@ export class Validator {
    * ### Performance Characteristics
    * - No additional overhead vs buildRuleDecorator
    * - Wrapper instantiation happens at decoration time, not at import
-   * - Actual validation is performed lazily during validateTarget() calls
+   * - Actual validation is performed lazily during validateClass() calls
    * - Multiple properties with same target class share no cached state
    *
    * ### Error Handling
@@ -3461,14 +3460,14 @@ export class Validator {
    *   - Accepts the target class constructor
    *   - Returns a property decorator
    *   - Attaches target-based validation to class properties
-   *   - Works with class validation via validateTarget()
+   *   - Works with class validation via validateClass()
    *
    *
    * @see {@link buildRuleDecorator} - General-purpose decorator factory
    * @see {@link buildPropertyDecorator} - Low-level decorator creation
    * @see {@link ValidateNested} - Example target rule decorator
    * @see {@link validateNestedRule} - Example target validation rule
-   * @see {@link validateTarget} - Parent validation method using target rules
+   * @see {@link validateClass} - Parent validation method using target rules
    * @public
    */
   static buildTargetRuleDecorator<
@@ -3691,7 +3690,7 @@ export class Validator {
    *   - Accepts an array of validation rules as parameters
    *   - Returns a property decorator when called
    *   - Attaches multi-rule validation to class properties
-   *   - Works with class validation via `validateTarget()`
+   *   - Works with class validation via `validateClass()`
    *   - Enables complex validation logic through rule composition
    *
    * @example
@@ -3719,7 +3718,7 @@ export class Validator {
    * }
    *
    * // Validate with context
-   * const result = await Validator.validateTarget(Contact, {
+   * const result = await Validator.validateClass(Contact, {
    *   data: { primaryContact: "user@example.com", secondaryContact: "" },
    *   context: { allowEmptySecondary: true }
    * });
@@ -3764,7 +3763,7 @@ export class Validator {
    * ### Purpose
    * This is the most fundamental decorator factory in the validation system. It creates property
    * decorators that store validation rules as metadata on class properties, enabling the
-   * {@link validateTarget} method to discover and execute validation rules during class-based
+   * {@link validateClass} method to discover and execute validation rules during class-based
    * validation. Unlike higher-level factories, this method works directly with rule objects
    * and metadata storage.
    *
@@ -3773,7 +3772,7 @@ export class Validator {
    * 2. Uses the imported `buildPropertyDecorator` helper to create a property decorator
    * 3. Stores rules under the `VALIDATOR_TARGET_RULES_METADATA_KEY` symbol
    * 4. When applied to a property, accumulates rules with existing rules on the same property
-   * 5. Enables rule discovery during `validateTarget()` execution
+   * 5. Enables rule discovery during `validateClass()` execution
    *
    * ### Rule Accumulation Logic
    * The decorator accumulates rules rather than replacing them:
@@ -3942,14 +3941,14 @@ export class Validator {
    * - **Accumulation**: Efficient array concatenation for multiple decorators
    *
    * ### Error Handling
-   * - **Invalid rules**: Stored as-is (validation errors occur during `validateTarget`)
+   * - **Invalid rules**: Stored as-is (validation errors occur during `validateClass`)
    * - **Metadata failures**: Falls back gracefully if Reflect Metadata unavailable
    * - **Type mismatches**: TypeScript prevents invalid rule types at compile time
    * - **Runtime errors**: Handled during validation, not decoration
    *
    * ### Integration with Validation System
    * - **Metadata discovery**: Rules found by `getDecoratedProperties()` during validation
-   * - **Parallel execution**: All property rules validated simultaneously in `validateTarget()`
+   * - **Parallel execution**: All property rules validated simultaneously in `validateClass()`
    * - **Error aggregation**: Property-level errors collected with field names
    * - **Context propagation**: Validation context passed to all rule functions
    * - **i18n support**: Error messages localized through validation system
@@ -3975,7 +3974,7 @@ export class Validator {
    *   - Attaches the specified rule(s) to class properties
    *   - Accumulates rules when multiple decorators applied
    *   - Stores rules as metadata for validation discovery
-   *   - Works with `validateTarget()` for class validation
+   *   - Works with `validateClass()` for class validation
    *   - Enables type-safe property-level validation
    *
    * @example
@@ -4003,7 +4002,7 @@ export class Validator {
    * }
    *
    * // Validate the class
-   * const result = await Validator.validateTarget(User, {
+   * const result = await Validator.validateClass(User, {
    *   data: {
    *     name: "John",
    *     email: "john@example.com",
@@ -4017,7 +4016,7 @@ export class Validator {
    * @see {@link buildRuleDecorator} - Higher-level decorator factory with parameter handling
    * @see {@link buildMultiRuleDecorator} - For multi-rule validation patterns
    * @see {@link buildTargetRuleDecorator} - For nested class validation
-   * @see {@link validateTarget} - Class validation method that uses these decorators
+   * @see {@link validateClass} - Class validation method that uses these decorators
    * @see {@link getDecoratedProperties} - Metadata discovery for validation
    * @see {@link ValidatorRule} - Rule type attached by this decorator
    * @see {@link VALIDATOR_TARGET_RULES_METADATA_KEY} - Metadata key for rule storage
@@ -4047,7 +4046,7 @@ export class Validator {
  *
  * Class decorator that configures validation behavior for a target class.
  * This decorator allows you to set class-level validation options that will
- * be automatically applied whenever `validateTarget` is called on the class.
+ * be automatically applied whenever `validateClass` is called on the class.
  *
  * ### Configuration Options
  * - **errorMessageBuilder**: Custom function to format validation error messages
@@ -4174,14 +4173,14 @@ export class Validator {
  * @returns Class decorator function that applies the validation configuration
  *
  *
- * @see {@link validateTarget} - Method that uses these options
- * @see {@link getValidateTargetOptions} - Retrieves configured options
+ * @see {@link validateClass} - Method that uses these options
+ * @see {@link getValidateClassOptions} - Retrieves configured options
  * @decorator
  * @public
  */
 export function ValidationTargetOptions(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  validationOptions: ValidateTargetOptions<any, any>
+  validationOptions: ValidateClassOptions<any, any>
 ): ClassDecorator {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
   return function (targetClass: Function) {

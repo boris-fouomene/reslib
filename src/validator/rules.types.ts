@@ -156,10 +156,10 @@ export interface ValidatorRuleParamTypes<Context = unknown> {}
  *
  * @public
  */
-export type ValidatorTargetData<
+export type ValidatorClassInput<
   Target extends ClassConstructor = ClassConstructor,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-> = Partial<Record<ValidatorTargetKeys<Target>, any>>;
+> = Partial<Record<ValidatorClassKeys<Target>, any>>;
 
 /**
  * ## Validator Target Keys
@@ -171,5 +171,5 @@ export type ValidatorTargetData<
  *
  * @public
  */
-export type ValidatorTargetKeys<Target extends ClassConstructor> =
+export type ValidatorClassKeys<Target extends ClassConstructor> =
   keyof InstanceType<Target>;

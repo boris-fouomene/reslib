@@ -45,7 +45,7 @@ describe('ValidateNested Validation - Comprehensive Test Suite', () => {
         },
       };
 
-      const result = await Validator.validateTarget(User, { data });
+      const result = await Validator.validateClass(User, { data });
 
       expect(result.success).toBe(true);
       if (result.success) {
@@ -66,7 +66,7 @@ describe('ValidateNested Validation - Comprehensive Test Suite', () => {
         contact: Contact = new Contact();
       }
 
-      const result = await Validator.validateTarget(Employee, {
+      const result = await Validator.validateClass(Employee, {
         data: {
           name: 'Jane Smith',
           contact: {
@@ -90,7 +90,7 @@ describe('ValidateNested Validation - Comprehensive Test Suite', () => {
       }
 
       // Without validation decorators on nested class, any data passes
-      const result = await Validator.validateTarget(User, {
+      const result = await Validator.validateClass(User, {
         data: {
           address: 'not-an-object',
         } as any,
@@ -109,7 +109,7 @@ describe('ValidateNested Validation - Comprehensive Test Suite', () => {
       }
 
       // Without validation decorators on nested class, null passes
-      const result = await Validator.validateTarget(User, {
+      const result = await Validator.validateClass(User, {
         data: {
           address: null,
         } as any,
@@ -128,7 +128,7 @@ describe('ValidateNested Validation - Comprehensive Test Suite', () => {
       }
 
       // Without validation decorators on nested class, undefined passes
-      const result = await Validator.validateTarget(User, {
+      const result = await Validator.validateClass(User, {
         data: {
           address: undefined,
         } as any,
@@ -148,7 +148,7 @@ describe('ValidateNested Validation - Comprehensive Test Suite', () => {
       }
 
       // Without validation decorators on nested class, array passes
-      const result = await Validator.validateTarget(User, {
+      const result = await Validator.validateClass(User, {
         data: {
           address: ['123 Main St'],
         } as any,
@@ -174,7 +174,7 @@ describe('ValidateNested Validation - Comprehensive Test Suite', () => {
         address: Address = new Address();
       }
 
-      const result = await Validator.validateTarget(User, {
+      const result = await Validator.validateClass(User, {
         data: {
           address: { street: '123 Main St' },
         },
@@ -194,7 +194,7 @@ describe('ValidateNested Validation - Comprehensive Test Suite', () => {
         address: Address = new Address();
       }
 
-      const result = await Validator.validateTarget(User, {
+      const result = await Validator.validateClass(User, {
         data: {},
       });
 
@@ -212,13 +212,13 @@ describe('ValidateNested Validation - Comprehensive Test Suite', () => {
         address?: Address;
       }
 
-      const resultWithData = await Validator.validateTarget(User, {
+      const resultWithData = await Validator.validateClass(User, {
         data: {
           address: { street: '123 Main St' },
         },
       });
 
-      const resultWithoutData = await Validator.validateTarget(User, {
+      const resultWithoutData = await Validator.validateClass(User, {
         data: {},
       });
 
@@ -239,7 +239,7 @@ describe('ValidateNested Validation - Comprehensive Test Suite', () => {
         contact?: Contact;
       }
 
-      const result = await Validator.validateTarget(User, {
+      const result = await Validator.validateClass(User, {
         data: {
           name: 'John',
           contact: undefined,
@@ -260,7 +260,7 @@ describe('ValidateNested Validation - Comprehensive Test Suite', () => {
         address?: Address;
       }
 
-      const result = await Validator.validateTarget(User, {
+      const result = await Validator.validateClass(User, {
         data: {},
       });
 
@@ -278,7 +278,7 @@ describe('ValidateNested Validation - Comprehensive Test Suite', () => {
         contact: Contact = new Contact();
       }
 
-      const successResult = await Validator.validateTarget(User, {
+      const successResult = await Validator.validateClass(User, {
         data: {
           contact: {
             email: 'user@example.com',
@@ -300,7 +300,7 @@ describe('ValidateNested Validation - Comprehensive Test Suite', () => {
         profile: Profile = new Profile();
       }
 
-      const successResult = await Validator.validateTarget(User, {
+      const successResult = await Validator.validateClass(User, {
         data: {
           profile: {
             bio: 'Hello World',
@@ -322,7 +322,7 @@ describe('ValidateNested Validation - Comprehensive Test Suite', () => {
         address: Address = new Address();
       }
 
-      const successResult = await Validator.validateTarget(User, {
+      const successResult = await Validator.validateClass(User, {
         data: {
           address: { street: '123 Main St' },
         },
@@ -345,7 +345,7 @@ describe('ValidateNested Validation - Comprehensive Test Suite', () => {
         address: Address = new Address();
       }
 
-      const result = await Validator.validateTarget(User, {
+      const result = await Validator.validateClass(User, {
         data: {
           address: { street: '123 Main St' },
         },
@@ -381,7 +381,7 @@ describe('ValidateNested Validation - Comprehensive Test Suite', () => {
         address: Address = new Address();
       }
 
-      const result = await Validator.validateTarget(User, {
+      const result = await Validator.validateClass(User, {
         data: {
           address: {
             city: {
@@ -417,7 +417,7 @@ describe('ValidateNested Validation - Comprehensive Test Suite', () => {
         address: Address = new Address();
       }
 
-      const result = await Validator.validateTarget(User, {
+      const result = await Validator.validateClass(User, {
         data: {
           address: {
             city: {
@@ -450,7 +450,7 @@ describe('ValidateNested Validation - Comprehensive Test Suite', () => {
         campus: Campus = new Campus();
       }
 
-      const result = await Validator.validateTarget(University, {
+      const result = await Validator.validateClass(University, {
         data: {
           campus: {
             building: {
@@ -488,7 +488,7 @@ describe('ValidateNested Validation - Comprehensive Test Suite', () => {
         company: Company = new Company();
       }
 
-      const result = await Validator.validateTarget(User, {
+      const result = await Validator.validateClass(User, {
         data: {
           address: { street: '123 Main St' },
           company: { name: 'Tech Corp' },
@@ -517,7 +517,7 @@ describe('ValidateNested Validation - Comprehensive Test Suite', () => {
         company: Company = new Company();
       }
 
-      const result = await Validator.validateTarget(User, {
+      const result = await Validator.validateClass(User, {
         data: {
           address: {},
           company: {},
@@ -553,7 +553,7 @@ describe('ValidateNested Validation - Comprehensive Test Suite', () => {
         contact: Contact = new Contact();
       }
 
-      const result = await Validator.validateTarget(User, {
+      const result = await Validator.validateClass(User, {
         data: {
           name: 'John Doe',
           contact: {
@@ -590,7 +590,7 @@ describe('ValidateNested Validation - Comprehensive Test Suite', () => {
       }
 
       // Both nested classes have no decorators, so any data passes
-      const result = await Validator.validateTarget(User, {
+      const result = await Validator.validateClass(User, {
         data: {
           address: { street: 'Valid' },
           phone: null,
@@ -617,7 +617,7 @@ describe('ValidateNested Validation - Comprehensive Test Suite', () => {
         address: Address = new Address();
       }
 
-      const result = await Validator.validateTarget(User, {
+      const result = await Validator.validateClass(User, {
         data: {
           address: {},
         },
@@ -636,7 +636,7 @@ describe('ValidateNested Validation - Comprehensive Test Suite', () => {
         address: Address = new Address();
       }
 
-      const result = await Validator.validateTarget(User, {
+      const result = await Validator.validateClass(User, {
         data: {
           address: { street: '123 Main St', extraField: 'extra' },
         } as any,
@@ -656,7 +656,7 @@ describe('ValidateNested Validation - Comprehensive Test Suite', () => {
       }
 
       // Without decorators, primitive passes
-      const result = await Validator.validateTarget(User, {
+      const result = await Validator.validateClass(User, {
         data: {
           address: 123,
         } as any,
@@ -676,7 +676,7 @@ describe('ValidateNested Validation - Comprehensive Test Suite', () => {
       }
 
       // Without decorators, boolean passes
-      const result = await Validator.validateTarget(User, {
+      const result = await Validator.validateClass(User, {
         data: {
           address: true,
         } as any,
@@ -697,7 +697,7 @@ describe('ValidateNested Validation - Comprehensive Test Suite', () => {
       }
 
       // Without decorators, boolean passes
-      const result = await Validator.validateTarget(User, {
+      const result = await Validator.validateClass(User, {
         data: {
           address: [{ street: '123 Main St' }, { street: '456 Elm St' }],
         } as any,
@@ -719,7 +719,7 @@ describe('ValidateNested Validation - Comprehensive Test Suite', () => {
         address: Address = new Address();
       }
 
-      const result = await Validator.validateTarget(User, {
+      const result = await Validator.validateClass(User, {
         data: {
           address: {},
         },
@@ -745,7 +745,7 @@ describe('ValidateNested Validation - Comprehensive Test Suite', () => {
         address: Address = new Address();
       }
 
-      const result = await Validator.validateTarget(User, {
+      const result = await Validator.validateClass(User, {
         data: {
           address: { street: '123 Main St' },
         },
@@ -775,7 +775,7 @@ describe('ValidateNested Validation - Comprehensive Test Suite', () => {
         address: Address = new Address();
       }
 
-      const result = await Validator.validateTarget(User, {
+      const result = await Validator.validateClass(User, {
         data: {
           address: {
             city: {
@@ -851,13 +851,13 @@ describe('ValidateNested Validation - Comprehensive Test Suite', () => {
         address?: Address;
       }
 
-      const result1 = await Validator.validateTarget(User, {
+      const result1 = await Validator.validateClass(User, {
         data: {
           name: 'John',
         },
       });
 
-      const result2 = await Validator.validateTarget(User, {
+      const result2 = await Validator.validateClass(User, {
         data: {
           name: 'John',
           address: {
@@ -883,7 +883,7 @@ describe('ValidateNested Validation - Comprehensive Test Suite', () => {
         address: Address = new Address();
       }
 
-      const result = await Validator.validateTarget(User, {
+      const result = await Validator.validateClass(User, {
         data: {
           email: 'john@example.com',
           address: {
@@ -907,7 +907,7 @@ describe('ValidateNested Validation - Comprehensive Test Suite', () => {
         address: Address = new Address();
       }
 
-      const result = await Validator.validateTarget(User, {
+      const result = await Validator.validateClass(User, {
         data: {
           address: {
             street: 'Hi',
@@ -928,7 +928,7 @@ describe('ValidateNested Validation - Comprehensive Test Suite', () => {
         address: Address = new Address();
       }
 
-      const result = await Validator.validateTarget(User, {
+      const result = await Validator.validateClass(User, {
         data: { address: {} },
       });
 
@@ -954,7 +954,7 @@ describe('ValidateNested Validation - Comprehensive Test Suite', () => {
         company: Company = new Company();
       }
 
-      const result = await Validator.validateTarget(User, {
+      const result = await Validator.validateClass(User, {
         data: {
           address: {},
           company: {},
@@ -977,7 +977,7 @@ describe('ValidateNested Validation - Comprehensive Test Suite', () => {
       }
 
       const start = Date.now();
-      const result = await Validator.validateTarget(User, {
+      const result = await Validator.validateClass(User, {
         data: {
           address: {
             street: '123 Main St',
@@ -1014,7 +1014,7 @@ describe('ValidateNested Validation - Comprehensive Test Suite', () => {
         value: `Value ${i}`,
       }));
 
-      const result = await Validator.validateTarget(Root, {
+      const result = await Validator.validateClass(Root, {
         data: {
           container: { items },
         },

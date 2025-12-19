@@ -134,7 +134,7 @@ describe('Boolean Validation Rules', () => {
       const instance = new TestClass();
       instance.isActive = true;
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(true);
@@ -149,7 +149,7 @@ describe('Boolean Validation Rules', () => {
       const instance = new TestClass();
       instance.isActive = 'false' as any;
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(true);
@@ -164,7 +164,7 @@ describe('Boolean Validation Rules', () => {
       const instance = new TestClass();
       instance.isActive = 1 as any;
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(true);
@@ -179,7 +179,7 @@ describe('Boolean Validation Rules', () => {
       const instance = new TestClass();
       instance.isActive = 'maybe' as any;
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(false);

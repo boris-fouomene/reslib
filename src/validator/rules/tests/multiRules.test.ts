@@ -62,7 +62,7 @@ describe('Multi-Rules Validation', () => {
       const instance = new TestClass();
       instance.contact = 'test@example.com';
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(true);
@@ -77,7 +77,7 @@ describe('Multi-Rules Validation', () => {
       const instance = new TestClass();
       instance.contact = 'invalid-contact';
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(false);
@@ -95,7 +95,7 @@ describe('Multi-Rules Validation', () => {
       const instance = new TestClass();
       instance.text = 'hello'; // Passes both MinLength(3) and MaxLength(10)
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(true);
@@ -157,7 +157,7 @@ describe('Multi-Rules Validation', () => {
       const instance = new TestClass();
       instance.email = 'test@example.com'; // Passes Email and MinLength(10)
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(true);
@@ -172,7 +172,7 @@ describe('Multi-Rules Validation', () => {
       const instance = new TestClass();
       instance.email = 'test@example.com'; // Passes Email but fails MaxLength(5)
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(false);
@@ -243,7 +243,7 @@ describe('Multi-Rules Validation', () => {
       const instance = new TestClass();
       instance.emails = ['test@example.com', 'user@domain.com'];
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(true);
@@ -258,7 +258,7 @@ describe('Multi-Rules Validation', () => {
       const instance = new TestClass();
       instance.emails = ['test@example.com', 'invalid-email'];
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(false);
@@ -276,7 +276,7 @@ describe('Multi-Rules Validation', () => {
       const instance = new TestClass();
       instance.emails = 'not an array';
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(false);
@@ -390,7 +390,7 @@ describe('Multi-Rules Validation', () => {
       instance.password = 'SecurePass123';
       instance.tags = ['web', 'dev', 'js'];
 
-      const result = await Validator.validateTarget(ContactForm, {
+      const result = await Validator.validateClass(ContactForm, {
         data: instance,
       });
       expect(result.success).toBe(true);

@@ -46,7 +46,7 @@ describe('Target Validation Rules', () => {
         zipCode: 12345,
       };
 
-      const result = await Validator.validateTarget(Person, { data: instance });
+      const result = await Validator.validateClass(Person, { data: instance });
       expect(result.success).toBe(true);
     });
 
@@ -76,7 +76,7 @@ describe('Target Validation Rules', () => {
         city: 'Anytown',
       };
 
-      const result = await Validator.validateTarget(Person, { data: instance });
+      const result = await Validator.validateClass(Person, { data: instance });
       expect(result.success).toBe(false);
       expect((result as any).errors?.length).toBeGreaterThan(0);
       expect(
@@ -103,7 +103,7 @@ describe('Target Validation Rules', () => {
       instance.name = 'John Doe';
       instance.address = null;
 
-      const result = await Validator.validateTarget(Person, { data: instance });
+      const result = await Validator.validateClass(Person, { data: instance });
       expect(result.success).toBe(false);
     });
 
@@ -123,7 +123,7 @@ describe('Target Validation Rules', () => {
       const instance = new Person();
       instance.name = 'John Doe';
       // address is undefined
-      const result = await Validator.validateTarget(Person, { data: instance });
+      const result = await Validator.validateClass(Person, { data: instance });
 
       expect(result.success).toBe(false);
     });
@@ -167,7 +167,7 @@ describe('Target Validation Rules', () => {
         },
       };
 
-      const result = await Validator.validateTarget(Person, { data: instance });
+      const result = await Validator.validateClass(Person, { data: instance });
       expect(result.success).toBe(true);
     });
 
@@ -204,7 +204,7 @@ describe('Target Validation Rules', () => {
         },
       };
 
-      const result = await Validator.validateTarget(Person, { data: instance });
+      const result = await Validator.validateClass(Person, { data: instance });
       expect(result.success).toBe(false);
       expect(
         (result as any).errors?.some(
@@ -241,7 +241,7 @@ describe('Target Validation Rules', () => {
         { name: 'Widget B', quantity: 3 },
       ];
 
-      const result = await Validator.validateTarget(Order, { data: instance });
+      const result = await Validator.validateClass(Order, { data: instance });
       expect(result.success).toBe(true);
     });
 
@@ -271,7 +271,7 @@ describe('Target Validation Rules', () => {
         { name: '', quantity: 0 }, // Invalid: empty name and zero quantity
       ];
 
-      const result = await Validator.validateTarget(Order, { data: instance });
+      const result = await Validator.validateClass(Order, { data: instance });
       expect(result.success).toBe(false);
       expect((result as any).errors?.length).toBeGreaterThan(0);
     });
@@ -294,7 +294,7 @@ describe('Target Validation Rules', () => {
       instance.orderId = 'ORD-001';
       instance.items = [];
 
-      const result = await Validator.validateTarget(Order, { data: instance });
+      const result = await Validator.validateClass(Order, { data: instance });
       expect(result.success).toBe(true);
     });
 
@@ -351,7 +351,7 @@ describe('Target Validation Rules', () => {
         },
       ];
 
-      const result = await Validator.validateTarget(Store, { data: instance });
+      const result = await Validator.validateClass(Store, { data: instance });
       expect(result.success).toBe(true);
     });
 
@@ -387,7 +387,7 @@ describe('Target Validation Rules', () => {
         phone: '123-456-7890', // Valid
       };
 
-      const result = await Validator.validateTarget(Person, { data: instance });
+      const result = await Validator.validateClass(Person, { data: instance });
       expect(result.success).toBe(false);
       expect((result as any).errors?.length).toBeGreaterThan(2); // At least 3 errors
     });

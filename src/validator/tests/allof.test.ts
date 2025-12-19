@@ -61,7 +61,7 @@ describe('AllOf Validation Rules', () => {
       phoneNumber?: string;
     }
     it('should validate single email or array of emails', async () => {
-      const result = await Validator.validateTarget(RegisterDto, {
+      const result = await Validator.validateClass(RegisterDto, {
         data: {
           email: 'borisfouomen14@gmail.com',
           password: '1',
@@ -701,7 +701,7 @@ describe('AllOf Validation Rules', () => {
           field: string = '';
         }
 
-        const result = Validator.validateTarget(TestEntity, {
+        const result = Validator.validateClass(TestEntity, {
           data: {
             field: 'test@example.com',
           },
@@ -780,7 +780,7 @@ describe('AllOf Validation Rules', () => {
           contact: string = '';
         }
 
-        const result = await Validator.validateTarget(User, {
+        const result = await Validator.validateClass(User, {
           data: {
             contact: 'test@example.com',
           },
@@ -803,7 +803,7 @@ describe('AllOf Validation Rules', () => {
           contact: string = '';
         }
 
-        const result = await Validator.validateTarget(User, {
+        const result = await Validator.validateClass(User, {
           data: { contact: 'not-an-email' },
           i18n,
         });
@@ -827,7 +827,7 @@ describe('AllOf Validation Rules', () => {
           age: number = 0;
         }
 
-        const result = await Validator.validateTarget(Form, {
+        const result = await Validator.validateClass(Form, {
           data: {
             email: 'test@example.com',
             age: 25,
@@ -853,7 +853,7 @@ describe('AllOf Validation Rules', () => {
           age: number = 0;
         }
 
-        const result = await Validator.validateTarget(Form, {
+        const result = await Validator.validateClass(Form, {
           data: {
             email: '',
             age: 'not-a-number',
@@ -889,7 +889,7 @@ describe('AllOf Validation Rules', () => {
           contact: string = '';
         }
 
-        const result = await Validator.validateTarget(User, {
+        const result = await Validator.validateClass(User, {
           data: {
             contact: 'test@example.com',
           },
@@ -906,7 +906,7 @@ describe('AllOf Validation Rules', () => {
           contact: string = '';
         }
 
-        const result = await Validator.validateTarget(User, {
+        const result = await Validator.validateClass(User, {
           data: {
             contact: '',
           },
@@ -924,7 +924,7 @@ describe('AllOf Validation Rules', () => {
           info: string = '';
         }
 
-        const result = await Validator.validateTarget(Contact, {
+        const result = await Validator.validateClass(Contact, {
           data: {
             info: 'user@example.com',
           },
@@ -940,7 +940,7 @@ describe('AllOf Validation Rules', () => {
           id: string = '';
         }
 
-        const result = await Validator.validateTarget(Identifier, {
+        const result = await Validator.validateClass(Identifier, {
           data: {
             id: '550e8400-e29b-41d4-a716-446655440000',
           },
@@ -958,7 +958,7 @@ describe('AllOf Validation Rules', () => {
           value: string = '';
         }
 
-        const result = await Validator.validateTarget(FieldMeta, {
+        const result = await Validator.validateClass(FieldMeta, {
           data: {
             value: 'hello',
           },
@@ -979,7 +979,7 @@ describe('AllOf Validation Rules', () => {
           field: string = '';
         }
 
-        const result = await Validator.validateTarget(CustomField, {
+        const result = await Validator.validateClass(CustomField, {
           data: {
             field: 'ADMIN-123',
           },
@@ -1001,7 +1001,7 @@ describe('AllOf Validation Rules', () => {
           value: string = '';
         }
 
-        const result = await Validator.validateTarget(MixedRules, {
+        const result = await Validator.validateClass(MixedRules, {
           data: {
             value: 'user@example.com',
           },
@@ -1019,7 +1019,7 @@ describe('AllOf Validation Rules', () => {
           contact?: string;
         }
 
-        const result = await Validator.validateTarget(OptionalAllOf, {
+        const result = await Validator.validateClass(OptionalAllOf, {
           data: {
             contact: 'test@example.com',
           },
@@ -1037,7 +1037,7 @@ describe('AllOf Validation Rules', () => {
           value: string = '';
         }
 
-        const result = await Validator.validateTarget(ErrorTest, {
+        const result = await Validator.validateClass(ErrorTest, {
           data: {
             value: '',
           },
@@ -1055,7 +1055,7 @@ describe('AllOf Validation Rules', () => {
           value: string = '';
         }
 
-        const result = await Validator.validateTarget(MultiError, {
+        const result = await Validator.validateClass(MultiError, {
           data: {
             value: '',
           },
@@ -1075,7 +1075,7 @@ describe('AllOf Validation Rules', () => {
           value: string = '';
         }
 
-        const result = await Validator.validateTarget(EmptyRules, {
+        const result = await Validator.validateClass(EmptyRules, {
           data: {
             value: 'any-value',
           },
@@ -1093,7 +1093,7 @@ describe('AllOf Validation Rules', () => {
           email: string = '';
         }
 
-        const result = await Validator.validateTarget(SingleRule, {
+        const result = await Validator.validateClass(SingleRule, {
           data: {
             email: 'test@example.com',
           },
@@ -1109,7 +1109,7 @@ describe('AllOf Validation Rules', () => {
           email: string = '';
         }
 
-        const result = await Validator.validateTarget(SingleRule, {
+        const result = await Validator.validateClass(SingleRule, {
           data: {
             email: 'not-an-email',
           },
@@ -1133,7 +1133,7 @@ describe('AllOf Validation Rules', () => {
           code: string = '';
         }
 
-        const result = await Validator.validateTarget(MultiProperty, {
+        const result = await Validator.validateClass(MultiProperty, {
           data: {
             contact: 'test@example.com',
             id: '550e8400-e29b-41d4-a716-446655440000',
@@ -1157,7 +1157,7 @@ describe('AllOf Validation Rules', () => {
           id: string = '';
         }
 
-        const result = await Validator.validateTarget(MultiProperty, {
+        const result = await Validator.validateClass(MultiProperty, {
           data: {
             contact: '',
             id: 'invalid-uuid',
@@ -1188,7 +1188,7 @@ describe('AllOf Validation Rules', () => {
           value: number = 0;
         }
 
-        const result = await Validator.validateTarget(NumericAllOf, {
+        const result = await Validator.validateClass(NumericAllOf, {
           data: {
             value: 42,
           },
@@ -1209,7 +1209,7 @@ describe('AllOf Validation Rules', () => {
           value: boolean = false;
         }
 
-        const result = await Validator.validateTarget(BooleanAllOf, {
+        const result = await Validator.validateClass(BooleanAllOf, {
           data: {
             value: true,
           },
@@ -1228,7 +1228,7 @@ describe('AllOf Validation Rules', () => {
           value: any[] = [];
         }
 
-        const result = await Validator.validateTarget(ArrayAllOf, {
+        const result = await Validator.validateClass(ArrayAllOf, {
           data: {
             value: [1, 2, 3],
           },
@@ -1246,7 +1246,7 @@ describe('AllOf Validation Rules', () => {
           value: string | null = '';
         }
 
-        const result = await Validator.validateTarget(NullTest, {
+        const result = await Validator.validateClass(NullTest, {
           data: {
             value: null,
           },
@@ -1262,7 +1262,7 @@ describe('AllOf Validation Rules', () => {
           value?: string = '';
         }
 
-        const result = await Validator.validateTarget(UndefinedTest, {
+        const result = await Validator.validateClass(UndefinedTest, {
           data: {
             value: undefined,
           },
@@ -1285,7 +1285,7 @@ describe('AllOf Validation Rules', () => {
           value: string = '';
         }
 
-        const result = await Validator.validateTarget(EmptyStringTest, {
+        const result = await Validator.validateClass(EmptyStringTest, {
           data: {
             value: '',
           },
@@ -1313,7 +1313,7 @@ describe('AllOf Validation Rules', () => {
           field: string = '';
         }
 
-        const result = await Validator.validateTarget<
+        const result = await Validator.validateClass<
           typeof AdminField,
           AdminContext
         >(AdminField, {
@@ -1364,7 +1364,7 @@ describe('AllOf Validation Rules', () => {
         ];
 
         for (const testData of testCases) {
-          const result = await Validator.validateTarget(ComplexEntity, {
+          const result = await Validator.validateClass(ComplexEntity, {
             data: testData,
             i18n,
           });
@@ -1381,14 +1381,14 @@ describe('AllOf Validation Rules', () => {
           code?: string;
         }
 
-        const result1 = await Validator.validateTarget(UserProfile, {
+        const result1 = await Validator.validateClass(UserProfile, {
           data: {
             contact: 'test@example.com',
           },
           i18n,
         });
 
-        const result2 = await Validator.validateTarget(UserProfile, {
+        const result2 = await Validator.validateClass(UserProfile, {
           data: {
             contact: 'test@example.com',
             code: 'abc',
@@ -1407,7 +1407,7 @@ describe('AllOf Validation Rules', () => {
           field: string = '';
         }
 
-        const result = await Validator.validateTarget(DebugEntity, {
+        const result = await Validator.validateClass(DebugEntity, {
           data: {
             field: '',
           },
@@ -1427,7 +1427,7 @@ describe('AllOf Validation Rules', () => {
           value: string = '';
         }
 
-        const result = await Validator.validateTarget(ErrorReporting, {
+        const result = await Validator.validateClass(ErrorReporting, {
           data: {
             value: '',
           },
@@ -1447,7 +1447,7 @@ describe('AllOf Validation Rules', () => {
         }
 
         const start = Date.now();
-        const result = await Validator.validateTarget(Performance, {
+        const result = await Validator.validateClass(Performance, {
           data: {
             value: 'test@example.com',
           },
@@ -1471,7 +1471,7 @@ describe('AllOf Validation Rules', () => {
           value: string = '';
         }
 
-        const result = await Validator.validateTarget(LargeRuleSet, {
+        const result = await Validator.validateClass(LargeRuleSet, {
           data: {
             value: 'this-is-a-very-long-email-address@example.com',
           },

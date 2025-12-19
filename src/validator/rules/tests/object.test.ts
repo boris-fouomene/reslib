@@ -65,7 +65,7 @@ describe('Object Validation Rules', () => {
       const instance = new TestClass();
       instance.config = { setting: 'value' };
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(true);
@@ -80,7 +80,7 @@ describe('Object Validation Rules', () => {
       const instance = new TestClass();
       (instance as any).config = 'not an object';
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(false);

@@ -12,7 +12,7 @@
 
   feat: introduce core types for the validation system, including rule definitions and validation results.
 
-  feat: add ValidatorError, ValidatorTargetError, and ValidatorBulkError classes with their respective interfaces for structured validation error handling
+  feat: add ValidatorError, ValidatorClassError, and ValidatorBulkError classes with their respective interfaces for structured validation error handling
 
 ## 1.1.1
 

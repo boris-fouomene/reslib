@@ -59,6 +59,7 @@ This directory contains comprehensive documentation for `reslib/validator`.
 ---
 
 ### **[API_REFERENCE.md](./API_REFERENCE.md)** - API Documentation
+
 | **[COMPARISON.md](./COMPARISON.md)** - Library comparison | Comparing with other validators |
 
 **Complete API reference for Validator class** (~500 lines)
@@ -66,7 +67,7 @@ This directory contains comprehensive documentation for `reslib/validator`.
 **Contents:**
 
 - `Validator.validate()` - detailed API
-- `Validator.validateTarget()` - class validation
+- `Validator.validateClass()` - class validation
 - `Validator.registerRule()` - custom rules
 - All helper methods
 - Type definitions
@@ -109,14 +110,14 @@ README.md ←―――――― You are here!
 
 | Goal                             | Document                               | Section            |
 | -------------------------------- | -------------------------------------- | ------------------ |
-| **Get started quickly**          | [README.md](../README.md)               | Quick Start        |
+| **Get started quickly**          | [README.md](../README.md)              | Quick Start        |
 | **See all available rules**      | [RULES.md](./RULES.md)                 | All categories     |
 | **Learn a specific rule**        | [GUIDE.md](./GUIDE.md)                 | Rule categories    |
-| **Use decorators**               | [README.md](../README.md)               | Decorator examples |
-| **Validate a class**             | [API_REFERENCE.md](./API_REFERENCE.md) | validateTarget()   |
+| **Use decorators**               | [README.md](../README.md)              | Decorator examples |
+| **Validate a class**             | [API_REFERENCE.md](./API_REFERENCE.md) | validateClass()    |
 | **Create custom rules**          | [GUIDE.md](./GUIDE.md)                 | Custom Rules       |
 | **Check method signatures**      | [API_REFERENCE.md](./API_REFERENCE.md) | API Reference      |
-| **See common patterns**          | [README.md](../README.md)               | Common Patterns    |
+| **See common patterns**          | [README.md](../README.md)              | Common Patterns    |
 | **Troubleshoot issues**          | [GUIDE.md](./GUIDE.md)                 | Troubleshooting    |
 | **Migrate from another library** | [GUIDE.md](./GUIDE.md)                 | Migration Guide    |
 

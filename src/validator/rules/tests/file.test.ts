@@ -87,7 +87,7 @@ describe('File Validation Rules', () => {
       const instance = new TestClass();
       instance.uploadedFile = textFile;
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(true);
@@ -102,7 +102,7 @@ describe('File Validation Rules', () => {
       const instance = new TestClass();
       instance.uploadedFile = 'not a file';
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(false);
@@ -168,7 +168,7 @@ describe('File Validation Rules', () => {
       const instance = new TestClass();
       instance.uploadedFile = textFile;
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(true);
@@ -184,7 +184,7 @@ describe('File Validation Rules', () => {
       const instance = new TestClass();
       instance.uploadedFile = largeFile;
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(false);
@@ -239,7 +239,7 @@ describe('File Validation Rules', () => {
       const instance = new TestClass();
       instance.uploadedFile = textFile;
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(true);
@@ -255,7 +255,7 @@ describe('File Validation Rules', () => {
       const instance = new TestClass();
       instance.uploadedFile = smallFile;
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(false);
@@ -318,7 +318,7 @@ describe('File Validation Rules', () => {
       const instance = new TestClass();
       instance.uploadedFile = textFile;
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(true);
@@ -334,7 +334,7 @@ describe('File Validation Rules', () => {
       const instance = new TestClass();
       instance.uploadedFile = textFile;
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(false);
@@ -384,7 +384,7 @@ describe('File Validation Rules', () => {
       const instance = new TestClass();
       instance.uploadedFile = imageFile;
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(true);
@@ -400,7 +400,7 @@ describe('File Validation Rules', () => {
       const instance = new TestClass();
       instance.uploadedFile = textFile;
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(false);
@@ -482,7 +482,7 @@ describe('File Validation Rules', () => {
       const instance = new TestClass();
       instance.uploadedFile = textFile;
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(true);
@@ -498,7 +498,7 @@ describe('File Validation Rules', () => {
       const instance = new TestClass();
       instance.uploadedFile = textFile;
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(false);
@@ -517,7 +517,7 @@ describe('File Validation Rules', () => {
       const instance = new TestClass();
       instance.uploadedFile = textFile;
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(true);
@@ -538,7 +538,7 @@ describe('File Validation Rules', () => {
       const instance = new TestClass();
       instance.uploadedFile = imageFile;
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(true);
@@ -555,7 +555,7 @@ describe('File Validation Rules', () => {
       const instance = new TestClass();
       instance.uploadedFile = imageFile;
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(false);

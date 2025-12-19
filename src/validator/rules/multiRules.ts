@@ -133,8 +133,8 @@ import { Validator } from '../validator';
  * // When validation fails, you get aggregated error messages:
  * // "Invalid email format; Invalid phone number format; Invalid UUID format"
  *
- * // Use with validateTarget for comprehensive error reporting
- * const result = await Validator.validateTarget(FlexibleForm, {
+ * // Use with validateClass for comprehensive error reporting
+ * const result = await Validator.validateClass(FlexibleForm, {
  *   identifier: "invalid"
  * });
  *
@@ -176,7 +176,7 @@ import { Validator } from '../validator';
  *
  * @see {@link Validator.validateOneOfRule} - The underlying validation method
  * @see {@link Validator.buildMultiRuleDecorator} - Factory method that creates this decorator
- * @see {@link Validator.validateTarget} - For class-based validation using decorators
+ * @see {@link Validator.validateClass} - For class-based validation using decorators
  * @see {@link ValidateMultiRuleOptions} - Type definition for validation options
  *
  * @public
@@ -277,8 +277,8 @@ export const OneOf = Validator.buildMultiRuleDecorator(function OneOf(options) {
  * // When validation fails, you get the first error encountered:
  * // "Value must be at least 5 characters long"
  *
- * // Use with validateTarget for comprehensive error reporting
- * const result = await Validator.validateTarget(StrictForm, {
+ * // Use with validateClass for comprehensive error reporting
+ * const result = await Validator.validateClass(StrictForm, {
  *   code: "hi"
  * });
  *
@@ -321,7 +321,7 @@ export const OneOf = Validator.buildMultiRuleDecorator(function OneOf(options) {
  *
  * @see {@link Validator.validateAllOfRule} - The underlying validation method
  * @see {@link Validator.buildMultiRuleDecorator} - Factory method that creates this decorator
- * @see {@link Validator.validateTarget} - For class-based validation using decorators
+ * @see {@link Validator.validateClass} - For class-based validation using decorators
  * @see {@link ValidateMultiRuleOptions} - Type definition for validation options
  *
  * @public
@@ -475,7 +475,7 @@ export const AllOf = Validator.buildMultiRuleDecorator(function AllOf(options) {
  *
  * @see {@link Validator.validateArrayOfRule} - The underlying validation method
  * @see {@link Validator.buildMultiRuleDecorator} - Factory method that creates this decorator
- * @see {@link Validator.validateTarget} - For class-based validation using decorators
+ * @see {@link Validator.validateClass} - For class-based validation using decorators
  * @see {@link ValidateMultiRuleOptions} - Type definition for validation options
  *
  * @public

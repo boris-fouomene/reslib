@@ -401,7 +401,7 @@ describe('Validator Rules', () => {
     });
     it('Validate rules with decorators on entity', async () => {
       try {
-        await Validator.validateTarget(Entity, {
+        await Validator.validateClass(Entity, {
           data: { id: 10, aString: '1234567890' },
         });
       } catch (error) {
@@ -505,7 +505,7 @@ describe('Validator Rules', () => {
         });
 
         it('should skip validation for empty string with decorator', async () => {
-          const result = await Validator.validateTarget(TestEntity, {
+          const result = await Validator.validateClass(TestEntity, {
             data: { emptyField: '', optionalEmail: '' },
           });
           expect(result.data?.emptyField).toBe('');
@@ -513,7 +513,7 @@ describe('Validator Rules', () => {
         });
 
         it('should apply other rules when not empty string', async () => {
-          const result = await Validator.validateTarget(TestEntity, {
+          const result = await Validator.validateClass(TestEntity, {
             data: { emptyField: null, optionalEmail: 'invalid-email' },
           });
           expect(result.success).toBe(false);
@@ -646,7 +646,7 @@ describe('Validator Rules', () => {
         });
 
         it('should skip validation for null with decorator', async () => {
-          const result = await Validator.validateTarget(TestEntity, {
+          const result = await Validator.validateClass(TestEntity, {
             data: {
               nullableField: null,
               optionalEmail: null,
@@ -659,7 +659,7 @@ describe('Validator Rules', () => {
         });
 
         it('should skip validation for undefined with decorator', async () => {
-          const result = await Validator.validateTarget(TestEntity, {
+          const result = await Validator.validateClass(TestEntity, {
             data: {
               nullableField: undefined,
               optionalEmail: undefined,
@@ -672,7 +672,7 @@ describe('Validator Rules', () => {
         });
 
         it('should apply other rules when value is empty string', async () => {
-          const result = await Validator.validateTarget(TestEntity, {
+          const result = await Validator.validateClass(TestEntity, {
             data: {
               nullableField: '',
               optionalEmail: 'invalid-email',
@@ -683,7 +683,7 @@ describe('Validator Rules', () => {
         });
 
         it('should apply other rules when value is valid', async () => {
-          const result = await Validator.validateTarget(TestEntity, {
+          const result = await Validator.validateClass(TestEntity, {
             data: {
               nullableField: 'valid',
               optionalEmail: 'test@example.com',
@@ -823,7 +823,7 @@ describe('Validator Rules', () => {
         });
 
         it('should skip validation for undefined with decorator', async () => {
-          const result = await Validator.validateTarget(TestEntity, {
+          const result = await Validator.validateClass(TestEntity, {
             data: {
               sometimesField: undefined,
               optionalEmail: undefined,
@@ -836,14 +836,14 @@ describe('Validator Rules', () => {
         });
 
         it('should skip validation when field is absent from data', async () => {
-          const result = await Validator.validateTarget(TestEntity, {
+          const result = await Validator.validateClass(TestEntity, {
             data: {},
           });
           expect(result.data).toEqual({});
         });
 
         it('should apply other rules when value is null', async () => {
-          const result = await Validator.validateTarget(TestEntity, {
+          const result = await Validator.validateClass(TestEntity, {
             data: {
               sometimesField: null,
               optionalEmail: 'invalid-email',
@@ -854,7 +854,7 @@ describe('Validator Rules', () => {
         });
 
         it('should apply other rules when value is empty string', async () => {
-          const result = await Validator.validateTarget(TestEntity, {
+          const result = await Validator.validateClass(TestEntity, {
             data: {
               sometimesField: '',
               optionalEmail: 'invalid-email',
@@ -865,7 +865,7 @@ describe('Validator Rules', () => {
         });
 
         it('should apply other rules when value is valid', async () => {
-          const result = await Validator.validateTarget(TestEntity, {
+          const result = await Validator.validateClass(TestEntity, {
             data: {
               sometimesField: 'valid',
               optionalEmail: 'test@example.com',
@@ -955,7 +955,7 @@ describe('Validator Rules', () => {
       });
     });
 
-    describe('Integration with validateTarget', () => {
+    describe('Integration with validateClass', () => {
       class ComprehensiveEntity {
         @IsRequired()
         @IsEmail()
@@ -997,14 +997,14 @@ describe('Validator Rules', () => {
           sometimesRequired: undefined,
         };
 
-        const result = await Validator.validateTarget(ComprehensiveEntity, {
+        const result = await Validator.validateClass(ComprehensiveEntity, {
           data: validData,
         });
         expect(result.data).toEqual(validData);
       });
 
       it('should fail when required fields are missing', async () => {
-        const result = await Validator.validateTarget(ComprehensiveEntity, {
+        const result = await Validator.validateClass(ComprehensiveEntity, {
           data: {
             emptyEmail: '',
             nullableEmail: null,
@@ -1018,7 +1018,7 @@ describe('Validator Rules', () => {
       });
 
       it('should fail when nullable fields have invalid values', async () => {
-        const result = await Validator.validateTarget(ComprehensiveEntity, {
+        const result = await Validator.validateClass(ComprehensiveEntity, {
           data: {
             requiredEmail: 'test@example.com',
             emptyEmail: 'invalid-email',
@@ -1033,7 +1033,7 @@ describe('Validator Rules', () => {
       });
 
       it('should skip Optional fields when absent from data', async () => {
-        const result = await Validator.validateTarget(ComprehensiveEntity, {
+        const result = await Validator.validateClass(ComprehensiveEntity, {
           data: {
             requiredEmail: 'test@example.com',
             emptyRequired: '',

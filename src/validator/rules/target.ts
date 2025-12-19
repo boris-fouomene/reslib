@@ -26,7 +26,7 @@ import { Validator } from '../validator';
  *   address: Address;
  * }
  *
- * const result = await Validator.validateTarget(User, {
+ * const result = await Validator.validateClass(User, {
  *   data: {
  *     name: "John",
  *     address: { street: "123 Main St", city: "Springfield" }
@@ -78,7 +78,7 @@ import { Validator } from '../validator';
  *   contact?: Contact;
  * }
  *
- * const result = await Validator.validateTarget(Person, {
+ * const result = await Validator.validateClass(Person, {
  *   data: { name: "Alice" }
  * });
  * ```
@@ -86,14 +86,14 @@ import { Validator } from '../validator';
  * @param options - Configuration object containing the target class constructor
  *   The nested class must have validation decorators to be useful
  *
- * @returns Promise<ValidatorTargetResult> containing:
+ * @returns Promise<ValidatorClassResult> containing:
  *   - isValid: boolean indicating if validation passed
  *   - errors: object mapping field names to error arrays (includes nested path info)
  *   - data: the original validated data on success
  *
  * How It Works:
  * 1. Accepts an array containing a class constructor: [NestedClass]
- * 2. When parent class is validated via Validator.validateTarget(), this decorator
+ * 2. When parent class is validated via Validator.validateClass(), this decorator
  *    triggers validation of the nested object against the NestedClass schema
  * 3. Delegates to Validator.validateNestedRule() for actual nested validation
  * 4. Returns errors with nested field path information (e.g., [address]: [street]: error)
@@ -121,7 +121,7 @@ import { Validator } from '../validator';
  * Implementation:
  * Created using Validator.buildTargetRuleDecorator() which:
  * - Attaches validation metadata to the class property
- * - Enables property validation when validateTarget() is called
+ * - Enables property validation when validateClass() is called
  * - Works seamlessly with other validation decorators
  *
  * @decorator
@@ -133,7 +133,7 @@ import { Validator } from '../validator';
  * - Supports partial data validation
  * - Errors include nested field information for clarity
  * @see Validator.validateNestedRule - Core validation logic
- * @see Validator.validateTarget - Parent validation method
+ * @see Validator.validateClass - Parent validation method
  * @see Validator.buildTargetRuleDecorator - Decorator factory
  * @public
  */

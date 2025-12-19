@@ -53,7 +53,7 @@ describe('Array Validation Rules', () => {
       const instance = new TestClass();
       instance.items = [1, 2, 3];
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(true);
@@ -68,7 +68,7 @@ describe('Array Validation Rules', () => {
       const instance = new TestClass();
       instance.items = 'not an array' as any;
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(false);
@@ -125,7 +125,7 @@ describe('Array Validation Rules', () => {
       const instance = new TestClass();
       instance.items = [1, 2, 3];
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(true);
@@ -141,7 +141,7 @@ describe('Array Validation Rules', () => {
       const instance = new TestClass();
       instance.items = [1];
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(false);
@@ -197,7 +197,7 @@ describe('Array Validation Rules', () => {
       const instance = new TestClass();
       instance.items = [1, 2];
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(true);
@@ -213,7 +213,7 @@ describe('Array Validation Rules', () => {
       const instance = new TestClass();
       instance.items = [1, 2, 3];
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(false);
@@ -266,7 +266,7 @@ describe('Array Validation Rules', () => {
       const instance = new TestClass();
       instance.items = [1, 2, 3];
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(true);
@@ -282,7 +282,7 @@ describe('Array Validation Rules', () => {
       const instance = new TestClass();
       instance.items = [1, 2, 3];
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(false);
@@ -346,7 +346,7 @@ describe('Array Validation Rules', () => {
       const instance = new TestClass();
       instance.roles = ['admin', 'user', 'guest'];
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(true);
@@ -362,7 +362,7 @@ describe('Array Validation Rules', () => {
       const instance = new TestClass();
       instance.roles = ['user', 'guest'];
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(false);
@@ -452,7 +452,7 @@ describe('Array Validation Rules', () => {
       const instance = new TestClass();
       instance.tags = ['js', 'ts', 'python'];
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(true);
@@ -468,7 +468,7 @@ describe('Array Validation Rules', () => {
       const instance = new TestClass();
       instance.tags = ['js', 'ts', 'js'];
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(false);
@@ -532,7 +532,7 @@ describe('Array Validation Rules', () => {
       const instance = new TestClass();
       instance.names = ['Alice', 'Bob', 'Charlie'];
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(true);
@@ -548,7 +548,7 @@ describe('Array Validation Rules', () => {
       const instance = new TestClass();
       instance.names = ['Alice', 123 as any, 'Charlie'];
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(false);
@@ -619,7 +619,7 @@ describe('Array Validation Rules', () => {
       const instance = new TestClass();
       instance.scores = [85, 92, 78];
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(true);
@@ -635,7 +635,7 @@ describe('Array Validation Rules', () => {
       const instance = new TestClass();
       instance.scores = [85, '92' as any, 78];
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(false);

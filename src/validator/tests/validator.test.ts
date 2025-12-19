@@ -458,7 +458,7 @@ describe('Validator', () => {
     });
   });
 
-  describe('validateTarget - Success Cases', () => {
+  describe('validateClass - Success Cases', () => {
     it('should validate a class with all valid data', async () => {
       class User {
         email: string = '';
@@ -466,7 +466,7 @@ describe('Validator', () => {
       }
 
       // Manually attach rules using metadata for this test
-      const result = await Validator.validateTarget(User, {
+      const result = await Validator.validateClass(User, {
         data: { email: 'test@example.com', name: 'John' },
       });
 
@@ -481,7 +481,7 @@ describe('Validator', () => {
         url: string = '';
       }
 
-      const result = await Validator.validateTarget(Product, {
+      const result = await Validator.validateClass(Product, {
         data: {
           name: 'Product Name',
           price: 99.99,
@@ -503,7 +503,7 @@ describe('Validator', () => {
         field: string = '';
       }
 
-      const result = await Validator.validateTarget(SimpleClass, {
+      const result = await Validator.validateClass(SimpleClass, {
         data: {
           field: 'value',
         },
@@ -516,7 +516,7 @@ describe('Validator', () => {
     });
   });
 
-  describe('validateTarget - Error Aggregation', () => {
+  describe('validateClass - Error Aggregation', () => {
     it('should aggregate multiple field errors', async () => {
       // This test would need actual decorators on the class
       class User {
@@ -525,7 +525,7 @@ describe('Validator', () => {
         name: string = '';
       }
 
-      const result = await Validator.validateTarget(User, {
+      const result = await Validator.validateClass(User, {
         data: { email: 'invalid', name: '' },
       });
       // Result will depend on whether decorators are applied
@@ -541,7 +541,7 @@ describe('Validator', () => {
         email: string = '';
       }
 
-      const result = await Validator.validateTarget(User, {
+      const result = await Validator.validateClass(User, {
         data: { email: 'invalid' },
       });
 

@@ -70,7 +70,7 @@ describe('String Validation Rules', () => {
       const instance = new TestClass();
       instance.name = 'John Doe';
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(true);
@@ -85,7 +85,7 @@ describe('String Validation Rules', () => {
       const instance = new TestClass();
       instance.name = 123;
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(false);
@@ -145,7 +145,7 @@ describe('String Validation Rules', () => {
       const instance = new TestClass();
       instance.name = 'John';
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(true);
@@ -160,7 +160,7 @@ describe('String Validation Rules', () => {
       const instance = new TestClass();
       instance.name = '';
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(false);
@@ -222,7 +222,7 @@ describe('String Validation Rules', () => {
       const instance = new TestClass();
       instance.username = 'john';
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(true);
@@ -237,7 +237,7 @@ describe('String Validation Rules', () => {
       const instance = new TestClass();
       instance.username = 'hi';
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(false);
@@ -289,7 +289,7 @@ describe('String Validation Rules', () => {
       const instance = new TestClass();
       instance.title = 'Short';
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(true);
@@ -304,7 +304,7 @@ describe('String Validation Rules', () => {
       const instance = new TestClass();
       instance.title = 'This is too long';
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(false);
@@ -357,7 +357,7 @@ describe('String Validation Rules', () => {
       const instance = new TestClass();
       instance.code = 'ABCDEFGH';
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(true);
@@ -372,7 +372,7 @@ describe('String Validation Rules', () => {
       const instance = new TestClass();
       instance.code = 'SHORT';
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(true);
@@ -433,7 +433,7 @@ describe('String Validation Rules', () => {
       const instance = new TestClass();
       instance.url = 'https://example.com';
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(true);
@@ -448,7 +448,7 @@ describe('String Validation Rules', () => {
       const instance = new TestClass();
       instance.url = 'ftp://example.com';
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(false);
@@ -503,7 +503,7 @@ describe('String Validation Rules', () => {
       const instance = new TestClass();
       instance.domain = 'example.com';
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(true);
@@ -518,7 +518,7 @@ describe('String Validation Rules', () => {
       const instance = new TestClass();
       instance.domain = 'example.io';
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(false);
@@ -542,7 +542,7 @@ describe('String Validation Rules', () => {
       const instance = new User();
       instance.username = 'johndoe';
 
-      const result = await Validator.validateTarget(User, { data: instance });
+      const result = await Validator.validateClass(User, { data: instance });
       expect(result.success).toBe(true);
     });
 
@@ -556,7 +556,7 @@ describe('String Validation Rules', () => {
       const instance = new Email();
       instance.address = 'user@gmail.com';
 
-      const result = await Validator.validateTarget(Email, { data: instance });
+      const result = await Validator.validateClass(Email, { data: instance });
       expect(result.success).toBe(true);
     });
 
@@ -571,7 +571,7 @@ describe('String Validation Rules', () => {
       const instance = new Phone();
       instance.number = '+12345678901';
 
-      const result = await Validator.validateTarget(Phone, { data: instance });
+      const result = await Validator.validateClass(Phone, { data: instance });
       expect(result.success).toBe(true);
     });
 
@@ -587,7 +587,7 @@ describe('String Validation Rules', () => {
       const instance = new Password();
       instance.value = 'MySecurePassword123';
 
-      const result = await Validator.validateTarget(Password, {
+      const result = await Validator.validateClass(Password, {
         data: instance,
       });
       expect(result.success).toBe(true);
@@ -603,7 +603,7 @@ describe('String Validation Rules', () => {
       const instance = new FileUpload();
       instance.filename = 'photo.jpg';
 
-      const result = await Validator.validateTarget(FileUpload, {
+      const result = await Validator.validateClass(FileUpload, {
         data: instance,
       });
       expect(result.success).toBe(true);

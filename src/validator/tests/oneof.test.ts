@@ -636,7 +636,7 @@ describe('OneOf Validation Rules', () => {
           field: string = '';
         }
 
-        const result = Validator.validateTarget(TestEntity, {
+        const result = Validator.validateClass(TestEntity, {
           data: { field: 'test@example.com' },
         });
 
@@ -712,7 +712,7 @@ describe('OneOf Validation Rules', () => {
           contact: string = '';
         }
 
-        const result = await Validator.validateTarget(User, {
+        const result = await Validator.validateClass(User, {
           data: { contact: 'test@example.com' },
         });
 
@@ -732,7 +732,7 @@ describe('OneOf Validation Rules', () => {
           contact: string = '';
         }
 
-        const result = await Validator.validateTarget(User, {
+        const result = await Validator.validateClass(User, {
           data: { contact: 'invalid' },
         });
 
@@ -757,7 +757,7 @@ describe('OneOf Validation Rules', () => {
           phone: string | number = '';
         }
 
-        const result = await Validator.validateTarget(Form, {
+        const result = await Validator.validateClass(Form, {
           data: { email: 'test@example.com', phone: 1234567890 },
         });
 
@@ -779,7 +779,7 @@ describe('OneOf Validation Rules', () => {
           phone: string = '';
         }
 
-        const result = await Validator.validateTarget(Form, {
+        const result = await Validator.validateClass(Form, {
           data: { email: 'invalid', phone: 'invalid' },
         });
 
@@ -811,7 +811,7 @@ describe('OneOf Validation Rules', () => {
           contact: string = '';
         }
 
-        const result = await Validator.validateTarget(User, {
+        const result = await Validator.validateClass(User, {
           data: { contact: 'test@example.com' },
         });
 
@@ -825,7 +825,7 @@ describe('OneOf Validation Rules', () => {
           contact: string = '';
         }
 
-        const result = await Validator.validateTarget(User, {
+        const result = await Validator.validateClass(User, {
           data: { contact: 'invalid' },
         });
 
@@ -840,11 +840,11 @@ describe('OneOf Validation Rules', () => {
           info: string = '';
         }
 
-        const emailResult = await Validator.validateTarget(Contact, {
+        const emailResult = await Validator.validateClass(Contact, {
           data: { info: 'user@example.com' },
         });
 
-        const phoneResult = await Validator.validateTarget(Contact, {
+        const phoneResult = await Validator.validateClass(Contact, {
           data: { info: '+1 202 555 0185' },
         });
 
@@ -858,11 +858,11 @@ describe('OneOf Validation Rules', () => {
           id: string | number = '';
         }
 
-        const uuidResult = await Validator.validateTarget(Identifier, {
+        const uuidResult = await Validator.validateClass(Identifier, {
           data: { id: '550e8400-e29b-41d4-a716-446655440000' },
         });
 
-        const numberResult = await Validator.validateTarget(Identifier, {
+        const numberResult = await Validator.validateClass(Identifier, {
           data: { id: 12345 },
         });
 
@@ -878,11 +878,11 @@ describe('OneOf Validation Rules', () => {
           value: string = '';
         }
 
-        const shortResult = await Validator.validateTarget(FieldMeta, {
+        const shortResult = await Validator.validateClass(FieldMeta, {
           data: { value: 'ab' },
         });
 
-        const longResult = await Validator.validateTarget(FieldMeta, {
+        const longResult = await Validator.validateClass(FieldMeta, {
           data: { value: 'this is a long string' },
         });
 
@@ -898,11 +898,11 @@ describe('OneOf Validation Rules', () => {
           field: string = '';
         }
 
-        const adminResult = await Validator.validateTarget(CustomField, {
+        const adminResult = await Validator.validateClass(CustomField, {
           data: { field: 'ADMIN-123' },
         });
 
-        const emailResult = await Validator.validateTarget(CustomField, {
+        const emailResult = await Validator.validateClass(CustomField, {
           data: { field: 'user@example.com' },
         });
 
@@ -922,15 +922,15 @@ describe('OneOf Validation Rules', () => {
           value: string = '';
         }
 
-        const emailResult = await Validator.validateTarget(MixedRules, {
+        const emailResult = await Validator.validateClass(MixedRules, {
           data: { value: 'test@example.com' },
         });
 
-        const minLengthResult = await Validator.validateTarget(MixedRules, {
+        const minLengthResult = await Validator.validateClass(MixedRules, {
           data: { value: 'longstring' },
         });
 
-        const customResult = await Validator.validateTarget(MixedRules, {
+        const customResult = await Validator.validateClass(MixedRules, {
           data: { value: 'any@thing' },
         });
 
@@ -948,7 +948,7 @@ describe('OneOf Validation Rules', () => {
           contact: string = '';
         }
 
-        const result = await Validator.validateTarget(RequiredOneOf, {
+        const result = await Validator.validateClass(RequiredOneOf, {
           data: { contact: 'test@example.com' },
         });
 
@@ -963,7 +963,7 @@ describe('OneOf Validation Rules', () => {
           value: string = '';
         }
 
-        const result = await Validator.validateTarget(ErrorTest, {
+        const result = await Validator.validateClass(ErrorTest, {
           data: { value: 'invalid-input' },
         });
 
@@ -978,7 +978,7 @@ describe('OneOf Validation Rules', () => {
           value: string = '';
         }
 
-        const result = await Validator.validateTarget(MultiError, {
+        const result = await Validator.validateClass(MultiError, {
           data: { value: 'not-valid' },
         });
 
@@ -996,7 +996,7 @@ describe('OneOf Validation Rules', () => {
           value: string = '';
         }
 
-        const result = await Validator.validateTarget(EmptyRules, {
+        const result = await Validator.validateClass(EmptyRules, {
           data: { value: 'any-value' },
         });
 
@@ -1011,7 +1011,7 @@ describe('OneOf Validation Rules', () => {
           email: string = '';
         }
 
-        const result = await Validator.validateTarget(SingleRule, {
+        const result = await Validator.validateClass(SingleRule, {
           data: { email: 'test@example.com' },
         });
 
@@ -1024,7 +1024,7 @@ describe('OneOf Validation Rules', () => {
           email: string = '';
         }
 
-        const result = await Validator.validateTarget(SingleRule, {
+        const result = await Validator.validateClass(SingleRule, {
           data: { email: 'not-an-email' },
         });
 
@@ -1045,7 +1045,7 @@ describe('OneOf Validation Rules', () => {
           flexField: string | number = '';
         }
 
-        const result = await Validator.validateTarget(MultiProperty, {
+        const result = await Validator.validateClass(MultiProperty, {
           data: { contact: 'test@example.com', id: 123, flexField: 'hello' },
         });
 
@@ -1064,7 +1064,7 @@ describe('OneOf Validation Rules', () => {
           id: string = '';
         }
 
-        const result = await Validator.validateTarget(MultiProperty, {
+        const result = await Validator.validateClass(MultiProperty, {
           data: { contact: 'invalid-email', id: 'invalid-uuid' },
         });
 
@@ -1088,7 +1088,7 @@ describe('OneOf Validation Rules', () => {
           value: string | number = '';
         }
 
-        const result = await Validator.validateTarget(NumericOneOf, {
+        const result = await Validator.validateClass(NumericOneOf, {
           data: { value: 42 },
         });
 
@@ -1105,7 +1105,7 @@ describe('OneOf Validation Rules', () => {
           value: string | boolean = '';
         }
 
-        const result = await Validator.validateTarget(BooleanOneOf, {
+        const result = await Validator.validateClass(BooleanOneOf, {
           data: { value: true },
         });
 
@@ -1118,7 +1118,7 @@ describe('OneOf Validation Rules', () => {
           value: string | any[] = '';
         }
 
-        const result = await Validator.validateTarget(ArrayOneOf, {
+        const result = await Validator.validateClass(ArrayOneOf, {
           data: { value: [1, 2, 3] },
         });
 
@@ -1133,7 +1133,7 @@ describe('OneOf Validation Rules', () => {
           value: string | null = '';
         }
 
-        const result = await Validator.validateTarget(NullTest, {
+        const result = await Validator.validateClass(NullTest, {
           data: { value: null },
         });
 
@@ -1146,7 +1146,7 @@ describe('OneOf Validation Rules', () => {
           value?: string = '';
         }
 
-        const result = await Validator.validateTarget(UndefinedTest, {
+        const result = await Validator.validateClass(UndefinedTest, {
           data: { value: undefined },
         });
 
@@ -1165,7 +1165,7 @@ describe('OneOf Validation Rules', () => {
           value: string = '';
         }
 
-        const result = await Validator.validateTarget(EmptyStringTest, {
+        const result = await Validator.validateClass(EmptyStringTest, {
           data: { value: '' },
         });
 
@@ -1190,7 +1190,7 @@ describe('OneOf Validation Rules', () => {
           field: string = '';
         }
 
-        const result = await Validator.validateTarget<
+        const result = await Validator.validateClass<
           typeof AdminField,
           AdminContext
         >(AdminField, {
@@ -1247,7 +1247,7 @@ describe('OneOf Validation Rules', () => {
         ];
 
         for (const testData of testCases) {
-          const result = await Validator.validateTarget(ComplexEntity, {
+          const result = await Validator.validateClass(ComplexEntity, {
             data: testData,
           });
           expect(result.success).toBe(true);
@@ -1263,11 +1263,11 @@ describe('OneOf Validation Rules', () => {
           identifier?: string | number;
         }
 
-        const result1 = await Validator.validateTarget(UserProfile, {
+        const result1 = await Validator.validateClass(UserProfile, {
           data: { contact: 'test@example.com' },
         });
 
-        const result2 = await Validator.validateTarget(UserProfile, {
+        const result2 = await Validator.validateClass(UserProfile, {
           data: { contact: 'test@example.com', identifier: 'abc' },
         });
         expect(result1.success).toBe(false);
@@ -1282,7 +1282,7 @@ describe('OneOf Validation Rules', () => {
           field: string = '';
         }
 
-        const result = await Validator.validateTarget(DebugEntity, {
+        const result = await Validator.validateClass(DebugEntity, {
           data: { field: 'invalid' },
         });
 
@@ -1299,7 +1299,7 @@ describe('OneOf Validation Rules', () => {
           value: string = '';
         }
 
-        const result = await Validator.validateTarget(ErrorReporting, {
+        const result = await Validator.validateClass(ErrorReporting, {
           data: { value: 'not-valid' },
         });
 
@@ -1318,7 +1318,7 @@ describe('OneOf Validation Rules', () => {
         }
 
         const start = Date.now();
-        const result = await Validator.validateTarget(Performance, {
+        const result = await Validator.validateClass(Performance, {
           data: { value: 'test@example.com' },
         });
         const duration = Date.now() - start;
@@ -1339,7 +1339,7 @@ describe('OneOf Validation Rules', () => {
           value: string = '';
         }
 
-        const result = await Validator.validateTarget(LargeRuleSet, {
+        const result = await Validator.validateClass(LargeRuleSet, {
           data: { value: 'test@example.com' },
         });
 

@@ -5,12 +5,12 @@ import { i18n } from '../../i18n';
 import { ValidateNested } from '../rules/target';
 
 /**
- * Comprehensive test suite for Validator.validateTarget() method
+ * Comprehensive test suite for Validator.validateClass() method
  *
  * Tests class validation using the Either pattern (discriminated unions).
  * Covers basic validation, error handling, and response format consistency.
  */
-describe('Validator.validateTarget() - Class Validation with Either Pattern', () => {
+describe('Validator.validateClass() - Class Validation with Either Pattern', () => {
   beforeAll(async () => {
     await i18n.setLocale('en');
   });
@@ -27,7 +27,7 @@ describe('Validator.validateTarget() - Class Validation with Either Pattern', ()
         name: 'John Doe',
       };
 
-      const result = await Validator.validateTarget(User, { data });
+      const result = await Validator.validateClass(User, { data });
 
       expect(result.success).toBe(true);
       if (result.success) {
@@ -48,7 +48,7 @@ describe('Validator.validateTarget() - Class Validation with Either Pattern', ()
         endpoint: 'https://api.example.com',
       };
 
-      const result = await Validator.validateTarget(Config, { data });
+      const result = await Validator.validateClass(Config, { data });
 
       expect(result.success).toBe(true);
       if (result.success) {
@@ -72,7 +72,7 @@ describe('Validator.validateTarget() - Class Validation with Either Pattern', ()
         field3: true,
       };
 
-      const result = await Validator.validateTarget(Model, {
+      const result = await Validator.validateClass(Model, {
         data: originalData,
       });
 
@@ -90,7 +90,7 @@ describe('Validator.validateTarget() - Class Validation with Either Pattern', ()
       }
 
       const data = { value: 'test' };
-      const result = await Validator.validateTarget(SimpleModel, { data });
+      const result = await Validator.validateClass(SimpleModel, { data });
 
       expect(result.success).toBe(true);
     });
@@ -111,7 +111,7 @@ describe('Validator.validateTarget() - Class Validation with Either Pattern', ()
       ];
 
       for (const data of variations) {
-        const result = await Validator.validateTarget(OpenModel, { data });
+        const result = await Validator.validateClass(OpenModel, { data });
         expect(result.success).toBe(true);
       }
     });
@@ -128,7 +128,7 @@ describe('Validator.validateTarget() - Class Validation with Either Pattern', ()
         extra3: { nested: true },
       };
 
-      const result = await Validator.validateTarget(Model, { data });
+      const result = await Validator.validateClass(Model, { data });
       expect(result.success).toBe(true);
     });
   });
@@ -140,7 +140,7 @@ describe('Validator.validateTarget() - Class Validation with Either Pattern', ()
       }
 
       const data = {};
-      const result = await Validator.validateTarget(Model, { data });
+      const result = await Validator.validateClass(Model, { data });
 
       expect(result.success).toBe(true);
     });
@@ -153,7 +153,7 @@ describe('Validator.validateTarget() - Class Validation with Either Pattern', ()
       }
 
       const data = { field1: 'value' };
-      const result = await Validator.validateTarget(Model, { data });
+      const result = await Validator.validateClass(Model, { data });
 
       expect(result.success).toBe(true);
     });
@@ -165,7 +165,7 @@ describe('Validator.validateTarget() - Class Validation with Either Pattern', ()
         data: string = '';
       }
 
-      const result = await Validator.validateTarget(Model, {
+      const result = await Validator.validateClass(Model, {
         data: { data: 'test' },
       });
 
@@ -179,7 +179,7 @@ describe('Validator.validateTarget() - Class Validation with Either Pattern', ()
         data: string = '';
       }
 
-      const result = await Validator.validateTarget(Model, {
+      const result = await Validator.validateClass(Model, {
         data: { data: 'test' },
       });
 
@@ -194,7 +194,7 @@ describe('Validator.validateTarget() - Class Validation with Either Pattern', ()
         field: string = '';
       }
 
-      const result = await Validator.validateTarget(Model, {
+      const result = await Validator.validateClass(Model, {
         data: { field: 'test' },
       });
 
@@ -206,7 +206,7 @@ describe('Validator.validateTarget() - Class Validation with Either Pattern', ()
         field: string = '';
       }
 
-      const result = await Validator.validateTarget(Model, {
+      const result = await Validator.validateClass(Model, {
         data: { field: 'test' },
       });
 
@@ -225,7 +225,7 @@ describe('Validator.validateTarget() - Class Validation with Either Pattern', ()
       }
 
       const context = { userId: 123, role: 'admin' };
-      const result = await Validator.validateTarget(Model, {
+      const result = await Validator.validateClass(Model, {
         data: { field: 'test' },
         context,
       });
@@ -240,7 +240,7 @@ describe('Validator.validateTarget() - Class Validation with Either Pattern', ()
 
       const testContext = { testValue: 'context-data' };
 
-      const result = await Validator.validateTarget(Model, {
+      const result = await Validator.validateClass(Model, {
         data: { field: 'test' },
         context: testContext,
       });
@@ -260,7 +260,7 @@ describe('Validator.validateTarget() - Class Validation with Either Pattern', ()
       const instances = [{ id: '1' }, { id: '2' }, { id: '3' }];
 
       const results = await Promise.all(
-        instances.map((data) => Validator.validateTarget(Model, { data }))
+        instances.map((data) => Validator.validateClass(Model, { data }))
       );
 
       expect(results).toHaveLength(3);
@@ -275,9 +275,9 @@ describe('Validator.validateTarget() - Class Validation with Either Pattern', ()
       }
 
       const results = await Promise.all([
-        Validator.validateTarget(Model, { data: { value: 'a' } }),
-        Validator.validateTarget(Model, { data: { value: 'b' } }),
-        Validator.validateTarget(Model, { data: { value: 'c' } }),
+        Validator.validateClass(Model, { data: { value: 'a' } }),
+        Validator.validateClass(Model, { data: { value: 'b' } }),
+        Validator.validateClass(Model, { data: { value: 'c' } }),
       ]);
 
       expect(results[0].success).toBe(true);
@@ -293,7 +293,7 @@ describe('Validator.validateTarget() - Class Validation with Either Pattern', ()
       }
 
       const data = { text: 'test string' };
-      const result = await Validator.validateTarget(Model, { data });
+      const result = await Validator.validateClass(Model, { data });
 
       if (result.success) {
         expect(result.data?.text).toEqual('test string');
@@ -307,7 +307,7 @@ describe('Validator.validateTarget() - Class Validation with Either Pattern', ()
       }
 
       const data = { count: 42 };
-      const result = await Validator.validateTarget(Model, { data });
+      const result = await Validator.validateClass(Model, { data });
 
       if (result.success) {
         expect(result.data?.count).toEqual(42);
@@ -321,7 +321,7 @@ describe('Validator.validateTarget() - Class Validation with Either Pattern', ()
       }
 
       const data = { active: true };
-      const result = await Validator.validateTarget(Model, { data });
+      const result = await Validator.validateClass(Model, { data });
 
       if (result.success) {
         expect(result.data?.active).toEqual(true);
@@ -335,7 +335,7 @@ describe('Validator.validateTarget() - Class Validation with Either Pattern', ()
       }
 
       const data = { items: ['a', 'b', 'c'] };
-      const result = await Validator.validateTarget(Model, { data });
+      const result = await Validator.validateClass(Model, { data });
 
       if (result.success) {
         expect(Array.isArray(result.data?.items)).toBe(true);
@@ -349,7 +349,7 @@ describe('Validator.validateTarget() - Class Validation with Either Pattern', ()
       }
 
       const data = { metadata: { key: 'value', nested: { prop: 123 } } };
-      const result = await Validator.validateTarget(Model, { data });
+      const result = await Validator.validateClass(Model, { data });
 
       if (result.success) {
         expect(typeof result.data?.metadata).toBe('object');
@@ -364,7 +364,7 @@ describe('Validator.validateTarget() - Class Validation with Either Pattern', ()
         value: string = '';
       }
 
-      const result = await Validator.validateTarget(Simple, {
+      const result = await Validator.validateClass(Simple, {
         data: { value: 'test' },
       });
       expect(result.success).toBe(true);
@@ -373,7 +373,7 @@ describe('Validator.validateTarget() - Class Validation with Either Pattern', ()
     it('should work with empty classes', async () => {
       class Empty {}
 
-      const result = await Validator.validateTarget(Empty, { data: {} });
+      const result = await Validator.validateClass(Empty, { data: {} });
       expect(result.success).toBe(true);
     });
 
@@ -383,7 +383,7 @@ describe('Validator.validateTarget() - Class Validation with Either Pattern', ()
         count: number = 0;
       }
 
-      const result = await Validator.validateTarget(WithDefaults, { data: {} });
+      const result = await Validator.validateClass(WithDefaults, { data: {} });
       expect(result.success).toBe(true);
     });
   });
@@ -394,7 +394,7 @@ describe('Validator.validateTarget() - Class Validation with Either Pattern', ()
         field: string = '';
       }
 
-      const result = await Validator.validateTarget(Model, {
+      const result = await Validator.validateClass(Model, {
         data: { field: 'test' },
       });
 
@@ -415,7 +415,7 @@ describe('Validator.validateTarget() - Class Validation with Either Pattern', ()
         field: string = '';
       }
 
-      const result = await Validator.validateTarget(Model, {
+      const result = await Validator.validateClass(Model, {
         data: { field: 'test' },
       });
 
@@ -439,7 +439,7 @@ describe('Validator.validateTarget() - Class Validation with Either Pattern', ()
         return `CUSTOM[${name}]: ${error}`;
       };
 
-      const result = await Validator.validateTarget(Model, {
+      const result = await Validator.validateClass(Model, {
         data: { field: 'test' },
         errorMessageBuilder: customBuilder,
       });
@@ -459,10 +459,10 @@ describe('Validator.validateTarget() - Class Validation with Either Pattern', ()
       }
 
       const [userResult, productResult] = await Promise.all([
-        Validator.validateTarget(UserModel, {
+        Validator.validateClass(UserModel, {
           data: { email: 'test@example.com' },
         }),
-        Validator.validateTarget(ProductModel, { data: { name: 'Widget' } }),
+        Validator.validateClass(ProductModel, { data: { name: 'Widget' } }),
       ]);
 
       expect(userResult.success).toBe(true);
@@ -476,7 +476,7 @@ describe('Validator.validateTarget() - Class Validation with Either Pattern', ()
         field: string = '';
       }
 
-      const result = await Validator.validateTarget(Model, {
+      const result = await Validator.validateClass(Model, {
         data: { field: 'test' },
       });
 
@@ -499,7 +499,7 @@ describe('Validator.validateTarget() - Class Validation with Either Pattern', ()
         field: string = '';
       }
 
-      const result = await Validator.validateTarget(Model, {
+      const result = await Validator.validateClass(Model, {
         data: { field: 'test' },
       });
 
@@ -532,7 +532,7 @@ describe('Validator.validateTarget() - Class Validation with Either Pattern', ()
         },
       };
 
-      const result = await Validator.validateTarget(User, { data });
+      const result = await Validator.validateClass(User, { data });
 
       expect(result.success).toBe(true);
       if (result.success) {
@@ -557,7 +557,7 @@ describe('Validator.validateTarget() - Class Validation with Either Pattern', ()
       }
 
       // Validation should also succeed
-      const result = await Validator.validateTarget(User, {
+      const result = await Validator.validateClass(User, {
         data: {
           email: 'test@example.com',
           address: { street: 'Main St' },
@@ -584,7 +584,7 @@ describe('Validator.validateTarget() - Class Validation with Either Pattern', ()
         address: 'not an object',
       };
 
-      const result = await Validator.validateTarget(User, { data });
+      const result = await Validator.validateClass(User, { data });
 
       // Without validation decorators on nested class, any data passes
       expect(result.success).toBe(false);
@@ -621,7 +621,7 @@ describe('Validator.validateTarget() - Class Validation with Either Pattern', ()
         },
       };
 
-      const result = await Validator.validateTarget(Event, { data });
+      const result = await Validator.validateClass(Event, { data });
 
       expect(result.success).toBe(true);
       if (result.success) {
@@ -654,9 +654,9 @@ describe('Validator.validateTarget() - Class Validation with Either Pattern', ()
         },
       };
 
-      const result = await Validator.validateTarget(Person, { data });
+      const result = await Validator.validateClass(Person, { data });
 
-      // When validateTarget is called, it should process the @ValidateNested decorator
+      // When validateClass is called, it should process the @ValidateNested decorator
       // which triggers the normalizedRule === "validatenested" condition,
       // invoking Validator.validateNestedRule internally
       expect(result.success).toBe(true);
@@ -683,7 +683,7 @@ describe('Validator.validateTarget() - Class Validation with Either Pattern', ()
         address: null,
       };
 
-      const result = await Validator.validateTarget(User, { data });
+      const result = await Validator.validateClass(User, { data });
       // Without validation decorators on nested class, null passes
       expect(result.success).toBe(false);
     });
@@ -709,7 +709,7 @@ describe('Validator.validateTarget() - Class Validation with Either Pattern', ()
         },
       };
 
-      const result = await Validator.validateTarget(User, { data });
+      const result = await Validator.validateClass(User, { data });
 
       expect(result.success).toBe(true);
     });
@@ -738,7 +738,7 @@ describe('Validator.validateTarget() - Class Validation with Either Pattern', ()
         },
       };
 
-      const result = await Validator.validateTarget(Document, { data });
+      const result = await Validator.validateClass(Document, { data });
       expect(result.success).toBe(true);
       if (result.success) {
         expect(result.data.title).toBe('My Document');
@@ -758,7 +758,7 @@ describe('Validator.validateTarget() - Class Validation with Either Pattern', ()
       }
 
       // Test with nested object present
-      const resultWith = await Validator.validateTarget(Customer, {
+      const resultWith = await Validator.validateClass(Customer, {
         data: {
           email: 'customer@example.com',
           phone: {
@@ -771,7 +771,7 @@ describe('Validator.validateTarget() - Class Validation with Either Pattern', ()
       expect(resultWith.success).toBe(true);
 
       // Test with nested object omitted
-      const resultWithout = await Validator.validateTarget(Customer, {
+      const resultWithout = await Validator.validateClass(Customer, {
         data: {
           email: 'customer@example.com',
         },
@@ -787,7 +787,7 @@ describe('Validator.validateTarget() - Class Validation with Either Pattern', ()
         field: string = '';
       }
 
-      const result = await Validator.validateTarget(Model, {
+      const result = await Validator.validateClass(Model, {
         data: { field: 'test' },
       });
 
@@ -807,7 +807,7 @@ describe('Validator.validateTarget() - Class Validation with Either Pattern', ()
         field: string = '';
       }
 
-      const result = await Validator.validateTarget(Model, {
+      const result = await Validator.validateClass(Model, {
         data: { field: 'test' },
       });
 

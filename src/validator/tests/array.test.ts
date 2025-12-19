@@ -100,14 +100,14 @@ describe('Array Validation Rules', () => {
       });
 
       it('should validate array with decorator', async () => {
-        const result = await Validator.validateTarget(TestEntity, {
+        const result = await Validator.validateClass(TestEntity, {
           data: { items: [1, 2, 3] },
         });
         expect(result.data?.items).toEqual([1, 2, 3]);
       });
 
       it('should reject non-array with decorator', async () => {
-        const result = await Validator.validateTarget(TestEntity, {
+        const result = await Validator.validateClass(TestEntity, {
           data: { items: 'not an array' },
         });
         expect(result.success).toBe(false);
@@ -201,14 +201,14 @@ describe('Array Validation Rules', () => {
       });
 
       it('should validate sufficient length with decorator', async () => {
-        const result = await Validator.validateTarget(TestEntity, {
+        const result = await Validator.validateClass(TestEntity, {
           data: { items: [1, 2, 3] },
         });
         expect(result.data?.items).toEqual([1, 2, 3]);
       });
 
       it('should reject insufficient length with decorator', async () => {
-        const result = await Validator.validateTarget(TestEntity, {
+        const result = await Validator.validateClass(TestEntity, {
           data: { items: [1] },
         });
         expect(result.success).toBe(false);
@@ -280,14 +280,14 @@ describe('Array Validation Rules', () => {
       }
 
       it('should validate under maximum length with decorator', async () => {
-        const result = await Validator.validateTarget(TestEntity, {
+        const result = await Validator.validateClass(TestEntity, {
           data: { items: [1, 2] },
         });
         expect(result.data?.items).toEqual([1, 2]);
       });
 
       it('should reject excessive length with decorator', async () => {
-        const result = await Validator.validateTarget(TestEntity, {
+        const result = await Validator.validateClass(TestEntity, {
           data: { items: [1, 2, 3, 4] },
         });
         expect(result.success).toBe(false);
@@ -350,14 +350,14 @@ describe('Array Validation Rules', () => {
       }
 
       it('should validate exact length with decorator', async () => {
-        const result = await Validator.validateTarget(TestEntity, {
+        const result = await Validator.validateClass(TestEntity, {
           data: { coordinates: [1, 2, 3] },
         });
         expect(result.data?.coordinates).toEqual([1, 2, 3]);
       });
 
       it('should reject wrong length with decorator', async () => {
-        const result = await Validator.validateTarget(TestEntity, {
+        const result = await Validator.validateClass(TestEntity, {
           data: { coordinates: [1, 2] },
         });
         expect(result.success).toBe(false);
@@ -438,14 +438,14 @@ describe('Array Validation Rules', () => {
       }
 
       it('should validate containing values with decorator', async () => {
-        const result = await Validator.validateTarget(TestEntity, {
+        const result = await Validator.validateClass(TestEntity, {
           data: { permissions: ['read', 'write', 'delete'] },
         });
         expect(result.data?.permissions).toEqual(['read', 'write', 'delete']);
       });
 
       it('should reject missing values with decorator', async () => {
-        const result = await Validator.validateTarget(TestEntity, {
+        const result = await Validator.validateClass(TestEntity, {
           data: { permissions: ['write', 'delete'] },
         });
         expect(result.success).toBe(false);
@@ -535,7 +535,7 @@ describe('Array Validation Rules', () => {
       }
 
       it('should validate unique values with decorator', async () => {
-        const result = await Validator.validateTarget(TestEntity, {
+        const result = await Validator.validateClass(TestEntity, {
           data: { tags: ['javascript', 'typescript', 'react'] },
         });
         expect(result.data?.tags).toEqual([
@@ -546,7 +546,7 @@ describe('Array Validation Rules', () => {
       });
 
       it('should reject duplicate values with decorator', async () => {
-        const result = await Validator.validateTarget(TestEntity, {
+        const result = await Validator.validateClass(TestEntity, {
           data: { tags: ['javascript', 'typescript', 'javascript'] },
         });
         expect(result.success).toBe(false);
@@ -650,12 +650,12 @@ describe('Array Validation Rules', () => {
           ],
         });
 
-        const ok = await Validator.validateTarget(StringList, {
+        const ok = await Validator.validateClass(StringList, {
           data: { items: ['x', 'y'] },
         });
         expect(ok.success).toBe(true);
 
-        const bad = await Validator.validateTarget(StringList, {
+        const bad = await Validator.validateClass(StringList, {
           data: { items: ['x', 1 as any] },
         });
         expect(bad.success).toBe(false);
@@ -765,12 +765,12 @@ describe('Array Validation Rules', () => {
           ],
         });
 
-        const ok = await Validator.validateTarget(NumberList, {
+        const ok = await Validator.validateClass(NumberList, {
           data: { values: [1, 2, 3] },
         });
         expect(ok.success).toBe(true);
 
-        const bad = await Validator.validateTarget(NumberList, {
+        const bad = await Validator.validateClass(NumberList, {
           data: { values: [1, '2' as any] },
         });
         expect(bad.success).toBe(false);
@@ -789,14 +789,14 @@ describe('Array Validation Rules', () => {
       }
 
       it('should validate array meeting all criteria', async () => {
-        const result = await Validator.validateTarget(StrictArrayEntity, {
+        const result = await Validator.validateClass(StrictArrayEntity, {
           data: { items: [1, 2, 3] },
         });
         expect(result.data?.items).toEqual([1, 2, 3]);
       });
 
       it('should reject array failing any criteria', async () => {
-        const result = await Validator.validateTarget(StrictArrayEntity, {
+        const result = await Validator.validateClass(StrictArrayEntity, {
           data: { items: [1, 1, 2, 3, 4, 5] }, // Not unique and too long
         });
         expect(result.success).toBe(false);

@@ -91,7 +91,7 @@ describe('Numeric Validation Rules', () => {
       const instance = new TestClass();
       instance.value = 42;
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(true);
@@ -106,7 +106,7 @@ describe('Numeric Validation Rules', () => {
       const instance = new TestClass();
       instance.value = '42.5';
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(false);
@@ -122,7 +122,7 @@ describe('Numeric Validation Rules', () => {
       const instance = new TestClass();
       instance.value = 'not-a-number';
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(false);
@@ -186,7 +186,7 @@ describe('Numeric Validation Rules', () => {
       const instance = new TestClass();
       instance.positiveNumber = 5;
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(true);
@@ -202,7 +202,7 @@ describe('Numeric Validation Rules', () => {
       const instance = new TestClass();
       instance.value = 5;
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(false);
@@ -242,7 +242,7 @@ describe('Numeric Validation Rules', () => {
       const instance = new TestClass();
       instance.age = 25;
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(true);
@@ -258,7 +258,7 @@ describe('Numeric Validation Rules', () => {
       const instance = new TestClass();
       instance.age = 18;
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(true);
@@ -294,7 +294,7 @@ describe('Numeric Validation Rules', () => {
       const instance = new TestClass();
       instance.percentage = 85;
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(true);
@@ -333,7 +333,7 @@ describe('Numeric Validation Rules', () => {
       const instance = new TestClass();
       instance.score = 95;
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(true);
@@ -372,7 +372,7 @@ describe('Numeric Validation Rules', () => {
       const instance = new TestClass();
       instance.answer = 42;
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(true);
@@ -411,7 +411,7 @@ describe('Numeric Validation Rules', () => {
       const instance = new TestClass();
       instance.divisor = 5;
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(true);
@@ -468,7 +468,7 @@ describe('Numeric Validation Rules', () => {
       const instance = new TestClass();
       instance.percentage = 85;
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(true);
@@ -541,7 +541,7 @@ describe('Numeric Validation Rules', () => {
       const instance = new TestClass();
       instance.count = 10;
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(true);
@@ -556,7 +556,7 @@ describe('Numeric Validation Rules', () => {
       const instance = new TestClass();
       instance.count = 10.5;
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(false);
@@ -621,7 +621,7 @@ describe('Numeric Validation Rules', () => {
       const instance = new TestClass();
       instance.value = 42;
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(true);
@@ -662,7 +662,7 @@ describe('Numeric Validation Rules', () => {
       const instance = new TestClass();
       instance.value = 43;
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(true);
@@ -726,7 +726,7 @@ describe('Numeric Validation Rules', () => {
       const instance = new TestClass();
       instance.value = 25;
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(true);
@@ -785,7 +785,7 @@ describe('Numeric Validation Rules', () => {
       const instance = new TestClass();
       instance.price = 19.99;
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(true);
@@ -806,7 +806,7 @@ describe('Numeric Validation Rules', () => {
       const instance = new Person();
       instance.age = 25;
 
-      const result = await Validator.validateTarget(Person, { data: instance });
+      const result = await Validator.validateClass(Person, { data: instance });
       expect(result.success).toBe(true);
     });
 
@@ -821,7 +821,7 @@ describe('Numeric Validation Rules', () => {
       const instance = new Product();
       instance.price = 29.99;
 
-      const result = await Validator.validateTarget(Product, {
+      const result = await Validator.validateClass(Product, {
         data: instance,
       });
       expect(result.success).toBe(true);
@@ -838,7 +838,7 @@ describe('Numeric Validation Rules', () => {
       const instance = new Score();
       instance.percentage = 85.5;
 
-      const result = await Validator.validateTarget(Score, { data: instance });
+      const result = await Validator.validateClass(Score, { data: instance });
       expect(result.success).toBe(true);
     });
 
@@ -853,7 +853,7 @@ describe('Numeric Validation Rules', () => {
       const instance = new Record();
       instance.id = 42;
 
-      const result = await Validator.validateTarget(Record, { data: instance });
+      const result = await Validator.validateClass(Record, { data: instance });
       expect(result.success).toBe(true);
     });
   });

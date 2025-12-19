@@ -10,7 +10,7 @@
 
 - [Validator Class](#validator-class)
   - [Validator.validate()](#validatorvalidate)
-  - [Validator.validateTarget()](#validatorvalidatetarget)
+  - [Validator.validateClass()](#validatorvalidatetarget)
   - [Validator.registerRule()](#validatorregisterrule)
   - [Validator.getRule()](#validatorgetrule)
   - [Validator.getRules()](#validatorgetrules)
@@ -18,7 +18,7 @@
 - [Types](#types)
   - [ValidatorOptions](#validatorvalidateoptions)
   - [ValidatorResult](#validatorvalidateresult)
-  - [ValidatorTargetResult](#validatorvalidatetargetresult)
+  - [ValidatorClassResult](#validatorvalidatetargetresult)
   - [ValidatorRules](#validatorrules)
   - [ValidatorRuleResult](#validatorresult)
 
@@ -126,15 +126,15 @@ const result = await Validator.validate({
 
 ---
 
-### Validator.validateTarget()
+### Validator.validateClass()
 
 **Validate class instances using decorator-based rules.**
 
 ```typescript
-static async validateTarget<Target extends object, Context = unknown>(
+static async validateClass<Target extends object, Context = unknown>(
   TargetClass: new () => Target,
-  options: ValidateTargetOptions<Target, Context>
-): Promise<ValidatorTargetResult<Target, Context>>
+  options: ValidateClassOptions<Target, Context>
+): Promise<ValidatorClassResult<Target, Context>>
 ```
 
 #### Parameters
@@ -149,24 +149,24 @@ static async validateTarget<Target extends object, Context = unknown>(
 #### Returns
 
 ```typescript
-Promise<ValidatorTargetResult<Target, Context>>;
+Promise<ValidatorClassResult<Target, Context>>;
 
-type ValidatorTargetResult<Target, Context> =
-  | ValidatorTargetSuccess<Target, Context>
-  | ValidatorTargetError<Target>;
+type ValidatorClassResult<Target, Context> =
+  | ValidatorClassSuccess<Target, Context>
+  | ValidatorClassError<Target>;
 
-interface ValidatorTargetSuccess<Target, Context> {
+interface ValidatorClassSuccess<Target, Context> {
   success: true;
   status: 'success';
   data: Target;
   context?: Context;
 }
 
-interface ValidatorTargetError<Target> {
+interface ValidatorClassError<Target> {
   success: false;
   status: 'error';
   message: string;
-  errors: ValidatorTargetSingleError[];
+  errors: ValidatorClassItemError[];
   fieldErrors: Record<keyof Target, string>;
   data: Partial<Target>;
 }
@@ -187,7 +187,7 @@ class User {
   password: string;
 }
 
-const result = await Validator.validateTarget(User, {
+const result = await Validator.validateClass(User, {
   data: {
     email: 'user@example.com',
     password: 'SecurePass123',
@@ -223,7 +223,7 @@ class User {
   address: Address;
 }
 
-const result = await Validator.validateTarget(User, {
+const result = await Validator.validateClass(User, {
   data: {
     name: 'John Doe',
     address: {
@@ -237,7 +237,7 @@ const result = await Validator.validateTarget(User, {
 **With context:**
 
 ```typescript
-const result = await Validator.validateTarget(UserDTO, {
+const result = await Validator.validateClass(UserDTO, {
   data: userData,
   context: { userId: currentUser.id, mode: 'strict' },
 });
@@ -451,10 +451,10 @@ interface ValidatorResult<Context = unknown> {
 }
 ```
 
-### ValidatorTargetResult
+### ValidatorClassResult
 
 ```typescript
-interface ValidatorTargetResult<Target, Context = unknown> {
+interface ValidatorClassResult<Target, Context = unknown> {
   isValid: boolean;
   errors: Array<{
     field: string;
@@ -552,7 +552,7 @@ if (!result.isValid) {
 ### Target Validation Errors
 
 ```typescript
-const result = await Validator.validateTarget(UserDTO, {
+const result = await Validator.validateClass(UserDTO, {
   data: invalidData,
 });
 

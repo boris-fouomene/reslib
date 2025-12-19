@@ -1,8 +1,10 @@
 import { I18n } from '@/i18n';
 import { InputFormatterResult } from '@/inputFormatter/types';
 import { ClassConstructor, Dictionary } from '@/types';
-import { ValidatorError, ValidatorTargetError } from './errors';
+import { ValidatorClassError, ValidatorError } from './errors';
 import { ValidatorRuleName, ValidatorRuleParamTypes } from './rules.types';
+
+export * from './rules.types';
 
 /**
  * ## Validator Sync Result
@@ -884,7 +886,7 @@ export type ValidatorRuleParams<
  * work with entire class instances or nested object hierarchies.
  *
  * ### Key Differences from ValidatorOptions
- * - **Extends from ValidateTargetOptions**: Inherits target-specific properties
+ * - **Extends from ValidateClassOptions**: Inherits target-specific properties
  * - **Omits "data" property**: Uses its own `data` property instead
  * - **Optional value property**: Accepts target data instead of single values
  * - **Flexible data property**: Allows any record structure for nested validation
@@ -892,7 +894,7 @@ export type ValidatorRuleParams<
  * ### Inheritance Structure
  * ```
  * ValidatorNestedRuleFunctionOptions
- *   ↳ extends Omit<ValidateTargetOptions<Target, Context, [target: Target]>, "data">
+ *   ↳ extends Omit<ValidateClassOptions<Target, Context, [target: Target]>, "data">
  *     ↳ extends Omit<ValidatorOptions<TParams, Context>, "data" | "rule" | "value">
  *       ↳ extends Omit<Partial<InputFormatterResult>, "value">
  *         ↳ extends BaseData<Context>
@@ -941,7 +943,7 @@ export type ValidatorRuleParams<
  *   // Validate the nested profile
  *   if (value && typeof value === 'object') {
  *     // Perform nested validation logic
- *     const result = await Validator.validateTarget(UserProfile, value);
+ *     const result = await Validator.validateClass(UserProfile, value);
  *     return result.success || "Profile validation failed";
  *   }
  *
@@ -951,7 +953,7 @@ export type ValidatorRuleParams<
  *
  * ### Relationship to Validation System
  * - **Used by**: {@link Validator.validateNestedRule} method
- * - **Complements**: {@link ValidateTargetOptions} for target validation
+ * - **Complements**: {@link ValidateClassOptions} for target validation
  * - **Extends**: {@link ValidatorOptions} with target-specific modifications
  * - **Supports**: Complex nested object validation scenarios
  *
@@ -1003,17 +1005,17 @@ export type ValidatorRuleParams<
  *
  * @public
  *
- * @see {@link ValidateTargetOptions} - Base target validation options
+ * @see {@link ValidateClassOptions} - Base target validation options
  * @see {@link ValidatorOptions} - Single-value validation options
  * @see {@link Validator.validateNestedRule} - Method that uses this interface
- * @see {@link ValidatorTargetData} - Target data type
+ * @see {@link ValidatorClassInput} - Target data type
  * @see {@link ClassConstructor} - Class constructor constraint
  */
 export interface ValidatorNestedRuleFunctionOptions<
   Target extends ClassConstructor = ClassConstructor,
   Context = unknown,
 > extends Omit<
-  ValidateTargetOptions<
+  ValidateClassOptions<
     Target,
     Context,
     [
@@ -1029,7 +1031,7 @@ export interface ValidatorNestedRuleFunctionOptions<
   >,
   'data'
 > {
-  value?: ValidatorTargetData<Target>;
+  value?: ValidatorClassInput<Target>;
 
   data?: Dictionary;
 }
@@ -1503,11 +1505,11 @@ export type ValidatorMultiRuleFunction<
  * ## Target Validation Data Type
  *
  * A mapped type representing the data structure expected for class-based validation using
- * {@link Validator.validateTarget}. This type creates a partial record mapping class properties
+ * {@link Validator.validateClass}. This type creates a partial record mapping class properties
  * to their values, enabling type-safe validation of entire class instances.
  *
  * ### Purpose
- * Provides compile-time type safety for data passed to {@link Validator.validateTarget} method.
+ * Provides compile-time type safety for data passed to {@link Validator.validateClass} method.
  * Ensures that the data object matches the structure of the target class constructor, allowing
  * validation decorators to be applied to class properties with full type checking.
  *
@@ -1536,13 +1538,13 @@ export type ValidatorMultiRuleFunction<
  * }
  *
  * // Type-safe data object
- * const data: ValidatorTargetData<UserForm> = {
+ * const data: ValidatorClassInput<UserForm> = {
  *   email: "user@example.com",  // ✓ Matches UserForm.email
  *   name: "John",               // ✓ Matches UserForm.name
  *   age: 25,                    // ✓ Matches UserForm.age
  * };
  *
- * const result = await Validator.validateTarget(UserForm, data);
+ * const result = await Validator.validateClass(UserForm, data);
  * ```
  *
  * ### Key Features
@@ -1565,26 +1567,26 @@ export type ValidatorMultiRuleFunction<
  * - **Type Coercion**: Values are validated according to decorator rules, not TypeScript types
  *
  * ### Relationship to Validation System
- * - **Used by**: {@link Validator.validateTarget} as input data type
+ * - **Used by**: {@link Validator.validateClass} as input data type
  * - **Mapped from**: Class constructor type via `InstanceType<Target>`
  * - **Validated by**: Decorator-based rules on class properties
- * - **Returns**: {@link ValidatorTargetResult} with validated instance
+ * - **Returns**: {@link ValidatorClassResult} with validated instance
  *
  * @template Target - The class constructor type being validated
  *
  * @public
  *
- * @see {@link Validator.validateTarget} - Method that accepts this data type
- * @see {@link ValidateTargetOptions} - Options type that includes this
- * @see {@link ValidatorTargetResult} - Result type returned after validation
+ * @see {@link Validator.validateClass} - Method that accepts this data type
+ * @see {@link ValidateClassOptions} - Options type that includes this
+ * @see {@link ValidatorClassResult} - Result type returned after validation
  * @see {@link ClassConstructor} - Base constructor type constraint
  */
-export type ValidatorTargetData<
+export type ValidatorClassInput<
   Target extends ClassConstructor = ClassConstructor,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
 > = Partial<Record<keyof InstanceType<Target>, any>>;
 
-export interface ValidateTargetOptions<
+export interface ValidateClassOptions<
   Target extends ClassConstructor = ClassConstructor,
   Context = unknown,
   ParamsTypes extends ValidatorRuleParams = ValidatorRuleParams,
@@ -1592,7 +1594,7 @@ export interface ValidateTargetOptions<
   ValidatorOptions<ParamsTypes, Context>,
   'data' | 'rule' | 'value'
 > {
-  data: ValidatorTargetData<Target>;
+  data: ValidatorClassInput<Target>;
   /**
    * The parent data/context for nested validations
    *
@@ -1619,8 +1621,8 @@ export interface ValidateTargetOptions<
 }
 export interface ValidateBulkOptions<
   Target extends ClassConstructor = ClassConstructor,
-> extends Omit<ValidateTargetOptions<Target>, 'data'> {
-  data: ValidatorTargetData<Target>[];
+> extends Omit<ValidateClassOptions<Target>, 'data'> {
+  data: ValidatorClassInput<Target>[];
 }
 
 /**
@@ -1772,142 +1774,6 @@ export interface ValidatorSuccess<Context = unknown> extends BaseData<Context> {
 
   message?: string | undefined;
 }
-/**
- * ## Base Data Structure
- *
- * Shared data structure for both validation success and failure results.
- * Contains the core properties that exist in all validation outcomes.
- *
- * ### Purpose
- * Provides a common interface for passing data through the validation pipeline
- * and in the result objects. Used by both {@link ValidatorSuccess}
- * and {@link ValidatorError}.
- *
- * ### Properties
- * - **value**: The actual value being validated (required)
- * - **data**: Optional contextual data available to validation rules
- * - **context**: Optional typed context object for advanced validations
- *
- * ### Usage in Validation Results
- * ```typescript
- * // In ValidatorSuccess
- * const successResult: ValidatorSuccess = {
- *   success: true,
- *   value: "user@example.com",  // Original validated value
- *   data: { userId: 123 },      // Additional context
- *   context: { ... },           // Typed context object
- *   validatedAt: new Date(),
- *   duration: 5,
- * };
- *
- * // In ValidatorError
- * const failureResult: ValidatorError = {
- *   success: false,
- *   value: "invalid-email",     // Value that failed
- *   data: { userId: 123 },      // Available during failure too
- *   context: { ... },           // Context from validation request
- *   error: { ... },
- *   failedAt: new Date(),
- *   duration: 2,
- * };
- * ```
- *
- * @template Context - Type parameter for optional typed context object
- *
- * @public
- *
- * @see {@link ValidatorOptions} - Options passed to validation
- * @see {@link ValidatorSuccess} - Success result type
- * @see {@link ValidatorError} - Failure result type
- */
-interface BaseData<Context = unknown> {
-  /**
-   * The value to use for performing the validation.
-   * This is the actual data that will be validated against the specified rules.
-   *
-   * @type {any}
-   *
-   * @example
-   * ```typescript
-   * const result = await Validator.validate({
-   *   value: "user@example.com",  // This is the value being validated
-   *   rules: ["Required", "Email"],
-   * });
-   * ```
-   *
-   * @remarks
-   * - This is the core data being validated
-   * - Type can be any JavaScript value: string, number, object, array, etc.
-   * - Available in both success and failure results
-   */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  value: any;
-
-  /**
-   * Optional data object providing contextual information for validation rules.
-   *
-   * This property is used to provide additional context for the validation rule.
-   * It can be used to pass any additional data that might be needed for validation,
-   * such as form data, related field values, or other contextual information.
-   *
-   * @type {Dictionary | undefined}
-   *
-   * @example
-   * ```typescript
-   * const result = await Validator.validate({
-   *   value: "test@example.com",
-   *   rules: ["Required", "Email"],
-   *   data: {
-   *     userId: 123,
-   *     formId: "user_form",
-   *   },
-   * });
-   * ```
-   *
-   * @remarks
-   * - Optional property (not required)
-   * - Passed to validation rule functions via options.data
-   * - Useful for multi-field validation scenarios
-   * - Commonly used for form data context in validateTarget
-   */
-  data?: Dictionary;
-
-  /**
-   * Optional typed context object for validation.
-   *
-   * Provides a typed context that can be passed to validation rules for
-   * advanced validation scenarios requiring external data or permissions.
-   *
-   * @template Context - Type of the context object
-   *
-   * @example
-   * ```typescript
-   * interface UserContext {
-   *   userId: number;
-   *   permissions: string[];
-   *   isAdmin: boolean;
-   * }
-   *
-   * const result = await Validator.validate<UserContext>({
-   *   value: "admin_action",
-   *   rules: ["Required"],
-   *   context: {
-   *     userId: 123,
-   *     permissions: ["read", "write", "admin"],
-   *     isAdmin: true,
-   *   },
-   * });
-   * ```
-   *
-   * @remarks
-   * - Optional property (not required)
-   * - Type is defined by the Context generic parameter
-   * - Passed to all validation rule functions
-   * - Enables context-aware validation rules
-   * - Commonly used for permission-based or user-specific validations
-   */
-  context?: Context;
-}
 
 /**
  * ## Validation Result Type (Discriminated Union)
@@ -1997,16 +1863,16 @@ export type ValidatorResult<Context = unknown> =
 /**
  * ## Class Validation Success Result
  *
- * Represents a successful multi-field validation result when using {@link Validator.validateTarget}.
+ * Represents a successful multi-field validation result when using {@link Validator.validateClass}.
  * All decorated fields passed their respective validation rules.
  *
  * ### Type Guard
  * Can be narrowed by checking the `success` property:
  * ```typescript
- * const result = await Validator.validateTarget(UserForm, data);
+ * const result = await Validator.validateClass(UserForm, data);
  *
  * if (result.success) {
- *   // result is ValidatorTargetSuccess
+ *   // result is ValidatorClassSuccess
  *   console.log(result.data);        // Validated instance of T
  *   console.log(result.validatedAt); // Timestamp of validation
  * }
@@ -2033,7 +1899,7 @@ export type ValidatorResult<Context = unknown> =
  *   name: string;
  * }
  *
- * const result = await Validator.validateTarget(UserForm, {
+ * const result = await Validator.validateClass(UserForm, {
  *   email: "user@example.com",
  *   name: "John",
  * });
@@ -2064,7 +1930,7 @@ export type ValidatorResult<Context = unknown> =
  * form.email = "user@example.com";
  * form.name = "John";
  *
- * const result = await Validator.validateTarget(UserForm, form);
+ * const result = await Validator.validateClass(UserForm, form);
  *
  * if (result.success) {
  *   // Safe to use result.data
@@ -2077,10 +1943,10 @@ export type ValidatorResult<Context = unknown> =
  *
  * @public
  *
- * @see {@link ValidatorTargetResult}
+ * @see {@link ValidatorClassResult}
  * @see {@link ValidatorSuccess} - Single-value equivalent
  */
-export interface ValidatorTargetSuccess<
+export interface ValidatorClassSuccess<
   Target extends ClassConstructor = ClassConstructor,
   Context = unknown,
 > extends Omit<BaseData<Context>, 'data'> {
@@ -2120,28 +1986,28 @@ export interface ValidatorTargetSuccess<
    */
   duration?: number;
 
-  data: ValidatorTargetData<Target>;
+  data: ValidatorClassInput<Target>;
 }
 
 /**
  * ## Class Validation Result Type (Discriminated Union)
  *
- * Discriminated union type representing the result of a {@link Validator.validateTarget} operation.
- * Discriminated union type representing the result of a {@link Validator.validateTarget} operation.
- * Can be either {@link ValidatorTargetSuccess} or {@link ValidatorTargetError}.
+ * Discriminated union type representing the result of a {@link Validator.validateClass} operation.
+ * Discriminated union type representing the result of a {@link Validator.validateClass} operation.
+ * Can be either {@link ValidatorClassSuccess} or {@link ValidatorClassError}.
  *
  * ### Type Narrowing Strategies
  *
  * **Strategy 1: Check `success` property**
  * ```typescript
- * const result = await Validator.validateTarget(UserForm, data);
+ * const result = await Validator.validateClass(UserForm, data);
  *
  * if (result.success) {
- *   // result is ValidatorTargetSuccess<T>
+ *   // result is ValidatorClassSuccess<T>
  *   console.log(result.data);        // Class instance with all fields valid
  *   console.log(result.validatedAt); // Validation timestamp
  * } else {
- *   // result is ValidatorTargetError
+ *   // result is ValidatorClassError
  *   console.log(result.errors);      // Array of field-level errors
  *   console.log(result.failureCount); // Number of failed fields
  * }
@@ -2151,11 +2017,11 @@ export interface ValidatorTargetSuccess<
  * ```typescript
  * switch (result.status) {
  *   case "success":
- *     // result is ValidatorTargetSuccess
+ *     // result is ValidatorClassSuccess
  *     await saveToDatabase(result.data);
  *     break;
  *   case "error":
- *     // result is ValidatorTargetError
+ *     // result is ValidatorClassError
  *     logErrors(result.errors);
  *     break;
  * }
@@ -2164,10 +2030,10 @@ export interface ValidatorTargetSuccess<
  * **Strategy 3: Use type guard helper**
  * ```typescript
  * if (Validator.isSuccess(result)) {
- *   // result is ValidatorTargetSuccess
+ *   // result is ValidatorClassSuccess
  *   return result.data;
  * }
- * // result is ValidatorTargetError
+ * // result is ValidatorClassError
  * throw new Error(result.message);
  * ```
  *
@@ -2195,7 +2061,7 @@ export interface ValidatorTargetSuccess<
  *   confirmPassword: string;
  * }
  *
- * const result = await Validator.validateTarget(RegistrationForm, {
+ * const result = await Validator.validateClass(RegistrationForm, {
  *   email: "user@example.com",
  *   password: "SecurePass123",
  *   confirmPassword: "SecurePass123",
@@ -2213,25 +2079,25 @@ export interface ValidatorTargetSuccess<
  * ```
  *
  * ### Union Members
- * - {@link ValidatorTargetSuccess} - When all fields pass (success: true)
- * - {@link ValidatorTargetError} - When one or more fields fail (success: false)
+ * - {@link ValidatorClassSuccess} - When all fields pass (success: true)
+ * - {@link ValidatorClassError} - When one or more fields fail (success: false)
  *
  * @template Context - Type of the optional validation context
  *
  * @public
  *
- * @see {@link ValidatorTargetSuccess} - Success variant
- * @see {@link ValidatorTargetError} - Failure variant
- * @see {@link Validator.validateTarget} - Main target validation method
+ * @see {@link ValidatorClassSuccess} - Success variant
+ * @see {@link ValidatorClassError} - Failure variant
+ * @see {@link Validator.validateClass} - Main target validation method
  * @see {@link Validator.isSuccess} - Type guard for success
  * @see {@link Validator.isFailure} - Type guard for failure
  * @see {@link ValidatorResult} - Single-value equivalent
  */
-export type ValidatorTargetResult<
+export type ValidatorClassResult<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   Target extends ClassConstructor = any,
   Context = unknown,
-> = ValidatorTargetSuccess<Target, Context> | ValidatorTargetError<Target>;
+> = ValidatorClassSuccess<Target, Context> | ValidatorClassError<Target>;
 
 /**
  * ## Validator Rule Functions Map
@@ -2259,7 +2125,7 @@ export type ValidatorTargetResult<
  * ### Usage in Validator Class
  * This type is primarily used internally by the {@link Validator} class:
  * - {@link Validator.getRules} returns an instance of this mapped type
- * - {@link Validator.validateTarget} uses it to retrieve rule functions by name
+ * - {@link Validator.validateClass} uses it to retrieve rule functions by name
  * - Rule execution methods access functions through this type-safe lookup table
  *
  * ### Example Structure
@@ -2305,7 +2171,7 @@ export type ValidatorTargetResult<
  * @see {@link ValidatorRuleParamTypes} - Rule parameter definitions
  * @see {@link ValidatorRuleFunction} - Validation function signature
  * @see {@link Validator.getRules} - Method that returns this map
- * @see {@link Validator.validateTarget} - Method that uses this map
+ * @see {@link Validator.validateClass} - Method that uses this map
  */
 export type ValidatorRuleFunctionsMap<Context = unknown> = {
   [K in ValidatorRuleName]: ValidatorRuleFunction<
@@ -2314,4 +2180,91 @@ export type ValidatorRuleFunctionsMap<Context = unknown> = {
   >;
 };
 
-export * from './rules.types';
+interface BaseData<Context = unknown> {
+  /**
+   * The value to use for performing the validation.
+   * This is the actual data that will be validated against the specified rules.
+   *
+   * @type {any}
+   *
+   * @example
+   * ```typescript
+   * const result = await Validator.validate({
+   *   value: "user@example.com",  // This is the value being validated
+   *   rules: ["Required", "Email"],
+   * });
+   * ```
+   *
+   * @remarks
+   * - This is the core data being validated
+   * - Type can be any JavaScript value: string, number, object, array, etc.
+   * - Available in both success and failure results
+   */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  value: any;
+
+  /**
+   * Optional data object providing contextual information for validation rules.
+   *
+   * This property is used to provide additional context for the validation rule.
+   * It can be used to pass any additional data that might be needed for validation,
+   * such as form data, related field values, or other contextual information.
+   *
+   * @type {Dictionary | undefined}
+   *
+   * @example
+   * ```typescript
+   * const result = await Validator.validate({
+   *   value: "test@example.com",
+   *   rules: ["Required", "Email"],
+   *   data: {
+   *     userId: 123,
+   *     formId: "user_form",
+   *   },
+   * });
+   * ```
+   *
+   * @remarks
+   * - Optional property (not required)
+   * - Passed to validation rule functions via options.data
+   * - Useful for multi-field validation scenarios
+   * - Commonly used for form data context in validateClass
+   */
+  data?: Dictionary;
+
+  /**
+   * Optional typed context object for validation.
+   *
+   * Provides a typed context that can be passed to validation rules for
+   * advanced validation scenarios requiring external data or permissions.
+   *
+   * @template Context - Type of the context object
+   *
+   * @example
+   * ```typescript
+   * interface UserContext {
+   *   userId: number;
+   *   permissions: string[];
+   *   isAdmin: boolean;
+   * }
+   *
+   * const result = await Validator.validate<UserContext>({
+   *   value: "admin_action",
+   *   rules: ["Required"],
+   *   context: {
+   *     userId: 123,
+   *     permissions: ["read", "write", "admin"],
+   *     isAdmin: true,
+   *   },
+   * });
+   * ```
+   *
+   * @remarks
+   * - Optional property (not required)
+   * - Type is defined by the Context generic parameter
+   * - Passed to all validation rule functions
+   * - Enables context-aware validation rules
+   * - Commonly used for permission-based or user-specific validations
+   */
+  context?: Context;
+}

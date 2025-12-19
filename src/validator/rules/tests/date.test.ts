@@ -125,7 +125,7 @@ describe('Date Validation Rules', () => {
       const instance = new TestClass();
       instance.eventDate = new Date();
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(true);
@@ -140,7 +140,7 @@ describe('Date Validation Rules', () => {
       const instance = new TestClass();
       instance.eventDate = '2023-01-01' as any;
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(true);
@@ -155,7 +155,7 @@ describe('Date Validation Rules', () => {
       const instance = new TestClass();
       instance.eventDate = 'invalid-date' as any;
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(false);
@@ -227,7 +227,7 @@ describe('Date Validation Rules', () => {
       const instance = new TestClass();
       instance.eventDate = now;
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(true);
@@ -243,7 +243,7 @@ describe('Date Validation Rules', () => {
       const instance = new TestClass();
       instance.eventDate = now;
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(false);
@@ -289,7 +289,7 @@ describe('Date Validation Rules', () => {
       const instance = new TestClass();
       instance.eventDate = now;
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(true);
@@ -305,7 +305,7 @@ describe('Date Validation Rules', () => {
       const instance = new TestClass();
       instance.eventDate = now;
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(false);
@@ -378,7 +378,7 @@ describe('Date Validation Rules', () => {
       const instance = new TestClass();
       instance.eventDate = now;
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(true);
@@ -394,7 +394,7 @@ describe('Date Validation Rules', () => {
       const instance = new TestClass();
       instance.eventDate = now;
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(false);
@@ -433,7 +433,7 @@ describe('Date Validation Rules', () => {
       const instance = new TestClass();
       instance.eventDate = new Date(now.getTime()); // Same date, different object
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(true);
@@ -477,7 +477,7 @@ describe('Date Validation Rules', () => {
       const instance = new TestClass();
       instance.eventDate = futureDate;
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(true);
@@ -521,7 +521,7 @@ describe('Date Validation Rules', () => {
       const instance = new TestClass();
       instance.eventDate = pastDate;
 
-      const result = await Validator.validateTarget(TestClass, {
+      const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
       expect(result.success).toBe(true);
