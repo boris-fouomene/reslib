@@ -934,6 +934,27 @@ export class Validator {
     }
     return null;
   }
+  /**
+   * ## Parse Function Rule
+   *
+   * Transforms a raw validation function into a standardized rule object.
+   * This is a critical normalization step that ensures even ad-hoc, anonymous functions
+   * conform to the system's uniform `ValidatorSanitizedRuleObject` structure.
+   *
+   * ### Logic
+   * 1. **Rule Name resolution**: Attempts to identify the rule name in this order:
+   *    - Checks for a marked rule name (metadata attached via decorators)
+   *    - Falls back to the function's innate `.name` property
+   *    - Defaults to "anonymous" (implicit in most cases if un-named)
+   * 2. **Structure Creation**: Wraps the function in a standard object with:
+   *    - `ruleFunction`: The original function itself
+   *    - `ruleName`: The resolved identifier
+   *    - `params`: Empty array `[]` (Function rules carry their logic internally)
+   *
+   * @template Context - Validation context type
+   * @param rule - The raw validation function to process
+   * @returns A sanitized rule object containing the function and metadata
+   */
   static parseFunctionRule<Context = unknown>(
     rule: ValidatorRuleFunction<ValidatorDefaultArray, Context>
   ): ValidatorSanitizedRuleObject<ValidatorDefaultArray, Context> {
@@ -949,6 +970,40 @@ export class Validator {
     };
   }
 
+  /**
+   * ## Parse Object Rule
+   *
+   * Parses object notation validation rules into standardized rule objects. This method handles
+   * rules specified as key-value pairs where the key is the rule name and the value is either
+   * an array of parameters or a structured configuration object.
+   *
+   * ### Object Rule Formats
+   * 1. **Simple Format**: Key is rule name, value is parameter array
+   *    ```typescript
+   *    { MinLength: [5] }
+   *    ```
+   * 2. **Detailed Format**: Key is rule name, value is object with `params` and `message`
+   *    ```typescript
+   *    {
+   *      Required: {
+   *        params: [],
+   *        message: "This field is mandatory"
+   *      }
+   *    }
+   *    ```
+   *
+   * ### Processing Logic
+   * 1. **Input Validation**: Ensures `rulesObject` is a valid object
+   * 2. **Sanitized Check**: Pass-through if object is already sanitized
+   * 3. **Iteration**: Loops through keys in the object
+   * 4. **Lookup**: Verifies rule existence in registry
+   * 5. **Extraction**: Handles both array and object value formats
+   * 6. **Construction**: Creates standardized rule objects with function references
+   *
+   * @param rulesObject - The rule configuration object
+   * @param registeredRules - Map of registered validation functions
+   * @returns Array of sanitized rule objects ready for execution
+   */
   static parseObjectRule<Context = unknown>(
     rulesObject: ValidatorRuleObject,
     registeredRules: ValidatorRuleFunctionsMap<Context>

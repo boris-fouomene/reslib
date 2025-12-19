@@ -464,6 +464,23 @@ type ExtractOptionalOrEmptyKeys<T> = {
  * };
  * ```
  *
+ * #### Rule Objects with Custom Messages
+ * ```typescript
+ * const customMessageRule: ValidatorRuleObject = {
+ *   Required: {
+ *     params: [],
+ *     message: "This field is absolutely required!"
+ *   }
+ * };
+ *
+ * const detailedRule: ValidatorRuleObject = {
+ *   MinLength: {
+ *     params: [5],
+ *     message: "validation.custom.minLength" // Translation key
+ *   }
+ * };
+ * ```
+ *
  * #### In Validation Rules Array
  * ```typescript
  * const rules: ValidatorRules = [
@@ -752,52 +769,53 @@ export type ValidatorSanitizedRules<Context = unknown> = ValidatorSanitizedRule<
 >[];
 
 /**
- * ## Validator Validate Rule Function Type
+ * ## Validator Rule Function
  *
- * Represents a validation rule function that is used within the validation system.
- * This function takes a set of options and performs validation on a given value,
- * returning the result of the validation process.
+ * Represents the fundamental unit of logic in the validation system: a function that validates a value.
  *
- * @template TParams The type of the parameters that the rule function accepts.
+ * This type definition abstracts both **Synchronous** and **Asynchronous** validation logic into a unified
+ * interface, allowing the validator to handle everything from simple checks (regex, length) to complex
+ * operations (database lookups, API calls) seamlessly.
  *
- * ### Structure:
- * - The function accepts a single parameter:
- *   - `options` (ValidateOptions): An object containing the necessary parameters for validation.
+ * ### Core Responsibilities
+ * 1. **Receive Context**: Accepts a rich options object (`ValidateOptions`) containing the value, rule parameters, and context.
+ * 2. **Execute Logic**: Performs the actual validation check.
+ * 3. **Report Result**: Returns `true` for success or an error message (string) for failure.
  *
- * ### Parameters:
- * - **options**: An object of type `ValidateOptions` which includes:
- *   - `rules`: A collection of validation rules to apply. This can be a single rule or an array of rules.
- *   - `rule`: An optional specific validation rule to apply, overriding the rules defined in the `rules` property.
- *   - `value`: The actual value that needs to be validated against the specified rules.
- *   - `ruleParams`: Optional parameters that may be required for specific validation rules.
+ * ### Type Parameters
+ * - **TParams**: Tightly couples the function to a specific set of parameters (e.g., `[min: number]`).
+ * - **Context**: Allows injecting application-specific context (e.g., database connection, user session).
  *
- * ### Return Value:
- * - The function returns a {@link ValidatorRuleResult}, which is either:
- *   - a `ValidatorSyncRuleResult` (synchronous rule result) — `true` for success, or a `string` containing the error message on failure
- *   - or a `Promise<ValidatorSyncRuleResult>` (asynchronous rule result)
+ * ### Return Behavior
+ * The return type {@link ValidatorRuleResult} is a union of:
+ * - `boolean`: `true` indicates valid.
+ * - `string`: A non-empty string indicates invalid (the string is the error message/key).
+ * - `Promise<boolean | string>`: For async rules.
  *
- * ### Example Usage:
+ * ### Example Usage
+ *
+ * #### Synchronous Rule
  * ```typescript
- * function validateEmail({ value }) {
- *     const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
- *     if (!emailPattern.test(value)) {
- *         return "Invalid email format."; // Invalid validation
- *     }
- *     return true; // Valid validation
- * }
- *
- * // Example of using the validation function
- * const result = validateEmail({ value: "test@example.com" });
- * if (typeof result === "string") {
- *     console.error(result); // Output: "Invalid email format." if validation fails
- * } else {
- *     console.log("Validation passed."); // Output: "Validation passed." if validation succeeds
- * }
+ * const isEven: ValidatorRuleFunction = ({ value }) => {
+ *   if (typeof value !== 'number') return "Value must be a number";
+ *   return value % 2 === 0 || "Value must be even";
+ * };
  * ```
  *
- * ### Notes:
- * - This type is essential for defining custom validation logic in forms, allowing developers to create reusable and flexible validation rules.
- * - The function can be synchronous or asynchronous, depending on the validation logic implemented.
+ * #### Asynchronous Rule
+ * ```typescript
+ * const isUniqueUser: ValidatorRuleFunction = async ({ value, context }) => {
+ *   const user = await context.db.users.findByEmail(value);
+ *   return !user || "Email already exists";
+ * };
+ * ```
+ *
+ * ### Interaction with Registry
+ * These functions are typically registered with the `Validator` class using names like "MinLength" or "Email",
+ * allowing them to be referenced by string later.
+ *
+ * @see {@link ValidateOptions} - The input object received by this function.
+ * @see {@link ValidatorRuleResult} - The output produced by this function.
  */
 export type ValidatorRuleFunction<
   TParams extends ValidatorRuleParams = ValidatorRuleParams,
