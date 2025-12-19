@@ -377,8 +377,8 @@ describe('Validator Rule Message Override Tests', () => {
     });
   });
 
-  describe('Matches Ruless', () => {
-    it('should override message for Mathes rule', async () => {
+  describe('Matches Rules', () => {
+    it('should override message for Matches rule', async () => {
       const result = await Validator.validate({
         value: 'abc',
         rules: [

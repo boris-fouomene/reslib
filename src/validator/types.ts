@@ -1,6 +1,11 @@
 import { I18n } from '@/i18n';
 import { InputFormatterResult } from '@/inputFormatter/types';
-import { ClassConstructor, Dictionary, MakeRequired } from '@/types';
+import {
+  ClassConstructor,
+  Dictionary,
+  MakeOptional,
+  MakeRequired,
+} from '@/types';
 import {
   ValidatorBulkError,
   ValidatorClassError,
@@ -1020,7 +1025,7 @@ export type ValidatorRuleParams<
  *   ↳ extends Omit<ValidatorClassOptions<TClass, Context, [classInstance: TClass]>, "data">
  *     ↳ extends Omit<ValidatorOptions<TParams, Context>, "data" | "rule" | "value">
  *       ↳ extends Omit<Partial<InputFormatterResult>, "value">
- *         ↳ extends ValidatorBaseSuccess<Context>
+ *         ↳ extends ValidatorBaseOptions<Context>
  * ```
  *
  * ### Generic Parameters
@@ -1156,7 +1161,7 @@ export interface ValidatorOptions<
 >
   extends
     Omit<Partial<InputFormatterResult>, 'value'>,
-    ValidatorBaseSuccess<Context> {
+    Omit<ValidatorBaseOptions<Context>, 'status' | 'name'> {
   /**
    * The list of validation rules to apply
    *
@@ -1642,7 +1647,10 @@ export interface ValidatorClassOptions<
 export interface ValidatorBulkOptions<
   TClass extends ClassConstructor = ClassConstructor,
   Context = unknown,
-> extends Omit<ValidatorClassOptions<TClass, Context>, 'data'> {
+> extends Omit<
+  MakeOptional<ValidatorClassOptions<TClass, Context>, 'i18n'>,
+  'data' | 'ruleParams'
+> {
   data: ValidatorClassInput<TClass>[];
 }
 
@@ -1744,8 +1752,8 @@ export type ValidatorMultiRuleNames = 'OneOf' | 'AllOf';
  * - **duration**: Duration in milliseconds from validation start to completion
  * - **error**: Explicitly `undefined` for success (aids type narrowing)
  * - **failedAt**: Explicitly `undefined` for success (aids type narrowing)
- * - **data**: Optional context data (inherited from ValidatorBaseSuccess)
- * - **context**: Optional validation context (inherited from ValidatorBaseSuccess)
+ * - **data**: Optional context data (inherited from ValidatorBaseOptions)
+ * - **context**: Optional validation context (inherited from ValidatorBaseOptions)
  *
  * ### Example
  * ```typescript
@@ -1773,7 +1781,7 @@ export type ValidatorMultiRuleNames = 'OneOf' | 'AllOf';
  */
 export interface ValidatorSuccess<
   Context = unknown,
-> extends ValidatorBaseSuccess<Context> {
+> extends ValidatorBaseOptions<Context> {
   /** Discriminant for type narrowing - always `true` for success */
   success: true;
 
@@ -1972,7 +1980,7 @@ export type ValidatorResult<Context = unknown> =
 export interface ValidatorClassSuccess<
   TClass extends ClassConstructor = ClassConstructor,
   Context = unknown,
-> extends Omit<ValidatorBaseSuccess<Context>, 'data' | 'value'> {
+> extends Omit<ValidatorBaseOptions<Context>, 'data' | 'value'> {
   /** Discriminant for type narrowing - always `true` for success */
   success: true;
 
@@ -2442,7 +2450,7 @@ export type ValidatorRuleFunctionsMap<Context = unknown> = {
  * @template Context - Type of the optional application context
  * @public
  */
-export interface ValidatorBaseSuccess<Context = unknown> {
+export interface ValidatorBaseOptions<Context = unknown> {
   /**
    * The value to use for performing the validation.
    * This is the actual data that will be validated against the specified rules.
