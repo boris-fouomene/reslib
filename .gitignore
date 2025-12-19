@@ -34,6 +34,9 @@ logs/
 .env.test.local
 .env.production.local
 
+# npm authentication (contains secret token)
+.npmrc
+
 # Temporary files
 *.tmp
 *.temp
