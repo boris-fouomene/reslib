@@ -3706,13 +3706,136 @@ export class Validator {
   }
 
   /**
-   * ## Check for Single Validation Error
+   * ## Check for Single Field Validation Error
    *
-   * Type guard to determine if a result is specifically a `ValidatorError`.
-   * Useful for distinguishing between simple value errors and complex target/bulk errors.
+   * Type guard that determines if a value is specifically a `ValidatorError`,
+   * representing a validation failure for a **single field or value**.
    *
-   * @param result - The value to check
-   * @returns `true` if it's a single value validation error
+   * ### Purpose
+   * - **Type Discrimination**: Distinguish single field errors from class/bulk errors
+   * - **Type Safety**: Enables TypeScript to narrow the type to `ValidatorError`
+   * - **Specific Handling**: Access field-specific error properties
+   * - **Error Classification**: Categorize validation errors by granularity
+   *
+   * ### When to Use
+   * - **Single Field Validation**: When validating individual values
+   * - **Field-Level Errors**: To access specific field, rule, and value information
+   * - **Granular Error Handling**: When you need different logic for single vs. multiple errors
+   * - **Error Reporting**: To format single field errors differently
+   *
+   * ### When NOT to Use
+   * - **Generic Handling**: Use `isAnyError()` to handle all validator errors the same way
+   * - **Class Validation**: Use `isClassError()` for object/class validation errors
+   * - **Bulk Validation**: Use `isBulkError()` for array validation errors
+   *
+   * @param result - The value to check for ValidatorError type
+   * @returns `true` if the value is a ValidatorError, `false` otherwise
+   *
+   * @example
+   * ```typescript
+   * // Basic single field validation
+   * const emailResult = await Validator.validate({
+   *   value: 'invalid-email',
+   *   rules: ['Email']
+   * });
+   *
+   * if (!emailResult.success && Validator.isError(emailResult)) {
+   *   // TypeScript knows emailResult is ValidatorError
+   *   console.log('Field:', emailResult.field);        // undefined (single value)
+   *   console.log('Rule:', emailResult.rule);          // 'Email'
+   *   console.log('Value:', emailResult.value);        // 'invalid-email'
+   *   console.log('Message:', emailResult.message);    // 'Must be a valid email'
+   * }
+   * ```
+   *
+   * @example
+   * ```typescript
+   * // Conditional error handling based on error type
+   * async function validateInput(value: unknown, rules: string[]) {
+   *   const result = await Validator.validate({ value, rules });
+   *
+   *   if (!result.success) {
+   *     if (Validator.isError(result)) {
+   *       // Handle single field error
+   *       return {
+   *         type: 'field',
+   *         field: result.field || 'value',
+   *         rule: result.rule,
+   *         message: result.message
+   *       };
+   *     } else if (Validator.isClassError(result)) {
+   *       // Handle class validation error
+   *       return {
+   *         type: 'class',
+   *         errors: result.fieldErrors
+   *       };
+   *     }
+   *   }
+   *
+   *   return { type: 'success', value };
+   * }
+   * ```
+   *
+   * @example
+   * ```typescript
+   * // Error logging with field information
+   * function logValidationError(error: unknown) {
+   *   if (Validator.isError(error)) {
+   *     logger.error({
+   *       type: 'SINGLE_FIELD_VALIDATION',
+   *       field: error.field,
+   *       rule: error.rule,
+   *       value: error.value,
+   *       message: error.message,
+   *       timestamp: error.failedAt,
+   *       duration: error.duration
+   *     });
+   *   }
+   * }
+   * ```
+   *
+   * @example
+   * ```typescript
+   * // Custom error formatting for single fields
+   * function formatValidationError(error: unknown): string {
+   *   if (Validator.isError(error)) {
+   *     const fieldName = error.field || 'Value';
+   *     return `${fieldName} validation failed: ${error.message} (Rule: ${error.rule})`;
+   *   }
+   *   return 'Unknown validation error';
+   * }
+   * ```
+   *
+   * @remarks
+   * **ValidatorError Properties**:
+   * - `name: 'ValidatorError'` - Error type identifier
+   * - `field?: string` - Field name (may be undefined for standalone validation)
+   * - `rule: string` - The validation rule that failed
+   * - `value: unknown` - The value that failed validation
+   * - `message: string` - Human-readable error message
+   * - `errorCode: 'ERR_VALIDATION_FAILED'` - Standard error code
+   * - `statusCode: 400` - HTTP status code
+   * - `failedAt: Date` - Timestamp of failure
+   * - `duration: number` - Validation duration in milliseconds
+   *
+   * **Type Narrowing**:
+   * - After this check, TypeScript narrows the type to `ValidatorError`
+   * - Enables safe access to field-specific properties
+   * - No need for additional type assertions
+   *
+   * **Performance**:
+   * - O(1) complexity - two property checks
+   * - Very fast, suitable for high-frequency validation
+   * - No object creation or memory allocation
+   *
+   * @see {@link isClassError} - Check for class/object validation errors
+   * @see {@link isBulkError} - Check for bulk/array validation errors
+   * @see {@link isAnyError} - Check for any validator error type
+   * @see {@link ValidatorError} - Single field validation error type
+   * @see {@link validate} - Method that returns ValidatorError on failure
+   *
+   * @public
+   * @category Type Guards
    */
   static isError(result: unknown): result is ValidatorError {
     return (
@@ -3722,13 +3845,185 @@ export class Validator {
   }
 
   /**
-   * ## Check for TClass Validation Error
+   * ## Check for Class/Object Validation Error
    *
-   * Type guard to determine if a result is a `ValidatorClassError`.
-   * Identifies errors resulting from class/object validation (e.g., `validateClass`).
+   * Type guard that determines if a value is specifically a `ValidatorClassError`,
+   * representing validation failures for **class or object validation** with
+   * multiple field-level errors.
    *
-   * @param result - The value to check
-   * @returns `true` if it's a target object validation error
+   * ### Purpose
+   * - **Type Discrimination**: Distinguish class validation errors from single/bulk errors
+   * - **Type Safety**: Enables TypeScript to narrow the type to `ValidatorClassError`
+   * - **Field Access**: Access detailed field-level error information
+   * - **Error Aggregation**: Handle multiple field errors together
+   *
+   * ### When to Use
+   * - **Class Validation**: When validating decorated class instances
+   * - **Object Validation**: When validating complex objects with multiple fields
+   * - **Field-Level Errors**: To access individual field error details
+   * - **Form Validation**: To map errors to form fields
+   *
+   * ### When NOT to Use
+   * - **Generic Handling**: Use `isAnyError()` to handle all validator errors the same way
+   * - **Single Field**: Use `isError()` for single field validation errors
+   * - **Array Validation**: Use `isBulkError()` for bulk array validation errors
+   *
+   * @param result - The value to check for ValidatorClassError type
+   * @returns `true` if the value is a ValidatorClassError, `false` otherwise
+   *
+   * @example
+   * ```typescript
+   * // Basic class validation
+   * class User {
+   *   @IsRequired()
+   *   @IsEmail()
+   *   email: string;
+   *
+   *   @IsRequired()
+   *   @MinLength(8)
+   *   password: string;
+   * }
+   *
+   * const result = await Validator.validateClass(User, {
+   *   data: { email: 'invalid', password: '123' }
+   * });
+   *
+   * if (!result.success && Validator.isClassError(result)) {
+   *   // TypeScript knows result is ValidatorClassError
+   *   console.log('Failed fields:', result.fieldCount);     // 2
+   *   console.log('Target class:', result.targetClass);     // User
+   *
+   *   result.fieldErrors.forEach(fieldError => {
+   *     console.log(`${fieldError.field}: ${fieldError.message}`);
+   *     // Output:
+   *     // email: Must be a valid email address
+   *     // password: Minimum length is 8 characters
+   *   });
+   * }
+   * ```
+   *
+   * @example
+   * ```typescript
+   * // Form validation with field mapping
+   * async function validateForm(formData: FormData) {
+   *   const result = await Validator.validateClass(FormSchema, {
+   *     data: Object.fromEntries(formData)
+   *   });
+   *
+   *   if (!result.success && Validator.isClassError(result)) {
+   *     // Map errors to form fields
+   *     const fieldErrors: Record<string, string> = {};
+   *
+   *     result.fieldErrors.forEach(error => {
+   *       fieldErrors[error.field] = error.message;
+   *     });
+   *
+   *     return {
+   *       success: false,
+   *       errors: fieldErrors,
+   *       message: result.message
+   *     };
+   *   }
+   *
+   *   return { success: true };
+   * }
+   * ```
+   *
+   * @example
+   * ```typescript
+   * // Error logging with field details
+   * function logClassValidationError(error: unknown) {
+   *   if (Validator.isClassError(error)) {
+   *     logger.error({
+   *       type: 'CLASS_VALIDATION',
+   *       targetClass: error.targetClass?.name,
+   *       fieldCount: error.fieldCount,
+   *       fields: error.fieldErrors.map(e => e.field),
+   *       message: error.message,
+   *       timestamp: error.failedAt,
+   *       duration: error.duration
+   *     });
+   *
+   *     // Log individual field errors
+   *     error.fieldErrors.forEach(fieldError => {
+   *       logger.debug({
+   *         field: fieldError.field,
+   *         rule: fieldError.rule,
+   *         message: fieldError.message,
+   *         value: fieldError.value
+   *       });
+   *     });
+   *   }
+   * }
+   * ```
+   *
+   * @example
+   * ```typescript
+   * // Conditional error handling
+   * function handleValidationResult(result: unknown) {
+   *   if (Validator.isClassError(result)) {
+   *     // Handle class validation errors
+   *     return {
+   *       type: 'class',
+   *       summary: `${result.fieldCount} field(s) failed validation`,
+   *       fields: result.fieldErrors.reduce((acc, error) => {
+   *         acc[error.field] = {
+   *           message: error.message,
+   *           rule: error.rule,
+   *           value: error.value
+   *         };
+   *         return acc;
+   *       }, {} as Record<string, any>)
+   *     };
+   *   } else if (Validator.isError(result)) {
+   *     // Handle single field error
+   *     return {
+   *       type: 'field',
+   *       message: result.message
+   *     };
+   *   }
+   *
+   *   return { type: 'unknown' };
+   * }
+   * ```
+   *
+   * @remarks
+   * **ValidatorClassError Properties**:
+   * - `name: 'ValidatorClassError'` - Error type identifier
+   * - `targetClass: ClassConstructor` - The class that was validated
+   * - `fieldErrors: FieldError[]` - Array of individual field errors
+   * - `fieldCount: number` - Number of fields that failed validation
+   * - `message: string` - Summary message (e.g., "Validation failed for 2 fields")
+   * - `errorCode: 'ERR_VALIDATION_FAILED'` - Standard error code
+   * - `statusCode: 400` - HTTP status code
+   * - `failedAt: Date` - Timestamp of failure
+   * - `duration: number` - Validation duration in milliseconds
+   *
+   * **FieldError Structure**:
+   * - `field: string` - Property name that failed
+   * - `message: string` - Error message for this field
+   * - `rule: string` - The validation rule that failed
+   * - `value: unknown` - The value that failed validation
+   * - `translatedPropertyName?: string` - Localized field name
+   *
+   * **Type Narrowing**:
+   * - After this check, TypeScript narrows the type to `ValidatorClassError`
+   * - Enables safe access to `fieldErrors`, `targetClass`, etc.
+   * - No need for additional type assertions
+   *
+   * **Performance**:
+   * - O(1) complexity - two property checks
+   * - Very fast, suitable for high-frequency validation
+   * - No object creation or memory allocation
+   *
+   * @see {@link isError} - Check for single field validation errors
+   * @see {@link isBulkError} - Check for bulk/array validation errors
+   * @see {@link isAnyError} - Check for any validator error type
+   * @see {@link ValidatorClassError} - Class validation error type
+   * @see {@link validateClass} - Method that returns ValidatorClassError on failure
+   *
+   * @public
+   * @category Type Guards
    */
   static isClassError(result: unknown): result is ValidatorClassError {
     return (
@@ -3738,18 +4033,406 @@ export class Validator {
   }
 
   /**
-   * ## Check for Bulk Validation Error
+   * ## Check for Bulk/Array Validation Error
    *
-   * Type guard to determine if a result is a `ValidatorBulkError`.
-   * Identifies errors resulting from array bulk validation.
+   * Type guard that determines if a value is specifically a `ValidatorBulkError`,
+   * representing validation failures for **bulk array validation** with
+   * multiple item-level errors.
    *
-   * @param result - The value to check
-   * @returns `true` if it's a bulk validation error
+   * ### Purpose
+   * - **Type Discrimination**: Distinguish bulk validation errors from single/class errors
+   * - **Type Safety**: Enables TypeScript to narrow the type to `ValidatorBulkError`
+   * - **Item Access**: Access detailed item-level error information with indices
+   * - **Error Aggregation**: Handle multiple item errors together
+   *
+   * ### When to Use
+   * - **Array Validation**: When validating arrays of items
+   * - **Bulk Operations**: When processing multiple records/items
+   * - **Item-Level Errors**: To access individual item error details with indices
+   * - **Batch Processing**: To identify which items failed in a batch
+   *
+   * ### When NOT to Use
+   * - **Generic Handling**: Use `isAnyError()` to handle all validator errors the same way
+   * - **Single Field**: Use `isError()` for single field validation errors
+   * - **Object Validation**: Use `isClassError()` for class/object validation errors
+   *
+   * @param result - The value to check for ValidatorBulkError type
+   * @returns `true` if the value is a ValidatorBulkError, `false` otherwise
+   *
+   * @example
+   * ```typescript
+   * // Basic bulk validation
+   * class User {
+   *   @IsRequired()
+   *   @IsEmail()
+   *   email: string;
+   *
+   *   @IsRequired()
+   *   name: string;
+   * }
+   *
+   * const users = [
+   *   { email: 'valid@example.com', name: 'John' },
+   *   { email: 'invalid', name: '' },           // Invalid
+   *   { email: 'test@example.com', name: 'Jane' },
+   *   { email: 'bad-email', name: 'Bob' }       // Invalid
+   * ];
+   *
+   * const result = await Validator.validateBulk(User, {
+   *   data: users
+   * });
+   *
+   * if (!result.success && Validator.isBulkError(result)) {
+   *   // TypeScript knows result is ValidatorBulkError
+   *   console.log('Total items:', result.totalCount);       // 4
+   *   console.log('Failed items:', result.failureCount);    // 2
+   *   console.log('Success rate:',
+   *     `${((result.totalCount - result.failureCount) / result.totalCount * 100).toFixed(1)}%`
+   *   ); // 50.0%
+   *
+   *   result.itemErrors.forEach(itemError => {
+   *     console.log(`Item[${itemError.index}]: ${itemError.message}`);
+   *     // Output:
+   *     // Item[1]: Validation failed for 2 fields: email, name
+   *     // Item[3]: Validation failed for field: email
+   *   });
+   * }
+   * ```
+   *
+   * @example
+   * ```typescript
+   * // Bulk import with error reporting
+   * async function importUsers(csvData: string[][]) {
+   *   const result = await Validator.validateBulk(User, {
+   *     data: csvData.map(row => ({
+   *       email: row[0],
+   *       name: row[1]
+   *     }))
+   *   });
+   *
+   *   if (!result.success && Validator.isBulkError(result)) {
+   *     // Generate error report
+   *     const errorReport = {
+   *       totalRecords: result.totalCount,
+   *       failedRecords: result.failureCount,
+   *       successRecords: result.totalCount - result.failureCount,
+   *       errors: result.itemErrors.map(error => ({
+   *         row: error.index + 2, // +2 for 1-based + header row
+   *         message: error.message,
+   *         data: csvData[error.index]
+   *       }))
+   *     };
+   *
+   *     return {
+   *       success: false,
+   *       report: errorReport
+   *     };
+   *   }
+   *
+   *   return { success: true };
+   * }
+   * ```
+   *
+   * @example
+   * ```typescript
+   * // Error logging with item details
+   * function logBulkValidationError(error: unknown) {
+   *   if (Validator.isBulkError(error)) {
+   *     logger.error({
+   *       type: 'BULK_VALIDATION',
+   *       targetClass: error.targetClass?.name,
+   *       totalCount: error.totalCount,
+   *       failureCount: error.failureCount,
+   *       successRate: ((error.totalCount - error.failureCount) / error.totalCount * 100).toFixed(2) + '%',
+   *       message: error.message,
+   *       timestamp: error.failedAt,
+   *       duration: error.duration
+   *     });
+   *
+   *     // Log individual item errors
+   *     error.itemErrors.forEach(itemError => {
+   *       logger.debug({
+   *         index: itemError.index,
+   *         message: itemError.message,
+   *         error: itemError.error
+   *       });
+   *     });
+   *   }
+   * }
+   * ```
+   *
+   * @example
+   * ```typescript
+   * // Retry failed items
+   * async function processBatchWithRetry(items: any[]) {
+   *   const result = await Validator.validateBulk(ItemClass, { data: items });
+   *
+   *   if (!result.success && Validator.isBulkError(result)) {
+   *     // Extract failed item indices
+   *     const failedIndices = new Set(
+   *       result.itemErrors.map(error => error.index)
+   *     );
+   *
+   *     // Retry only failed items
+   *     const failedItems = items.filter((_, index) =>
+   *       failedIndices.has(index)
+   *     );
+   *
+   *     console.log(`Retrying ${failedItems.length} failed items...`);
+   *     return await retryValidation(failedItems);
+   *   }
+   *
+   *   return { success: true };
+   * }
+   * ```
+   *
+   * @remarks
+   * **ValidatorBulkError Properties**:
+   * - `name: 'ValidatorBulkError'` - Error type identifier
+   * - `targetClass: ClassConstructor` - The class used for validation
+   * - `itemErrors: ItemError[]` - Array of individual item errors with indices
+   * - `failures: ValidatorClassError[]` - Detailed class errors for each failed item
+   * - `failureCount: number` - Number of items that failed validation
+   * - `totalCount: number` - Total number of items validated
+   * - `message: string` - Summary message (e.g., "2 of 5 items failed validation")
+   * - `errorCode: 'ERR_VALIDATION_FAILED'` - Standard error code
+   * - `statusCode: 400` - HTTP status code
+   * - `failedAt: Date` - Timestamp of failure
+   * - `duration: number` - Validation duration in milliseconds
+   *
+   * **ItemError Structure**:
+   * - `index: number` - Zero-based index of the failed item
+   * - `message: string` - Error message for this item
+   * - `error: ValidatorClassError` - Detailed validation error for the item
+   *
+   * **Type Narrowing**:
+   * - After this check, TypeScript narrows the type to `ValidatorBulkError`
+   * - Enables safe access to `itemErrors`, `failures`, `totalCount`, etc.
+   * - No need for additional type assertions
+   *
+   * **Performance**:
+   * - O(1) complexity - two property checks
+   * - Very fast, suitable for high-frequency validation
+   * - No object creation or memory allocation
+   *
+   * @see {@link isError} - Check for single field validation errors
+   * @see {@link isClassError} - Check for class/object validation errors
+   * @see {@link isAnyError} - Check for any validator error type
+   * @see {@link ValidatorBulkError} - Bulk validation error type
+   * @see {@link validateBulk} - Method that returns ValidatorBulkError on failure
+   *
+   * @public
+   * @category Type Guards
    */
   static isBulkError(result: unknown): result is ValidatorBulkError {
     return (
       this.isBaseError(result) &&
       (result as ValidatorBulkError).name == 'ValidatorBulkError'
+    );
+  }
+
+  /**
+   * ## Check for Any Validator Error Type
+   *
+   * Universal type guard that checks if a value is **any type** of validator error.
+   * This method returns `true` if the value is a `ValidatorError`, `ValidatorClassError`,
+   * or `ValidatorBulkError`, providing a convenient way to detect validation failures
+   * without needing to check each error type individually.
+   *
+   * ### Purpose
+   * - **Unified Error Detection**: Single method to detect all validation error types
+   * - **Type Safety**: Narrows TypeScript type to union of all validator errors
+   * - **Convenience**: Eliminates need for multiple type checks
+   * - **Error Handling**: Simplifies error handling logic in catch blocks
+   *
+   * ### When to Use
+   * - **Generic Error Handling**: When you want to handle all validation errors the same way
+   * - **Error Classification**: To distinguish validation errors from other error types
+   * - **API Responses**: To check if a response contains validation errors
+   * - **Logging**: To categorize errors by type for monitoring
+   *
+   * ### When NOT to Use
+   * - **Type-Specific Handling**: When you need different logic for each error type
+   *   → Use `isError()`, `isClassError()`, or `isBulkError()` instead
+   * - **Field-Level Access**: When you need to access specific error properties
+   *   → Check specific type first, then access properties
+   *
+   * @param result - The value to check for validator error types
+   * @returns `true` if the value is any validator error type, `false` otherwise
+   *
+   * @example
+   * ```typescript
+   * // Basic usage - generic validation error handling
+   * try {
+   *   const result = await Validator.validateClass(UserClass, { data: userData });
+   *   if (!result.success) {
+   *     // Handle validation failure
+   *   }
+   * } catch (error) {
+   *   if (Validator.isAnyError(error)) {
+   *     // TypeScript knows error is ValidatorError | ValidatorClassError | ValidatorBulkError
+   *     console.log('Validation failed:', error.message);
+   *     console.log('Error code:', error.errorCode);
+   *     console.log('Status code:', error.statusCode);
+   *   } else {
+   *     // Handle other error types
+   *     console.error('Unexpected error:', error);
+   *   }
+   * }
+   * ```
+   *
+   * @example
+   * ```typescript
+   * // API response validation
+   * async function submitForm(formData: FormData) {
+   *   const response = await fetch('/api/submit', {
+   *     method: 'POST',
+   *     body: formData
+   *   });
+   *
+   *   const result = await response.json();
+   *
+   *   if (Validator.isAnyError(result)) {
+   *     // Server returned validation errors
+   *     return {
+   *       success: false,
+   *       type: 'validation',
+   *       message: result.message,
+   *       errors: result
+   *     };
+   *   }
+   *
+   *   return { success: true, data: result };
+   * }
+   * ```
+   *
+   * @example
+   * ```typescript
+   * // Error classification for logging
+   * function logError(error: unknown) {
+   *   const errorType = Validator.isAnyError(error)
+   *     ? 'VALIDATION_ERROR'
+   *     : error instanceof Error
+   *     ? 'RUNTIME_ERROR'
+   *     : 'UNKNOWN_ERROR';
+   *
+   *   logger.error({
+   *     type: errorType,
+   *     message: error instanceof Error ? error.message : String(error),
+   *     timestamp: new Date().toISOString(),
+   *     details: Validator.isAnyError(error) ? {
+   *       errorCode: error.errorCode,
+   *       statusCode: error.statusCode,
+   *       duration: error.duration
+   *     } : undefined
+   *   });
+   * }
+   * ```
+   *
+   * @example
+   * ```typescript
+   * // Conditional error handling with type narrowing
+   * function handleValidationResult(result: unknown) {
+   *   if (Validator.isAnyError(result)) {
+   *     // Now TypeScript knows the exact union type
+   *
+   *     // Further narrow to specific types if needed
+   *     if (Validator.isClassError(result)) {
+   *       // Handle class validation errors
+   *       result.fieldErrors.forEach(fieldError => {
+   *         console.log(`${fieldError.field}: ${fieldError.message}`);
+   *       });
+   *     } else if (Validator.isBulkError(result)) {
+   *       // Handle bulk validation errors
+   *       console.log(`${result.failureCount} items failed validation`);
+   *     } else if (Validator.isError(result)) {
+   *       // Handle single field errors
+   *       console.log(`Field ${result.field} failed: ${result.message}`);
+   *     }
+   *   }
+   * }
+   * ```
+   *
+   * @example
+   * ```typescript
+   * // Integration with exception handling
+   * class ValidationException extends Error {
+   *   constructor(public validatorError: ValidatorError | ValidatorClassError | ValidatorBulkError) {
+   *     super(validatorError.message);
+   *     this.name = 'ValidationException';
+   *   }
+   *
+   *   static from(error: unknown): ValidationException | null {
+   *     if (Validator.isAnyError(error)) {
+   *       return new ValidationException(error);
+   *     }
+   *     return null;
+   *   }
+   * }
+   *
+   * try {
+   *   await validateUserInput(data);
+   * } catch (error) {
+   *   const validationException = ValidationException.from(error);
+   *   if (validationException) {
+   *     throw validationException;
+   *   }
+   *   throw error;
+   * }
+   * ```
+   *
+   * @remarks
+   * **Implementation Details**:
+   * - Checks `isError()`, `isClassError()`, and `isBulkError()` in sequence
+   * - Short-circuits on first match for performance
+   * - All checks delegate to `isBaseError()` for consistency
+   * - No additional overhead beyond individual type checks
+   *
+   * **Type Narrowing**:
+   * - TypeScript narrows to: `ValidatorError | ValidatorClassError | ValidatorBulkError`
+   * - Use specific type guards for further narrowing
+   * - Enables safe access to common properties (message, errorCode, statusCode, etc.)
+   *
+   * **Performance**:
+   * - O(1) complexity - maximum 3 checks
+   * - Short-circuits on first match (typically 1 check)
+   * - No object creation or memory allocation
+   * - Safe for high-frequency error checking
+   *
+   * **Common Properties** (available on all validator errors):
+   * - `message: string` - Human-readable error message
+   * - `errorCode: 'ERR_VALIDATION_FAILED'` - Standard error code
+   * - `statusCode: 400` - HTTP status code
+   * - `success: false` - Always false for errors
+   * - `status: 'error'` - Status indicator
+   * - `failedAt: Date` - Timestamp of failure
+   * - `duration: number` - Validation duration in milliseconds
+   *
+   * **Type-Specific Properties**:
+   * - `ValidatorError`: `field`, `rule`, `value`
+   * - `ValidatorClassError`: `fieldErrors`, `fieldCount`, `targetClass`
+   * - `ValidatorBulkError`: `failures`, `failureCount`, `totalCount`, `itemErrors`
+   *
+   * @see {@link isError} - Check for single field validation errors only
+   * @see {@link isClassError} - Check for class/object validation errors only
+   * @see {@link isBulkError} - Check for bulk/array validation errors only
+   * @see {@link isBaseError} - Internal base error structure check
+   * @see {@link ValidatorError} - Single field validation error type
+   * @see {@link ValidatorClassError} - Class validation error type
+   * @see {@link ValidatorBulkError} - Bulk validation error type
+   * @see {@link ValidatorBaseError} - Base error interface
+   *
+   * @public
+   * @since 2.0.2
+   * @category Type Guards
+   */
+  static isAnyError(
+    result: unknown
+  ): result is ValidatorError | ValidatorClassError | ValidatorBulkError {
+    return (
+      this.isError(result) ||
+      this.isClassError(result) ||
+      this.isBulkError(result)
     );
   }
   private static _prepareRuleDecorator<

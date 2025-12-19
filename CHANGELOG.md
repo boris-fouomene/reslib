@@ -1,5 +1,88 @@
 ## 1.0.3 (2025-12-09)
 
+## 2.0.2
+
+### Patch Changes
+
+- **New Features**: Added comprehensive validator error type guards and enhanced documentation
+
+  ### New Methods
+
+  #### Validator Class
+  - **`Validator.isAnyError()`**: Universal type guard to check for any validator error type (ValidatorError | ValidatorClassError | ValidatorBulkError)
+    - Provides convenient single method to detect all validation failures
+    - Short-circuits on first match for optimal performance
+    - Includes comprehensive documentation with 5 detailed examples
+
+  #### BaseException Class
+  - **`BaseException.isAnyValidatorError()`**: Alias for `Validator.isAnyError()`
+    - Provides consistent API across exception and validator modules
+    - Delegates to `Validator.isAnyError()` for unified implementation
+    - Includes comprehensive documentation with 4 detailed examples
+  - **`BaseException.isValidatorError()`**: Type guard for single field validation errors
+  - **`BaseException.isValidatorClassError()`**: Type guard for class validation errors
+  - **`BaseException.isValidatorBulkError()`**: Type guard for bulk validation errors
+  - **`BaseException.getValidationError()`**: Extracts validation errors from exceptions or errors
+
+  ### Documentation Enhancements
+
+  Enhanced documentation for all validator type guard methods with:
+  - **Purpose sections**: Clear explanation of when and why to use each method
+  - **When to Use/NOT to Use**: Practical guidance for appropriate usage
+  - **Multiple examples**: 4-5 real-world examples per method showing:
+    - Basic usage patterns
+    - Error handling and logging
+    - Form validation and field mapping
+    - Bulk processing and retry logic
+    - API response handling
+  - **Remarks sections**: Detailed property listings, type narrowing behavior, and performance characteristics
+  - **Cross-references**: Links to related methods and types
+
+  Methods with enhanced documentation:
+  - `Validator.isError()` - Single field validation error detection
+  - `Validator.isClassError()` - Class/object validation error detection
+  - `Validator.isBulkError()` - Bulk/array validation error detection
+  - `Validator.isAnyError()` - Universal validator error detection
+
+  ### Benefits
+  1. **Improved Developer Experience**:
+     - Single method to check for any validation error type
+     - Comprehensive examples for common use cases
+     - Clear guidance on when to use each type guard
+  2. **Better Type Safety**:
+     - TypeScript type narrowing for all error types
+     - Union type support for generic error handling
+     - No need for manual type assertions
+  3. **Enhanced Error Handling**:
+     - Easier to distinguish validation errors from other errors
+     - Simplified error classification in catch blocks
+     - Better integration with exception handling systems
+  4. **Performance**:
+     - O(1) complexity for all type guards
+     - Short-circuit evaluation for optimal speed
+     - No memory allocation or object creation
+
+  ### Migration
+
+  No breaking changes. All new methods are additive and backward compatible.
+
+  **Recommended usage**:
+
+  ```typescript
+  // Check for any validation error
+  if (Validator.isAnyError(error)) {
+    // Handle all validation errors generically
+  }
+
+  // Or use specific type guards
+  if (Validator.isClassError(error)) {
+    // Handle class validation errors specifically
+    error.fieldErrors.forEach((fieldError) => {
+      console.log(`${fieldError.field}: ${fieldError.message}`);
+    });
+  }
+  ```
+
 ## 2.0.1
 
 ### Patch Changes

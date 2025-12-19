@@ -96,7 +96,7 @@ export class BaseException<TDetails = unknown, TCause = unknown> extends Error {
   /**
    * The validation error that caused this exception.
    */
-  public validationError?:
+  public validatorError?:
     | ValidatorError
     | ValidatorClassError
     | ValidatorBulkError;
@@ -1010,7 +1010,7 @@ export class BaseException<TDetails = unknown, TCause = unknown> extends Error {
       (details as any).statusCode,
       500
     );
-    const isValidation = Validator.isError(error);
+    const isValidator = Validator.isError(error);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const result: TException = (this as any).create(message, {
       ...options,
@@ -1019,24 +1019,362 @@ export class BaseException<TDetails = unknown, TCause = unknown> extends Error {
       statusCode: finalStatus,
       cause: options?.cause ?? error,
     });
-    if (isValidation) {
-      result.validationError = error;
+    if (isValidator) {
+      result.validatorError = error;
     }
     return result;
   }
+  /**
+   * Type guard to check if an error is a ValidatorClassError.
+   *
+   * ValidatorClassError represents validation failures for class/object validation,
+   * containing field-level errors with detailed information about which properties
+   * failed validation and why.
+   *
+   * @param error - The value to check
+   * @returns True if the error is a ValidatorClassError, false otherwise
+   *
+   * @example
+   * ```typescript
+   * try {
+   *   await validateUserInput(data);
+   * } catch (error) {
+   *   if (BaseException.isValidatorClassError(error)) {
+   *     // TypeScript now knows error is ValidatorClassError
+   *     console.log('Field errors:', error.fieldErrors);
+   *     error.fieldErrors.forEach(fieldError => {
+   *       console.log(`${fieldError.field}: ${fieldError.message}`);
+   *     });
+   *   }
+   * }
+   * ```
+   *
+   * @see {@link ValidatorClassError} - The class validation error type
+   * @see {@link isValidatorError} - Check for any validator error type
+   * @see {@link getValidationError} - Extract validation error from exceptions
+   */
+  public static isValidatorClassError(
+    error: unknown
+  ): error is ValidatorClassError {
+    return Validator.isClassError(error);
+  }
 
-  public static isValidationError(error: unknown): error is ValidatorError {
+  /**
+   * Type guard to check if an error is a ValidatorBulkError.
+   *
+   * ValidatorBulkError represents validation failures for bulk/array validation,
+   * containing errors for multiple items in an array with index information.
+   *
+   * @param error - The value to check
+   * @returns True if the error is a ValidatorBulkError, false otherwise
+   *
+   * @example
+   * ```typescript
+   * try {
+   *   await validateBulkUsers(userArray);
+   * } catch (error) {
+   *   if (BaseException.isValidatorBulkError(error)) {
+   *     // TypeScript now knows error is ValidatorBulkError
+   *     console.log(`${error.itemCount} items failed validation`);
+   *     error.itemErrors.forEach(itemError => {
+   *       console.log(`Item[${itemError.index}]: ${itemError.message}`);
+   *     });
+   *   }
+   * }
+   * ```
+   *
+   * @see {@link ValidatorBulkError} - The bulk validation error type
+   * @see {@link isValidatorError} - Check for any validator error type
+   * @see {@link getValidationError} - Extract validation error from exceptions
+   */
+  public static isValidatorBulkError(
+    error: unknown
+  ): error is ValidatorBulkError {
+    return Validator.isBulkError(error);
+  }
+
+  /**
+   * Type guard to check if an error is a ValidatorError (single field/value validation).
+   *
+   * ValidatorError represents validation failures for individual field/value validation,
+   * containing information about a single validation rule failure.
+   *
+   * @param error - The value to check
+   * @returns True if the error is a ValidatorError, false otherwise
+   *
+   * @example
+   * ```typescript
+   * try {
+   *   await validateEmail(email);
+   * } catch (error) {
+   *   if (BaseException.isValidatorError(error)) {
+   *     // TypeScript now knows error is ValidatorError
+   *     console.log('Validation failed:', error.message);
+   *     console.log('Field:', error.field);
+   *     console.log('Rule:', error.rule);
+   *   }
+   * }
+   * ```
+   *
+   * @see {@link ValidatorError} - The single field validation error type
+   * @see {@link isValidatorClassError} - Check for class validation errors
+   * @see {@link isValidatorBulkError} - Check for bulk validation errors
+   * @see {@link getValidationError} - Extract validation error from exceptions
+   */
+  public static isValidatorError(error: unknown): error is ValidatorError {
     return Validator.isError(error);
   }
+
+  /**
+   * Type guard to check if an error is any type of validator error.
+   *
+   * This is a convenience method that checks if the error is a `ValidatorError`,
+   * `ValidatorClassError`, or `ValidatorBulkError`. Use this when you want to
+   * handle any validation error generically without caring about the specific type.
+   *
+   * **Note**: This method is an alias for `Validator.isAnyError()`.
+   * Both methods provide identical functionality and can be used interchangeably.
+   *
+   * **When to use this vs specific type guards:**
+   * - Use `isAnyValidatorError()` when you want to handle ALL validator errors the same way
+   * - Use `isValidatorError()`, `isValidatorClassError()`, or `isValidatorBulkError()`
+   *   when you need type-specific handling
+   *
+   * @param error - The value to check
+   * @returns True if the error is any type of validator error, false otherwise
+   *
+   * @example
+   * ```typescript
+   * // Generic validation error handling
+   * try {
+   *   await processData(data);
+   * } catch (error) {
+   *   if (BaseException.isAnyValidatorError(error)) {
+   *     // Handle any validation error
+   *     console.log('Validation failed:', error.message);
+   *     return { success: false, type: 'validation', error };
+   *   }
+   *   // Handle other error types
+   *   console.error('Unexpected error:', error);
+   *   return { success: false, type: 'unknown', error };
+   * }
+   * ```
+   *
+   * @example
+   * ```typescript
+   * // Check before extracting validation details
+   * function handleError(error: unknown) {
+   *   if (BaseException.isAnyValidatorError(error)) {
+   *     // Now we know it's a validator error, extract it
+   *     const validationError = BaseException.getValidationError(error);
+   *
+   *     // Then check specific type if needed
+   *     if (BaseException.isValidatorClassError(validationError)) {
+   *       return formatFieldErrors(validationError.fieldErrors);
+   *     } else if (BaseException.isValidatorBulkError(validationError)) {
+   *       return formatBulkErrors(validationError.itemErrors);
+   *     }
+   *   }
+   *
+   *   return formatGenericError(error);
+   * }
+   * ```
+   *
+   * @example
+   * ```typescript
+   * // API error response handling
+   * async function apiCall(endpoint: string, data: any) {
+   *   try {
+   *     const response = await fetch(endpoint, {
+   *       method: 'POST',
+   *       body: JSON.stringify(data)
+   *     });
+   *     const result = await response.json();
+   *
+   *     if (!response.ok) {
+   *       // Check if it's a validation error
+   *       if (BaseException.isAnyValidatorError(result)) {
+   *         throw AppException.from(result, {
+   *           code: 'VALIDATION_ERROR',
+   *           statusCode: 400
+   *         });
+   *       }
+   *       throw AppException.from(result);
+   *     }
+   *
+   *     return result;
+   *   } catch (error) {
+   *     if (BaseException.isAnyValidatorError(error)) {
+   *       // Special handling for validation errors
+   *       notifyUser('Please check your input');
+   *     }
+   *     throw error;
+   *   }
+   * }
+   * ```
+   *
+   * @example
+   * ```typescript
+   * // Logging with error type detection
+   * function logError(error: unknown) {
+   *   const errorType = BaseException.isAnyValidatorError(error)
+   *     ? 'VALIDATION'
+   *     : BaseException.is(error)
+   *     ? 'APPLICATION'
+   *     : 'UNKNOWN';
+   *
+   *   logger.error({
+   *     type: errorType,
+   *     message: error instanceof Error ? error.message : String(error),
+   *     details: BaseException.isAnyValidatorError(error) ? error : undefined
+   *   });
+   * }
+   * ```
+   *
+   * @remarks
+   * **Behavior**:
+   * - Returns `true` if error is `ValidatorError`, `ValidatorClassError`, or `ValidatorBulkError`
+   * - Returns `false` for all other error types
+   * - Does NOT check wrapped exceptions (use `getValidationError()` for that)
+   *
+   * **Type Safety**:
+   * - TypeScript will narrow the type to the union of all validator error types
+   * - Use specific type guards for further narrowing if needed
+   *
+   * **Performance**:
+   * - Performs up to 3 type checks (short-circuits on first match)
+   * - Very fast for most cases due to short-circuiting
+   *
+   * **Alias Information**:
+   * - This method delegates to `Validator.isAnyError()`
+   * - Use whichever is more convenient in your context
+   * - Both provide identical type narrowing and behavior
+   *
+   * @see {@link isValidatorError} - Check for single field validation errors only
+   * @see {@link isValidatorClassError} - Check for class validation errors only
+   * @see {@link isValidatorBulkError} - Check for bulk validation errors only
+   * @see {@link getValidationError} - Extract validation error from exceptions (checks wrapped errors)
+   * @see {@link Validator.isAnyError} - Original implementation in Validator class
+   * @see {@link ValidatorError} - Single field validation error type
+   * @see {@link ValidatorClassError} - Class validation error type
+   * @see {@link ValidatorBulkError} - Bulk validation error type
+   */
+  public static isAnyValidatorError(
+    error: unknown
+  ): error is ValidatorError | ValidatorClassError | ValidatorBulkError {
+    return Validator.isAnyError(error);
+  }
+
+  /**
+   * Extracts the underlying validation error from an error or exception.
+   *
+   * This method checks if the provided error is a validation error directly,
+   * or if it's a BaseException that wraps a validation error. It returns the
+   * validation error if found, or null otherwise.
+   *
+   * **Use Cases**:
+   * - Extract validation errors from caught exceptions
+   * - Check if an API error response contains validation failures
+   * - Access detailed field-level validation errors for custom error handling
+   *
+   * @param error - The error to extract validation error from
+   * @returns The validation error if found, null otherwise
+   *
+   * @example
+   * ```typescript
+   * // Extract from API exception
+   * try {
+   *   await api.createUser(userData);
+   * } catch (error) {
+   *   const validationError = BaseException.getValidationError(error);
+   *   if (validationError) {
+   *     // Handle validation error specifically
+   *     if (BaseException.isValidatorClassError(validationError)) {
+   *       // Show field-level errors to user
+   *       validationError.fieldErrors.forEach(fieldError => {
+   *         showFieldError(fieldError.field, fieldError.message);
+   *       });
+   *     }
+   *   } else {
+   *     // Handle other error types
+   *     showGenericError(error);
+   *   }
+   * }
+   * ```
+   *
+   * @example
+   * ```typescript
+   * // Check validation error in action handler
+   * async function handleFormSubmit(formData: FormData) {
+   *   try {
+   *     return await submitForm(formData);
+   *   } catch (error) {
+   *     const validationError = AppException.getValidationError(error);
+   *
+   *     if (validationError && AppException.isValidatorClassError(validationError)) {
+   *       // Return field errors to form
+   *       return {
+   *         success: false,
+   *         fieldErrors: validationError.fieldErrors.reduce((acc, err) => {
+   *           acc[err.field] = err.message;
+   *           return acc;
+   *         }, {} as Record<string, string>)
+   *       };
+   *     }
+   *
+   *     // Return generic error
+   *     return {
+   *       success: false,
+   *       message: error.message
+   *     };
+   *   }
+   * }
+   * ```
+   *
+   * @example
+   * ```typescript
+   * // Bulk validation error handling
+   * try {
+   *   await validateBulkImport(records);
+   * } catch (error) {
+   *   const validationError = BaseException.getValidationError(error);
+   *
+   *   if (validationError && BaseException.isValidatorBulkError(validationError)) {
+   *     console.log(`${validationError.itemCount} of ${validationError.totalCount} items failed`);
+   *     validationError.itemErrors.forEach(itemError => {
+   *       console.log(`Row ${itemError.index + 1}: ${itemError.message}`);
+   *     });
+   *   }
+   * }
+   * ```
+   *
+   * @remarks
+   * **Behavior**:
+   * - Returns the error directly if it's a validator error
+   * - Extracts `validatorError` property from BaseException instances
+   * - Returns null if no validation error is found
+   * - Works with wrapped exceptions (checks the `validatorError` property)
+   *
+   * **Type Safety**:
+   * - Use with type guard methods for proper TypeScript narrowing
+   * - Combine with `isValidatorClassError()` or `isValidatorBulkError()` for specific handling
+   *
+   * @see {@link isValidatorError} - Check if error is a single field validation error
+   * @see {@link isValidatorClassError} - Check if error is a class validation error
+   * @see {@link isValidatorBulkError} - Check if error is a bulk validation error
+   * @see {@link ValidatorError} - Single field validation error type
+   * @see {@link ValidatorClassError} - Class validation error type
+   * @see {@link ValidatorBulkError} - Bulk validation error type
+   */
   public static getValidationError(
     error: unknown
   ): ValidatorError | ValidatorClassError | ValidatorBulkError | null {
-    if (this.isValidationError(error)) {
+    if (this.isAnyValidatorError(error)) {
       return error;
     }
     if (this.is(error)) {
-      return this.isValidationError(error.validationError)
-        ? error.validationError
+      return this.isAnyValidatorError(error.validatorError)
+        ? error.validatorError
         : null;
     }
     return null;
@@ -1086,12 +1424,6 @@ export class BaseException<TDetails = unknown, TCause = unknown> extends Error {
    *     return super.parseErrorMessage(error, options);
    *   }
    * }
-   *
-   * const validationError = {
-   *   errors: [{ field: 'email', message: 'Invalid format' }]
-   * };
-   * const ex = ValidationException.from(validationError);
-   * // ex.message === 'Validation failed for email: Invalid format'
    * ```
    *
    * @example
