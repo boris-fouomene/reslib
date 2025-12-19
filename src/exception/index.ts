@@ -1051,7 +1051,7 @@ export class BaseException<TDetails = unknown, TCause = unknown> extends Error {
    *
    * @see {@link ValidatorClassError} - The class validation error type
    * @see {@link isValidatorError} - Check for any validator error type
-   * @see {@link getValidationError} - Extract validation error from exceptions
+   * @see {@link getValidatorError} - Extract validation error from exceptions
    */
   public static isValidatorClassError(
     error: unknown
@@ -1085,7 +1085,7 @@ export class BaseException<TDetails = unknown, TCause = unknown> extends Error {
    *
    * @see {@link ValidatorBulkError} - The bulk validation error type
    * @see {@link isValidatorError} - Check for any validator error type
-   * @see {@link getValidationError} - Extract validation error from exceptions
+   * @see {@link getValidatorError} - Extract validation error from exceptions
    */
   public static isValidatorBulkError(
     error: unknown
@@ -1119,7 +1119,7 @@ export class BaseException<TDetails = unknown, TCause = unknown> extends Error {
    * @see {@link ValidatorError} - The single field validation error type
    * @see {@link isValidatorClassError} - Check for class validation errors
    * @see {@link isValidatorBulkError} - Check for bulk validation errors
-   * @see {@link getValidationError} - Extract validation error from exceptions
+   * @see {@link getValidatorError} - Extract validation error from exceptions
    */
   public static isValidatorError(error: unknown): error is ValidatorError {
     return Validator.isError(error);
@@ -1166,7 +1166,7 @@ export class BaseException<TDetails = unknown, TCause = unknown> extends Error {
    * function handleError(error: unknown) {
    *   if (BaseException.isAnyValidatorError(error)) {
    *     // Now we know it's a validator error, extract it
-   *     const validationError = BaseException.getValidationError(error);
+   *     const validationError = BaseException.getValidatorError(error);
    *
    *     // Then check specific type if needed
    *     if (BaseException.isValidatorClassError(validationError)) {
@@ -1235,7 +1235,7 @@ export class BaseException<TDetails = unknown, TCause = unknown> extends Error {
    * **Behavior**:
    * - Returns `true` if error is `ValidatorError`, `ValidatorClassError`, or `ValidatorBulkError`
    * - Returns `false` for all other error types
-   * - Does NOT check wrapped exceptions (use `getValidationError()` for that)
+   * - Does NOT check wrapped exceptions (use `getValidatorError()` for that)
    *
    * **Type Safety**:
    * - TypeScript will narrow the type to the union of all validator error types
@@ -1253,7 +1253,7 @@ export class BaseException<TDetails = unknown, TCause = unknown> extends Error {
    * @see {@link isValidatorError} - Check for single field validation errors only
    * @see {@link isValidatorClassError} - Check for class validation errors only
    * @see {@link isValidatorBulkError} - Check for bulk validation errors only
-   * @see {@link getValidationError} - Extract validation error from exceptions (checks wrapped errors)
+   * @see {@link getValidatorError} - Extract validation error from exceptions (checks wrapped errors)
    * @see {@link Validator.isAnyError} - Original implementation in Validator class
    * @see {@link ValidatorError} - Single field validation error type
    * @see {@link ValidatorClassError} - Class validation error type
@@ -1286,7 +1286,7 @@ export class BaseException<TDetails = unknown, TCause = unknown> extends Error {
    * try {
    *   await api.createUser(userData);
    * } catch (error) {
-   *   const validationError = BaseException.getValidationError(error);
+   *   const validationError = BaseException.getValidatorError(error);
    *   if (validationError) {
    *     // Handle validation error specifically
    *     if (BaseException.isValidatorClassError(validationError)) {
@@ -1309,7 +1309,7 @@ export class BaseException<TDetails = unknown, TCause = unknown> extends Error {
    *   try {
    *     return await submitForm(formData);
    *   } catch (error) {
-   *     const validationError = AppException.getValidationError(error);
+   *     const validationError = AppException.getValidatorError(error);
    *
    *     if (validationError && AppException.isValidatorClassError(validationError)) {
    *       // Return field errors to form
@@ -1337,7 +1337,7 @@ export class BaseException<TDetails = unknown, TCause = unknown> extends Error {
    * try {
    *   await validateBulkImport(records);
    * } catch (error) {
-   *   const validationError = BaseException.getValidationError(error);
+   *   const validationError = BaseException.getValidatorError(error);
    *
    *   if (validationError && BaseException.isValidatorBulkError(validationError)) {
    *     console.log(`${validationError.itemCount} of ${validationError.totalCount} items failed`);
@@ -1366,7 +1366,7 @@ export class BaseException<TDetails = unknown, TCause = unknown> extends Error {
    * @see {@link ValidatorClassError} - Class validation error type
    * @see {@link ValidatorBulkError} - Bulk validation error type
    */
-  public static getValidationError(
+  public static getValidatorError(
     error: unknown
   ): ValidatorError | ValidatorClassError | ValidatorBulkError | null {
     if (this.isAnyValidatorError(error)) {
