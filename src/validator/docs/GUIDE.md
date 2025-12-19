@@ -5574,26 +5574,151 @@ async function registerUser(input: any) {
 
 #### Nested Object Validation
 
-You can validate nested structures by using custom rule functions that call `validateObject` recursively.
+You can validate nested structures by using custom rule functions that call `validateObject` recursively, or by composing schemas together.
+
+**Simple 2-Level Nesting:**
 
 ```typescript
-const AddressRules = {
-  street: ['Required'],
-  city: ['Required'],
-  zipCode: ['Required', 'Numeric'],
-};
+const AddressSchema = Validator.object({
+  street: ['Required', 'String'],
+  city: ['Required', 'String'],
+  zipCode: ['Required', 'String'],
+});
 
-const UserRules = {
-  name: ['Required'],
+const UserSchema = Validator.object({
+  name: ['Required', 'String'],
   address: [
     async ({ value }) => {
-      const res = await Validator.validateObject(value, AddressRules);
+      const res = await AddressSchema.validate(value);
       return res.success || res.message;
     },
   ],
+});
+
+const userData = {
+  name: 'Jane Doe',
+  address: {
+    street: '123 Main St',
+    city: 'Springfield',
+    zipCode: '12345',
+  },
 };
 
-const result = await Validator.validateObject(userData, UserRules);
+const result = await UserSchema.validate(userData);
+// ✅ Success: All fields validated including nested address
+```
+
+**Multi-Level (3+) Nesting:**
+
+```typescript
+// Level 1: Address schema
+const AddressSchema = Validator.object({
+  street: ['Required', 'String'],
+  city: ['Required', 'String'],
+  zipCode: ['Required', 'String'],
+});
+
+// Level 2: Profile schema (contains address)
+const ProfileSchema = Validator.object({
+  bio: ['String'],
+  location: [
+    async ({ value }) => {
+      const res = await AddressSchema.validate(value);
+      return res.success || res.message;
+    },
+  ],
+});
+
+// Level 3: User schema (contains profile)
+const UserSchema = Validator.object({
+  username: ['Required', 'String'],
+  profile: [
+    async ({ value }) => {
+      const res = await ProfileSchema.validate(value);
+      return res.success || res.message;
+    },
+  ],
+});
+
+const complexUserData = {
+  username: 'johndoe',
+  profile: {
+    bio: 'Software Engineer',
+    location: {
+      street: '456 Tech Blvd',
+      city: 'San Francisco',
+      zipCode: '94102',
+    },
+  },
+};
+
+const result = await UserSchema.validate(complexUserData);
+// ✅ Validates through all 3 levels of nesting
+```
+
+**Array of Nested Objects:**
+
+```typescript
+const TagSchema = Validator.object({
+  id: ['Required', 'Number'],
+  label: ['Required', 'String'],
+});
+
+const ArticleSchema = Validator.object({
+  title: ['Required', 'String'],
+  tags: [
+    'Array',
+    async ({ value }) => {
+      if (!Array.isArray(value)) return 'Tags must be an array';
+
+      const results = await Promise.all(
+        value.map((tag) => TagSchema.validate(tag))
+      );
+
+      const failures = results.filter((r) => !r.success);
+      if (failures.length > 0) {
+        return `${failures.length} invalid tag(s) found`;
+      }
+
+      return true;
+    },
+  ],
+});
+
+const articleData = {
+  title: 'Understanding Validation',
+  tags: [
+    { id: 1, label: 'TypeScript' },
+    { id: 2, label: 'Validation' },
+  ],
+};
+
+const result = await ArticleSchema.validate(articleData);
+// ✅ Validates the article and all nested tags
+```
+
+**Error Handling in Nested Validation:**
+
+```typescript
+const result = await UserSchema.validate({
+  name: 'Jane',
+  address: {
+    street: '', // ❌ Empty - fails Required
+    city: 'Springfield',
+    zipCode: '12345',
+  },
+});
+
+if (!result.success) {
+  console.log(result.fieldErrors);
+  // {
+  //   address: "Validation failed: 2 of 3 fields failed"
+  // }
+
+  // Access detailed errors
+  console.log(result.errors);
+  // Array of ValidatorClassItemError with field paths
+}
 ```
 
 #### Passing Context

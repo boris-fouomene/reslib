@@ -176,27 +176,142 @@ describe('Validator - Object-Based Validation (Zod-like)', () => {
       }
     });
 
-    it('should support nested objects via custom rules calling validateObject', async () => {
-      const data = {
-        user: { name: 'Alice', email: 'alice@example.com' },
-        metadata: { version: 1 },
-      };
+    describe('Nested Object Validation', () => {
+      const AddressSchema = Validator.object({
+        street: ['Required', 'String'],
+        city: ['Required', 'String'],
+        zipCode: ['Required', 'String'], // zipCode as string (e.g., "90210")
+      });
 
-      const rules: ValidatorObjectRules<typeof data> = {
-        user: [
+      const ProfileSchema = Validator.object({
+        bio: ['String'],
+        location: [
           async ({ value }: any) => {
-            const res = await Validator.validateObject(value, {
-              name: ['Required'],
-              email: ['Email'],
-            });
+            const res = await AddressSchema.validate(value);
             return res.success || res.message;
           },
         ],
-        metadata: [],
-      };
+      });
 
-      const result = await Validator.validateObject(data, rules);
-      expect(result.success).toBe(true);
+      it('should validate 2-level nested objects successfully', async () => {
+        const data = {
+          name: 'Jane Smith',
+          address: {
+            street: '123 Tech Way',
+            city: 'Innovation',
+            zipCode: '90210',
+          },
+        };
+
+        const rules: ValidatorObjectRules<typeof data> = {
+          name: ['Required'],
+          address: [
+            async ({ value }: any) => {
+              const res = await AddressSchema.validate(value);
+              return res.success || res.message;
+            },
+          ],
+        };
+
+        const result = await Validator.validateObject(data, rules);
+        expect(result.success).toBe(true);
+      });
+
+      it('should report correct field errors for nested failures', async () => {
+        const data = {
+          name: 'Jane Smith',
+          address: {
+            street: '', // Failed: Required
+            city: 'Innovation',
+            zipCode: '', // Failed: Required (empty string)
+          },
+        };
+
+        const rules: ValidatorObjectRules<typeof data> = {
+          name: ['Required'],
+          address: [
+            async ({ value }: any) => {
+              const res = await AddressSchema.validate(value);
+              return res.success || res.message;
+            },
+          ],
+        };
+
+        const result = await Validator.validateObject(data, rules);
+        expect(result.success).toBe(false);
+        if (!result.success) {
+          expect(result.fieldErrors.address).toBeDefined();
+          // The error message should contain details about what failed inside
+          expect(result.fieldErrors.address).toContain('address');
+        }
+      });
+
+      it('should support multi-level (3+) nesting', async () => {
+        const UserSchema = Validator.object({
+          username: ['Required'],
+          profile: [
+            async ({ value }: any) => {
+              const res = await ProfileSchema.validate(value);
+              return res.success || res.message;
+            },
+          ],
+        });
+
+        const data = {
+          username: 'dev_user',
+          profile: {
+            bio: 'Coding enthusiast',
+            location: {
+              street: 'Main St',
+              city: 'Silicon Valley',
+              zipCode: '12345',
+            },
+          },
+        };
+
+        const result = await UserSchema.validate(data);
+        expect(result.success).toBe(true);
+      });
+
+      it('should validate an array of nested objects', async () => {
+        const data = {
+          tags: [
+            { id: 1, label: 'Typescript' },
+            { id: 2, label: 'Testing' },
+          ],
+        };
+
+        const TagSchema = Validator.object({
+          id: ['Required', 'Number'],
+          label: ['Required', 'String'],
+        });
+
+        const rules: ValidatorObjectRules<typeof data> = {
+          tags: [
+            'Array',
+            async ({ value }: any) => {
+              const results = await Promise.all(
+                value.map((item: any) => TagSchema.validate(item))
+              );
+              const failures = results.filter((r) => !r.success);
+              if (failures.length > 0) {
+                return `Invalid tags: ${failures.length} errors found`;
+              }
+              return true;
+            },
+          ],
+        };
+
+        const result = await Validator.validateObject(data, rules);
+        expect(result.success).toBe(true);
+
+        // Test failure in array
+        const invalidData = {
+          tags: [{ id: 'one', label: '' }],
+        };
+        const result2 = await Validator.validateObject(invalidData, rules);
+        expect(result2.success).toBe(false);
+      });
     });
 
     it('should handle null/undefined data values correctly according to rules', async () => {
