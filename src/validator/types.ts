@@ -901,7 +901,7 @@ export type ValidatorRuleParams<
  *   ↳ extends Omit<ValidatorClassOptions<TClass, Context, [classInstance: TClass]>, "data">
  *     ↳ extends Omit<ValidatorOptions<TParams, Context>, "data" | "rule" | "value">
  *       ↳ extends Omit<Partial<InputFormatterResult>, "value">
- *         ↳ extends BaseData<Context>
+ *         ↳ extends ValidatorBaseOptions<Context>
  * ```
  *
  * ### Generic Parameters
@@ -1035,7 +1035,9 @@ export interface ValidatorOptions<
   TParams extends ValidatorRuleParams = ValidatorRuleParams,
   Context = unknown,
 >
-  extends Omit<Partial<InputFormatterResult>, 'value'>, BaseData<Context> {
+  extends
+    Omit<Partial<InputFormatterResult>, 'value'>,
+    ValidatorBaseOptions<Context> {
   /**
    * The list of validation rules to apply
    *
@@ -1651,8 +1653,8 @@ export type ValidatorMultiRuleNames = 'OneOf' | 'AllOf';
  * - **duration**: Duration in milliseconds from validation start to completion
  * - **error**: Explicitly `undefined` for success (aids type narrowing)
  * - **failedAt**: Explicitly `undefined` for success (aids type narrowing)
- * - **data**: Optional context data (inherited from BaseData)
- * - **context**: Optional validation context (inherited from BaseData)
+ * - **data**: Optional context data (inherited from ValidatorBaseOptions)
+ * - **context**: Optional validation context (inherited from ValidatorBaseOptions)
  *
  * ### Example
  * ```typescript
@@ -1678,7 +1680,9 @@ export type ValidatorMultiRuleNames = 'OneOf' | 'AllOf';
  * @see {@link Validator.validate}
  * @see {@link Validator.isSuccess}
  */
-export interface ValidatorSuccess<Context = unknown> extends BaseData<Context> {
+export interface ValidatorSuccess<
+  Context = unknown,
+> extends ValidatorBaseOptions<Context> {
   /** Discriminant for type narrowing - always `true` for success */
   success: true;
 
@@ -1877,7 +1881,7 @@ export type ValidatorResult<Context = unknown> =
 export interface ValidatorClassSuccess<
   TClass extends ClassConstructor = ClassConstructor,
   Context = unknown,
-> extends Omit<BaseData<Context>, 'data'> {
+> extends Omit<ValidatorBaseOptions<Context>, 'data'> {
   /** Discriminant for type narrowing - always `true` for success */
   success: true;
 
@@ -2107,7 +2111,29 @@ export type ValidatorRuleFunctionsMap<Context = unknown> = {
   >;
 };
 
-interface BaseData<Context = unknown> {
+/**
+ * ## Validator Base Options
+ *
+ * The foundational type that defines the core data properties involved in any validation operation.
+ * It serves as the base for both:
+ * 1. **Validation Options**: The input configurations passed to validation methods (e.g., {@link ValidatorOptions}).
+ * 2. **Validation Results**: The successful output of validation containing the validated data (e.g., {@link ValidatorSuccess}).
+ *
+ * ### Purpose
+ * This interface identifies the three key pieces of data in the validation lifecycle:
+ * - **value**: The primary data being validated.
+ * - **data**: Auxiliary data (e.g., the full form object) for cross-field validation.
+ * - **context**: Application-specific context (e.g., database connections, user session) injected into rules.
+ *
+ * ### Usage
+ * You typically don't use this type directly. Instead, you use one of its specialized extensions:
+ * - Use {@link ValidatorOptions} for calling `Validator.validate()`
+ * - Use {@link ValidatorClassResult} or {@link ValidatorSuccess} when handling return values
+ *
+ * @template Context - Type of the optional application context
+ * @public
+ */
+export interface ValidatorBaseOptions<Context = unknown> {
   /**
    * The value to use for performing the validation.
    * This is the actual data that will be validated against the specified rules.
