@@ -235,4 +235,145 @@ describe('Validator Rule Message Override Tests', () => {
       expect(result.message).toBe('Please provide a valid email address');
     });
   });
+
+  describe('Dynamic Message Functions', () => {
+    it('should use a function to generate the error message', async () => {
+      const result = await Validator.validate({
+        value: '',
+        rules: [
+          {
+            Required: {
+              params: [],
+              message: () => 'Dynamic required message',
+            },
+          },
+        ],
+      });
+      expect(result.success).toBe(false);
+      expect(result.message).toBe('Dynamic required message');
+    });
+
+    it('should access validated value in message function', async () => {
+      const result = await Validator.validate({
+        value: 'bad_input',
+        rules: [
+          {
+            Email: {
+              params: [],
+              message: ({ value }) => `Value "${value}" is not an email`,
+            },
+          },
+        ],
+      });
+      expect(result.success).toBe(false);
+      expect(result.message).toBe('Value "bad_input" is not an email');
+    });
+
+    it('should access rule parameters in message function', async () => {
+      const result = await Validator.validate({
+        value: 'abc', // len 3
+        rules: [
+          {
+            MinLength: {
+              params: [5],
+              message: ({ ruleParams }) => `Minimum length is ${ruleParams[0]}`,
+            },
+          },
+        ],
+      });
+      expect(result.success).toBe(false);
+      expect(result.message).toBe('Minimum length is 5');
+    });
+
+    it('should access i18n instance in message function and translate', async () => {
+      // 'validator.required': 'This field is required by default' (registered in beforeAll)
+      const result = await Validator.validate({
+        value: '',
+        rules: [
+          {
+            Required: {
+              params: [],
+              message: ({ i18n }) =>
+                i18n.t('validator.required') + ' (verified)',
+            },
+          },
+        ],
+      });
+      expect(result.success).toBe(false);
+      expect(result.message).toBe(
+        'This field is required by default (verified)'
+      );
+    });
+
+    it('should access ruleName in message function', async () => {
+      const result = await Validator.validate({
+        value: '',
+        rules: [
+          {
+            Required: {
+              params: [],
+              message: ({ ruleName }) => `Rule ${ruleName} failed`,
+            },
+          },
+        ],
+      });
+      expect(result.success).toBe(false);
+      expect(result.message).toBe('Rule Required failed');
+    });
+
+    it('should use complex logic in message function', async () => {
+      const result = await Validator.validate({
+        value: 'short',
+        rules: [
+          {
+            MinLength: {
+              params: [10],
+              message: ({ value }) => {
+                if (String(value).length < 5) return 'Very short';
+                return 'Just short';
+              },
+            },
+          },
+        ],
+      });
+      expect(result.success).toBe(false);
+      expect(result.message).toBe('Just short');
+    });
+
+    it('should access fieldName in message function', async () => {
+      const result = await Validator.validate({
+        value: '',
+        fieldName: 'CustomField',
+        rules: [
+          {
+            Required: {
+              params: [],
+              message: ({ fieldName }) => `${fieldName} is mandatory`,
+            },
+          },
+        ],
+      });
+      expect(result.success).toBe(false);
+      expect(result.message).toBe('CustomField is mandatory');
+    });
+
+    it('should fall back to default message if message function throws error', async () => {
+      const result = await Validator.validate({
+        value: '',
+        rules: [
+          {
+            Required: {
+              params: [],
+              message: () => {
+                throw new Error('Message gen failed');
+              },
+            },
+          },
+        ],
+      });
+      expect(result.success).toBe(false);
+      // Expect fallback to default 'Required' message
+      expect(result.message).toContain('required');
+    });
+  });
 });

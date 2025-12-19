@@ -147,3 +147,28 @@ export interface ClassConstructor<T = unknown, D extends any[] = any[]> {
  */
 export type MakeOptional<T, K extends keyof T> = Omit<T, K> &
   Partial<Pick<T, K>>;
+
+/**
+ * MakeRequired<T, K>
+ * * Constructs a type by picking a set of properties K from T and making them required.
+ * This is the inverse of MakeOptional.
+ * * @template T - The original interface or object type.
+ * @template K - The specific keys within T that should become mandatory.
+ * * @example
+ * interface User {
+ * id: string;
+ * email?: string;
+ * displayName?: string;
+ * }
+ * * // Result: { id: string; email: string; displayName?: string; }
+ * type MandatoryEmail = MakeRequired<User, 'email'>;
+ * * @example
+ * // Works with multiple keys:
+ * type FullyActive = MakeRequired<User, 'email' | 'displayName'>;
+ */
+export type MakeRequired<T, K extends keyof T> = T & {
+  // [P in K] iterates over the keys provided in K
+  // -? explicitly removes the optional modifier (?) from those keys
+  // T[P] preserves the original value type of that property
+  [P in K]-?: T[P];
+};

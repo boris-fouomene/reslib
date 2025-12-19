@@ -3,6 +3,7 @@ import {
   getDecoratedProperties,
 } from '@/resources/decorators';
 import { ClassConstructor, Dictionary, MakeOptional } from '@/types';
+import { Logger } from '@logger';
 import {
   defaultStr,
   isEmpty,
@@ -37,6 +38,7 @@ import {
   ValidatorOptions,
   ValidatorResult,
   ValidatorRule,
+  ValidatorRuleConfigMessage,
   ValidatorRuleFunction,
   ValidatorRuleFunctionsMap,
   ValidatorRuleName,
@@ -928,10 +930,9 @@ export class Validator {
             Array.isArray(ruleParameters.params)
           ) {
             result.push({
+              ...ruleParameters,
               ruleName,
               ruleFunction,
-              params: ruleParameters.params,
-              message: defaultStr(ruleParameters.message),
             });
           }
         }
@@ -1049,7 +1050,7 @@ export class Validator {
         const rule = sanitizedRules[index];
         let ruleName = undefined;
         let ruleParams: ValidatorRuleParams<Array<unknown>, Context>[] = [];
-        let messageFromRule: string = '';
+        let ruleMessage: ValidatorRuleConfigMessage | undefined;
         let ruleFunc:
           | ValidatorRuleFunction<ValidatorDefaultArray, Context>
           | undefined = typeof rule === 'function' ? rule : undefined;
@@ -1059,7 +1060,7 @@ export class Validator {
             Array.isArray(rule.params) ? rule.params : []
           ) as ValidatorRuleParams<Array<unknown>, Context>[];
           ruleName = rule.ruleName;
-          messageFromRule = defaultStr(rule.message);
+          ruleMessage = rule.message;
         } else if (typeof rule == 'function') {
           const parsedRuleFunc = Validator.parseFunctionRule<Context>(rule);
           if (parsedRuleFunc) {
@@ -1092,6 +1093,7 @@ export class Validator {
           data: data ?? Object.assign({}, data),
           startTime,
           ...i18nRuleOptions,
+          ruleName: defaultStr(ruleName) as ValidatorRuleName,
           value,
           i18n,
         };
@@ -1099,15 +1101,31 @@ export class Validator {
           if (Validator.isError(result)) {
             return resolve(result);
           }
-          const translatedRuleMessage =
-            result !== true
-              ? messageFromRule
-                ? i18n.has(messageFromRule)
-                  ? i18n.t(messageFromRule, i18nRuleOptions)
-                  : messageFromRule
-                : undefined
-              : undefined;
-          if (translatedRuleMessage) {
+          let translatedRuleMessage: string = '';
+          if (result !== true && ruleMessage) {
+            if (isNonNullString(ruleMessage)) {
+              translatedRuleMessage = i18n.has(ruleMessage)
+                ? i18n.t(ruleMessage, i18nRuleOptions)
+                : ruleMessage;
+            } else if (typeof ruleMessage === 'function') {
+              try {
+                translatedRuleMessage = ruleMessage({
+                  ...validateOptions,
+                });
+              } catch (e) {
+                // Custom message function failed; ignore and use default message
+                Logger.log(
+                  Validator.name,
+                  ' Error generated when runing custom translate rule message ',
+                  ruleName,
+                  ruleParams,
+                  e
+                );
+                translatedRuleMessage = '';
+              }
+            }
+          }
+          if (isNonNullString(translatedRuleMessage)) {
             return resolve(
               Validator.createError(translatedRuleMessage, errorDetails)
             );
@@ -1148,8 +1166,7 @@ export class Validator {
           return handleResult(
             typeof e === 'string'
               ? e
-              : // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                (e as any)?.message || e?.toString() || stringify(e)
+              : (e as Error)?.message || e?.toString() || stringify(e)
           );
         }
       };
