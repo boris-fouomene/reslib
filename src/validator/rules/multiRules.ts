@@ -177,7 +177,7 @@ import { Validator } from '../validator';
  * @see {@link Validator.validateOneOfRule} - The underlying validation method
  * @see {@link Validator.buildMultiRuleDecorator} - Factory method that creates this decorator
  * @see {@link Validator.validateClass} - For class-based validation using decorators
- * @see {@link ValidateMultiRuleOptions} - Type definition for validation options
+ * @see {@link ValidatorMultiRuleOptions} - Type definition for validation options
  *
  * @public
  * @decorator
@@ -322,7 +322,7 @@ export const OneOf = Validator.buildMultiRuleDecorator(function OneOf(options) {
  * @see {@link Validator.validateAllOfRule} - The underlying validation method
  * @see {@link Validator.buildMultiRuleDecorator} - Factory method that creates this decorator
  * @see {@link Validator.validateClass} - For class-based validation using decorators
- * @see {@link ValidateMultiRuleOptions} - Type definition for validation options
+ * @see {@link ValidatorMultiRuleOptions} - Type definition for validation options
  *
  * @public
  * @decorator
@@ -476,7 +476,7 @@ export const AllOf = Validator.buildMultiRuleDecorator(function AllOf(options) {
  * @see {@link Validator.validateArrayOfRule} - The underlying validation method
  * @see {@link Validator.buildMultiRuleDecorator} - Factory method that creates this decorator
  * @see {@link Validator.validateClass} - For class-based validation using decorators
- * @see {@link ValidateMultiRuleOptions} - Type definition for validation options
+ * @see {@link ValidatorMultiRuleOptions} - Type definition for validation options
  *
  * @public
  * @decorator

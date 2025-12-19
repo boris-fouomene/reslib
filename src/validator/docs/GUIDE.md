@@ -5313,7 +5313,7 @@ static async validate<Context = unknown>(
 ```typescript
 static async validateClass<TClass extends object, Context = unknown>(
   targetClass: new () => TClass,
-  options: ValidateClassOptions<TClass, Context>
+  options: ValidatorClassOptions<TClass, Context>
 ): Promise<ValidatorClassResult<TClass, Context>>
 ```
 

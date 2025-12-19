@@ -25,14 +25,14 @@ import {
 } from './errors';
 import { VALIDATOR_RULE_MARKERS } from './rulesMarkers';
 import {
-  ValidateClassOptions,
-  ValidateMultiRuleOptions,
   ValidatorAsyncRuleResult,
   ValidatorClassKeys,
+  ValidatorClassOptions,
   ValidatorClassResult,
   ValidatorDefaultMultiRule,
   ValidatorMultiRuleFunction,
   ValidatorMultiRuleNames,
+  ValidatorMultiRuleOptions,
   ValidatorNestedRuleFunctionOptions,
   ValidatorOptions,
   ValidatorResult,
@@ -1253,7 +1253,7 @@ export class Validator {
     RulesFunctions extends ValidatorDefaultMultiRule<Context> =
       ValidatorDefaultMultiRule<Context>,
   >(
-    options: ValidateMultiRuleOptions<Context, RulesFunctions>
+    options: ValidatorMultiRuleOptions<Context, RulesFunctions>
   ): ValidatorRuleResult {
     return this.validateMultiRule<Context, RulesFunctions>('OneOf', options);
   }
@@ -1284,7 +1284,7 @@ export class Validator {
     RulesFunctions extends ValidatorDefaultMultiRule<Context> =
       ValidatorDefaultMultiRule<Context>,
   >(
-    options: ValidateMultiRuleOptions<Context, RulesFunctions>
+    options: ValidatorMultiRuleOptions<Context, RulesFunctions>
   ): ValidatorRuleResult {
     return this.validateMultiRule<Context, RulesFunctions>('AllOf', options);
   }
@@ -1318,7 +1318,7 @@ export class Validator {
     RulesFunctions extends ValidatorDefaultMultiRule<Context> =
       ValidatorDefaultMultiRule<Context>,
   >(
-    options: ValidateMultiRuleOptions<Context, RulesFunctions>
+    options: ValidatorMultiRuleOptions<Context, RulesFunctions>
   ): ValidatorAsyncRuleResult {
     let { value, ruleParams, startTime, ...extra } = options;
     startTime = isNumber(startTime) ? startTime : Date.now();
@@ -1633,7 +1633,7 @@ export class Validator {
    *   parameterized rule object, or a rule function
    *
    * @param ruleName - Multi-rule mode to apply: `"OneOf"` or `"AllOf"`
-   * @param options - Validation options extending {@link ValidateMultiRuleOptions}
+   * @param options - Validation options extending {@link ValidatorMultiRuleOptions}
    * @param options.value - The value to validate against the sub-rules
    * @param options.ruleParams - Array of sub-rules to evaluate (functions or named/object rules)
    * @param options.context - Optional context passed through to each sub-rule
@@ -1684,7 +1684,7 @@ export class Validator {
       ruleParams,
       startTime,
       ...extra
-    }: ValidateMultiRuleOptions<Context, RulesFunctions>
+    }: ValidatorMultiRuleOptions<Context, RulesFunctions>
   ) {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     startTime = isNumber(startTime) ? startTime : Date.now();
@@ -1896,7 +1896,7 @@ export class Validator {
         Context,
         ValidatorDefaultMultiRule<Context>
       >({
-        ...(options as unknown as ValidateMultiRuleOptions<
+        ...(options as unknown as ValidatorMultiRuleOptions<
           Context,
           ValidatorDefaultMultiRule<Context>
         >),
@@ -1936,7 +1936,7 @@ export class Validator {
         Context,
         ValidatorDefaultMultiRule<Context>
       >({
-        ...(options as unknown as ValidateMultiRuleOptions<
+        ...(options as unknown as ValidatorMultiRuleOptions<
           Context,
           ValidatorDefaultMultiRule<Context>
         >),
@@ -1970,7 +1970,7 @@ export class Validator {
         Context,
         ValidatorDefaultMultiRule<Context>
       >({
-        ...(options as unknown as ValidateMultiRuleOptions<
+        ...(options as unknown as ValidatorMultiRuleOptions<
           Context,
           ValidatorDefaultMultiRule<Context>
         >),
@@ -2198,7 +2198,7 @@ export class Validator {
    * @see {@link ValidateNested} - Decorator using this factory
    * @see {@link validateClass} - Multi-field class validation (signature: validateClass<T, Context>(target, options))
    * @see {@link ValidatorOptions} - Validation options interface for rule functions
-   * @see {@link ValidateClassOptions} - TClass validation options interface
+   * @see {@link ValidatorClassOptions} - TClass validation options interface
    * @see {@link oneOf} - Similar factory for OneOf rule creation
    * @see {@link allOf} - Similar factory for AllOf rule creation
    * @see {@link arrayOf} - Similar factory for ArrayOf rule creation
@@ -2225,7 +2225,7 @@ export class Validator {
   >(
     target: TClass,
     options: Omit<
-      ValidateClassOptions<TClass, Context>,
+      ValidatorClassOptions<TClass, Context>,
       'i18n' | 'ruleParams'
     > & {
       i18n?: I18n;
@@ -2235,7 +2235,7 @@ export class Validator {
     const targetRules = Validator.getClassRules<TClass>(target);
     const { context, errorMessageBuilder, ...restOptions } = Object.assign(
       {},
-      Validator.getValidateClassOptions(target),
+      Validator.getValidatorClassOptions(target),
       options
     );
     const data = Object.assign({}, options.data);
@@ -2474,7 +2474,7 @@ export class Validator {
    * }
    *
    * // Get the configured options
-   * const options = Validator.getValidateClassOptions(CustomUser);
+   * const options = Validator.getValidatorClassOptions(CustomUser);
    * console.log(typeof options.errorMessageBuilder); // 'function'
    *
    * // These options will be automatically used when validating
@@ -2493,10 +2493,10 @@ export class Validator {
    * @see {@link ValidationClassOptions} - Decorator to set these options
    * @public
    */
-  public static getValidateClassOptions<T extends ClassConstructor>(
+  public static getValidatorClassOptions<T extends ClassConstructor>(
     target: T
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  ): ValidateClassOptions<T, any> {
+  ): ValidatorClassOptions<T, any> {
     return Object.assign(
       {},
       Reflect.getMetadata(VALIDATOR_TARGET_OPTIONS_METADATA_KEY, target) || {}
@@ -4174,13 +4174,13 @@ export class Validator {
  *
  *
  * @see {@link validateClass} - Method that uses these options
- * @see {@link getValidateClassOptions} - Retrieves configured options
+ * @see {@link getValidatorClassOptions} - Retrieves configured options
  * @decorator
  * @public
  */
 export function ValidationClassOptions(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  validationOptions: ValidateClassOptions<any, any>
+  validationOptions: ValidatorClassOptions<any, any>
 ): ClassDecorator {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
   return function (targetClass: Function) {

@@ -48,7 +48,6 @@ describe('Validator', () => {
         { MinLength: [2] },
         { MaxLength: [10] },
       ]);
-      console.log(sanitizedRules, ' are sanitized rules');
       expect(sanitizedRules).toEqual({
         invalidRules: [],
         sanitizedRules: [

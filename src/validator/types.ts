@@ -890,7 +890,7 @@ export type ValidatorRuleParams<
  * work with entire class instances or nested object hierarchies.
  *
  * ### Key Differences from ValidatorOptions
- * - **Extends from ValidateClassOptions**: Inherits class-specific properties
+ * - **Extends from ValidatorClassOptions**: Inherits class-specific properties
  * - **Omits "data" property**: Uses its own `data` property instead
  * - **Optional value property**: Accepts class data instead of single values
  * - **Flexible data property**: Allows any record structure for nested validation
@@ -898,7 +898,7 @@ export type ValidatorRuleParams<
  * ### Inheritance Structure
  * ```
  * ValidatorNestedRuleFunctionOptions
- *   ↳ extends Omit<ValidateClassOptions<TClass, Context, [target: TClass]>, "data">
+ *   ↳ extends Omit<ValidatorClassOptions<TClass, Context, [classInstance: TClass]>, "data">
  *     ↳ extends Omit<ValidatorOptions<TParams, Context>, "data" | "rule" | "value">
  *       ↳ extends Omit<Partial<InputFormatterResult>, "value">
  *         ↳ extends BaseData<Context>
@@ -925,7 +925,7 @@ export type ValidatorRuleParams<
  * - **parentData**: Parent context for nested validations
  *
  * #### Own Properties
- * - **value**: Optional target data to validate
+ * - **value**: Optional class data to validate
  * - **data**: Flexible data object for nested validation context
  *
  * ### Usage in Nested Validation
@@ -957,8 +957,8 @@ export type ValidatorRuleParams<
  *
  * ### Relationship to Validation System
  * - **Used by**: {@link Validator.validateNestedRule} method
- * - **Complements**: {@link ValidateClassOptions} for target validation
- * - **Extends**: {@link ValidatorOptions} with target-specific modifications
+ * - **Complements**: {@link ValidatorClassOptions} for class validation
+ * - **Extends**: {@link ValidatorOptions} with class-specific modifications
  * - **Supports**: Complex nested object validation scenarios
  *
  * ### Common Use Cases
@@ -993,13 +993,13 @@ export type ValidatorRuleParams<
  * ```
  *
  * ### Type Safety Benefits
- * - **Compile-time validation** of target types
+ * - **Compile-time validation** of class types
  * - **Type-safe property access** on nested objects
  * - **Context propagation** through validation hierarchy
  * - **Flexible data structures** for complex validation scenarios
  *
  * ### Performance Considerations
- * - **TClass validation overhead**: More expensive than single-value validation
+ * - **Class validation overhead**: More expensive than single-value validation
  * - **Parallel processing**: Multiple nested validations can run concurrently
  * - **Memory usage**: Larger data structures require more memory
  * - **Serialization**: Complex objects may need special handling
@@ -1010,11 +1010,11 @@ export interface ValidatorNestedRuleFunctionOptions<
   TClass extends ClassConstructor = ClassConstructor,
   Context = unknown,
 > extends Omit<
-  ValidateClassOptions<
+  ValidatorClassOptions<
     TClass,
     Context,
     [
-      target: TClass,
+      classInstance: TClass,
       options?: {
         /**
          * The custom error message to use when validation fails.
@@ -1308,7 +1308,7 @@ export interface ValidatorOptions<
  *
  * #### Basic OneOf Validation Setup
  * ```typescript
- * const options: ValidateMultiRuleOptions = {
+ * const options: ValidatorMultiRuleOptions = {
  *   value: "user@example.com",
  *   ruleParams: [
  *     ({ value }) => value.includes("@") || "Must contain @",
@@ -1331,7 +1331,7 @@ export interface ValidatorOptions<
  *   allowedDomains: string[];
  * }
  *
- * const options: ValidateMultiRuleOptions<ValidationContext> = {
+ * const options: ValidatorMultiRuleOptions<ValidationContext> = {
  *   value: "admin@company.com",
  *   ruleParams: [
  *     // Email validation
@@ -1376,7 +1376,7 @@ export interface ValidatorOptions<
  * @see {@link ValidatorRuleFunction} - Type of functions in ruleParams array
  * @see {@link ValidatorResult} - Result type returned by validation
  */
-export interface ValidateMultiRuleOptions<
+export interface ValidatorMultiRuleOptions<
   Context = unknown,
   RulesFunctions extends ValidatorDefaultMultiRule<Context> =
     ValidatorDefaultMultiRule<Context>,
@@ -1393,7 +1393,7 @@ export interface ValidateMultiRuleOptions<
  * ### Purpose
  * Provides a flexible type for representing collections of validation rules where each rule
  * can have different parameter types. Used as a constraint for {@link ValidatorMultiRuleFunction}
- * and {@link ValidateMultiRuleOptions} to ensure type safety in multi-rule scenarios.
+ * and {@link ValidatorMultiRuleOptions} to ensure type safety in multi-rule scenarios.
  *
  * ### Type Parameters
  * - **Context**: Optional context type for validation (defaults to `unknown`)
@@ -1414,7 +1414,7 @@ export interface ValidateMultiRuleOptions<
  * ```
  *
  * ### Relationship to Validation System
- * - **Used by**: {@link ValidateMultiRuleOptions} as constraint
+ * - **Used by**: {@link ValidatorMultiRuleOptions} as constraint
  * - **Constrains**: {@link ValidatorMultiRuleFunction} parameter types
  * - **Enables**: Type-safe multi-rule validation operations
  *
@@ -1423,7 +1423,7 @@ export interface ValidateMultiRuleOptions<
  *
  * @public
  *
- * @see {@link ValidateMultiRuleOptions} - Uses this as constraint
+ * @see {@link ValidatorMultiRuleOptions} - Uses this as constraint
  * @see {@link ValidatorMultiRuleFunction} - Function type that accepts this
  * @see {@link ValidatorRule} - Individual rule type
  */
@@ -1497,79 +1497,6 @@ export type ValidatorMultiRuleFunction<
 > = ValidatorRuleFunction<RulesFunctions, Context>;
 
 /**
- * ## Class Validation Data Type
- *
- * A mapped type representing the data structure expected for class-based validation using
- * {@link Validator.validateClass}. This type creates a partial record mapping class properties
- * to their values, enabling type-safe validation of entire class instances.
- *
- * ### Purpose
- * Provides compile-time type safety for data passed to {@link Validator.validateClass} method.
- * Ensures that the data object matches the structure of the target class constructor, allowing
- * validation decorators to be applied to class properties with full type checking.
- *
- * ### Type Construction
- * ```typescript
- * Partial<Record<keyof InstanceType<TClass>, any>>
- * ```
- * - **TClass**: Class constructor type (must extend `ClassConstructor`)
- * - **InstanceType<TClass>**: Properties of the class instance
- * - **Partial**: All properties are optional (validation fills in defaults)
- * - **Record<..., any>**: Values can be any type (validation will check)
- *
- * ### Usage in TClass Validation
- * ```typescript
- * class UserForm {
- *   @IsRequired()
- *   @IsEmail()
- *   email: string;
- *
- *   @IsRequired()
- *   @MinLength(3)
- *   name: string;
- *
- *   @IsOptional()
- *   age?: number;
- * }
- *
- * // Type-safe data object
- * const data: ValidatorClassInput<UserForm> = {
- *   email: "user@example.com",  // ✓ Matches UserForm.email
- *   name: "John",               // ✓ Matches UserForm.name
- *   age: 25,                    // ✓ Matches UserForm.age
- * };
- *
- * const result = await Validator.validateClass(UserForm, data);
- * ```
- *
- * ### Key Features
- * - **Partial Mapping**: Not all class properties need to be provided
- * - **Type Safety**: Property names and types are checked at compile time
- * - **Decorator Integration**: Works with validation decorators on class properties
- * - **Flexible Values**: Accepts any value type (validation rules determine validity)
- *
- * ### Comparison with Single-Value Validation
- * | Aspect | TClass Data | Single Value |
- * |--------|-------------|--------------|
- * | Structure | Object with multiple properties | Single value |
- * | Validation | Multiple fields simultaneously | One value at a time |
- * | Type Safety | Class property mapping | Any value type |
- * | Use Case | Form validation | Field validation |
- *
- * ### Runtime Behavior
- * - **Missing Properties**: Validation decorators determine if properties are required
- * - **Extra Properties**: Ignored (only decorated properties are validated)
- * - **Type Coercion**: Values are validated according to decorator rules, not TypeScript types
- *
- * ### Relationship to Validation System
- * - **Used by**: {@link Validator.validateClass} as input data type
- * - **Mapped from**: Class constructor type via `InstanceType<TClass>`
- * - **Validated by**: Decorator-based rules on class properties
- * - **Returns**: {@link ValidatorClassResult} with validated instance
- *
-
-
-/**
  * ## Validator Class Options
  *
  * Configuration options for performing class-based validation (`Validator.validateClass`).
@@ -1578,9 +1505,9 @@ export type ValidatorMultiRuleFunction<
  *
  * ### Inheritance
  * Extends `ValidatorOptions` but excludes single-value specific properties (`value`, `rule`)
-  // in favor of class-instance specific properties (`data`).
+ * in favor of class-instance specific properties (`data`).
  */
-export interface ValidateClassOptions<
+export interface ValidatorClassOptions<
   TClass extends ClassConstructor = ClassConstructor,
   Context = unknown,
   ParamsTypes extends ValidatorRuleParams = ValidatorRuleParams,
@@ -1618,11 +1545,11 @@ export interface ValidateClassOptions<
  * ## Validator Bulk Options
  *
  * Configuration for bulk validation operations (validating an array of class instances).
- * Extends `ValidateClassOptions` but accepts an array of data objects instead of a single one.
+ * Extends `ValidatorClassOptions` but accepts an array of data objects instead of a single one.
  */
-export interface ValidateBulkOptions<
+export interface ValidatorBulkOptions<
   TClass extends ClassConstructor = ClassConstructor,
-> extends Omit<ValidateClassOptions<TClass>, 'data'> {
+> extends Omit<ValidatorClassOptions<TClass>, 'data'> {
   data: ValidatorClassInput<TClass>[];
 }
 
@@ -1880,7 +1807,7 @@ export type ValidatorResult<Context = unknown> =
  * ```
  *
  * ### Properties vs Single-Value Success
- * Unlike {@link ValidatorSuccess}, target success uses:
+ * Unlike {@link ValidatorSuccess}, class validation success uses:
  * - **data**: The validated class instance (not `value`)
  * - **value**: Always `undefined` (type narrowing aid)
  * - **errors**: Always `undefined` (type narrowing aid)
