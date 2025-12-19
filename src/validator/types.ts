@@ -546,6 +546,13 @@ export type ValidatorRuleObject = Partial<{
     | ValidatorRuleParamTypes[K]
     | {
         params: ValidatorRuleParamTypes[K];
+        /**
+         * Custom error message that overrides the rule's default message.
+         *
+         * If specified, this message will be used if validation fails, ignoring any
+         * message returned by the rule function itself.
+         * Support i18n keys and direct strings.
+         */
         message?: string;
       };
 }>;
@@ -718,13 +725,16 @@ export interface ValidatorSanitizedRuleObject<
    * The error message associated with the validation rule
    *
    * This is the error message that will be returned if the validation fails.
+   * **Important:** If this property is set, it overrides any error message generated
+   * by the `ruleFunction`. The validator will use this message instead.
+   *
    * It can be a translation key or a static string.
    * @type {string}
    * @example "This field is required."
    * @example "Value must be between {min} and {max}."
    * @example "auth.email.required"
    */
-  ruleMessage?: string;
+  message?: string;
 }
 /**
  * @typedef ValidatorSanitizedRules
@@ -1149,37 +1159,6 @@ export interface ValidatorOptions<
    * @see {@link ValidatorRuleName}
    */
   ruleName?: ValidatorRuleName;
-
-  /**
-   * Custom error message for validation failure
-   *
-   * Allows specifying a custom error message to display when validation fails.
-   * If provided, this message will be used instead of the default rule-generated message.
-   * Supports i18n translations and dynamic content.
-   *
-   * @type {string}
-   * @optional
-   *
-   * @example
-   * ```typescript
-   * const options: ValidatorOptions = {
-   *   value: "invalid-email",
-   *   rules: ["Email"],
-   *   message: "Please enter a valid email address (e.g., user@example.com)",
-   *   propertyName: "email"
-   * };
-   *
-   * // Custom message for specific context
-   * const options2: ValidatorOptions = {
-   *   value: "short",
-   *   rule: { ruleName: "MinLength" },
-   *   ruleParams: [8],
-   *   message: "Your password must be at least 8 characters for security",
-   *   propertyName: "password"
-   * };
-   * ```
-   */
-  message?: string;
 
   /**
    * The form field name/identifier

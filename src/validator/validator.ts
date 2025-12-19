@@ -633,7 +633,7 @@ export class Validator {
    *
    * - **sanitizedRules**: Array of `ValidatorSanitizedRule` (Union of functions and objects).
    *   - Functions are untouched.
-   *   - Objects are normalized to `{ ruleName, params, ruleFunction, ruleMessage? }`.
+   *   - Objects are normalized to `{ ruleName, params, ruleFunction, message? }`.
    *
    * - **invalidRules**: Array of rules that failed parsing or lookup. kept in original format for error reporting.
    *
@@ -931,7 +931,7 @@ export class Validator {
               ruleName,
               ruleFunction,
               params: ruleParameters.params,
-              ruleMessage: defaultStr(ruleParameters.message),
+              message: defaultStr(ruleParameters.message),
             });
           }
         }
@@ -1049,6 +1049,7 @@ export class Validator {
         const rule = sanitizedRules[index];
         let ruleName = undefined;
         let ruleParams: ValidatorRuleParams<Array<unknown>, Context>[] = [];
+        let messageFromRule: string = '';
         let ruleFunc:
           | ValidatorRuleFunction<ValidatorDefaultArray, Context>
           | undefined = typeof rule === 'function' ? rule : undefined;
@@ -1058,6 +1059,7 @@ export class Validator {
             Array.isArray(rule.params) ? rule.params : []
           ) as ValidatorRuleParams<Array<unknown>, Context>[];
           ruleName = rule.ruleName;
+          messageFromRule = defaultStr(rule.message);
         } else if (typeof rule == 'function') {
           const parsedRuleFunc = Validator.parseFunctionRule<Context>(rule);
           if (parsedRuleFunc) {
@@ -1095,7 +1097,20 @@ export class Validator {
         };
         const handleResult = (result: unknown) => {
           if (Validator.isError(result)) {
-            resolve(result);
+            return resolve(result);
+          }
+          const translatedRuleMessage =
+            result !== true
+              ? messageFromRule
+                ? i18n.has(messageFromRule)
+                  ? i18n.t(messageFromRule, i18nRuleOptions)
+                  : messageFromRule
+                : undefined
+              : undefined;
+          if (translatedRuleMessage) {
+            return resolve(
+              Validator.createError(translatedRuleMessage, errorDetails)
+            );
           }
           result =
             typeof result === 'string'
