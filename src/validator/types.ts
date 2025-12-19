@@ -94,7 +94,7 @@ export type ValidatorRuleResult =
  *
  * ### Purpose
  * Defines the complete set of valid rule specifications that can be used in validation operations.
- * Supports four different rule formats to accommodate various use cases and developer preferences.
+ * Supports three different rule formats to accommodate various use cases and developer preferences.
  *
  * ### Union Members
  *
@@ -106,17 +106,12 @@ export type ValidatorRuleResult =
  *
  * #### 2. Named Rules (`ValidatorRuleName`)
  * Simple string references to built-in validation rules. Most concise format.
+ * Only supports rules that don't require parameters (or have optional parameters).
  * ```typescript
- * "Required" | "Email" | "MinLength" | etc.
+ * "Required" | "Email" | "IsNumber"
  * ```
  *
- * #### 3. Parameterized Rules (Template Literal)
- * Built-in rules with parameters specified in string format. Readable and concise.
- * ```typescript
- * {MinLength:[5]}, {MaxLength:[100]} or {NumberBetween:[0,100]}
- * ```
- *
- * #### 4. Object Rules (`ValidatorRuleObject`)
+ * #### 3. Object Rules (`ValidatorRuleObject`)
  * Structured object format with type-safe parameters. Most type-safe format.
  * ```typescript
  * { MinLength: [5] } | { Email: [] } | { NumberBetween: [0, 100] }
@@ -132,9 +127,8 @@ export type ValidatorRuleResult =
  * ```typescript
  * const rules: ValidatorRules = [
  *   "Required",                    // Named rule
- *   "MinLength",               // Parameterized rule
- *   { MaxLength: [50] },          // Object rule
- *   ({ value }) => value !== "",  // Function rule
+ *   { MinLength: [5] },            // Object rule
+ *   ({ value }) => value !== "",   // Function rule
  * ];
  * ```
  *
@@ -157,7 +151,7 @@ export type ValidatorRuleResult =
  * // Multiple rules validation
  * const multiResult = await Validator.validate({
  *   value: "hello",
- *   rules: ["Required", "MinLength", { MaxLength: [10] }],  // ValidatorRule[]
+ *   rules: ["Required", { MinLength: [5] }, { MaxLength: [10] }],  // ValidatorRule[]
  * });
  * ```
  *
@@ -177,7 +171,6 @@ export type ValidatorRuleResult =
  * ### Performance Considerations
  * - **Function rules**: Fastest (direct execution)
  * - **Named rules**: Fast (lookup table)
- * - **Parameterized rules**: Medium (parsing required)
  * - **Object rules**: Medium (type mapping required)
  *
  * ### Best Practices
@@ -187,11 +180,8 @@ export type ValidatorRuleResult =
  * // ✅ Use named rules for simple cases
  * const simpleRules = ["Required", "Email"];
  *
- * // ✅ Use parameterized rules for single parameters
+ * // ✅ Use object rules for parameters or type safety
  * const lengthRules = [{ MinLength: [5] }, { MaxLength: [100] }];
- *
- * // ✅ Use object rules for complex parameters or type safety
- * const complexRules = [{ NumberBetween: [0, 100] }];
  *
  * // ✅ Use function rules for custom logic
  * const customRules = [({ value }) => value % 2 === 0];
@@ -201,8 +191,8 @@ export type ValidatorRuleResult =
  * ```typescript
  * const comprehensiveRules: ValidatorRules = [
  *   "Required",           // Built-in
- *   "MinLength",      // Parameterized
- *   { Email: [] },       // Object (type-safe)
+ *   { MinLength: [5] },   // Object (parameterized)
+ *   { Email: [] },        // Object (type-safe)
  *   ({ value, context }) => {  // Custom function
  *     return context?.allowSpecialChars || !/[!@#$%]/.test(value);
  *   },
@@ -214,8 +204,7 @@ export type ValidatorRuleResult =
  * ```typescript
  * // These will throw validation errors:
  * const invalid1 = "UnknownRule";        // Rule doesn't exist
- * const invalid2 = "MinLength";     // Invalid parameter type
- * const invalid3 = { UnknownRule: [] };  // Unknown rule name
+ * const invalid2 = { UnknownRule: [] };  // Unknown rule name
  * ```
  *
  * ### Relationship to Validation System
@@ -232,7 +221,7 @@ export type ValidatorRuleResult =
  *
  * const userValidationRules: UserRules = [
  *   "Required",
- *   "MinLength",
+ *   { MinLength: [3] },
  *   { MaxLength: [50] },
  *   ({ value }) => !/\s/.test(value),  // No spaces
  * ];
@@ -376,7 +365,7 @@ export type ValidatorOptionalOrEmptyRuleNames =
  * Email: [];                       // No parameters needed
  * PhoneNumber: [countryCode?: string]; // Optional parameter
  *
- * // ❌ Parameterized rules (must be called as "RuleName[param]")
+ * // ❌ Parameterized rules (must be used as { RuleName: [...] })
  * MinLength: [number];             // Required parameter
  * MaxLength: [number];             // Required parameter
  * Length: [number, number?];       // First parameter required
@@ -510,7 +499,6 @@ type ExtractOptionalOrEmptyKeys<T> = {
  * This type is one of four union members in {@link ValidatorRule}:
  * - `ValidatorRuleFunction` - Custom validation functions
  * - `ValidatorRuleName` - Simple rule names (strings)
- * - `` `${ValidatorRuleName}[${string}]` `` - Parameterized rule strings
  * - `ValidatorRuleObject` - Structured rule objects (this type)
  *
  * ### When to Use
@@ -520,15 +508,7 @@ type ExtractOptionalOrEmptyKeys<T> = {
  * - **Complex Parameters**: Rules with multiple typed parameters
  * - **Refactoring Safety**: Changes to rule signatures are caught by TypeScript
  *
- * ### Comparison with String Rules
- * | Aspect | Object Rules | String Rules |
- * |--------|-------------|--------------|
- * | Type Safety | ✅ Full compile-time checking | ⚠️ Runtime parameter validation |
- * | Autocomplete | ✅ Parameter types shown | ❌ No parameter hints |
- * | Refactoring | ✅ Breaking changes caught | ❌ May break silently |
- * | Readability | ✅ Self-documenting | ⚠️ Requires knowledge of syntax |
- * | Flexibility | ✅ Strongly typed | ✅ Dynamic |
- *
+
  * @template Context - Type of the optional validation context
  *
  * @example

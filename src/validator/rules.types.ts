@@ -1,35 +1,46 @@
 import { ClassConstructor } from '@/types';
 
 /**
- * @interface ValidatorRuleName
- * Represents the name of a validation rule as defined in the `ValidatorRuleParamTypes`.
+ * ## Validator Rule Name
  *
- * The `ValidatorRuleName` type is a union of string literal types that correspond to the keys
- * of the `ValidatorRuleParamTypes` interface. This allows for type-safe access to the names of
- * validation rules, ensuring that only valid rule names can be used in contexts where a rule name
- * is required.
+ * Represents a valid reference key for any registered validation rule.
  *
- * ### Structure:
- * - The type is derived from the keys of the `ValidatorRuleParamTypes`, meaning it will include
- *   all the rule names defined in that map.
+ * This type acts as the central vocabulary for the validation system, generated
+ * directly from the keys of `ValidatorRuleParamTypes`. It ensures that any rule
+ * name used in your code (whether as a string literal or object key) corresponds
+ * to a known, well-defined validation rule.
  *
- * ### Example:
+ * ### Usage
+ * You encounter `ValidatorRuleName` in two primary contexts:
+ * 1. **String Rules**: When using "Named Rules" for parameterless validation.
+ * 2. **Object Rules**: As the key in a rule object to specify which rule to apply.
  *
+ * ### Examples
  * ```typescript
- * const ruleName: ValidatorRuleName = "required"; // Valid
- * const anotherRuleName: ValidatorRuleName = "minLength"; // Valid
+ * // As a type annotation:
+ * const myRules: ValidatorRuleName[] = ["Required", "Email"];
  *
- * // Usage in a function that accepts a rule name
- * function getValidationRule(ruleName: ValidatorRuleName) {
- *     return validationRules[ruleName];
- * }
+ * // In object rules:
+ * const ruleObj = {
+ *   MinLength: [5],  // "MinLength" is a ValidatorRuleName
+ *   Required: []     // "Required" is a ValidatorRuleName
+ * };
  *
- * const rule = getValidationRule("maxLength"); // Valid usage
- * // const invalidRule = getValidationRule("unknownRule"); // TypeScript will throw an error
+ * // In custom lookups (e.g., getting a rule function):
+ * const ruleFn = Validator.getRule("Email");
  * ```
  *
- * This type enhances type safety in your code by ensuring that only valid validation rule names
- * can be used, reducing the risk of runtime errors due to typos or invalid rule names.
+ * ### Type Safety
+ * Because this is a string union type derived from the keys of the parameter map,
+ * TypeScript will produce an error if you try to use a misspelled or non-existent rule definition.
+ *
+ * ```typescript
+ * const valid: ValidatorRuleName = "Required";    // ✅
+ * const invalid: ValidatorRuleName = "Reguired";  // ❌ Type error: '"Reguired"' is not assignable...
+ * ```
+ *
+ * @public
+ * @see {@link ValidatorRuleParamTypes} - The source definition map.
  */
 export type ValidatorRuleName = keyof ValidatorRuleParamTypes & string;
 

@@ -573,198 +573,93 @@ export class Validator {
   /**
    * ## Parse and Validate Rules
    *
-   * Core rule normalization method that converts diverse validation rule formats into a standardized,
-   * executable representation while identifying and isolating invalid rules. This method serves as
-   * the critical preprocessing step that enables flexible rule input while ensuring type safety
-   * and consistent validation behavior across the entire validator system.
+   * The primary entry point for rule preprocessing in the validation pipeline.
+   * This method bridges the gap between user-friendly rule specification and the internal validation engine.
    *
-   * ### Purpose
-   * The `parseAndValidateRules` method bridges the gap between user-friendly rule specification
-   * and the internal validation engine. It accepts rules in multiple formats (strings, objects, functions)
-   * and transforms them into a uniform structure that the validation pipeline can process efficiently.
-   * Invalid rules are separated out for error reporting rather than causing validation failures.
+   * It transforms rules from multiple formats (strings, objects, functions) into a uniform structure
+   * that the validation engine can execute. Crucially, it isolates invalid rules (e.g., misspelled names)
+   * so they can be reported separately without crashing the validation process.
    *
    * ### Supported Input Formats
    *
-   * #### 1. Function Rules (Direct Validation Functions)
+   * #### 1. Function Rules (Direct Logic)
+   * The most flexible format. Functions are preserved as-is.
    * ```typescript
-   * // Synchronous function rule
-   * const positiveRule = ({ value }) => value > 0 || 'Must be positive';
+   * // Synchronous
+   * const isEven = ({ value }) => value % 2 === 0 || 'Must be even';
    *
-   * // Asynchronous function rule with context
-   * const asyncRule = async ({ value, context }) => {
-   *   const result = await someAsyncCheck(value, context);
-   *   return result || 'Async validation failed';
-   * };
-   *
-   * // Function rules with custom error messages
-   * const customRule = ({ value }) => {
-   *   if (!value) return 'Value is required';
-   *   if (value.length < 3) return 'Must be at least 3 characters';
-   *   return true; // Valid
+   * // Asynchronous
+   * const isUnique = async ({ value, context }) => {
+   *   return await checkDb(value) || 'Already exists';
    * };
    * ```
    *
-   * #### 2. String Rules (Bracket Notation for Parameters)
+   * #### 2. String Rules (Simple Names)
+   * Useful for built-in rules that don't require parameters (or where parameters are optional).
    * ```typescript
-   * // Simple rules without parameters
-   * 'Required'                    // Basic required field check
-   * 'Email'                       // Email format validation
-   * 'IsNumber'                    // Type checking
-   *
-   * // Rules with single parameter
-   * 'MinLength'               // Minimum length validation
-   * 'MaxLength'             // Maximum length validation
-   * 'GreaterThan'             // Numeric comparison
-   *
-   * // Rules with multiple parameters
-   * 'Between'             // Range validation (inclusive)
-   * 'InArray'  // Value enumeration
-   * 'Matches[/^[A-Z]{2}\d{6}$/]' // Regex pattern matching
+   * 'Required'
+   * 'Email'
+   * 'IsNumber'
    * ```
    *
-   * #### 3. Object Rules (Structured Parameter Passing)
+   * #### 3. Object Rules (Type-Safe & Configurable)
+   * The most robust format, supporting parameters and custom messages.
+   *
+   * **Standard Format:**
    * ```typescript
-   * // Rules without parameters
-   * { Required: [] }              // Explicit empty parameter array
-   * { Email: undefined }          // Undefined parameters (treated as [])
-   *
-   * // Rules with single parameter
-   * { MinLength: [5] }           // Array with one element
-   * { MaxLength: [100] }         // Array with one element
-   *
-   * // Rules with multiple parameters
-   * { Between: [10, 20] }        // Range validation
-   * { InArray: ['admin', 'user', 'guest'] }  // Multiple allowed values
-   * { CustomRule: ['param1', 'param2', 42] } // Mixed parameter types
+   * { MinLength: [5] }           // Rule with parameters
+   * { Required: [] }             // Rule without parameters
    * ```
    *
-   * ### Processing Logic
-   * The method follows a systematic approach to rule processing:
-   *
-   * 1. **Input Validation**: Accepts `undefined`, empty arrays, or arrays of mixed rule types
-   * 2. **Function Detection**: Direct function rules are preserved unchanged in the output
-   * 3. **String Parsing**: Bracket syntax is parsed to extract rule names and parameters
-   * 4. **Object Processing**: Object notation is converted to standardized rule objects
-   * 5. **Rule Registry Lookup**: Each parsed rule is validated against the registered rules map
-   * 6. **Error Isolation**: Invalid/unregistered rules are collected separately for reporting
-   * 7. **Type Safety**: All output maintains TypeScript type safety with proper generics
-   *
-   * ### Output Structure
-   * The method returns a structured result object with two key properties:
-   *
-   * #### `sanitizedRules` - Successfully Processed Rules
-   * Array of standardized rule objects with consistent structure:
+   * **Extended Format (with Custom Message):**
    * ```typescript
-   * interface SanitizedRule {
-   *   ruleName: ValidatorRuleName;        // Extracted rule name
-   *   params: any[];                     // Parameter array (empty for no params)
-   *   ruleFunction: ValidatorRuleFunction; // Actual validation function
+   * {
+   *   Required: {
+   *     params: [],
+   *     message: "This specific field is mandatory!"
+   *   }
    * }
    * ```
    *
-   * #### `invalidRules` - Unprocessable Rules
-   * Array of rules that couldn't be processed (maintains original input types):
-   * - Unregistered rule names
-   * - Malformed string syntax
-   * - Invalid object structures
-   * - Rules that failed registry lookup
+   * ### Processing Logic
+   * 1. **Normalization**: Iterates through the input array.
+   * 2. **Function Preservation**: Function rules are added directly to `sanitizedRules`.
+   * 3. **String Parsing**: String rules are looked up in the registry.
+   * 4. **Object Parsing**: Object rules are converted to `ValidatorSanitizedRuleObject`s.
+   * 5. **Validation**: Rules that are not found in the registry are moved to `invalidRules`.
    *
-   * ### Error Handling Strategy
-   * - **Graceful Degradation**: Invalid rules don't break the entire validation process
-   * - **Error Reporting**: Invalid rules are collected for user feedback
-   * - **Type Preservation**: Original rule formats are maintained in invalidRules array
-   * - **Validation Continuation**: Valid rules proceed through the validation pipeline
+   * ### Return Value Structure
+   * Returns an object `{ sanitizedRules, invalidRules }`.
+   *
+   * - **sanitizedRules**: Array of `ValidatorSanitizedRule` (Union of functions and objects).
+   *   - Functions are untouched.
+   *   - Objects are normalized to `{ ruleName, params, ruleFunction, ruleMessage? }`.
+   *
+   * - **invalidRules**: Array of rules that failed parsing or lookup. kept in original format for error reporting.
    *
    * @example
    * ```typescript
-   * // Mixed rule formats with validation
    * const mixedRules = [
-   *   'Required',                           // String rule
-   *   { MaxLength: [50] },                 // Object rule
-   *   ({ value }) => value.includes('@') || 'Must contain @', // Function rule
-   *   'InvalidRule',                       // Will be reported as invalid
-   *   { NonExistentRule: ['param'] }       // Will be reported as invalid
+   *   'Required',                                  // String rule
+   *   { MaxLength: [50] },                        // Object rule
+   *   { MinLength: { params: [3], message: "Too short!" } }, // Custom message
+   *   ({ value }) => value.includes('@'),         // Function rule
+   *   'InvalidRule'                               // Will be invalid
    * ];
    *
    * const { sanitizedRules, invalidRules } = Validator.parseAndValidateRules(mixedRules);
    *
-   * console.log('Successfully parsed rules:', sanitizedRules.length); // 4
-   * console.log('Invalid rules found:', invalidRules.length);         // 2
-   * console.log('Invalid rules:', invalidRules);
-   * // Output: ['InvalidRule', { NonExistentRule: ['param'] }]
-   *
-   * // Each sanitized rule has consistent structure
-   * sanitizedRules.forEach(rule => {
-   *   console.log(`Rule: ${rule.ruleName}, Params: ${rule.params.length}`);
-   * });
-   *
-   * // Empty or undefined input handling
-   * const { sanitizedRules: emptyRules } = Validator.parseAndValidateRules();
-   * console.log('Empty input rules:', emptyRules.length); // 0
-   *
-   * const { sanitizedRules: undefinedRules } = Validator.parseAndValidateRules(undefined);
-   * console.log('Undefined input rules:', undefinedRules.length); // 0
-   *
-   * // Complex validation scenarios
-   * const complexRules = [
-   *   'Between[1,100]',                    // Numeric range
-   *   { InArray: ['admin', 'user'] },      // Value enumeration
-   *   ({ value, context }) => {            // Context-aware function
-   *     if (context?.userType === 'admin') return true;
-   *     return value !== 'admin' || 'Admin access required';
-   *   }
-   * ];
-   *
-   * const result = Validator.parseAndValidateRules(complexRules);
-   * console.log('Complex rules processed:', result.sanitizedRules.length); // 3
-   * console.log('No invalid rules:', result.invalidRules.length); // 0
-   *
-   * // Error handling in validation pipeline
-   * const validationRules = ['Required', 'Email', 'UnknownRule'];
-   * const { sanitizedRules: validRules, invalidRules: errors } = Validator.parseAndValidateRules(validationRules);
-   *
-   * if (errors.length > 0) {
-   *   console.warn('Some validation rules are invalid:', errors);
-   *   // Could log to monitoring system or throw custom error
-   * }
-   *
-   * // Proceed with valid rules only
-   * const validationResult = await Validator.validate({
-   *   value: 'test@example.com',
-   *   rules: validRules.map(rule => rule.ruleFunction) // Extract functions for validation
-   * });
+   * console.log(sanitizedRules.length); // 4
+   * console.log(invalidRules.length);   // 1
    * ```
    *
-   * @template Context - Optional validation context type passed to rule functions
+   * @template Context - Type of the validation context
+   * @param inputRules - Array of rules (or undefined)
+   * @returns Object containing valid sanitized rules and a list of invalid rules
    *
-   * @param inputRules - Array of validation rules in various formats, or undefined
-   *                     Supports strings, objects, and functions in any combination
-   *                     Undefined or empty arrays are handled gracefully
-   *
-   * @returns Structured result object containing processed rules and errors
-   * @returns returns.sanitizedRules - Array of successfully parsed rule objects with standardized structure
-   * @returns returns.invalidRules - Array of rules that couldn't be processed (maintains original format)
-   *
-   * @remarks
-   * - This method is the primary entry point for rule preprocessing in the validation pipeline
-   * - Called internally by `validate()` and `validateTarget()` before rule execution
-   * - Invalid rules are isolated rather than causing validation failures for better error handling
-   * - Supports all rule formats: functions, bracket strings, and parameter objects
-   * - Maintains type safety through TypeScript generics for context propagation
-   * - Rule registry lookup ensures only registered rules are accepted
-   * - Empty input (undefined/null) returns empty arrays without errors
-   * - Processing is synchronous and performant for large rule sets
-   * - Invalid rules preserve original input format for accurate error reporting
-   *
-   * @see {@link parseStringRule} - Internal method for parsing bracket notation strings
-   * @see {@link parseObjectRule} - Internal method for processing object notation rules
-   * @see {@link validate} - Main validation method that uses this preprocessing
-   * @see {@link validateTarget} - Class-based validation that uses this preprocessing
-   * @see {@link registerRule} - Method for registering custom rules in the system
-   * @see {@link getRules} - Method to retrieve all registered rules
-   * @see {@link ValidatorSanitizedRules} - Type definition for processed rules
    * @public
+   * @see {@link parseStringRule}
+   * @see {@link parseObjectRule}
    */
   static parseAndValidateRules<Context = unknown>(
     inputRules?: ValidateOptions<ValidatorDefaultArray, Context>['rules']
@@ -814,11 +709,7 @@ export class Validator {
    * ### Current Supported String Formats
    * - `"ruleName"` - Simple rule without parameters (e.g., `"Required"`, `"Email"`)
    *
-   * ### Future Parameter Support (Currently Commented Out)
-   * The method includes commented code for bracket notation parameter parsing:
-   * - `"ruleName[param]"` - Rule with single parameter (planned)
-   * - `"ruleName[param1,param2,param3]"` - Rule with multiple parameters (planned)
-   *
+
    * ### Processing Logic
    * 1. **Input Validation**: Accepts any value, converts to trimmed string
    * 2. **Rule Lookup**: Searches registered rules map using the string as rule name
@@ -827,9 +718,8 @@ export class Validator {
    * 5. **Error Handling**: Returns null if rule is not found in registry
    *
    * ### Parameter Handling
-   * - Currently no parameter parsing is performed
-   - All parameters must be provided via object notation: `{ RuleName: [params] }`
-   - Bracket notation parsing is reserved for future implementation
+   * - String rules **do not** support parameters.
+   * - Rules needing parameters must use object notation: `{ RuleName: [params] }`
    *
    * ### Return Value Structure
    * When successful, returns a complete rule object:
@@ -883,12 +773,7 @@ export class Validator {
    * - **Memory Efficient**: Creates minimal rule objects
    * - **Synchronous**: No async operations or I/O
    *
-   * ### Future Enhancements
-   * - Implement bracket notation parameter parsing
-   * - Support nested parameter structures
-   * - Add parameter type validation
-   * - Support quoted parameters with spaces
-   *
+
    * @template Context - Optional validation context type for rule functions
    *
    * @param ruleString - The string representation of the rule to parse
@@ -905,7 +790,6 @@ export class Validator {
    *
    * @remarks
    * - This is an internal method used by `parseAndValidateRules`
-   * - Parameter parsing via bracket notation is planned but currently commented out
    * - For rules with parameters, use object notation: `{ RuleName: [param1, param2] }`
    * - Rule registry lookup ensures only registered rules are accepted
    * - Maintains type safety through TypeScript generics for context propagation
