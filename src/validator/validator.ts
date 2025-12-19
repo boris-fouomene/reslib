@@ -3602,7 +3602,7 @@ export class Validator {
       duration: Date.now() - startTime,
       success: false,
       status: 'error',
-      statusCode: 422,
+      statusCode: 400,
       errorCode: 'ERR_VALIDATION_FAILED',
     };
   }
@@ -3625,7 +3625,7 @@ export class Validator {
       value.__validatorBaseName === 'ValidatorBaseError' &&
       value.success === false &&
       value.failedAt &&
-      value.statusCode === 422 &&
+      value.statusCode === 400 &&
       value.errorCode === 'ERR_VALIDATION_FAILED'
     );
   }

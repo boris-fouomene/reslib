@@ -259,9 +259,9 @@ export interface ValidatorBaseError {
 
   /**
    * HTTP-compatible status code indicating the nature of the error.
-   * Defaults to 422 (Unprocessable Entity) for validation failures.
+   * Defaults to 400 (Bad request Exception) for validation failures.
    */
-  statusCode: 422;
+  statusCode: 400;
 
   /**
    * A constant string code identifying this as a validation failure.
