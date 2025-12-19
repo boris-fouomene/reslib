@@ -1338,8 +1338,8 @@ export class Validator {
    * - Ensures `value` is an array; otherwise returns the localized `array` error.
    * - Applies {@link validateMultiRule} with `"AllOf"` to each item using the provided `ruleParams`.
    * - Aggregates failing item messages; returns `true` when all items pass.
-   * - When any items fail, returns a localized summary using `failedForNItems`
-   *   followed by concatenated item error messages.
+   * - When any items fail, returns a localized summary using `arrayValidationFailed`
+   *   with indices of failed items, followed by detailed error messages for each item.
    *
    * @template Context - Optional type for validation context
    * @template RulesFunctions - Array of sub-rules applied to each item
@@ -1383,7 +1383,7 @@ export class Validator {
     }
 
     const { multiple, single } = this.getErrorMessageSeparators(i18n);
-    const failures: string[] = [];
+    const failures: Array<{ index: number; message: string }> = [];
 
     for (let index = 0; index < value.length; index++) {
       const item = value[index];
@@ -1397,16 +1397,48 @@ export class Validator {
         }
       );
       if (res !== true) {
-        failures.push(`#${index}: ${String(res)}`);
+        failures.push({ index, message: String(res) });
       }
     }
 
     if (failures.length === 0) return true;
 
-    const header = i18n.t('validator.failedForNItems', {
+    // Build list of failed item indices using i18n
+    const failedIndices = failures.map((f) => f.index);
+    const itemCount = failures.length;
+
+    let itemList: string;
+    const separator = i18n.t('validator.separators.multiple');
+
+    if (itemCount <= 3) {
+      itemList = failedIndices.join(separator);
+    } else {
+      const visibleIndices = failedIndices.slice(0, 3);
+      const remainingCount = itemCount - 3;
+      const moreText = i18n.t('validator.itemListOverflow', {
+        count: remainingCount,
+      });
+      itemList = `${visibleIndices.join(separator)}${separator}${moreText}`;
+    }
+
+    const header = i18n.t('validator.arrayValidationFailed', {
       count: failures.length,
+      itemCount,
+      items: itemList,
+      totalCount: value.length,
     });
-    return `${header}${single}${failures.join(multiple)}`;
+
+    // Include detailed error messages for each failed item
+    const details = failures
+      .map((f) =>
+        i18n.t('validator.arrayItemError', {
+          index: f.index,
+          message: f.message,
+        })
+      )
+      .join(multiple);
+
+    return `${header}${single}${details}`;
   }
   static getI18nTranslateOptions<Context = unknown>({
     fieldName,

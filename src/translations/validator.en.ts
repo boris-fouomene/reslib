@@ -18,10 +18,26 @@ export const validator = {
     other: '%{count} more',
   },
   //use for validating multi data
+  /**
+   * @deprecated Use arrayValidationFailed instead for more descriptive error messages
+   */
   failedForNItems: {
     one: 'Validation failed for one item',
     other: 'Validation failed for %{count} items',
   },
+  // New, more descriptive array validation error message
+  arrayValidationFailed: {
+    one: 'Array validation failed for item at index: %{items}',
+    other:
+      'Array validation failed for %{itemCount} of %{totalCount} items at indices: %{items}',
+  },
+  // Text for when item list is truncated (e.g., "2 more items")
+  itemListOverflow: {
+    one: '1 more item',
+    other: '%{count} more items',
+  },
+  // Format for individual array item errors
+  arrayItemError: 'Item[%{index}]: %{message}',
   multipleOf: 'This field must be a multiple of %{multipleOf}',
   invalidRule: 'Invalid validation rule: %{rule}',
   invalidRuleParams:

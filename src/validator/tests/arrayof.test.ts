@@ -47,8 +47,8 @@ describe('ArrayOf Validation Rules', () => {
       });
       expect(result).not.toBe(true);
       expect(typeof result).toBe('string');
-      expect(String(result)).toContain('Validation failed for');
-      expect(String(result)).toContain('#1:');
+      expect(String(result)).toContain('Array validation failed');
+      expect(String(result)).toContain('Item[1]:'); // New format
     });
 
     it('should return array error message for non-array input', async () => {
@@ -123,7 +123,7 @@ describe('ArrayOf Validation Rules', () => {
         i18n,
       });
       expect(result.success).toBe(false);
-      expect(result.message).toContain('Validation failed for');
+      expect(result.message).toContain('Array validation failed');
     });
   });
 
@@ -147,6 +147,7 @@ describe('ArrayOf Validation Rules', () => {
         i18n,
       });
       expect(ko.success).toBe(false);
+      // When used as decorator, outer message is from classValidationFailed
       expect(ko.message).toContain('Validation failed for');
     });
   });
