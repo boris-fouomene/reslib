@@ -4,6 +4,12 @@ import { isNonNullString } from '@utils/isNonNullString';
 import { JsonHelper } from '@utils/json';
 import { defaultNumber } from '@utils/numbers';
 import { isObj } from '@utils/object';
+import {
+  ValidatorBulkError,
+  ValidatorClassError,
+  ValidatorError,
+} from '@validator/errors';
+import { Validator } from '@validator/validator';
 
 /**
  * Hook function type for intercepting exceptions (e.g., for logging).
@@ -87,6 +93,13 @@ export class BaseException<TDetails = unknown, TCause = unknown> extends Error {
 
   public readonly success: boolean = false;
 
+  /**
+   * The validation error that caused this exception.
+   */
+  public validationError?:
+    | ValidatorError
+    | ValidatorClassError
+    | ValidatorBulkError;
   /**
    * Creates a new BaseException instance.
    *
@@ -681,7 +694,6 @@ export class BaseException<TDetails = unknown, TCause = unknown> extends Error {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       return (this as any).withOptions(error, options) as TException;
     }
-
     // If it's another BaseException type but we want `this` type (conversion)
     // We treat it as a source error to wrap or clone.
     // For simplicity, we extract info and create a new one.
@@ -998,15 +1010,36 @@ export class BaseException<TDetails = unknown, TCause = unknown> extends Error {
       (details as any).statusCode,
       500
     );
-
+    const isValidation = Validator.isError(error);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return (this as any).create(message, {
+    const result: TException = (this as any).create(message, {
       ...options,
       details: details as TDetails,
       code: finalCode,
       statusCode: finalStatus,
       cause: options?.cause ?? error,
     });
+    if (isValidation) {
+      result.validationError = error;
+    }
+    return result;
+  }
+
+  public static isValidationError(error: unknown): error is ValidatorError {
+    return Validator.isError(error);
+  }
+  public static getValidationError(
+    error: unknown
+  ): ValidatorError | ValidatorClassError | ValidatorBulkError | null {
+    if (this.isValidationError(error)) {
+      return error;
+    }
+    if (this.is(error)) {
+      return this.isValidationError(error.validationError)
+        ? error.validationError
+        : null;
+    }
+    return null;
   }
 
   /**
