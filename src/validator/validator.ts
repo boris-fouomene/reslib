@@ -2379,9 +2379,45 @@ export class Validator {
             data: data,
           });
         } else {
-          const message = i18n.translate('validator.failedForNFields', {
-            count: validationErrors.length,
+          // Get the list of failed fields with their translated names
+          const failedFieldsMap = new Map<string, string>();
+
+          validationErrors.forEach((error) => {
+            const displayName =
+              error.translatedPropertyName ||
+              error.fieldName ||
+              error.propertyName ||
+              'unknown';
+            failedFieldsMap.set(
+              error.propertyName || error.fieldName || 'unknown',
+              displayName
+            );
           });
+
+          const failedFields = Array.from(failedFieldsMap.values());
+          const fieldCount = failedFields.length;
+
+          // Build field list using i18n for separators and overflow text
+          let fieldList: string;
+          const separator = i18n.t('validator.separators.multiple');
+
+          if (fieldCount <= 3) {
+            fieldList = failedFields.join(separator);
+          } else {
+            const visibleFields = failedFields.slice(0, 3);
+            const remainingCount = fieldCount - 3;
+            const moreText = i18n.t('validator.fieldListOverflow', {
+              count: remainingCount,
+            });
+            fieldList = `${visibleFields.join(separator)}${separator}${moreText}`;
+          }
+
+          const message = i18n.translate('validator.classValidationFailed', {
+            count: validationErrors.length,
+            fieldCount,
+            fields: fieldList,
+          });
+
           resolve(
             Validator.createClassError(message, {
               startTime,

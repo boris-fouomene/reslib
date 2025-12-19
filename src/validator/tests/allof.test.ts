@@ -67,7 +67,9 @@ describe('AllOf Validation Rules', () => {
           password: '1',
         },
       });
-      expect(result.message).toContain('failed for one field');
+      // New message format includes field names
+      expect(result.message).toContain('Validation failed for');
+      expect(result.message).toContain('password');
     });
   });
   describe('validateAllOfRule Method', () => {

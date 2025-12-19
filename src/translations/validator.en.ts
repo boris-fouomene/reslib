@@ -1,8 +1,21 @@
 export const validator = {
   //use for validating single data
+  /**
+   * @deprecated Use classValidationFailed instead for more descriptive error messages
+   */
   failedForNFields: {
     one: 'Validation failed for one field',
     other: 'Validation failed for %{count} fields',
+  },
+  // New, more descriptive validation error message
+  classValidationFailed: {
+    one: 'Validation failed for field: %{fields}',
+    other: 'Validation failed for %{fieldCount} fields: %{fields}',
+  },
+  // Text for when field list is truncated (e.g., "2 more")
+  fieldListOverflow: {
+    one: '1 more',
+    other: '%{count} more',
   },
   //use for validating multi data
   failedForNItems: {
