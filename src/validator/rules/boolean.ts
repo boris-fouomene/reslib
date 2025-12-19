@@ -1,6 +1,6 @@
 import { defaultStr } from '@/utils';
 import type { ValidatorRuleParamTypes } from '../types';
-import { ValidatorRuleResult, ValidatorValidateOptions } from '../types';
+import { ValidateOptions, ValidatorRuleResult } from '../types';
 import { Validator } from '../validator';
 
 import type { ValidatorRuleParams } from '../types';
@@ -52,7 +52,7 @@ export const IsBoolean = Validator.buildRuleDecorator<
   translatedPropertyName,
   i18n,
   ...rest
-}: ValidatorValidateOptions): ValidatorRuleResult {
+}: ValidateOptions): ValidatorRuleResult {
   const validBooleans = [true, false, 1, 0, '1', '0'];
   // Handle string Boolean values case-insensitively
   let normalizedValue = value;

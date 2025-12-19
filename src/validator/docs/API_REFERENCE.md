@@ -16,7 +16,7 @@
   - [Validator.getRules()](#validatorgetrules)
   - [Validator.hasRule()](#validatorhasrule)
 - [Types](#types)
-  - [ValidatorValidateOptions](#validatorvalidateoptions)
+  - [ValidateOptions](#validatorvalidateoptions)
   - [ValidatorResult](#validatorvalidateresult)
   - [ValidatorTargetResult](#validatorvalidatetargetresult)
   - [ValidatorRules](#validatorrules)
@@ -34,7 +34,7 @@ The main `Validator` class provides static methods for validation.
 
 ```typescript
 static async validate<Context = unknown>(
-  options: ValidatorValidateOptions<Context>
+  options: ValidateOptions<Context>
 ): Promise<ValidatorResult<Context>>
 ```
 
@@ -55,10 +55,10 @@ static async validate<Context = unknown>(
 Promise<ValidatorResult<Context>>;
 
 type ValidatorResult<Context = unknown> =
-  | ValidatorValidateSuccess<Context>
+  | ValidateSuccess<Context>
   | ValidatorError<Context>;
 
-interface ValidatorValidateSuccess<Context> {
+interface ValidateSuccess<Context> {
   success: true;
   status: 'success';
   value: any;
@@ -133,7 +133,7 @@ const result = await Validator.validate({
 ```typescript
 static async validateTarget<Target extends object, Context = unknown>(
   TargetClass: new () => Target,
-  options: ValidatorTargetOptions<Target, Context>
+  options: ValidateTargetOptions<Target, Context>
 ): Promise<ValidatorTargetResult<Target, Context>>
 ```
 
@@ -267,7 +267,7 @@ static registerRule<Params extends ValidatorRuleParams = []>(
 
 ```typescript
 type ValidatorRuleFunction<Params> = (
-  options: ValidatorValidateOptions<Params>
+  options: ValidateOptions<Params>
 ) => ValidatorRuleResult | Promise<ValidatorRuleResult>;
 
 type ValidatorRuleResult = true | string | Promise<true | string>;
@@ -427,10 +427,10 @@ if (!Validator.hasRule('CustomRule')) {
 
 ## Types
 
-### ValidatorValidateOptions
+### ValidateOptions
 
 ```typescript
-interface ValidatorValidateOptions<Context = unknown> {
+interface ValidateOptions<Context = unknown> {
   value: any;
   rules: ValidatorRules;
   context?: Context;

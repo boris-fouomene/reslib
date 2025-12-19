@@ -1,7 +1,7 @@
 import {
   ValidatorRuleParamTypes,
+  type ValidateOptions,
   type ValidatorRuleResult,
-  type ValidatorValidateOptions,
 } from '../types';
 import { Validator } from '../validator';
 
@@ -45,7 +45,7 @@ export const IsFile = Validator.buildRuleDecorator<
   translatedPropertyName,
   i18n,
   ...rest
-}: ValidatorValidateOptions): ValidatorRuleResult {
+}: ValidateOptions): ValidatorRuleResult {
   if (isFileLike(value)) {
     return true;
   } else {
@@ -161,7 +161,7 @@ export const IsFileType = Validator.buildRuleDecorator<
   translatedPropertyName,
   i18n,
   ...rest
-}: ValidatorValidateOptions<string[]>): ValidatorRuleResult {
+}: ValidateOptions<string[]>): ValidatorRuleResult {
   if (!isFileLike(value)) {
     const message = i18n.t('validator.fileType', {
       field: translatedPropertyName || fieldName,
@@ -234,7 +234,7 @@ export const IsImage = Validator.buildRuleDecorator<
   translatedPropertyName,
   i18n,
   ...rest
-}: ValidatorValidateOptions): ValidatorRuleResult {
+}: ValidateOptions): ValidatorRuleResult {
   if (!isFileLike(value)) {
     const message = i18n.t('validator.image', {
       field: translatedPropertyName || fieldName,
@@ -302,7 +302,7 @@ export const IsFileExtension = Validator.buildRuleDecorator<
   translatedPropertyName,
   i18n,
   ...rest
-}: ValidatorValidateOptions<string[]>): ValidatorRuleResult {
+}: ValidateOptions<string[]>): ValidatorRuleResult {
   if (!isFileLike(value)) {
     const message = i18n.t('validator.fileExtension', {
       field: translatedPropertyName || fieldName,
@@ -376,7 +376,7 @@ export const MinFileSize = Validator.buildRuleDecorator<
   translatedPropertyName,
   i18n,
   ...rest
-}: ValidatorValidateOptions<[minSize: number]>): ValidatorRuleResult {
+}: ValidateOptions<[minSize: number]>): ValidatorRuleResult {
   if (!isFileLike(value)) {
     const message = i18n.t('validator.minFileSize', {
       field: translatedPropertyName || fieldName,

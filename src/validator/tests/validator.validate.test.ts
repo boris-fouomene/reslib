@@ -1,6 +1,6 @@
 import { ValidatorError } from '@validator/errors';
 import { i18n } from '../../i18n';
-import { Validator, ValidatorValidateSuccess } from '../index';
+import { ValidateSuccess, Validator } from '../index';
 
 describe('Validator.validate() - Either Pattern Tests', () => {
   beforeAll(async () => {
@@ -171,9 +171,7 @@ describe('Validator.validate() - Either Pattern Tests', () => {
       });
 
       expect(result.success).toBe(true);
-      expect((result as ValidatorValidateSuccess).validatedAt).toBeInstanceOf(
-        Date
-      );
+      expect((result as ValidateSuccess).validatedAt).toBeInstanceOf(Date);
     });
 
     it('should return result with duration in milliseconds', async () => {

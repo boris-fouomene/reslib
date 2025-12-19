@@ -2,10 +2,10 @@ import { defaultStr } from '@utils/defaultStr';
 import { isNonNullString } from '@utils/isNonNullString';
 import { isNumber } from '@utils/isNumber';
 import type {
+  ValidateOptions,
   ValidatorRuleParams,
   ValidatorRuleParamTypes,
   ValidatorRuleResult,
-  ValidatorValidateOptions,
 } from '../types';
 import { Validator } from '../validator';
 import { toNumber } from './utils';
@@ -20,12 +20,12 @@ type t = ValidatorRuleParams;
  * This rule ensures that the input string has at least the specified number of characters.
  *
  * ### Parameters:
- * - **options**: `ValidatorValidateOptions` - An object containing:
+ * - **options**: `ValidateOptions` - An object containing:
  *   - `value`: The string value to validate.
  *   - `ruleParams`: An array where the first element specifies the minimum length required.
  *
  * ### Return Value:
- * - `ValidatorSyncResult`: Returns `true` if the value is empty or meets the minimum length requirement;
+ * - `ValidatorSyncRuleResult`: Returns `true` if the value is empty or meets the minimum length requirement;
  *   otherwise, returns an error message indicating that the minimum length is not met.
  *
  * ### Example Usage:
@@ -61,12 +61,12 @@ export const MinLength = Validator.buildRuleDecorator<
  * This rule ensures that the input string has at most the specified number of characters.
  * 
  * ### Parameters:
- * - **options**: `ValidatorValidateOptions` - An object containing:
+ * - **options**: `ValidateOptions` - An object containing:
  *   - `value`: The string value to validate.
  *   - `ruleParams`: An array where the first element specifies the maximum length allowed.
  * 
  * ### Return Value:
- * - `ValidatorSyncResult`: Returns `true` if the value is empty or meets the maximum length requirement; 
+ * - `ValidatorSyncRuleResult`: Returns `true` if the value is empty or meets the maximum length requirement; 
  *   otherwise, returns an error message indicating that the maximum length is exceeded.
  * 
  * ### Example Usage:
@@ -150,14 +150,14 @@ export const IsNonNullString = Validator.buildRuleDecorator<
  * falls within a specified range or matches a specific length.
  *
  * ### Parameters:
- * - **options**: `ValidatorValidateOptions` - An object containing:
+ * - **options**: `ValidateOptions` - An object containing:
  *   - `value`: The string value to validate.
  *   - `ruleParams`: An array where:
  *     - The first element specifies the minimum length (optional).
  *     - The second element specifies the maximum length (optional).
  *
  * ### Return Value:
- * - `ValidatorSyncResult`: Returns `true` if the string length is valid according to the specified rules;
+ * - `ValidatorSyncRuleResult`: Returns `true` if the string length is valid according to the specified rules;
  *   otherwise, returns an error message indicating the validation failure.
  *
  * ### Example Usage:
@@ -378,7 +378,7 @@ export const StartsWithOneOf = Validator.buildRuleDecorator<
   translatedPropertyName,
   i18n,
   ...rest
-}: ValidatorValidateOptions<string[]>): ValidatorRuleResult {
+}: ValidateOptions<string[]>): ValidatorRuleResult {
   return new Promise((resolve, reject) => {
     if (typeof value !== 'string') {
       const message = i18n.t('validator.startsWithOneOf', {
@@ -450,7 +450,7 @@ export const IsString = Validator.buildRuleDecorator<
   translatedPropertyName,
   i18n,
   ...rest
-}: ValidatorValidateOptions): ValidatorRuleResult {
+}: ValidateOptions): ValidatorRuleResult {
   return typeof value === 'string'
     ? true
     : i18n.t('validator.string', {

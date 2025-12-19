@@ -9,7 +9,7 @@ import {
   MaxLength,
   MinLength,
 } from '../index';
-import { ValidatorAsyncResult, ValidatorRule } from '../types';
+import { ValidatorAsyncRuleResult, ValidatorRule } from '../types';
 
 import { AllOf } from '../rules/multiRules';
 import { Validator } from '../validator';
@@ -183,17 +183,17 @@ describe('AllOf Validation Rules', () => {
       it('should execute all rules even when some fail', async () => {
         const executionOrder: string[] = [];
 
-        const rule1 = async ({ value }: any): ValidatorAsyncResult => {
+        const rule1 = async ({ value }: any): ValidatorAsyncRuleResult => {
           executionOrder.push('rule1');
           return value.length > 0 || 'Rule1 failed';
         };
 
-        const rule2 = async ({ value }: any): ValidatorAsyncResult => {
+        const rule2 = async ({ value }: any): ValidatorAsyncRuleResult => {
           executionOrder.push('rule2');
           return 'Always fails'; // Always fails
         };
 
-        const rule3 = async ({ value }: any): ValidatorAsyncResult => {
+        const rule3 = async ({ value }: any): ValidatorAsyncRuleResult => {
           executionOrder.push('rule3');
           return true;
         };
@@ -211,12 +211,12 @@ describe('AllOf Validation Rules', () => {
       it('should execute all rules when all pass', async () => {
         const executionOrder: string[] = [];
 
-        const rule1 = async ({ value }: any): ValidatorAsyncResult => {
+        const rule1 = async ({ value }: any): ValidatorAsyncRuleResult => {
           executionOrder.push('rule1');
           return true;
         };
 
-        const rule2 = async ({ value }: any): ValidatorAsyncResult => {
+        const rule2 = async ({ value }: any): ValidatorAsyncRuleResult => {
           executionOrder.push('rule2');
           return true;
         };

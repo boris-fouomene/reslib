@@ -1,7 +1,7 @@
 import { i18n } from '../../i18n';
 import { ensureRulesRegistered } from '../index';
 import {
-  ValidatorAsyncResult,
+  ValidatorAsyncRuleResult,
   ValidatorRule,
   ValidatorRuleResult,
 } from '../types';
@@ -128,14 +128,18 @@ describe('OneOf Validation Rules', () => {
       it('should execute multiple async rules in parallel', async () => {
         const executionTimes: number[] = [];
 
-        const slowAsyncRule1 = async ({ value }: any): ValidatorAsyncResult => {
+        const slowAsyncRule1 = async ({
+          value,
+        }: any): ValidatorAsyncRuleResult => {
           const start = Date.now();
           await new Promise((resolve) => setTimeout(resolve, 50));
           executionTimes.push(Date.now() - start);
           return 'Fails'; // Fails
         };
 
-        const slowAsyncRule2 = async ({ value }: any): ValidatorAsyncResult => {
+        const slowAsyncRule2 = async ({
+          value,
+        }: any): ValidatorAsyncRuleResult => {
           const start = Date.now();
           await new Promise((resolve) => setTimeout(resolve, 50));
           executionTimes.push(Date.now() - start);
@@ -155,14 +159,14 @@ describe('OneOf Validation Rules', () => {
       it('should return immediately on first success without waiting for others', async () => {
         const executionOrder: string[] = [];
 
-        const rule1 = async ({ value }: any): ValidatorAsyncResult => {
+        const rule1 = async ({ value }: any): ValidatorAsyncRuleResult => {
           executionOrder.push('rule1_start');
           await new Promise((resolve) => setTimeout(resolve, 100));
           executionOrder.push('rule1_end');
           return true; // Passes immediately
         };
 
-        const rule2 = async ({ value }: any): ValidatorAsyncResult => {
+        const rule2 = async ({ value }: any): ValidatorAsyncRuleResult => {
           executionOrder.push('rule2_start');
           await new Promise((resolve) => setTimeout(resolve, 200));
           executionOrder.push('rule2_end');

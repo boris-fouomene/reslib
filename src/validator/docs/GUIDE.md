@@ -5288,7 +5288,7 @@ Both approaches use the same validation logic underneath!
 
 ```typescript
 static async validate<Context = unknown>(
-  options: ValidatorValidateOptions<Context>
+  options: ValidateOptions<Context>
 ): Promise<ValidatorResult<Context>>
 ```
 
@@ -5313,7 +5313,7 @@ static async validate<Context = unknown>(
 ```typescript
 static async validateTarget<Target extends object, Context = unknown>(
   TargetClass: new () => Target,
-  options: ValidatorTargetOptions<Target, Context>
+  options: ValidateTargetOptions<Target, Context>
 ): Promise<ValidatorTargetResult<Target, Context>>
 ```
 
@@ -5391,7 +5391,7 @@ static registerRule<Params extends ValidatorRuleParams = []>(
 **Rule Function Signature:**
 
 ```typescript
-(options: ValidatorValidateOptions<Params>) => ValidatorRuleResult;
+(options: ValidateOptions<Params>) => ValidatorRuleResult;
 ```
 
 **Example:**
