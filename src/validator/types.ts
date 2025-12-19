@@ -998,7 +998,20 @@ export interface ValidatorNestedRuleFunctionOptions<
   Target extends ClassConstructor = ClassConstructor,
   Context = unknown,
 > extends Omit<
-  ValidatorTargetOptions<Target, Context, [target: Target]>,
+  ValidatorTargetOptions<
+    Target,
+    Context,
+    [
+      target: Target,
+      options?: {
+        /**
+         * The custom error message to use when validation fails.
+         * It can be either a translation key or a custom message.
+         */
+        message?: string;
+      },
+    ]
+  >,
   'data'
 > {
   value?: ValidatorTargetData<Target>;

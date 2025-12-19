@@ -108,6 +108,25 @@ export const validator = {
   hexadecimal: 'This field must be a valid hexadecimal value',
   object: 'This field must be an object',
   isObject: 'This field must be an object',
+  /**
+   * Configuration for formatting nested validation errors.
+   *
+   * Definitions:
+   * - separator: content inserted between each error message (e.g. for creating lists like "A, B, C")
+   * - prefix: content prepended to the start of the constructed error string
+   * - suffix: content appended to the end of the constructed error string
+   *
+   * Examples:
+   * - English (Default): separator: '; ', prefix: '', suffix: '' -> "[Prop]: Error; [Prop]: Error"
+   * - English (Either/Or): separator: ' or ', prefix: 'Either ', suffix: '' -> "Either [Prop]: Error or [Prop]: Error"
+   * - French (Soit/Soit): separator: ' soit ', prefix: 'Soit ', suffix: '' -> "Soit [Prop]: Erreur soit [Prop]: Erreur"
+   * - Spanish (O/O): separator: ' o ', prefix: 'O ', suffix: '' -> "O [Prop]: Error o [Prop]: Error"
+   */
+  nestedErrors: {
+    separator: '; ',
+    prefix: '',
+    suffix: '',
+  },
   tests: {
     entity: {
       name: 'Name',

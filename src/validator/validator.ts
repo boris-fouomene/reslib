@@ -49,79 +49,6 @@ import {
   ValidatorValidateSuccess,
 } from './types';
 
-/**
- * # Validator Class
- *
- * A comprehensive validation system that provides flexible and powerful validation capabilities
- * for TypeScript/JavaScript applications. This class supports both synchronous and asynchronous
- * validation, decorator-based validation for classes, and a rich ecosystem of validation rules.
- *
- * ## Key Features
- * - **Type-Safe Validation**: Full TypeScript support with generic types
- * - **Decorator Support**: Class property validation using decorators
- * - **Async Validation**: Support for asynchronous validation rules
- * - **Internationalization**: Built-in i18n support for error messages
- * - **Extensible**: Easy to register custom validation rules
- * - **Rule Composition**: Combine multiple validation rules
- *
- * ## Basic Usage
- * ```typescript
- * // Register a custom validation rule
- * Validator.registerRule('CustomRule', ({ value }) => {
- *   return value > 10 || 'Value must be greater than 10';
- * });
- *
- * // Validate a single value
- * const result = await Validator.validate({
- *   value: 15,
- *   rules: ['Required', 'CustomRule']
- * });
- *
- * // Use with decorators
- * class User {
- *   @IsRequired()
- *   @IsEmail()
- *   email: string;
- *
- *   @IsRequired()
- *   @MinLength(3)
- *   name: string;
- * }
- *
- * const userData = { email: 'user@example.com', name: 'John' };
- * const validated = await Validator.validateTarget(User, userData);
- * ```
- *
- * ## Advanced Usage
- * ```typescript
- * // Complex validation with context
- * const validationOptions = {
- *   value: userData,
- *   rules: [
- *     'required',
- *     { minLength: [5] },
- *     async ({ value, context }) => {
- *       const exists = await checkIfUserExists(value);
- *       return !exists || 'User already exists';
- *     }
- *   ],
- *   context: { userId: 123 }
- * };
- *
- * try {
- *   const result = await Validator.validate(validationOptions);
- *   console.log('Validation passed!', result);
- * } catch (error) {
- *   console.error('Validation failed:', error.message);
- * }
- * ```
- *
- * @author Resk Framework Team
- *
- * @version 2.1.0
- * @see {@link https://docs.resk.dev/validation | Validation Documentation}
- * @public
- */
 export class Validator {
   private static readonly RULES_METADATA_KEY = Symbol.for('validationRules');
 
@@ -1770,12 +1697,10 @@ export class Validator {
           : value === null
             ? 'null'
             : typeof value;
-      return (
-        i18n.t('validator.validateNestedInvalidType', {
-          ...translateProperties,
-          receivedType: receivedType,
-        }) || `The field must be an object, but received ${receivedType}`
-      );
+      return i18n.t('validator.validateNestedInvalidType', {
+        ...translateProperties,
+        receivedType: receivedType,
+      });
     }
 
     //extra.data = extra.data ?? Object.assign({}, extra.data);
@@ -1792,24 +1717,48 @@ export class Validator {
     if (nestedResult.success) {
       return true;
     }
-
+    const nestedErrors = this.translateNestedErrorResult(nestedResult, i18n);
     // Aggregate nested errors with field path information
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const nestedErrors = (nestedResult as any).errors || [];
-    const errorMessages = nestedErrors
+    const nestedOptions = Object.assign({}, ruleParamsArray[1]);
+    const message = defaultStr(nestedOptions.message);
+    if (message) {
+      if (i18n.has(message)) {
+        return defaultStr(
+          i18n.t(message, {
+            ...translateProperties,
+            nestedErrors,
+          })
+        );
+      }
+      return message;
+    }
+    return i18n.t('validator.validateNested', {
+      nestedErrors,
+      ...translateProperties,
+    });
+  }
+  static translateNestedErrorResult(
+    nestedErrorResult: ValidatorTargetError,
+    customI18n?: I18n
+  ) {
+    const nestedErrors = nestedErrorResult.errors || [];
+    const i18n = this.getI18n({ i18n: customI18n });
+    const nestedErrorConfig: Dictionary = Object.assign(
+      { separator: '; ', prefix: '', suffix: '' },
+      i18n.getNestedTranslation('validator.nestedErrors')
+    ) as Dictionary;
+    const separator = defaultStr(nestedErrorConfig.separator, '; ');
+    const prefix = defaultStr(nestedErrorConfig.prefix, '');
+    const suffix = defaultStr(nestedErrorConfig.suffix, '');
+
+    return `${prefix}${nestedErrors
       .map(
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (err: any) =>
           `[${err.translatedPropertyName ?? err.propertyName}]: ${err.message}`
       )
-      .join('; ');
-
-    return i18n.t('validator.validateNested', {
-      nestedErrors: errorMessages,
-      ...translateProperties,
-    });
+      .join(separator)}${suffix}`;
   }
-
   /**
    * ## Validate Multi-Rule (OneOf / AllOf)
    *
