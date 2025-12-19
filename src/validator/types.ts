@@ -545,8 +545,16 @@ export type ValidatorRuleObject = Partial<{
   [K in ValidatorRuleName]:
     | ValidatorRuleParamTypes[K]
     | {
+        /**
+         * @since 1.2.0
+         * The parameters for the validation rule.
+         *
+         * These are the arguments that are passed to the rule function.
+         * The type of these parameters is defined in `ValidatorRuleParamTypes`.
+         */
         params: ValidatorRuleParamTypes[K];
         /**
+         * @since 1.2.0
          * Custom error message that overrides the rule's default message.
          *
          * If specified, this message will be used if validation fails, ignoring any
@@ -733,6 +741,7 @@ export interface ValidatorSanitizedRuleObject<
    * @example "This field is required."
    * @example "Value must be between {min} and {max}."
    * @example "auth.email.required"
+   * @since 1.2.0
    */
   message?: string;
 }
