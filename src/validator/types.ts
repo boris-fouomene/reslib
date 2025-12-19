@@ -416,6 +416,36 @@ type ExtractOptionalOrEmptyKeys<T> = {
 }[keyof T];
 
 /**
+ * @since 1.2.0
+ * Configuration interface for a validation rule object.
+ *
+ * This interface defines the structure for specifying rule parameters and optional customization
+ * like error messages overrides.
+ *
+ * @template TParams - The type of the rule parameters
+ */
+export interface ValidatorRuleConfig<TParams> {
+  /**
+   * The parameters for the validation rule.
+   *
+   * These are the arguments that are passed to the rule function.
+   * The type of these parameters is defined in `ValidatorRuleParamTypes`.
+   */
+  params: TParams;
+
+  /**
+   * Custom error message that overrides the rule's default message.
+   *
+   * If specified, this message will be used if validation fails, ignoring any
+   * message returned by the rule function itself.
+   * Support i18n keys and direct strings.
+   */
+  message?: ValidatorRuleConfigMessage;
+}
+
+export type ValidatorRuleConfigMessage = string;
+
+/**
  * ## Validation Rule Object Type
  *
  * Represents a structured object format for specifying validation rules with their parameters.
@@ -538,31 +568,14 @@ type ExtractOptionalOrEmptyKeys<T> = {
  * @see {@link ValidatorRule} - Union type that includes this
  * @see {@link ValidatorRuleName} - Valid rule names
  * @see {@link ValidatorRuleParamTypes} - Parameter type definitions
+ * @see {@link ValidatorRuleConfig}
  * @see {@link ValidatorRuleFunction} - Function-based rules
  * @public
  */
 export type ValidatorRuleObject = Partial<{
   [K in ValidatorRuleName]:
     | ValidatorRuleParamTypes[K]
-    | {
-        /**
-         * @since 1.2.0
-         * The parameters for the validation rule.
-         *
-         * These are the arguments that are passed to the rule function.
-         * The type of these parameters is defined in `ValidatorRuleParamTypes`.
-         */
-        params: ValidatorRuleParamTypes[K];
-        /**
-         * @since 1.2.0
-         * Custom error message that overrides the rule's default message.
-         *
-         * If specified, this message will be used if validation fails, ignoring any
-         * message returned by the rule function itself.
-         * Support i18n keys and direct strings.
-         */
-        message?: string;
-      };
+    | ValidatorRuleConfig<ValidatorRuleParamTypes[K]>;
 }>;
 
 /**
