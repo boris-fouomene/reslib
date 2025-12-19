@@ -73,6 +73,8 @@ class UserProfile {
 // Invalid: null, [], "string", 42
 ```
 
+> 💡 **Tip:** For deeper validation of object fields without using classes, see **[Object-Based Validation](./GUIDE.md#object-based-validation)** using `Validator.validateObject()`.
+
 ---
 
 ## Multi Rules

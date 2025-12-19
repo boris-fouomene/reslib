@@ -83,7 +83,9 @@ export function getDecoratedProperties<
   return Object.assign(
     {},
     Object.assign({}, Reflect.getMetadata(metadataKey, target)),
-    Object.assign({}, Reflect.getMetadata(metadataKey, target.prototype))
+    target?.prototype
+      ? Object.assign({}, Reflect.getMetadata(metadataKey, target.prototype))
+      : {}
   );
 }
 

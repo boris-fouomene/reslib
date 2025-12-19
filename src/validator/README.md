@@ -36,7 +36,7 @@ if (result.success) {
 ### Using Decorators
 
 ```typescript
-import { IsRequired, IsEmail, MinLength } from 'reslib/validator';
+import { IsRequired, IsEmail, MinLength, Validator } from 'reslib/validator';
 
 class UserRegistration {
   @IsRequired()
@@ -59,6 +59,28 @@ if (result.success) {
 }
 ```
 
+### Functional / Object-Based (Zod-like)
+
+```typescript
+import { Validator } from 'reslib/validator';
+
+// Define a schema
+const UserSchema = Validator.object({
+  email: ['Required', 'Email'],
+  age: ['NumberGTE[18]'],
+});
+
+// Validate
+const result = await UserSchema.validate({
+  email: 'test@example.com',
+  age: 20,
+});
+
+if (result.success) {
+  console.log('✅ Valid user data:', result.data);
+}
+```
+
 ---
 
 ## 📚 Documentation
@@ -69,6 +91,7 @@ if (result.success) {
 - **[⚡ Next.js Integration](./docs/NEXTJS_INTEGRATION.md)** - Modern Server Actions guide
 - **[📋 Rules Reference](./docs/RULES.md)** - All 67 validation rules
 - **[🔧 API Reference](./docs/API_REFERENCE.md)** - Detailed API documentation
+- **[🧩 Object Validation](./docs/GUIDE.md#object-based-validation)** - Zod-like functional patterns
 - **[📦 Batch Validation](./docs/GUIDE.md#batch-validation)** - Validating arrays of objects
 - **[💬 Custom Messages](./docs/GUIDE.md#custom-messages)** - Dynamic error messages
 - **[🗺️ Documentation Index](./docs/INDEX.md)** - Navigation guide
@@ -79,6 +102,7 @@ if (result.success) {
 
 - ✅ **70+ Built-in Rules** - Email, URL, phone, dates, files, and more
 - ✅ **Type-Safe** - Full TypeScript support
+- ✅ **Zod-like Patterns** - Functional object-based validation
 - ✅ **Batch Validation** - High-performance parallel array validation
 - ✅ **Decorator Support** - Clean, declarative validation
 - ✅ **Async Validation** - Built-in async rule support

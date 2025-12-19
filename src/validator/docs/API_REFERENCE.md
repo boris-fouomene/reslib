@@ -23,25 +23,34 @@
       - [Parameters](#parameters-2)
       - [Returns](#returns-2)
       - [Examples](#examples-2)
-    - [Validator.registerRule()](#validatorregisterrule)
+    - [Validator.validateObject()](#validatorvalidateobject)
       - [Parameters](#parameters-3)
-      - [Rule Function Signature](#rule-function-signature)
-      - [Examples](#examples-3)
-    - [Validator.getRule()](#validatorgetrule)
-      - [Parameters](#parameters-4)
       - [Returns](#returns-3)
+      - [Examples](#examples-3)
+    - [Validator.object()](#validatorobject)
+      - [Parameters](#parameters-4)
+      - [Returns](#returns-4)
+      - [Examples](#examples-4)
+    - [Validator.registerRule()](#validatorregisterrule)
+      - [Parameters](#parameters-5)
+      - [Rule Function Signature](#rule-function-signature)
+      - [Examples](#examples-5)
+    - [Validator.getRule()](#validatorgetrule)
+      - [Parameters](#parameters-6)
+      - [Returns](#returns-5)
       - [Example](#example)
     - [Validator.getRules()](#validatorgetrules)
-      - [Returns](#returns-4)
+      - [Returns](#returns-6)
       - [Example](#example-1)
     - [Validator.hasRule()](#validatorhasrule)
-      - [Parameters](#parameters-5)
-      - [Returns](#returns-5)
+      - [Parameters](#parameters-7)
+      - [Returns](#returns-7)
       - [Example](#example-2)
   - [Types](#types)
     - [ValidatorOptions](#validatoroptions)
     - [ValidatorResult](#validatorresult)
-    - [ValidatorClassResult](#validatorclassresult)
+  - [ValidatorClassResult](#validatorclassresult)
+  - [ValidatorObjectResult](#validatorobjectresult)
     - [ValidatorRules](#validatorrules)
     - [ValidatorRuleResult](#validatorruleresult)
   - [Error Handling](#error-handling)
@@ -138,7 +147,7 @@ const result = await Validator.validate({
     'Required',
     { MinLength: [8] },
     { MaxLength: [100] },
-    { Matches: [/.*\d.*/, 'Must contain a number'] },
+    { Matches: { params: [/.*\d.*/], message: 'Must contain a number' } },
   ],
   fieldName: 'password',
 });
@@ -367,6 +376,121 @@ if (result.success) {
 
 ---
 
+### Validator.validateObject()
+
+**Validate a plain object against a set of rules without requiring a class.**
+
+```typescript
+static async validateObject<T extends object, Context = unknown>(
+  data: T,
+  rules: ValidatorObjectRules<T>,
+  options?: ValidatorObjectOptions<T, Context>
+): Promise<ValidatorObjectResult<T, Context>>
+```
+
+#### Parameters
+
+| Parameter         | Type                      | Required | Description                            |
+| :---------------- | :------------------------ | :------- | :------------------------------------- |
+| `data`            | `T`                       | ✅       | The data object to validate            |
+| `rules`           | `ValidatorObjectRules<T>` | ✅       | Map of field names to validation rules |
+| `options`         | `ValidatorObjectOptions`  | ❌       | Optional validation configuration      |
+| `options.context` | `Context`                 | ❌       | Custom validation context              |
+| `options.i18n`    | `I18n`                    | ❌       | Custom i18n instance                   |
+
+#### Returns
+
+```typescript
+Promise<ValidatorObjectResult<T, Context>>;
+
+type ValidatorObjectResult<T, Context> =
+  | ValidatorObjectSuccess<T, Context>
+  | ValidatorObjectError<T>;
+
+interface ValidatorObjectSuccess<T, Context> {
+  success: true;
+  data: T;
+  status: 'success';
+  duration: number;
+  validatedAt: Date;
+}
+
+interface ValidatorObjectError<T> {
+  success: false;
+  status: 'error';
+  message: string;
+  fieldErrors: Partial<Record<keyof T | string, string>>;
+  errors: ValidatorClassItemError[];
+  failureCount: number;
+}
+```
+
+#### Examples
+
+**Direct validation:**
+
+```typescript
+const result = await Validator.validateObject(
+  { name: 'John', age: 25 },
+  {
+    name: ['Required', 'String'],
+    age: ['Required', 'Number', { NumberGTE: [18] }],
+  }
+);
+
+if (result.success) {
+  console.log(result.data.name); // 'John'
+}
+```
+
+---
+
+### Validator.object()
+
+**Factory method that creates a reusable object schema for validation.**
+
+```typescript
+static object<T extends object, Context = unknown>(
+  rules: ValidatorObjectRules<T>
+): ValidatorObjectSchema<T, Context>
+```
+
+#### Parameters
+
+| Parameter | Type                      | Required | Description                            |
+| :-------- | :------------------------ | :------- | :------------------------------------- |
+| `rules`   | `ValidatorObjectRules<T>` | ✅       | Map of field names to validation rules |
+
+#### Returns
+
+```typescript
+ValidatorObjectSchema<T, Context>;
+
+interface ValidatorObjectSchema<T, Context> {
+  validate(
+    data: T,
+    options?: ValidatorObjectOptions
+  ): Promise<ValidatorObjectResult<T, Context>>;
+}
+```
+
+#### Examples
+
+**Schema instantiation and reuse:**
+
+```typescript
+const UserSchema = Validator.object({
+  id: ['Required', 'Numeric'],
+  email: ['Required', 'Email'],
+});
+
+// Reuse same schema for multiple validations
+const result1 = await UserSchema.validate({ id: 1, email: 'a@b.com' });
+const result2 = await UserSchema.validate({ id: 2, email: 'c@d.com' });
+```
+
+---
+
 ### Validator.registerRule()
 
 **Register a custom validation rule.**
@@ -573,17 +697,58 @@ interface ValidatorResult<Context = unknown> {
 }
 ```
 
-### ValidatorClassResult
+## ValidatorClassResult
+
+Discriminated union for class validation results.
 
 ```typescript
-interface ValidatorClassResult<TClass, Context = unknown> {
-  isValid: boolean;
-  errors: Array<{
-    field: string;
-    message: string;
-  }>;
-  data: TClass;
-  context?: Context;
+type ValidatorClassResult<T, Context = unknown> =
+  | ValidatorClassSuccess<T, Context>
+  | ValidatorClassError<T>;
+
+interface ValidatorClassSuccess<T, Context> {
+  success: true;
+  data: T; // Class instance
+  status: 'success';
+  duration: number;
+  validatedAt: Date;
+}
+
+interface ValidatorClassError<T> {
+  success: false;
+  status: 'error';
+  message: string;
+  fieldErrors: Partial<Record<keyof T, string>>;
+  errors: ValidatorClassItemError[];
+  failureCount: number;
+}
+```
+
+## ValidatorObjectResult
+
+Discriminated union for functional object validation results.
+
+```typescript
+type ValidatorObjectResult<T, Context = unknown> =
+  | ValidatorObjectSuccess<T, Context>
+  | ValidatorObjectError<T>;
+
+interface ValidatorObjectSuccess<T, Context> {
+  success: true;
+  data: T; // The validated object
+  status: 'success';
+  duration: number;
+  validatedAt: Date;
+}
+
+interface ValidatorObjectError<T> {
+  success: false;
+  status: 'error';
+  message: string; // Summary message
+  fieldErrors: Partial<Record<keyof T | string, string>>;
+  errors: ValidatorClassItemError[];
+  failureCount: number;
+  data: T; // The original data object
 }
 ```
 

@@ -106,14 +106,18 @@ import 'reflect-metadata';
 - **Resources** are the foundation of ResLib. Use the `@ResourceMeta` decorator to define any logical entity (models, components, etc.).
 - **Fields**: Add fields to your resources using the `@FieldMeta` decorator, specifying field types and options.
 
-### Built-In FieldMeta Types
-
-- **number**: Simple number field.
-- **string**: Simple string field;
-- **boolean**: Simple boolean field;
 - **symbol** : Simple symbol field;
 - **switch** : Can be a number of a boolean;
 - **checkbox**: Can be a number of a boolean;
+
+### Validation
+
+Powerful validation system with 70+ rules, decorators, functional schemas, and batch processing.
+
+- **Decorator-based**: `@IsRequired()`, `@IsEmail()`, etc.
+- **Object-based (Zod-like)**: `Validator.object({ email: ['Required', 'Email'] })`.
+- **Batch validation**: `Validator.validateBulk(User, data)`.
+- **Async & i18n support**.
 
 Once you have installed the necessary packages and set up TypeScript, you can start defining resources and fields using ResLib decorators.
 

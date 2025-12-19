@@ -63,13 +63,19 @@ class User {
   email: string;
 }
 
-// ✅ Functional API (like Zod/Yup)
+// ✅ Functional API (like single-value validation)
 await Validator.validate({
   value: email,
   rules: ['Required', 'Email'],
 });
 
-// ⭐ BOTH in the SAME library!
+// ✅ Zod-like Schema API (Functional Object Validation)
+const UserSchema = Validator.object({
+  email: ['Required', 'Email'],
+  age: ['NumberGTE[18]'],
+});
+
+// ⭐ ALL in the SAME library!
 ```
 
 **No other library offers this flexibility!**

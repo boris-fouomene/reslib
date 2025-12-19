@@ -164,26 +164,36 @@ export const updateProfile = formActionFactory(
 
 ### Server-Side Only Validation
 
-Use `reslib/validator` directly in API routes or Server Components:
+Use `Validator.validateObject` directly in API routes or Server Components for clean, schema-less validation:
 
-````typescript
+```typescript
 // app/api/webhook/route.ts
 import { Validator } from 'reslib/validator';
 
 export async function POST(req: Request) {
   const body = await req.json();
 
-  const result = await Validator.validate({
-    value: body,
-    rules: ['IsObject', { Required: [], field: 'eventId' }],
+  const result = await Validator.validateObject(body, {
+    eventId: ['Required', 'String'],
+    timestamp: ['Required', 'Numeric'],
+    type: ['Required', { Enum: [['order.created', 'order.updated']] }],
   });
 
   if (!result.success) {
-    return Response.json({ error: result.message }, { status: 400 });
+    return Response.json(
+      {
+        success: false,
+        errors: result.fieldErrors,
+      },
+      { status: 400 }
+    );
   }
 
+  // body is validated and typed!
+  const { eventId, type } = result.data;
   // ...
 }
+```
 
 ### Bulk Data Processing
 
@@ -196,13 +206,16 @@ export async function importUsers(data: any[]) {
   if (!result.success) {
     return {
       error: result.message,
-      failures: result.failures.map(f => ({ row: f.index, errors: f.fieldErrors }))
+      failures: result.failures.map((f) => ({
+        row: f.index,
+        errors: f.fieldErrors,
+      })),
     };
   }
 
   return { success: true, validatedCount: result.data.length };
 }
-````
+```
 
 ```
 

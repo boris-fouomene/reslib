@@ -10,6 +10,7 @@ import {
   ValidatorBulkError,
   ValidatorClassError,
   ValidatorError,
+  ValidatorObjectError,
 } from './errors';
 import {
   ValidatorClassInput,
@@ -2009,7 +2010,24 @@ export interface ValidatorClassSuccess<
 
   data: ValidatorClassInput<TClass>;
 }
-
+/**
+ * ## Validator Object Success
+ *
+ * Represents a successful validation result for a plain object.
+ * This is the success variant of the discriminated union {@link ValidatorObjectResult}.
+ *
+ * It contains the original data object and metadata about the validation.
+ *
+ * @template TObject - The type of the validated object
+ * @template Context - Optional validation context type
+ * @public
+ */
+export interface ValidatorObjectSuccess<
+  TObject extends object,
+  Context = unknown,
+> extends Omit<ValidatorClassSuccess<ClassConstructor, Context>, 'data'> {
+  data: TObject;
+}
 /**
  * ## Class Validation Result Type (Discriminated Union)
  *
@@ -2550,3 +2568,80 @@ export interface ValidatorBaseOptions<Context = unknown> {
 
   name: 'ValidatorSuccessResult';
 }
+/**
+ * ## Validator Object Schema Interface
+ *
+ * Defines the structure for object-based validation schemas created with `Validator.object()`.
+ * This enables a functional, Zod-like validation pattern where rules are defined
+ * outside of classes.
+ *
+ * @template T - The type of data to validate
+ * @template Context - Optional validation context type
+ *
+ * @public
+ */
+export interface ValidatorObjectSchema<T extends object, Context = unknown> {
+  /** The internal schema target object containing metadata */
+  readonly schema: object;
+
+  /**
+   * Validates a data object against this schema.
+   *
+   * @template Context - The custom validation context
+   * @param data - The data to validate
+   * @param options - Optional validation configuration
+   * @returns Promise resolving to a structured validation result
+   */
+  validate(
+    data: T,
+    options?: Omit<ValidatorObjectOptions<T, Context>, 'data' | 'rules'>
+  ): Promise<ValidatorObjectResult<T, Context>>;
+}
+
+/**
+ * ## Validator Object Rules
+ *
+ * A type representing the validation rules for a plain object.
+ * Maps property names to their respective validation rules.
+ *
+ * @template T - The type of the object being validated
+ * @public
+ */
+export type ValidatorObjectRules<T extends object> = {
+  [K in keyof T | string]: ValidatorRules;
+};
+
+/**
+ * ## Validator Object Options
+ *
+ * Configuration options for object-based validation (`Validator.validateObject`).
+ * Extends class validation options but focuses on plain object data.
+ *
+ * @template T - The type of data to validate
+ * @template Context - Optional validation context type
+ * @public
+ */
+export interface ValidatorObjectOptions<
+  T extends object,
+  Context = unknown,
+> extends Omit<
+  MakeOptional<ValidatorClassOptions<ClassConstructor, Context>, 'i18n'>,
+  'data' | 'rules' | 'ruleParams'
+> {
+  data: T;
+  //rules: ValidatorObjectRules;
+}
+
+/**
+ * ## Validator Object Result
+ *
+ * Discriminated union type representing the result of a {@link Validator.validateObject} operation.
+ * Can be either {@link ValidatorObjectSuccess} or {@link ValidatorObjectError}.
+ *
+ * @template T - The type of data being validated
+ * @template Context - Optional validation context type
+ * @public
+ */
+export type ValidatorObjectResult<T extends object, Context = unknown> =
+  | ValidatorObjectSuccess<T, Context>
+  | ValidatorObjectError<T>;

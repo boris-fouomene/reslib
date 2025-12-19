@@ -320,6 +320,32 @@ export interface ValidatorClassError<
    */
   data: ValidatorClassInput<TClass>;
 }
+/**
+ * ## Validator Object Error
+ *
+ * Represents validation failures for a plain object validation operation.
+ * Aggregates all field-level failures into a structure optimized for UI display.
+ *
+ * This is the error variant of the {@link ValidatorObjectResult} discriminated union.
+ *
+ * @template TObject - The type of object that was validated
+ * @public
+ */
+export interface ValidatorObjectError<TObject extends object> extends Omit<
+  ValidatorClassError<ClassConstructor>,
+  'data' | 'fieldErrors'
+> {
+  /**
+   * The original data object that failed validation.
+   */
+  data: TObject;
+
+  /**
+   * Map of object keys to their error messages.
+   * Enables easy error lookups for UI binding.
+   */
+  fieldErrors: Partial<Record<keyof TObject | string, string>>;
+}
 
 /**
  * ## Class Single Error Item

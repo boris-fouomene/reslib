@@ -31,6 +31,7 @@ This directory contains comprehensive documentation for `reslib/validator`.
 
 - Core concepts and architecture
 - All 70+ validation rules (detailed documentation)
+- Object-Based Validation (Zod-like)
 - Batch validation (`validateBulk`)
 - Advanced usage patterns
 - Custom rule & message development
@@ -110,20 +111,21 @@ README.md ←―――――― You are here!
 
 ### I want to...
 
-| Goal                             | Document                               | Section            |
-| -------------------------------- | -------------------------------------- | ------------------ |
-| **Get started quickly**          | [README.md](../README.md)              | Quick Start        |
-| **See all available rules**      | [RULES.md](./RULES.md)                 | All categories     |
-| **Learn a specific rule**        | [GUIDE.md](./GUIDE.md)                 | Rule categories    |
-| **Use decorators**               | [README.md](../README.md)              | Decorator examples |
-| **Validate a class**             | [API_REFERENCE.md](./API_REFERENCE.md) | validateClass()    |
-| **Validate an array/batch**      | [GUIDE.md](./GUIDE.md)                 | Batch Validation   |
-| **Create custom rules**          | [GUIDE.md](./GUIDE.md)                 | Custom Rules       |
-| **Custom error messages**        | [GUIDE.md](./GUID.md)                  | Custom Messages    |
-| **Check method signatures**      | [API_REFERENCE.md](./API_REFERENCE.md) | API Reference      |
-| **See common patterns**          | [README.md](../README.md)              | Common Patterns    |
-| **Troubleshoot issues**          | [GUIDE.md](./GUIDE.md)                 | Troubleshooting    |
-| **Migrate from another library** | [GUIDE.md](./GUIDE.md)                 | Migration Guide    |
+| Goal                             | Document                               | Section                 |
+| -------------------------------- | -------------------------------------- | ----------------------- |
+| **Get started quickly**          | [README.md](../README.md)              | Quick Start             |
+| **See all available rules**      | [RULES.md](./RULES.md)                 | All categories          |
+| **Learn a specific rule**        | [GUIDE.md](./GUIDE.md)                 | Rule categories         |
+| **Use decorators**               | [README.md](../README.md)              | Decorator examples      |
+| **Validate a class**             | [API_REFERENCE.md](./API_REFERENCE.md) | validateClass()         |
+| **Validate an object (schema)**  | [GUIDE.md](./GUIDE.md)                 | Object-Based Validation |
+| **Validate an array/batch**      | [GUIDE.md](./GUIDE.md)                 | Batch Validation        |
+| **Create custom rules**          | [GUIDE.md](./GUIDE.md)                 | Custom Rules            |
+| **Custom error messages**        | [GUIDE.md](./GUID.md)                  | Custom Messages         |
+| **Check method signatures**      | [API_REFERENCE.md](./API_REFERENCE.md) | API Reference           |
+| **See common patterns**          | [README.md](../README.md)              | Common Patterns         |
+| **Troubleshoot issues**          | [GUIDE.md](./GUIDE.md)                 | Troubleshooting         |
+| **Migrate from another library** | [GUIDE.md](./GUIDE.md)                 | Migration Guide         |
 
 ---
 

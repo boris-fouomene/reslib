@@ -30,7 +30,6 @@ import {
   ValidatorAsyncRuleResult,
   ValidatorBulkOptions,
   ValidatorBulkResult,
-  ValidatorClassKeys,
   ValidatorClassOptions,
   ValidatorClassResult,
   ValidatorDefaultMultiRule,
@@ -38,6 +37,10 @@ import {
   ValidatorMultiRuleNames,
   ValidatorMultiRuleOptions,
   ValidatorNestedRuleFunctionOptions,
+  ValidatorObjectOptions,
+  ValidatorObjectResult,
+  ValidatorObjectRules,
+  ValidatorObjectSchema,
   ValidatorOptions,
   ValidatorResult,
   ValidatorRule,
@@ -1151,7 +1154,7 @@ export class Validator {
             isNonNullString((result as any)?.message) ||
             isNonNullString(result)
           ) {
-            const message = stringify(result);
+            const message = stringify(result, { escapeString: false });
             return resolve(Validator.createError(message, errorDetails));
           }
           return next();
@@ -1169,7 +1172,9 @@ export class Validator {
           return handleResult(
             typeof e === 'string'
               ? e
-              : (e as Error)?.message || e?.toString() || stringify(e)
+              : (e as Error)?.message ||
+                  e?.toString() ||
+                  stringify(e, { escapeString: false })
           );
         }
       };
@@ -2283,7 +2288,7 @@ export class Validator {
             `[${String(translatedPropertyName)}] : ${error}`;
 
     const validationErrors: ValidatorClassItemError[] = [];
-    const fieldErrors: Partial<Record<ValidatorClassKeys<TClass>, string>> = {};
+    const fieldErrors: Partial<Record<string, string>> = {};
     const validationPromises: Promise<ValidatorResult<Context>>[] = [];
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     let validatedFieldCount = 0;
@@ -2295,7 +2300,7 @@ export class Validator {
     for (const propertyKey in targetRules) {
       const rules = targetRules[propertyKey];
       const { sanitizedRules } = this.parseAndValidateRules(rules);
-      const value = data[propertyKey];
+      const value = data[propertyKey as keyof typeof data];
       // Skip validation for Optional fields that are not present in data
       if (this.shouldSkipValidation({ value, rules: sanitizedRules })) {
         continue;
@@ -2321,7 +2326,7 @@ export class Validator {
           if (validationResult.success) {
             validatedFieldCount++;
           } else {
-            const errorMessage = stringify(validationResult.message);
+            const errorMessage = defaultStr(validationResult.message);
             const error = Validator.createError(errorMessage, {
               propertyName: propertyKey,
               translatedPropertyName: translatedPropertyName,
@@ -2390,6 +2395,91 @@ export class Validator {
         }
       });
     });
+  }
+
+  /**
+   * ## Validate Object
+   *
+   * Validates a plain object against a set of rules without requiring a class definition.
+   * This provides a functional alternative to class-based validation, similar to libraries like Zod.
+   *
+   * @template T - The type of data to validate
+   * @template Context - Optional validation context type
+   *
+   * @param data - The data object to validate
+   * @param rules - A map where keys are property names and values are rule definitions
+   * @param options - Optional validation configuration
+   * @returns Promise resolving to a structured validation result
+   *
+   * @example
+   * ```typescript
+   * const result = await Validator.validateObject(
+   *   { name: 'John', age: 25 },
+   *   { name: ['Required'], age: ['Required', 'Number'] }
+   * );
+   * ```
+   *
+   * @public
+   */
+  static async validateObject<T extends object, Context = unknown>(
+    data: T,
+    rules: ValidatorObjectRules<T>,
+    options?: Omit<ValidatorObjectOptions<ClassConstructor, Context>, 'data'>
+  ): Promise<ValidatorObjectResult<T, Context>> {
+    const schema = {};
+    Reflect.defineMetadata(VALIDATOR_TARGET_RULES_METADATA_KEY, rules, schema);
+    const r = await this.validateClass<ClassConstructor, Context>(
+      schema as ClassConstructor,
+      {
+        ...options,
+        data,
+      } as ValidatorObjectOptions<T, Context>
+    );
+    return {
+      ...r,
+      data,
+    };
+  }
+
+  /**
+   * ## Create Object Schema
+   *
+   * Factory method that creates a reusable object schema for validation.
+   * This enables a Zod-like validation pattern: `const schema = Validator.object({...}); schema.validate(data);`
+   *
+   * @template T - The type of data to validate
+   * @template Context - Optional validation context type
+   *
+   * @param rules - A map where keys are property names and values are rule definitions
+   * @returns A `ValidatorObjectSchema` instance
+   *
+   * @example
+   * ```typescript
+   * const UserSchema = Validator.object({
+   *   email: ['Required', 'Email'],
+   *   age: ['NumberGTE[18]']
+   * });
+   *
+   * const result = await UserSchema.validate({ email: 'test@example.com', age: 20 });
+   * ```
+   *
+   * @public
+   */
+  static object<T extends object, Context = unknown>(
+    rules: Record<keyof T | string, ValidatorRules>
+  ): ValidatorObjectSchema<T, Context> {
+    const schemaTarget = {};
+    Reflect.defineMetadata(
+      VALIDATOR_TARGET_RULES_METADATA_KEY,
+      rules,
+      schemaTarget
+    );
+
+    return {
+      schema: schemaTarget,
+      validate: (data: T, options?: ValidatorObjectOptions<T, Context>) =>
+        this.validateObject(data, rules, options),
+    } as ValidatorObjectSchema<T, Context>;
   }
 
   /**
@@ -2773,13 +2863,20 @@ export class Validator {
    * @see {@link buildPropertyDecorator} - How rules are attached to properties
    * @public
    */
-  static getClassRules<T extends ClassConstructor>(
+  static getClassRules<T = unknown>(
     target: T
-  ): Record<keyof InstanceType<T>, ValidatorRule[]> {
-    return getDecoratedProperties(
-      target,
-      VALIDATOR_TARGET_RULES_METADATA_KEY
-    ) as Record<keyof InstanceType<T>, ValidatorRule[]>;
+  ): Record<string, ValidatorRule[]> {
+    if (typeof target === 'function') {
+      return getDecoratedProperties(
+        target as unknown as ClassConstructor,
+        VALIDATOR_TARGET_RULES_METADATA_KEY
+      ) as Record<string, ValidatorRule[]>;
+    }
+    return Object.assign(
+      {},
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      Reflect.getMetadata(VALIDATOR_TARGET_RULES_METADATA_KEY, target as any)
+    );
   }
 
   /**
@@ -2828,13 +2925,18 @@ export class Validator {
    * @see {@link ValidationClassOptions} - Decorator to set these options
    * @public
    */
-  public static getValidatorClassOptions<T extends ClassConstructor>(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  public static getValidatorClassOptions<T = any>(
     target: T
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  ): ValidatorClassOptions<T, any> {
+  ): ValidatorClassOptions<any, any> {
     return Object.assign(
       {},
-      Reflect.getMetadata(VALIDATOR_TARGET_OPTIONS_METADATA_KEY, target) || {}
+      Reflect.getMetadata(
+        VALIDATOR_TARGET_OPTIONS_METADATA_KEY,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        target as any
+      ) || {}
     );
   }
 

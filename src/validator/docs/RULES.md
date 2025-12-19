@@ -386,6 +386,18 @@ const result = await Validator.validate({
 });
 ```
 
+### Object Schema Format (v1.3.0)
+
+Ideal for validating entire objects without decorators:
+
+```typescript
+const result = await Validator.validateObject(userInput, {
+  username: ['Required', 'String'],
+  password: ['Required', { MinLength: [8] }],
+  email: ['Required', 'Email'],
+});
+```
+
 ### Configuration Format (v1.2.0)
 
 For custom messages or advanced options:

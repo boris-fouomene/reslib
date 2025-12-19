@@ -28,6 +28,7 @@
   - [Object Rules](#object-rules) - 1 rule
   - [Multi Rules](#multi-rules) - 3 rules
   - [Class Rules](#target-rules) - 1 rule
+- [Object-Based Validation](#object-based-validation)
 - [Batch Validation](#batch-validation)
 - [Advanced Usage](#advanced-usage)
   - [Custom Rules](#custom-rules)
@@ -57,6 +58,7 @@ The `reslib/validator` is an enterprise-grade, type-safe validation system for T
 - ✅ **Nested Validation**: Validate complex nested object structures
 - ✅ **Context Propagation**: Pass context data through validation hierarchy
 - ✅ **Batch Processing**: Industry-leading performance with `validateBulk` for arrays
+- ✅ **Object Validation**: Functional, Zod-like patterns without using decorators
 
 ---
 
@@ -5505,6 +5507,114 @@ declare module 'reslib/validator' {
     IsPositive: [];
   }
 }
+```
+
+---
+
+## Object-Based Validation
+
+`reslib/validator` provides a functional, Zod-like validation pattern that allows you to validate plain JavaScript objects without requiring class definitions or decorators. This is ideal for runtime data validation, API requests, or simple configuration objects.
+
+### Direct Object Validation
+
+Use `Validator.validateObject()` to validate a plain object against a set of rules defined in a mapping object.
+
+```typescript
+import { Validator } from 'reslib/validator';
+
+const data = {
+  email: 'user@example.com',
+  age: 25,
+  role: 'admin',
+};
+
+const rules = {
+  email: ['Required', 'Email'],
+  age: ['Required', 'Number', { NumberGTE: [18] }],
+  role: ['Optional', { Enum: [['admin', 'user']] }],
+};
+
+const result = await Validator.validateObject(data, rules);
+
+if (result.success) {
+  // TypeScript narrows result to ValidatorObjectSuccess
+  console.log('✅ Valid data:', result.data);
+} else {
+  // TypeScript narrows result to ValidatorObjectError
+  console.log('❌ Validation failed:', result.fieldErrors);
+}
+```
+
+### Schema-Based Validation
+
+For reusable validation logic, use `Validator.object()` to create a schema factory. This enables a pattern similar to Zod or Joi.
+
+```typescript
+// Define your schema
+const UserSchema = Validator.object({
+  username: ['Required', 'String', 'IsAlphanumeric'],
+  password: ['Required', { MinLength: [8] }],
+  email: ['Required', 'Email'],
+});
+
+// Use it anywhere
+async function registerUser(input: any) {
+  const result = await UserSchema.validate(input);
+
+  if (!result.success) {
+    throw new Error(`Validation failed: ${result.message}`);
+  }
+
+  // result.data is typed and validated
+  return saveToDb(result.data);
+}
+```
+
+### Advanced Patterns
+
+#### Nested Object Validation
+
+You can validate nested structures by using custom rule functions that call `validateObject` recursively.
+
+```typescript
+const AddressRules = {
+  street: ['Required'],
+  city: ['Required'],
+  zipCode: ['Required', 'Numeric'],
+};
+
+const UserRules = {
+  name: ['Required'],
+  address: [
+    async ({ value }) => {
+      const res = await Validator.validateObject(value, AddressRules);
+      return res.success || res.message;
+    },
+  ],
+};
+
+const result = await Validator.validateObject(userData, UserRules);
+```
+
+#### Passing Context
+
+Object-based validation fully supports dynamic context, which is passed to all validation rules.
+
+```typescript
+const rules = {
+  username: [
+    ({ value, context }) => {
+      if (context.reservedNames.includes(value)) {
+        return 'This username is reserved';
+      }
+      return true;
+    },
+  ],
+};
+
+const result = await Validator.validateObject(data, rules, {
+  context: { reservedNames: ['admin', 'root'] },
+});
 ```
 
 ---
