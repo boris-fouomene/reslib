@@ -26,16 +26,14 @@ import {
 import { VALIDATOR_RULE_MARKERS } from './rulesMarkers';
 import {
   ValidateMultiRuleOptions,
-  ValidateOptions,
-  ValidateResult,
-  ValidateSuccess,
   ValidateTargetOptions,
-  ValidateTargetResult,
   ValidatorAsyncRuleResult,
   ValidatorDefaultMultiRule,
   ValidatorMultiRuleFunction,
   ValidatorMultiRuleNames,
   ValidatorNestedRuleFunctionOptions,
+  ValidatorOptions,
+  ValidatorResult,
   ValidatorRule,
   ValidatorRuleFunction,
   ValidatorRuleFunctionsMap,
@@ -46,7 +44,9 @@ import {
   ValidatorRules,
   ValidatorSanitizedRuleObject,
   ValidatorSanitizedRules,
+  ValidatorSuccess,
   ValidatorTargetKeys,
+  ValidatorTargetResult,
 } from './types';
 
 export class Validator {
@@ -662,7 +662,7 @@ export class Validator {
    * @see {@link parseObjectRule}
    */
   static parseAndValidateRules<Context = unknown>(
-    inputRules?: ValidateOptions<ValidatorDefaultArray, Context>['rules']
+    inputRules?: ValidatorOptions<ValidatorDefaultArray, Context>['rules']
   ): {
     sanitizedRules: ValidatorSanitizedRules<Context>;
     invalidRules: ValidatorRules<Context>[];
@@ -981,9 +981,9 @@ export class Validator {
     rules,
     ...extra
   }: MakeOptional<
-    ValidateOptions<ValidatorDefaultArray, Context>,
+    ValidatorOptions<ValidatorDefaultArray, Context>,
     'i18n' | 'ruleParams'
-  >): Promise<ValidateResult<Context>> {
+  >): Promise<ValidatorResult<Context>> {
     const i18n = this.getI18n(extra);
     const startTime = Date.now();
     const { sanitizedRules, invalidRules } =
@@ -1376,10 +1376,10 @@ export class Validator {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     context,
     ...rest
-  }: Partial<ValidateOptions<ValidatorDefaultArray, Context>>) {
+  }: Partial<ValidatorOptions<ValidatorDefaultArray, Context>>) {
     fieldName = defaultStr(fieldName, propertyName);
     fieldLabel = defaultStr(fieldLabel, translatedPropertyName, fieldName);
-    const r: Partial<ValidateOptions<ValidatorDefaultArray, Context>> = {
+    const r: Partial<ValidatorOptions<ValidatorDefaultArray, Context>> = {
       fieldLabel,
       translatedPropertyName: defaultStr(translatedPropertyName, fieldLabel),
       propertyName: defaultStr(propertyName, fieldName),
@@ -1699,7 +1699,7 @@ export class Validator {
     }
     const errors: string[] = [];
     const allErrors: ValidatorError[] = [];
-    let firstSuccess: ValidateSuccess<Context> | null = null;
+    let firstSuccess: ValidatorSuccess<Context> | null = null;
     for (const subRule of subRules) {
       const res = await Validator.validate<Context>({
         value,
@@ -1930,7 +1930,7 @@ export class Validator {
     ruleParams: ValidatorDefaultMultiRule<Context>
   ): ValidatorRuleFunction<ValidatorDefaultArray, Context> {
     return function AllOf(
-      options: ValidateOptions<ValidatorDefaultArray, Context>
+      options: ValidatorOptions<ValidatorDefaultArray, Context>
     ) {
       return Validator.validateAllOfRule<
         Context,
@@ -1964,7 +1964,7 @@ export class Validator {
     ruleParams: ValidatorDefaultMultiRule<Context>
   ): ValidatorRuleFunction<ValidatorDefaultArray, Context> {
     return function ArrayOf(
-      options: ValidateOptions<ValidatorDefaultArray, Context>
+      options: ValidatorOptions<ValidatorDefaultArray, Context>
     ) {
       return Validator.validateArrayOfRule<
         Context,
@@ -2104,7 +2104,7 @@ export class Validator {
    *
    * ### Returns
    * `ValidatorRuleFunction<[target: Target], Context>` - A rule function that:
-   * - Accepts validation options with nested object data (ValidateOptions)
+   * - Accepts validation options with nested object data (ValidatorOptions)
    * - Delegates to `validateNestedRule` for actual validation
    * - Returns `true` on successful nested object validation
    * - Returns error message string if any nested field validation fails
@@ -2197,7 +2197,7 @@ export class Validator {
    * @see {@link validateNestedRule} - The underlying validation executor that delegates to validateTarget
    * @see {@link ValidateNested} - Decorator using this factory
    * @see {@link validateTarget} - Multi-field class validation (signature: validateTarget<T, Context>(target, options))
-   * @see {@link ValidateOptions} - Validation options interface for rule functions
+   * @see {@link ValidatorOptions} - Validation options interface for rule functions
    * @see {@link ValidateTargetOptions} - Target validation options interface
    * @see {@link oneOf} - Similar factory for OneOf rule creation
    * @see {@link allOf} - Similar factory for AllOf rule creation
@@ -2210,7 +2210,7 @@ export class Validator {
     Context = unknown,
   >(target: Target): ValidatorRuleFunction<Array<unknown>, Context> {
     return function ValidateNested(
-      options: ValidateOptions<Array<unknown>, Context>
+      options: ValidatorOptions<Array<unknown>, Context>
     ) {
       return Validator.validateNestedRule<Target, Context>({
         ...options,
@@ -2230,7 +2230,7 @@ export class Validator {
     > & {
       i18n?: I18n;
     }
-  ): Promise<ValidateTargetResult<Target, Context>> {
+  ): Promise<ValidatorTargetResult<Target, Context>> {
     const startTime = Date.now();
     const targetRules = Validator.getTargetRules<Target>(target);
     const { context, errorMessageBuilder, ...restOptions } = Object.assign(
@@ -2250,7 +2250,7 @@ export class Validator {
     const validationErrors: ValidatorTargetSingleError[] = [];
     const fieldErrors: Partial<Record<ValidatorTargetKeys<Target>, string>> =
       {};
-    const validationPromises: Promise<ValidateResult<Context>>[] = [];
+    const validationPromises: Promise<ValidatorResult<Context>>[] = [];
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     let validatedFieldCount = 0;
 
@@ -2321,7 +2321,7 @@ export class Validator {
       );
     }
 
-    return new Promise<ValidateTargetResult<Target, Context>>((resolve) => {
+    return new Promise<ValidatorTargetResult<Target, Context>>((resolve) => {
       return Promise.all(validationPromises).then(() => {
         const isValidationSuccessful = !validationErrors.length;
         if (isValidationSuccessful) {
@@ -3065,8 +3065,8 @@ export class Validator {
     };
   }
   static isSuccess<Context = unknown>(
-    result: ValidateResult<Context>
-  ): result is ValidateSuccess<Context> {
+    result: ValidatorResult<Context>
+  ): result is ValidatorSuccess<Context> {
     return isObj(result) && result.success === true;
   }
   /**
@@ -4200,7 +4200,7 @@ function createSuccessResult<Context = unknown>(
     data?: Dictionary;
   },
   startTime: number
-): ValidateSuccess<Context> {
+): ValidatorSuccess<Context> {
   return {
     message: undefined,
     ...options,

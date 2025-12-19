@@ -577,7 +577,7 @@ export type ValidatorRuleObject = Partial<{
  * @public
  *
  * @see {@link ValidatorRule} - Individual rule type
- * @see {@link ValidateOptions} - Options interface that uses this type
+ * @see {@link ValidatorOptions} - Options interface that uses this type
  * @see {@link Validator.validate} - Validation method that accepts these rules
  */
 export type ValidatorRules<Context = unknown> = Array<
@@ -758,7 +758,7 @@ export type ValidatorSanitizedRules<Context = unknown> = ValidatorSanitizedRule<
  * operations (database lookups, API calls) seamlessly.
  *
  * ### Core Responsibilities
- * 1. **Receive Context**: Accepts a rich options object (`ValidateOptions`) containing the value, rule parameters, and context.
+ * 1. **Receive Context**: Accepts a rich options object (`ValidatorOptions`) containing the value, rule parameters, and context.
  * 2. **Execute Logic**: Performs the actual validation check.
  * 3. **Report Result**: Returns `true` for success or an error message (string) for failure.
  *
@@ -794,13 +794,13 @@ export type ValidatorSanitizedRules<Context = unknown> = ValidatorSanitizedRule<
  * These functions are typically registered with the `Validator` class using names like "MinLength" or "Email",
  * allowing them to be referenced by string later.
  *
- * @see {@link ValidateOptions} - The input object received by this function.
+ * @see {@link ValidatorOptions} - The input object received by this function.
  * @see {@link ValidatorRuleResult} - The output produced by this function.
  */
 export type ValidatorRuleFunction<
   TParams extends ValidatorRuleParams = ValidatorRuleParams,
   Context = unknown,
-> = (options: ValidateOptions<TParams, Context>) => ValidatorRuleResult;
+> = (options: ValidatorOptions<TParams, Context>) => ValidatorRuleResult;
 
 /**
  * ## Validation Rule Parameters Type
@@ -879,11 +879,11 @@ export type ValidatorRuleParams<
  *
  * ### Purpose
  * Provides a specialized options interface for validation rule functions that operate on
- * nested or complex data structures. Unlike {@link ValidateOptions} which handles
+ * nested or complex data structures. Unlike {@link ValidatorOptions} which handles
  * single values, this interface is tailored for scenarios where validation rules need to
  * work with entire class instances or nested object hierarchies.
  *
- * ### Key Differences from ValidateOptions
+ * ### Key Differences from ValidatorOptions
  * - **Extends from ValidateTargetOptions**: Inherits target-specific properties
  * - **Omits "data" property**: Uses its own `data` property instead
  * - **Optional value property**: Accepts target data instead of single values
@@ -893,7 +893,7 @@ export type ValidatorRuleParams<
  * ```
  * ValidatorNestedRuleFunctionOptions
  *   ↳ extends Omit<ValidateTargetOptions<Target, Context, [target: Target]>, "data">
- *     ↳ extends Omit<ValidateOptions<TParams, Context>, "data" | "rule" | "value">
+ *     ↳ extends Omit<ValidatorOptions<TParams, Context>, "data" | "rule" | "value">
  *       ↳ extends Omit<Partial<InputFormatterResult>, "value">
  *         ↳ extends BaseData<Context>
  * ```
@@ -952,7 +952,7 @@ export type ValidatorRuleParams<
  * ### Relationship to Validation System
  * - **Used by**: {@link Validator.validateNestedRule} method
  * - **Complements**: {@link ValidateTargetOptions} for target validation
- * - **Extends**: {@link ValidateOptions} with target-specific modifications
+ * - **Extends**: {@link ValidatorOptions} with target-specific modifications
  * - **Supports**: Complex nested object validation scenarios
  *
  * ### Common Use Cases
@@ -1004,7 +1004,7 @@ export type ValidatorRuleParams<
  * @public
  *
  * @see {@link ValidateTargetOptions} - Base target validation options
- * @see {@link ValidateOptions} - Single-value validation options
+ * @see {@link ValidatorOptions} - Single-value validation options
  * @see {@link Validator.validateNestedRule} - Method that uses this interface
  * @see {@link ValidatorTargetData} - Target data type
  * @see {@link ClassConstructor} - Class constructor constraint
@@ -1034,7 +1034,7 @@ export interface ValidatorNestedRuleFunctionOptions<
   data?: Dictionary;
 }
 
-export interface ValidateOptions<
+export interface ValidatorOptions<
   TParams extends ValidatorRuleParams = ValidatorRuleParams,
   Context = unknown,
 >
@@ -1050,7 +1050,7 @@ export interface ValidateOptions<
    *
    * @example
    * ```typescript
-   * const options: ValidateOptions = {
+   * const options: ValidatorOptions = {
    *   value: "example@test.com",
    *   rules: [
    *     { ruleName: "Required" },
@@ -1087,7 +1087,7 @@ export interface ValidateOptions<
    *
    * @example
    * ```typescript
-   * const options: ValidateOptions = {
+   * const options: ValidatorOptions = {
    *   value: "test",
    *   rule: { ruleName: "Required" },
    *   propertyName: "username"
@@ -1111,7 +1111,7 @@ export interface ValidateOptions<
    * @example
    * ```typescript
    * // For MinLength rule
-   * const options: ValidateOptions = {
+   * const options: ValidatorOptions = {
    *   value: "password123",
    *   rule: { ruleName: "MinLength" },
    *   ruleParams: [8],  // Minimum 8 characters
@@ -1119,7 +1119,7 @@ export interface ValidateOptions<
    * };
    *
    * // For NumberBetween rule
-   * const options2: ValidateOptions = {
+   * const options2: ValidatorOptions = {
    *   value: 50,
    *   rule: { ruleName: "NumberBetween" },
    *   ruleParams: [0, 100],  // Between 0 and 100
@@ -1140,7 +1140,7 @@ export interface ValidateOptions<
    *
    * @example
    * ```typescript
-   * const options: ValidateOptions = {
+   * const options: ValidatorOptions = {
    *   value: "user@example.com",
    *   ruleName: "Email",
    *   propertyName: "email"
@@ -1163,7 +1163,7 @@ export interface ValidateOptions<
    *
    * @example
    * ```typescript
-   * const options: ValidateOptions = {
+   * const options: ValidatorOptions = {
    *   value: "invalid-email",
    *   rules: ["Email"],
    *   message: "Please enter a valid email address (e.g., user@example.com)",
@@ -1171,7 +1171,7 @@ export interface ValidateOptions<
    * };
    *
    * // Custom message for specific context
-   * const options2: ValidateOptions = {
+   * const options2: ValidatorOptions = {
    *   value: "short",
    *   rule: { ruleName: "MinLength" },
    *   ruleParams: [8],
@@ -1194,7 +1194,7 @@ export interface ValidateOptions<
    *
    * @example
    * ```typescript
-   * const options: ValidateOptions = {
+   * const options: ValidatorOptions = {
    *   value: "invalid@",
    *   rules: ["Email"],
    *   fieldName: "email_input",         // HTML form field ID
@@ -1236,7 +1236,7 @@ export interface ValidateOptions<
    *   password: string;
    * }
    *
-   * const options: ValidateOptions = {
+   * const options: ValidatorOptions = {
    *   value: "invalid-email",
    *   rules: ["Email"],
    *   propertyName: "email",  // Maps to UserData.email
@@ -1263,7 +1263,7 @@ export interface ValidateOptions<
    * @example
    * ```typescript
    * // Before translation
-   * const options: ValidateOptions = {
+   * const options: ValidatorOptions = {
    *   value: "invalid",
    *   rules: ["Required"],
    *   propertyName: "user_phone_number"
@@ -1287,7 +1287,7 @@ export interface ValidateOptions<
  * ## OneOf Rule Validation Options
  *
  * Configuration interface for validating a value against an array of alternative validation rules
- * where at least one rule must pass. This interface extends {@link ValidateOptions}
+ * where at least one rule must pass. This interface extends {@link ValidatorOptions}
  * with specialized properties for OneOf rule validation.
  *
  * ### Purpose
@@ -1375,15 +1375,15 @@ export interface ValidateOptions<
  *
  * @public
  * @see {@link Validator.validateOneOfRule} - Method that uses this interface
- * @see {@link ValidateOptions} - Base options interface being extended
+ * @see {@link ValidatorOptions} - Base options interface being extended
  * @see {@link ValidatorRuleFunction} - Type of functions in ruleParams array
- * @see {@link ValidateResult} - Result type returned by validation
+ * @see {@link ValidatorResult} - Result type returned by validation
  */
 export interface ValidateMultiRuleOptions<
   Context = unknown,
   RulesFunctions extends ValidatorDefaultMultiRule<Context> =
     ValidatorDefaultMultiRule<Context>,
-> extends ValidateOptions<RulesFunctions, Context> {
+> extends ValidatorOptions<RulesFunctions, Context> {
   startTime?: number;
 }
 /**
@@ -1453,7 +1453,7 @@ export type ValidatorDefaultMultiRule<
  *
  * ### Function Signature
  * ```typescript
- * (options: ValidateOptions<RulesFunctions, Context>) => ValidatorRuleResult
+ * (options: ValidatorOptions<RulesFunctions, Context>) => ValidatorRuleResult
  * ```
  *
  * ### Usage in Validation System
@@ -1568,7 +1568,7 @@ export type ValidatorMultiRuleFunction<
  * - **Used by**: {@link Validator.validateTarget} as input data type
  * - **Mapped from**: Class constructor type via `InstanceType<Target>`
  * - **Validated by**: Decorator-based rules on class properties
- * - **Returns**: {@link ValidateTargetResult} with validated instance
+ * - **Returns**: {@link ValidatorTargetResult} with validated instance
  *
  * @template Target - The class constructor type being validated
  *
@@ -1576,7 +1576,7 @@ export type ValidatorMultiRuleFunction<
  *
  * @see {@link Validator.validateTarget} - Method that accepts this data type
  * @see {@link ValidateTargetOptions} - Options type that includes this
- * @see {@link ValidateTargetResult} - Result type returned after validation
+ * @see {@link ValidatorTargetResult} - Result type returned after validation
  * @see {@link ClassConstructor} - Base constructor type constraint
  */
 export type ValidatorTargetData<
@@ -1589,7 +1589,7 @@ export interface ValidateTargetOptions<
   Context = unknown,
   ParamsTypes extends ValidatorRuleParams = ValidatorRuleParams,
 > extends Omit<
-  ValidateOptions<ParamsTypes, Context>,
+  ValidatorOptions<ParamsTypes, Context>,
   'data' | 'rule' | 'value'
 > {
   data: ValidatorTargetData<Target>;
@@ -1703,13 +1703,13 @@ export type ValidatorMultiRuleNames = 'OneOf' | 'AllOf';
  * ## Single Value Validation Success Result
  *
  * Represents a successful validation result for a single value.
- * This type is used as the success branch of the {@link ValidateResult} discriminated union.
+ * This type is used as the success branch of the {@link ValidatorResult} discriminated union.
  *
  * ### Type Guard
  * Can be narrowed using {@link Validator.isSuccess}:
  * ```typescript
  * if (Validator.isSuccess(result)) {
- *   // TypeScript knows: result satisfies ValidateSuccess
+ *   // TypeScript knows: result satisfies ValidatorSuccess
  *   // Can safely access result.value, result.validatedAt, result.duration
  * }
  * ```
@@ -1732,7 +1732,7 @@ export type ValidatorMultiRuleNames = 'OneOf' | 'AllOf';
  * });
  *
  * if (result.success) {
- *   // result is ValidateSuccess
+ *   // result is ValidatorSuccess
  *   console.log("Validated:", result.value);
  *   console.log("Took:", result.duration, "ms");
  *   console.log("Completed at:", result.validatedAt.toISOString());
@@ -1743,12 +1743,12 @@ export type ValidatorMultiRuleNames = 'OneOf' | 'AllOf';
  *
  * @public
  *
- * @see {@link ValidateResult}
+ * @see {@link ValidatorResult}
  * @see {@link ValidatorError}
  * @see {@link Validator.validate}
  * @see {@link Validator.isSuccess}
  */
-export interface ValidateSuccess<Context = unknown> extends BaseData<Context> {
+export interface ValidatorSuccess<Context = unknown> extends BaseData<Context> {
   /** Discriminant for type narrowing - always `true` for success */
   success: true;
 
@@ -1780,7 +1780,7 @@ export interface ValidateSuccess<Context = unknown> extends BaseData<Context> {
  *
  * ### Purpose
  * Provides a common interface for passing data through the validation pipeline
- * and in the result objects. Used by both {@link ValidateSuccess}
+ * and in the result objects. Used by both {@link ValidatorSuccess}
  * and {@link ValidatorError}.
  *
  * ### Properties
@@ -1790,8 +1790,8 @@ export interface ValidateSuccess<Context = unknown> extends BaseData<Context> {
  *
  * ### Usage in Validation Results
  * ```typescript
- * // In ValidateSuccess
- * const successResult: ValidateSuccess = {
+ * // In ValidatorSuccess
+ * const successResult: ValidatorSuccess = {
  *   success: true,
  *   value: "user@example.com",  // Original validated value
  *   data: { userId: 123 },      // Additional context
@@ -1816,8 +1816,8 @@ export interface ValidateSuccess<Context = unknown> extends BaseData<Context> {
  *
  * @public
  *
- * @see {@link ValidateOptions} - Options passed to validation
- * @see {@link ValidateSuccess} - Success result type
+ * @see {@link ValidatorOptions} - Options passed to validation
+ * @see {@link ValidatorSuccess} - Success result type
  * @see {@link ValidatorError} - Failure result type
  */
 interface BaseData<Context = unknown> {
@@ -1922,7 +1922,7 @@ interface BaseData<Context = unknown> {
  * const result = await Validator.validate({ value: "...", rules: [...] });
  *
  * if (result.success) {
- *   // TypeScript knows: ValidateSuccess
+ *   // TypeScript knows: ValidatorSuccess
  *   console.log(result.value);      // ✓ Available
  *   console.log(result.validatedAt); // ✓ Available
  *   console.log(result.error);      // ✗ Type error (undefined for success)
@@ -1939,7 +1939,7 @@ interface BaseData<Context = unknown> {
  * const result = await Validator.validate({ value: "...", rules: [...] });
  *
  * if (Validator.isSuccess(result)) {
- *   // result is ValidateSuccess<Context>
+ *   // result is ValidatorSuccess<Context>
  *   console.log(result.value);
  *   console.log(result.validatedAt);
  * } else if (Validator.isValidatorError(result)) {
@@ -1964,7 +1964,7 @@ interface BaseData<Context = unknown> {
  * ```
  *
  * ### Union Members
- * - {@link ValidateSuccess} - When validation passes (success: true)
+ * - {@link ValidatorSuccess} - When validation passes (success: true)
  * - {@link ValidatorError} - When validation fails (success: false)
  *
  * @template Context - Type of the optional validation context
@@ -1975,7 +1975,7 @@ interface BaseData<Context = unknown> {
  *   userId: number;
  * }
  *
- * const result: ValidateResult<MyContext> = await Validator.validate({
+ * const result: ValidatorResult<MyContext> = await Validator.validate({
  *   value: "test@example.com",
  *   rules: ["Required", "Email"],
  *   context: { userId: 123 },
@@ -1984,14 +1984,14 @@ interface BaseData<Context = unknown> {
  *
  * @public
  *
- * @see {@link ValidateSuccess} - Success variant
+ * @see {@link ValidatorSuccess} - Success variant
  * @see {@link ValidatorError} - Failure variant
  * @see {@link Validator.validate} - Main validation method
  * @see {@link Validator.isSuccess} - Type guard for success
  * @see {@link Validator.isFailure} - Type guard for failure
  */
-export type ValidateResult<Context = unknown> =
-  | ValidateSuccess<Context>
+export type ValidatorResult<Context = unknown> =
+  | ValidatorSuccess<Context>
   | ValidatorError;
 
 /**
@@ -2013,7 +2013,7 @@ export type ValidateResult<Context = unknown> =
  * ```
  *
  * ### Properties vs Single-Value Success
- * Unlike {@link ValidateSuccess}, target success uses:
+ * Unlike {@link ValidatorSuccess}, target success uses:
  * - **data**: The validated class instance (not `value`)
  * - **value**: Always `undefined` (type narrowing aid)
  * - **errors**: Always `undefined` (type narrowing aid)
@@ -2077,8 +2077,8 @@ export type ValidateResult<Context = unknown> =
  *
  * @public
  *
- * @see {@link ValidateTargetResult}
- * @see {@link ValidateSuccess} - Single-value equivalent
+ * @see {@link ValidatorTargetResult}
+ * @see {@link ValidatorSuccess} - Single-value equivalent
  */
 export interface ValidatorTargetSuccess<
   Target extends ClassConstructor = ClassConstructor,
@@ -2225,9 +2225,9 @@ export interface ValidatorTargetSuccess<
  * @see {@link Validator.validateTarget} - Main target validation method
  * @see {@link Validator.isSuccess} - Type guard for success
  * @see {@link Validator.isFailure} - Type guard for failure
- * @see {@link ValidateResult} - Single-value equivalent
+ * @see {@link ValidatorResult} - Single-value equivalent
  */
-export type ValidateTargetResult<
+export type ValidatorTargetResult<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   Target extends ClassConstructor = any,
   Context = unknown,

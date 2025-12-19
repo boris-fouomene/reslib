@@ -2,7 +2,7 @@ import { defaultStr } from '@utils/defaultStr';
 import { isNonNullString } from '@utils/isNonNullString';
 import { isNumber } from '@utils/isNumber';
 import type {
-  ValidateOptions,
+  ValidatorOptions,
   ValidatorRuleParams,
   ValidatorRuleParamTypes,
   ValidatorRuleResult,
@@ -20,7 +20,7 @@ type t = ValidatorRuleParams;
  * This rule ensures that the input string has at least the specified number of characters.
  *
  * ### Parameters:
- * - **options**: `ValidateOptions` - An object containing:
+ * - **options**: `ValidatorOptions` - An object containing:
  *   - `value`: The string value to validate.
  *   - `ruleParams`: An array where the first element specifies the minimum length required.
  *
@@ -61,7 +61,7 @@ export const MinLength = Validator.buildRuleDecorator<
  * This rule ensures that the input string has at most the specified number of characters.
  * 
  * ### Parameters:
- * - **options**: `ValidateOptions` - An object containing:
+ * - **options**: `ValidatorOptions` - An object containing:
  *   - `value`: The string value to validate.
  *   - `ruleParams`: An array where the first element specifies the maximum length allowed.
  * 
@@ -150,7 +150,7 @@ export const IsNonNullString = Validator.buildRuleDecorator<
  * falls within a specified range or matches a specific length.
  *
  * ### Parameters:
- * - **options**: `ValidateOptions` - An object containing:
+ * - **options**: `ValidatorOptions` - An object containing:
  *   - `value`: The string value to validate.
  *   - `ruleParams`: An array where:
  *     - The first element specifies the minimum length (optional).
@@ -378,7 +378,7 @@ export const StartsWithOneOf = Validator.buildRuleDecorator<
   translatedPropertyName,
   i18n,
   ...rest
-}: ValidateOptions<string[]>): ValidatorRuleResult {
+}: ValidatorOptions<string[]>): ValidatorRuleResult {
   return new Promise((resolve, reject) => {
     if (typeof value !== 'string') {
       const message = i18n.t('validator.startsWithOneOf', {
@@ -450,7 +450,7 @@ export const IsString = Validator.buildRuleDecorator<
   translatedPropertyName,
   i18n,
   ...rest
-}: ValidateOptions): ValidatorRuleResult {
+}: ValidatorOptions): ValidatorRuleResult {
   return typeof value === 'string'
     ? true
     : i18n.t('validator.string', {

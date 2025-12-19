@@ -1,6 +1,6 @@
 import { defaultStr } from '@utils/defaultStr';
 import { isNumber } from '@utils/isNumber';
-import { ValidateOptions, ValidatorRuleResult } from '../types';
+import { ValidatorOptions, ValidatorRuleResult } from '../types';
 import { Validator } from '../validator';
 import { toNumber } from './utils';
 
@@ -16,7 +16,7 @@ function compareNumer(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   compare: (value: any, toCompare: any) => boolean,
   translateKey: string,
-  { value, ruleParams, i18n, ...rest }: ValidateOptions,
+  { value, ruleParams, i18n, ...rest }: ValidatorOptions,
   ruleName: ValidatorRuleName
 ): ValidatorRuleResult {
   ruleParams = Array.isArray(ruleParams) ? ruleParams : [];
@@ -150,7 +150,7 @@ function compareNumer(
  */
 export const IsNumberLTE = Validator.buildRuleDecorator<
   ValidatorRuleParamTypes['NumberLTE']
->(function NumberLTE(options: ValidateOptions<[number]>) {
+>(function NumberLTE(options: ValidatorOptions<[number]>) {
   return compareNumer(
     (value, toCompare) => {
       return value <= toCompare;
@@ -168,7 +168,7 @@ export const IsNumberLTE = Validator.buildRuleDecorator<
  * This rule utilizes the `compareNumer` function to perform the comparison and return the result.
  *
  * ### Parameters:
- * - **options**: `ValidateOptions` - An object containing:
+ * - **options**: `ValidatorOptions` - An object containing:
  *   - `value`: The number to validate.
  *   - `ruleParams`: An array where the first element is the value to compare against.
  *
@@ -208,7 +208,7 @@ export const IsNumberLT = Validator.buildRuleDecorator<
  * This rule utilizes the `compareNumer` function to perform the comparison and return the result.
  *
  * ### Parameters:
- * - **options**: `ValidateOptions` - An object containing:
+ * - **options**: `ValidatorOptions` - An object containing:
  *   - `value`: The number to validate.
  *   - `ruleParams`: An array where the first element is the value to compare against.
  *
@@ -230,7 +230,7 @@ export const IsNumberLT = Validator.buildRuleDecorator<
  */
 export const IsNumberGTE = Validator.buildRuleDecorator<
   ValidatorRuleParamTypes['NumberGTE']
->(function NumberGTE(options: ValidateOptions<[number]>) {
+>(function NumberGTE(options: ValidatorOptions<[number]>) {
   return compareNumer(
     (value, toCompare) => {
       return value >= toCompare;
@@ -248,7 +248,7 @@ export const IsNumberGTE = Validator.buildRuleDecorator<
  * This rule utilizes the `compareNumer` function to perform the comparison and return the result.
  *
  * ### Parameters:
- * - **options**: `ValidateOptions` - An object containing:
+ * - **options**: `ValidatorOptions` - An object containing:
  *   - `value`: The number to validate.
  *   - `ruleParams`: An array where the first element is the value to compare against.
  *
@@ -271,7 +271,7 @@ export const IsNumberGTE = Validator.buildRuleDecorator<
 export const IsNumberGT = Validator.buildRuleDecorator<
   ValidatorRuleParamTypes['NumberGT']
 >(function NumberGT(
-  options: ValidateOptions<ValidatorRuleParamTypes['NumberGT']>
+  options: ValidatorOptions<ValidatorRuleParamTypes['NumberGT']>
 ) {
   return compareNumer(
     (value, toCompare) => {
@@ -290,7 +290,7 @@ export const IsNumberGT = Validator.buildRuleDecorator<
  * This rule utilizes the `compareNumer` function to perform the comparison and return the result.
  *
  * ### Parameters:
- * - **options**: `ValidateOptions` - An object containing:
+ * - **options**: `ValidatorOptions` - An object containing:
  *   - `value`: The number to validate.
  *   - `ruleParams`: An array where the first element is the value to compare against.
  *
@@ -312,7 +312,7 @@ export const IsNumberGT = Validator.buildRuleDecorator<
  */
 export const IsNumberEQ = Validator.buildRuleDecorator<
   ValidatorRuleParamTypes['NumberEQ']
->(function NumberEQ(options: ValidateOptions<[number]>) {
+>(function NumberEQ(options: ValidatorOptions<[number]>) {
   return compareNumer(
     (value, toCompare) => {
       return value === toCompare;
@@ -339,7 +339,7 @@ export const IsNumberEQ = Validator.buildRuleDecorator<
  */
 export const IsNumberNE = Validator.buildRuleDecorator<
   ValidatorRuleParamTypes['NumberNE']
->(function NumberNE(options: ValidateOptions<[number]>) {
+>(function NumberNE(options: ValidatorOptions<[number]>) {
   return compareNumer(
     (value, toCompare) => {
       return value !== toCompare;
@@ -440,7 +440,7 @@ export const IsNumberBetween = Validator.buildRuleDecorator<
   translatedPropertyName,
   i18n,
   ...rest
-}: ValidateOptions<[number, number]>): ValidatorRuleResult {
+}: ValidatorOptions<[number, number]>): ValidatorRuleResult {
   if (!ruleParams || ruleParams.length < 2) {
     const message = i18n.t('validator.invalidRuleParams', {
       rule: 'NumberBetween',
@@ -619,7 +619,7 @@ export const IsInteger = Validator.buildRuleDecorator<
   translatedPropertyName,
   i18n,
   ...rest
-}: ValidateOptions): ValidatorRuleResult {
+}: ValidatorOptions): ValidatorRuleResult {
   if (!isNumber(value) || !Number.isInteger(value)) {
     const message = i18n.t('validator.integer', {
       field: translatedPropertyName || fieldName,
@@ -675,7 +675,7 @@ export const IsEvenNumber = Validator.buildRuleDecorator<
   translatedPropertyName,
   i18n,
   ...rest
-}: ValidateOptions): ValidatorRuleResult {
+}: ValidatorOptions): ValidatorRuleResult {
   if (!isNumber(value)) {
     const message = i18n.t('validator.number', {
       field: translatedPropertyName || fieldName,
@@ -746,7 +746,7 @@ export const IsOddNumber = Validator.buildRuleDecorator<
   translatedPropertyName,
   i18n,
   ...rest
-}: ValidateOptions): ValidatorRuleResult {
+}: ValidatorOptions): ValidatorRuleResult {
   if (!isNumber(value)) {
     const message = i18n.t('validator.number', {
       field: translatedPropertyName || fieldName,
@@ -814,7 +814,7 @@ export const IsMultipleOf = Validator.buildRuleDecorator<
   translatedPropertyName,
   i18n,
   ...rest
-}: ValidateOptions<[number]>): ValidatorRuleResult {
+}: ValidatorOptions<[number]>): ValidatorRuleResult {
   if (!ruleParams || !ruleParams.length) {
     const message = i18n.t('validator.invalidRuleParams', {
       rule: 'MultipleOf',
