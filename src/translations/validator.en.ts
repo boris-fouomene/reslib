@@ -1,8 +1,4 @@
 export const validator = {
-  separators: {
-    multiple: ', ',
-    single: ', ',
-  },
   //use for validating single data
   failedForNFields: {
     one: 'Validation failed for one field',
@@ -108,6 +104,23 @@ export const validator = {
   hexadecimal: 'This field must be a valid hexadecimal value',
   object: 'This field must be an object',
   isObject: 'This field must be an object',
+  /**
+   * Configuration for separators used to join multiple error messages on a single field.
+   *
+   * Definitions:
+   * - multiple: Used to join distinct error messages (e.g. "Value is required, Must be a number")
+   * - single: Secondary separator for complex single errors (default: ", ")
+   *
+   * Examples:
+   * - English/French/Spanish (Standard): multiple: ', ' -> "Error 1, Error 2"
+   * - Japanese (Ideographic Comma): multiple: '、' -> "エラー1、エラー2"
+   * - Arabic (Reverse Comma): multiple: '، ' -> "خطأ 1، خطأ 2"
+   * - List Style (Formatting): multiple: '\n- ' -> "Error 1\n- Error 2"
+   */
+  separators: {
+    multiple: ', ',
+    single: ', ',
+  },
   /**
    * Configuration for formatting nested validation errors.
    *

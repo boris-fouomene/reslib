@@ -541,10 +541,12 @@ export class Validator {
    *
    * @remarks
    * - Separators are loaded from i18n key `validator.separators` with fallback defaults
-   * - Method is used internally by `validate()` and `validateTarget()` for error formatting
+   * - Method is used internally by `validate()` and `validateTarget()` for filtering error formatting
    * - Supports both built-in i18n and custom I18n instances
    * - Thread-safe and stateless - can be called multiple times without side effects
    * - Default separators ensure English-compatible formatting when i18n unavailable
+   * - Note: This deals specifically with flat lists of errors (e.g. multiple failed rules on one field).
+   *   Nested error structure formatting (e.g. nested objects) is handled separately via `translateNestedErrorResult`.
    *
    * @see {@link validate} - Uses these separators for formatting validation error messages
    * @see {@link validateTarget} - Uses these separators for multi-field validation errors
