@@ -376,4 +376,76 @@ describe('Validator Rule Message Override Tests', () => {
       expect(result.message).toContain('required');
     });
   });
+
+  describe('Matches Ruless', () => {
+    it('should override message for Mathes rule', async () => {
+      const result = await Validator.validate({
+        value: 'abc',
+        rules: [
+          {
+            Matches: {
+              params: ['abc'],
+              message: 'Mathes fail',
+            },
+          },
+        ],
+      });
+      expect(result.success).toBe(false);
+      expect(result.message).toBe('Mathes fail');
+    });
+    it('should override message for Mathes rule with function', async () => {
+      const result = await Validator.validate({
+        value: 'abc',
+        rules: [
+          {
+            Matches: {
+              params: ['abc'],
+              message: ({ value }) => `Mathes fail ${value}`,
+            },
+          },
+        ],
+      });
+      expect(result.success).toBe(false);
+      expect(result.message).toBe('Mathes fail abc');
+    });
+    it('should override message for Mathes rule with function and params', async () => {
+      const result = await Validator.validate({
+        value: 'abc',
+        rules: [
+          {
+            Matches: {
+              params: ['abc'],
+              message: ({ value, ruleParams }) =>
+                `Mathes fail ${value} ${ruleParams[0]}`,
+            },
+          },
+        ],
+      });
+      expect(result.success).toBe(false);
+      expect(result.message).toBe('Mathes fail abc abc');
+    });
+    it('should override message for Mathes rule with function and params and i18n', async () => {
+      i18n.registerTranslations({
+        en: {
+          messages: {
+            matches: 'Mathes fail',
+          },
+        },
+      });
+      const result = await Validator.validate({
+        value: 'abc',
+        rules: [
+          {
+            Matches: {
+              params: ['abc'],
+              message: ({ value, ruleParams }) =>
+                `Mathes fail ${value} ${ruleParams[0]} - ${i18n.t('messages.matches')}`,
+            },
+          },
+        ],
+      });
+      expect(result.success).toBe(false);
+      expect(result.message).toBe('Mathes fail abc abc - Mathes fail');
+    });
+  });
 });
