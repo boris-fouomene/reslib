@@ -1,5 +1,18 @@
 ## 1.0.3 (2025-12-09)
 
+## 2.0.1
+
+### Patch Changes
+
+- **BREAKING CHANGE**: Changed validation error HTTP status code from 422 to 400
+  - Changed `ValidatorError.statusCode` from `422` (Unprocessable Entity) to `400` (Bad Request) to align with standard REST API conventions and NestJS best practices
+  - Updated `Validator.isError()` check to validate against status code `400` instead of `422`
+  - Added `validationError` property to `BaseException` to track the underlying validation error
+  - Added `BaseException.isValidationError()` static method to check if an error is a validation error
+  - Added `BaseException.getValidationError()` static method to extract validation errors from exceptions
+
+  This change improves consistency with HTTP standards where 400 is the conventional status code for client-side validation failures.
+
 ## 2.0.0
 
 ### Major Changes
