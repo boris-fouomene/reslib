@@ -1,6 +1,5 @@
 export * from './date';
 export * from './dictionary';
-export * from './i18n';
 /**
  * @typedef Primitive
  * @description

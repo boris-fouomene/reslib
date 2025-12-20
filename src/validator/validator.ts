@@ -570,7 +570,7 @@ export class Validator {
     const i18n = this.getI18n({ i18n: customI18n });
     const translatedSeparator: Dictionary = Object.assign(
       {},
-      i18n.getNestedTranslation('validator.separators')
+      i18n.get('validator.separators')
     ) as Dictionary;
     return {
       multiple: defaultStr(translatedSeparator.multiple, ', '),
@@ -1665,7 +1665,7 @@ export class Validator {
     const i18n = this.getI18n({ i18n: customI18n });
     const nestedErrorConfig: Dictionary = Object.assign(
       { separator: '; ', prefix: '', suffix: '' },
-      i18n.getNestedTranslation('validator.nestedErrors')
+      i18n.get('validator.nestedErrors')
     ) as Dictionary;
     const separator = defaultStr(nestedErrorConfig.separator, '; ');
     const prefix = defaultStr(nestedErrorConfig.prefix, '');

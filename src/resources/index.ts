@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { AuthUser } from '@/auth/types';
-import { i18n } from '@/i18n';
+import { I18n } from '@/i18n';
+import { I18nScope, I18nTranslateOptions } from '@/i18n/types';
 import { observableFactory } from '@/observable';
-import { Scope, TranslateOptions } from 'i18n-js';
 import 'reflect-metadata';
 import { Auth } from '../auth';
 import { Logger } from '../logger';
@@ -64,18 +64,7 @@ export abstract class Resource<
    */
   protected abstract name: Name;
 
-  private _onDictionaryChangedListener?: { remove: () => any };
-
-  private _onLocaleChangeListener?: { remove: () => any };
   constructor() {
-    this._onDictionaryChangedListener = i18n.on(
-      'translations-changed',
-      this.onI18nChange.bind(this)
-    );
-    this._onLocaleChangeListener = i18n.on(
-      'locale-changed',
-      this.onI18nChange.bind(this)
-    );
     this.init();
   }
   actions?: Partial<ResourceActions<Name>>;
@@ -121,28 +110,12 @@ export abstract class Resource<
    Fields are created using the @FieldMeta decorator when resources are defined.
   */
   fields?: Record<string, Field>;
-  /**
-   * Resolves the translations for the resource when the i18n dictionary or locale changes.
-   * This method is called when the "translations-changed" or "locale-changed" events are triggered.
-   */
-  onI18nChange() {
-    this.resolveTranslations();
-  }
-  /**
-   * Resolves the translations for the resource when the i18n dictionary or locale changes.
-   * This method is called when the "translations-changed" or "locale-changed" events are triggered.
-   */
-  resolveTranslations() {
-    return i18n.resolveTranslations(this);
-  }
+
   /**
    * Removes the event listeners for the "translations-changed" and "locale-changed" events.
    * This method is called when the resource is being destroyed to clean up the event listeners.
    */
-  destroy() {
-    this._onDictionaryChangedListener?.remove();
-    this._onLocaleChangeListener?.remove();
-  }
+  destroy() {}
   /**
    * Creates a resource context object containing the resource's name, label, and any additional parameters.
    *
@@ -166,12 +139,18 @@ export abstract class Resource<
       resourceName: this.getName(),
     };
   }
+  protected getI18n() {
+    return I18n.getInstance();
+  }
   /**
    *
    * @returns {string} the message to display when the DataProvider for the resource is invalid
    */
   get INVALID_DATA_PROVIDER_ERROR(): string {
-    return i18n.t('resources.invalidDataProvider', this.getResourceContext());
+    return this.getI18n().t(
+      'resources.invalidDataProvider',
+      this.getResourceContext()
+    );
   }
   hasDataService(): boolean {
     const dataService = this.getDataService();
@@ -243,7 +222,7 @@ export abstract class Resource<
 
     if (!hasPermission) {
       throw new Error(
-        i18n.t(
+        this.getI18n().t(
           this.buildTranslationPath('forbiddenError'),
           this.getResourceContext({ action })
         )
@@ -316,7 +295,7 @@ export abstract class Resource<
     const result = await this.findOne(options);
     if (!isObj(result) || !result) {
       throw new Error(
-        i18n.t(
+        this.getI18n().t(
           this.buildTranslationPath('notFoundError'),
           Object.assign(
             {},
@@ -706,7 +685,6 @@ export abstract class Resource<
    * to further process the resource.
    */
   init() {
-    this.resolveTranslations();
     this.getFields();
   }
   /**
@@ -716,16 +694,6 @@ export abstract class Resource<
    * @returns {Record<string,any>} - An object containing the translations for the resource, keyed by the property names.
    * @example
    * // Register translations for the "en" locale.
-   * i18n.registerTranslations({
-   *   en: {
-   *     resources: {
-   *       user: {  // The resource name
-   *         label: "User",  // The label property
-   *         title: "User Information",  // The title property
-   *       }
-   *     }
-   *   }
-   * });
    *
    * // Retrieve the translations for the "user" resource.
    * const userResource = ResourcesManager.getResource("user");
@@ -739,39 +707,21 @@ export abstract class Resource<
    */
 
   getTranslations(locale?: string): Record<string, any> {
-    locale = defaultStr(locale, i18n.getLocale());
+    locale = defaultStr(locale, this.getI18n().getLocale());
     const nameStr = String(this.getName()).trim();
     if (!isNonNullString(nameStr)) return {};
-    const t = i18n.getNestedTranslation(['resources', nameStr], locale);
+    const t = this.getI18n().get(['resources', nameStr], locale);
     return isObj(t) && t ? t : {};
   }
 
   /**
    *Translates the given scope using the i18n default instance, ensuring that the resource name is prefixed correctly.
    *
-   * @param {Scope} scope - The scope to use for the translation. This can be a string or an array of strings.
-   * @param {TranslateOptions} [options] - Optional options to pass to the translation function.
+   * @param {I18nScope} scope - The scope to use for the translation. This can be a string or an array of strings.
+   * @param {I18nTranslateOptions} [options] - Optional options to pass to the translation function.
    * @returns {string | T} - The translated string, or the translated value of type T if the scope returns a non-string value.
    * @example
-   * // Register translations for the "en" locale.
-   * i18n.registerTranslations({
-   *   en: {
-   *     resources: {
-   *       user: {  // The resource name
-   *         label: "User",  // The label property
-   *         title: "User Information",  // The title property
-   *         create: {
-   *            label: "Create User",
-   *            title: "Create a new user",
-   *         },
-   *         read: {
-   *            label: "View User",
-   *            title: "View a specific user",
-   *         },
-   *       }
-   *     }
-   *   }
-   * });
+   *
    * // Translate the "label" property of the "user" resource.
    * const userResource = ResourcesManager.getResource("user");
    * const label = userResource.translate("label"); // "User"
@@ -779,7 +729,10 @@ export abstract class Resource<
    * // Translate the "title" property of the "user" resource.
    * const title = userResource.translate("title"); // "Manage user data"
    */
-  translate<T = string>(scope: Scope, options?: TranslateOptions): string | T {
+  translate<T = string>(
+    scope: I18nScope,
+    options?: I18nTranslateOptions
+  ): string | T {
     const scopeArray = isNonNullString(scope)
       ? scope.trim().split('.')
       : Array.isArray(scope)
@@ -791,7 +744,7 @@ export abstract class Resource<
     ) {
       scopeArray.unshift(this.getName(), 'resources');
     }
-    return i18n.translate<T>(scopeArray, options);
+    return this.getI18n().translate<T>(scopeArray, options);
   }
 
   /**
@@ -910,13 +863,15 @@ export abstract class Resource<
   translateProperty(
     propertyName: string,
     fallbackValue?: string,
-    options?: TranslateOptions
+    options?: I18nTranslateOptions
   ): string {
     propertyName = defaultStr(propertyName).trim();
     options = Object.assign({}, { resourceName: this.getName() }, options);
     const translations = this.getTranslations();
     if (isNonNullString(propertyName) && translations[propertyName]) {
-      const translatedValue = stringify(i18n.t(propertyName, options));
+      const translatedValue = stringify(
+        this.getI18n().t(propertyName, options)
+      );
       if (
         isNonNullString(translatedValue) &&
         translatedValue.includes('.' + propertyName.ltrim('.'))
@@ -969,7 +924,6 @@ export abstract class Resource<
    */
   getFields(): Record<string, Field> {
     try {
-      this.resolveTranslations();
       this.fields = getFields(this) as Record<string, Field>;
       return this.fields;
     } catch (e) {

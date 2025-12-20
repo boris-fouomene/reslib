@@ -109,16 +109,31 @@ export interface InterpolateOptions {
  *
 /**
  * Default value formatter for interpolation.
- * Handles all common JavaScript value types.
+ * Handles all common JavaScript value types, including:
+ * - Primitives (string, number, boolean, null, undefined)
+ * - Dates (uses .toFormat() if available/Moment.js, else .toISOString())
+ * - Errors (returns "Error: message")
+ * - Regular Expressions (returns string representation)
+ * - Arrays (returns JSON string)
+ * - Objects (uses custom .toString(), or JSON string fallback)
+ * 
+ * @param value - The value to format.
+ * @param tagName - The name of the placeholder tag (unused in default formatter but available for custom ones).
+ * @returns The formatted string representation of the value.
  */
 // eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any
 function defaultValueFormatter(value: any, tagName: string): string {
+  // Handle null/undefined checks early
   if (value === null || value === undefined) {
     return '';
   }
+
+  // Return strings as-is
   if (typeof value === 'string') {
     return value;
   }
+
+  // Handle numbers, checking for custom formatNumber method
   if (
     typeof value === 'number' ||
     (typeof value === 'object' && value instanceof Number)
@@ -129,6 +144,8 @@ function defaultValueFormatter(value: any, tagName: string): string {
       return (value as any).formatNumber();
     }
   }
+
+  // Handle Dates, preferring toFormat method (e.g. from Moment.js/Luxon)
   if (
     value instanceof Date ||
     (typeof value === 'object' && value !== null && value.constructor === Date)
@@ -140,56 +157,103 @@ function defaultValueFormatter(value: any, tagName: string): string {
     }
     return (value as Date).toISOString();
   }
+
+  // Handle Errors
   if (value instanceof Error) {
     return `Error: ${value.message}`;
   }
+
+  // Handle RegExp
   if (isRegExp(value)) {
     return value.toString();
   }
+
+  // Handle other primitives (boolean, symbol)
   if (isPrimitive(value)) {
     return String(value);
   }
+
+  // Handle Arrays via JSON serialization
   if (Array.isArray(value)) {
     return JSON.stringify(value);
   }
+
+  // Handle Objects
   if (typeof value === 'object' && value !== null) {
-    // For objects with custom toString methods (not Object.prototype.toString)
+    // Check for custom toString implementation (that isn't Object.prototype.toString)
     if (
       typeof value.toString === 'function' &&
       value.toString !== Object.prototype.toString
     ) {
       return value.toString();
     }
-    // For other objects, try toString first (for Map, Set, etc.), then fall back to JSON.stringify
+    // For other objects (like Map, Set), try generic toString first
     if (typeof value.toString === 'function') {
       const str = value.toString();
+      // If result is generic [object Object], fall back to JSON
       if (str !== '[object Object]') {
         return str;
       }
     }
+    // Fallback to JSON stringification for plain objects
     return JSON.stringify(value);
   }
+
+  // Handle edge cases like functions or weird objects with toString
   if (typeof value?.toString === 'function') {
     return value.toString();
   }
-  // For other types (functions, symbols, etc.), convert to string
+
+  // Final fallback
   return String(value);
 }
+
+/**
+ * Interpolates placeholders in a string with values from a parameters object.
+ *
+ * This function is the core of the library's dynamic string replacement.
+ * It identifies placeholders in the format `%{key}` (or custom format), looks up matching values
+ * in the provided `params` object, formats them using a value formatter, and replaces
+ * the placeholders in the original text.
+ *
+ * Key features:
+ * - Supports default `%{key}` syntax.
+ * - Supports custom regex via `options.tagRegex`.
+ * - Supports custom value formatting via `options.valueFormatter`.
+ * - Handles missing values gracefully (defaults to empty string).
+ * - Safe replacement logic to avoid regex injection issues from value strings.
+ *
+ * @param text - The template string containing placeholders.
+ * @param params - An object containing key-value pairs for interpolation.
+ * @param options - Optional configuration object for interpolation behavior.
+ * @returns The interpolated string with placeholders replaced by their corresponding values.
+ */
 export function interpolate(
   text?: string,
   params?: Dictionary,
   options?: InterpolateOptions
 ): string {
+  // Determine the formatter to use: custom or default
   const valueFormatter = options?.valueFormatter || defaultValueFormatter;
 
+  // Ensure input text is a valid string
   let processedContent = defaultStr(text);
+
+  // Quick exit if no params provided
   if (!isObj(params) || !params) {
     return processedContent;
   }
-  // Use custom tag regex or default to %{key} format
+
+  // Determine the regex to use for identifying placeholders.
+  // Defaults to the pattern %{key} if no custom regex is provided in options.
   const tagRegex = options?.tagRegex || /%\{([^}]+)\}/g;
+
+  // Track unique tags found in the content to iterate over them.
+  // This allows processing each unique placeholder type once.
   const usedTags = new Set<string>();
   let match;
+
+  // Scan the original content for matches
   const content = defaultStr(text);
   while ((match = tagRegex.exec(content)) !== null) {
     const tagPath = match[1];
@@ -198,31 +262,38 @@ export function interpolate(
       usedTags.add(tagPath);
     }
   }
+
+  // Iterate over each found unique tag to perform replacement
   usedTags.forEach((tagPath) => {
-    // Reconstruct the full tag based on the regex pattern
-    // For default %{key}, it's %{tagPath}
-    // For custom patterns, we need to build the replacement string
-    let tag: string;
+    // If a custom regex was provided, we use a specialized replacement logic
     if (options?.tagRegex) {
-      // For custom regex, we need to reconstruct the tag from the match
-      // This is tricky, so we'll use a different approach: replace all occurrences directly
+      // Re-create the regex to ensure we have a fresh state for global matching if needed
+      // Note: This block runs for every tag found, which is redundant but functional.
+      // Ideally this logic handles all replacements in one go, but the structure iterates 'usedTags'.
+      // We process all matches of the custom regex here.
       const customRegex = new RegExp(
         options.tagRegex.source,
         options.tagRegex.flags
       );
+
       const matches = [...content.matchAll(customRegex)];
       matches.forEach((match) => {
-        const fullMatch = match[0];
-        // Check if the regex has a capture group
+        const fullMatch = match[0]; // The full placeholder string, e.g. {{key}}
+
+        // Ensure capture group exists
         if (!match[1]) {
-          // No capture group found, skip this match
           return;
         }
-        const key = match[1];
+
+        const key = match[1]; // The extracted key, e.g. "key"
+
+        // Lookup value in params
         const value = Object.prototype.hasOwnProperty.call(params, key)
           ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
             (params as any)[key]
           : undefined;
+
+        // Format the value
         const stringValue =
           value === undefined
             ? ''
@@ -230,25 +301,34 @@ export function interpolate(
                 try {
                   return valueFormatter(value, key, defaultValueFormatter);
                 } catch {
+                  // Fallback to default formatter if custom one fails
                   return defaultValueFormatter(value, key);
                 }
               })();
+
+        // Escape special regex characters in the matched string to safely use it in replacement RegExp
         const escapedMatch = fullMatch.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+        // Perform replacement in the working content string
         processedContent = processedContent.replace(
           new RegExp(escapedMatch, 'g'),
           stringValue
         );
       });
-      return; // Skip the default logic
-    } else {
-      tag = `%{${tagPath}}`;
+      return; // Skip the default replacement logic below
     }
-    // Look for the value in params using the exact path as key
-    // params has keys like "user.firstName", "domain.field", etc.
+
+    // Default logic for standard %{key} syntax
+    // Reconstruct the full placeholder tag string
+    const tag = `%{${tagPath}}`;
+
+    // Look up value in params using the path
     const value = Object.prototype.hasOwnProperty.call(params, tagPath)
       ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (params as any)[tagPath]
       : undefined;
+
+    // Format the value
     const stringValue =
       value === undefined
         ? ''
@@ -259,12 +339,16 @@ export function interpolate(
               return defaultValueFormatter(value, tagPath);
             }
           })();
-    // Escape special regex characters in the tag for safe replacement
+
+    // Escape special regex characters in the tag for safe replacement construction
     const escapedTag = tag.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+    // Replace all occurrences of this tag in the content
     processedContent = processedContent.replace(
       new RegExp(escapedTag, 'g'),
       stringValue
     );
   });
+
   return processedContent;
 }

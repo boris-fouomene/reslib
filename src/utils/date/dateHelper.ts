@@ -334,7 +334,7 @@ export class DateHelper {
    */
   static getDefaultDateTimeFormat(i18n?: I18n): DateFormat {
     return defaultStr(
-      this.getI18n(i18n).getNestedTranslation('dates.defaultDateTimeFormat'),
+      this.getI18n(i18n).get('dates.defaultDateTimeFormat'),
       'YYYY-MM-DD HH:mm'
     ) as unknown as DateFormat;
   }
@@ -346,7 +346,7 @@ export class DateHelper {
    */
   static getDefaultDateFormat(i18n?: I18n): DateFormat {
     return defaultStr(
-      this.getI18n(i18n).getNestedTranslation('dates.defaultDateFormat'),
+      this.getI18n(i18n).get('dates.defaultDateFormat'),
       'YYYY-MM-DD'
     ) as unknown as DateFormat;
   }
@@ -434,7 +434,7 @@ export class DateHelper {
    */
   static getDefaultTimeFormat(i18n?: I18n): DateFormat {
     return defaultStr(
-      this.getI18n(i18n).getNestedTranslation('dates.defaultTimeFormat'),
+      this.getI18n(i18n).get('dates.defaultTimeFormat'),
       'HH:mm'
     ) as unknown as DateFormat;
   }

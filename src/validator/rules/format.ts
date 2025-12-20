@@ -2471,7 +2471,7 @@ export const Matches = Validator.buildRuleDecorator<
   const options = Object.assign({}, ruleParams[1]);
   const customMessage = defaultStr(options.message).trim();
   const translatedMessage = defaultStr(
-    customMessage ? i18n.getNestedTranslation(customMessage) : ''
+    customMessage ? i18n.get(customMessage) : ''
   ).trim();
   const message = isNonNullString(translatedMessage)
     ? translatedMessage

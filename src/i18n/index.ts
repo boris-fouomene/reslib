@@ -1,8 +1,4 @@
-import {
-  Observable,
-  ObservableCallback,
-  observableFactory,
-} from '@/observable';
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   buildPropertyDecorator,
   getDecoratedProperties,
@@ -13,581 +9,130 @@ import { Session as session } from '@session/index';
 import { defaultStr } from '@utils/defaultStr';
 import { interpolate } from '@utils/interpolate';
 import { isNonNullString } from '@utils/isNonNullString';
-import { isNullable } from '@utils/isNullable';
-import { isPrimitive } from '@utils/isPrimitive';
-import { extendObj, isObj } from '@utils/object';
-import { stringify } from '@utils/stringify';
-import {
-  Dict,
-  I18n as I18nJs,
-  I18nOptions,
-  Scope,
-  TranslateOptions,
-} from 'i18n-js';
+import { extendObj, flattenObject, isObj } from '@utils/object';
 import moment, { LocaleSpecification } from 'moment';
 import 'reflect-metadata';
-import { I18nEvent, I18nTranslation } from '../types/i18n';
+
+import { isNumber } from '@utils/isNumber';
 import { ClassConstructor, Dictionary } from '../types/index';
-/**
- * A key to store metadata for translations.
- */
-const TRANSLATION_KEY = Symbol('TRANSLATION_KEY');
+import {
+  I18nFormatter,
+  I18nScope,
+  I18nTranslateOptions,
+  I18nTranslations,
+} from './types';
 
-/**
-* A decorator to attach metadata to properties or methods for translation.
-* @param key The translation key in the translations.
-* @returns A property and method decorator.
-* @example 
-* ```ts
-*   // Class with translations using the decorator
-    class MyComponent {
-        @Translate("greeting")
-        public greeting: string;
-
-        @Translate("nested.example")
-        public nestedExample: string;
-
-        @Translate("farewell")
-        public sayGoodbye(): string {
-            return "";
-        }
+export class I18n {
+  constructor(
+    translations: I18nTranslations = {},
+    options: Partial<I18nOptions> = {}
+  ) {
+    if (isNonNullString(options.locale)) {
+      this.locale = options.locale;
     }
-* ```
-*/
-export function Translate(key: string): PropertyDecorator & MethodDecorator {
-  return buildPropertyDecorator<string>(TRANSLATION_KEY, key);
-}
+    if (isNonNullString(options.fallbackLocale)) {
+      this._fallbackLocale = options.fallbackLocale;
+    }
+    if (typeof options.interpolate === 'function') {
+      this.interpolateFunc = options.interpolate;
+    }
 
-/**
- * The I18n class extends the i18n-js library to provide internationalization (i18n)
- * functionality with observable capabilities. It manages translations, allows for
- * dynamic loading of language dictionaries, and supports event-driven architecture
- * through observable patterns.
- *
- * @extends I18nJs
- * @implements Observable<I18nEvent>
- *
- * @example
- * // Example usage of the I18n class
- * const i18nInstance = I18n.getInstance();
- * i18nInstance.registerTranslations({
- *   en: {
- *     greeting: "Hello, %{name}!",
- *     farewell: "Goodbye!",
- *   },
- * });
- * console.log(i18nInstance.translate("greeting", { name: "John" })); // Outputs: Hello, John!
- * @see https://www.npmjs.com/package/i18n-js?activeTab=readme for more information on i18n-js library.
- */
-export class I18n extends I18nJs implements Observable<I18nEvent> {
+    // Register default translations for the default instance mostly
+    // But helpful generally
+    if (!this._hasDefaultTranslations) {
+      this.registerTranslations(defaultTranslations);
+      this._hasDefaultTranslations = true;
+    }
+
+    if (translations) {
+      this.registerTranslations(translations);
+    }
+
+    // Load namespaces implicitly if any are set?
+    // Usually logic implies explicit load calls or constructor doesn't do async.
+    // The original code called loadNamespaces but that is async.
+    // We can call it but not await it.
+    this.loadNamespaces();
+  }
   /**
-   * Custom instanceof check. When consumers import `I18n` from built packages or
-   * across module boundaries, class identity can differ. Using Symbol.hasInstance
-   * allows `instanceof I18n` to succeed if the object has the required i18n API
-   * shape (duck typing). This preserves `instanceof` checks externally while
-   * keeping the current exported API intact.
+   * Custom instanceof check. Checks if an object looks like an I18n instance.
+   * @param obj The object to check.
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   static [Symbol.hasInstance](obj: any) {
     return this.isI18nInstance(obj);
   }
+
   /**
    * Type guard to check if an object is an instance of I18n.
-   * Uses duck typing to verify the object has the required i18n methods,
-   * allowing for cross-realm compatibility when instanceof checks fail.
+   * Uses duck typing.
    * @param obj The object to check.
-   * @returns True if the object is an I18n instance, false otherwise.
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   static isI18nInstance(obj: any): obj is I18n {
     if (!obj || typeof obj !== 'object') return false;
-    // If it's an actual instance of the native i18n-js class, consider true
-    try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      if (obj instanceof (I18nJs as any)) return true;
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    } catch (e) {
-      // ignore cross-realm issues
-    }
-    // Fallback to duck-typing verification: check for i18n-like methods used in the codebase
+    // Check if it's an actual instance (if created via new I18n)
+    // Note: This check might fail across realms/packages if we simply do instanceof I18n
+    // So we rely on duck typing primarily.
+    if (obj.constructor && obj.constructor.name === 'I18n') return true;
+
     return (
       typeof obj.getLocale === 'function' &&
       typeof obj.translate === 'function' &&
-      typeof obj.translateClass === 'function'
+      typeof obj.translateClass === 'function' &&
+      typeof obj.registerTranslations === 'function' &&
+      typeof obj.loadNamespace == 'function' &&
+      typeof obj.registerNamespaceResolver === 'function' &&
+      typeof obj.locale === 'string'
     );
   }
-  /**
-   * Translates the given scope with the provided options.
-   * If the scope is a string and the options include pluralization, the method will pluralize the translation.
-   * Otherwise, it will call the parent `translate` method.
-   * @param scope The translation scope.
-   * @param options The translation options, including pluralization.
-   * @returns The translated string or the type specified in the generic parameter.
-   * @example
-   * // Register translations for the "en" locale.
-   * i18n.registerTranslations({
-   *   en: {
-   *     greeting: {
-   *       one: "Hello, %{name}!",
-   *       other: "Hello, %{name}s!",
-   *       zero: "Hello, %{name}s!"
-   *     },
-   *     farewell: "Goodbye!"
-   *   }
-   * });
-   *
-   * // Translate the "greeting" scope with pluralization.
-   * i18n.translate("greeting", { count: 1 }); // "Hello, John!"
-   * i18n.translate("greeting", { count: 2 }); // "Hello, Johns!"
-   * i18n.translate("greeting", { count: 0 }); // "Hello, Johns!"
-   *
-   * // Translate the "farewell" scope.
-   * i18n.translate("farewell"); // "Goodbye!"
-   */
-  translate<T = string>(scope: Scope, options?: TranslateOptions) {
-    if (this.isPluralizeOptions(options) && this.canPluralize(scope)) {
-      if (typeof options.count === 'number') {
-        options.countStr = options.count.formatNumber();
-      }
-      return this.pluralize(options.count as number, scope, options);
-    }
-    return super.translate<T>(scope, options);
-  }
-  /***
-   * Translates the keys of the given target class.
-   * @param target The target class.
-   * @param options The translation options.
-   * @returns The translated keys.
-   */
 
-  translateClass<T extends ClassConstructor>(
-    target: T,
-    options?: TranslateOptions
-  ): Record<keyof T, string> {
-    const translationKeys = I18n.getClassTanslationKeys(target);
-    for (let i in translationKeys) {
-      if (isNonNullString(translationKeys[i])) {
-        translationKeys[i] = this.translate(translationKeys[i], options);
-      }
-    }
-    return translationKeys;
-  }
-  /**
-   * Translates an object containing translation keys as values.
-   * This method takes an object where each property value is expected to be a translation key,
-   * and returns a new object with the same structure but with translated values.
-   *
-   * @template T - The type of the input object, extending Record<string, string>
-   * @param object - The object containing translation keys as values to be translated
-   * @param {TranslateOptions} options - additional options to pass to the i18n.translate function
-   * @returns A new object with the same keys but translated values
-   *
-   * @example
-   * ```typescript
-   * // Register translations first
-   * i18n.registerTranslations({
-   *   en: {
-   *     'user.name': 'Name',
-   *     'user.email': 'Email Address',
-   *     'user.phone': 'Phone Number',
-   *     'actions.save': 'Save',
-   *     'actions.cancel': 'Cancel'
-   *   },
-   *   fr: {
-   *     'user.name': 'Nom',
-   *     'user.email': 'Adresse Email',
-   *     'user.phone': 'Numéro de Téléphone',
-   *     'actions.save': 'Enregistrer',
-   *     'actions.cancel': 'Annuler'
-   *   }
-   * });
-   *
-   * // Define an object with translation keys
-   * const formLabels = {
-   *   name: 'user.name',
-   *   email: 'user.email',
-   *   phone: 'user.phone'
-   * };
-   *
-   * // Translate the object
-   * const translatedLabels = i18n.translateObject(formLabels);
-   * console.log(translatedLabels);
-   * // Output (for 'en' locale): { name: 'Name', email: 'Email Address', phone: 'Phone Number' }
-   * // Output (for 'fr' locale): { name: 'Nom', email: 'Adresse Email', phone: 'Numéro de Téléphone' }
-   *
-   * // Can also be used with button configurations
-   * const buttonConfig = {
-   *   saveButton: 'actions.save',
-   *   cancelButton: 'actions.cancel'
-   * };
-   * const translatedButtons = i18n.translateObject(buttonConfig);
-   * // Output (for 'en' locale): { saveButton: 'Save', cancelButton: 'Cancel' }
-   * ```
-   *
-   * @example
-   * ```typescript
-   * // Advanced usage with form validation messages
-   * const validationMessages = {
-   *   required: 'validation.required',
-   *   email: 'validation.email.invalid',
-   *   minLength: 'validation.minLength',
-   *   maxLength: 'validation.maxLength'
-   * };
-   *
-   * // Assuming you have registered validation translations
-   * const translatedValidation = i18n.translateObject(validationMessages);
-   * // This allows you to easily get all validation messages in the current locale
-   * ```
-   *
-   * @note If the input object is not a valid object, an empty object of type T is returned.
-   * @note Only string values that are non-null and non-empty are translated; other values are skipped.
-   * @note This method is particularly useful for translating configuration objects, form labels,
-   *       button texts, or any structured data containing translation keys.
-   *
-   * @see {@link translateClass} for translating class properties decorated with @Translate
-   * @see {@link t} for translating individual keys with interpolation support
-   *
-   */
-  translateObject<T extends Record<string, string>>(
-    object: T,
-    options?: TranslateOptions
-  ): T {
-    if (!isObj(object)) return {} as T;
-    const translatedKeys: T = {} as T;
-    for (const key in object) {
-      const i18nKey = object[key];
-      if (isNonNullString(i18nKey)) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (translatedKeys as any)[key] = i18n.translate(i18nKey, options);
-      }
-    }
-    return translatedKeys;
-  }
-  /***
-   * returns the translation keys for the target class
-   * @param target the target class
-   * @returns the translation keys for the target class
-   */
-
-  static getClassTanslationKeys<T extends ClassConstructor>(
-    target: T
-  ): Record<keyof T, string> {
-    return getDecoratedProperties(target, TRANSLATION_KEY);
-  }
-  private _isLoading: boolean = false;
-  /***
-   * locales that are superted by the i18n instance
-   */
-  private _locales: string[] = [];
-  /**
-   * Namespace resolvers for loading translations.
-   */
-  private namespaceResolvers: Record<
-    string,
-    (locale: string) => Promise<I18nTranslation>
-  > = {};
-  /**
-   * Singleton instance of the I18n class.
-   */
-  private static instance: I18n;
-
-  /**
-   * Creates an instance of the I18n class.
-   * @param options Optional configuration options for the I18n instance.
-   */
-  constructor(
-    translations: I18nTranslation = {},
-    options: Partial<I18nOptions> = {}
-  ) {
-    super({}, options);
-    if (!this.hasRegisteredDefaultTranslations) {
-      this.registerTranslations(defaultTranslations);
-      this.hasRegisteredDefaultTranslations = true;
-    }
-    this.registerTranslations(translations);
-    this.loadNamespaces();
-  }
-  readonly _observableFactory = observableFactory<I18nEvent>();
-  readonly _____isObservable?: boolean | undefined = true;
-  /**
-   * Subscribes a callback function to a specific event.
-   * @param event The event name to listen for.
-   * @param fn The callback function to be invoked when the event is triggered.
-   * @returns An object containing a remove method to unsubscribe from the event.
-   */
-  on(event: I18nEvent, fn: ObservableCallback) {
-    return this._observableFactory.on.call(this, event, fn);
-  }
-  /**
-   * Registers a callback to be invoked finally when an event is triggered.
-   * @param event The event name.
-   * @param fn The callback function to be invoked.
-   * @returns The observable instance.
-   */
-  finally(event: I18nEvent, fn: ObservableCallback) {
-    return this._observableFactory.finally.call(this, event, fn);
-  }
-  /**
-   * Unsubscribes a callback from a specific event.
-   * @param event The event name.
-   * @param fn The callback function to remove.
-   * @returns The observable instance.
-   */
-  off(event: I18nEvent, fn: ObservableCallback) {
-    return this._observableFactory?.off.call(this, event, fn);
-  }
-  /**
-   * Triggers a specific event with optional arguments.
-   * @param event The event name to trigger.
-   * @param args Optional arguments to pass to the event callbacks.
-   * @returns The observable instance.
-   */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  trigger(event: I18nEvent | '*', ...args: any[]) {
-    return this._observableFactory?.trigger.call(this, event, ...args);
-  }
-  /**
-   * Unsubscribes all event callbacks for this component.
-   * @returns The observable instance.
-   */
-  offAll(): Observable<I18nEvent> {
-    return this._observableFactory?.offAll.call(this);
-  }
-  /**
-   * Subscribes a callback function to be triggered once for a specific event.
-   * @param event The event name.
-   * @param fn The callback function to be invoked.
-   * @returns An object containing a remove method to unsubscribe from the event.
-   */
-  once(event: I18nEvent, fn: ObservableCallback) {
-    return this._observableFactory?.once.call(this, event, fn);
-  }
-  /**
-   * Retrieves all registered event callbacks.
-   * @returns An object mapping event names to their respective callback functions.
-   */
-  getEventCallBacks() {
-    return this._observableFactory?.getEventCallBacks.call(this);
-  }
   /**
    * Retrieves the singleton instance of the I18n class.
+   * @param options Optional configuration options.
    * @returns The singleton I18n instance.
    */
-  static getInstance(options?: I18nOptions): I18n {
-    if (!this.isI18nInstance(I18n.instance)) {
+  static getInstance(options?: Partial<I18nOptions>): I18n {
+    if (!I18n.instance) {
       const locale = I18n.getLocaleFromSession();
-      I18n.instance = this.createInstance(
-        {},
-        Object.assign({}, locale ? { locale } : {}, options)
+      // Use "en" as default if session is empty or user didn't specify
+      const opts: Partial<I18nOptions> = Object.assign(
+        { locale: locale || 'en' },
+        options
       );
+      I18n.instance = new I18n({}, opts);
     }
     return I18n.instance;
   }
-  /***
-   * returns true if the instance is the default instance.
-   * @returns true if the instance is the default instance.
-   */
-  isDefaultInstance() {
-    return this === I18n.instance;
-  }
-  private static setLocaleToSession(locale: string) {
-    session.set('i18n.locale', locale);
-  }
-  static getLocaleFromSession() {
-    const locale = session.get('i18n.locale');
-    if (isNonNullString(locale)) {
-      return locale;
-    }
-    return '';
-  }
-  /**
-   * Checks if the provided translation key can be pluralized for the given locale.
-   * @param scope The translation scope to check.
-   * @param locale The locale to use for the check. If not provided, the current locale is used.
-   * @returns `true` if the translation key can be pluralized, `false` otherwise.
-   * @note This method is useful for determining if a translation key can be pluralized for a specific locale.
-   * A translation key can be pluralized if it has pluralization rules defined in the translation dictionary.
-   * The pluralization rules are defined in the `one`, `other`, and `zero` properties of the translation dictionary.
-   * @example
-   * //register a translation dictionary for the "en" locale.
-   * i18n.registerTranslations({
-   *   en: {
-   *     greeting: {
-   *       one: "Hello, {name}!",
-   *       other: "Hello, {name}s!",
-   *       zero: "Hello, {name}s!"
-   *     },
-   *     farewell: "Goodbye!"
-   *   }
-   * );
-   * });
-   * // Check if the translation key "greeting" can be pluralized for the current locale.
-   * i18n.canPluralize("greeting");
-   *
-   * // Check if the translation key "greeting" can be pluralized for the "en" locale.
-   * i18n.canPluralize("greeting", "en");
-   * i18n.canPluralize("greeting", "fr"); // returns false
-   * i18n.canPluralize("farewell", "en"); // returns false
-   */
-  canPluralize(scope: Scope, locale?: string) {
-    locale = defaultStr(locale, this.getLocale());
-    const r = this.getNestedTranslation(scope, locale) as Dictionary;
-    if (!isObj(r) || !r) return false;
-    return isNonNullString(r?.one) && isNonNullString(r?.other); //&& isNonNullString(r?.zero);
-  }
 
   /**
-   * Checks if the provided translation key exists for the given locale.
-   * @since 1.1.1
-   * @param scope The translation scope to check.
-   * @param locale The locale to use for the check. If not provided, the current locale is used.
-   * @returns `true` if the translation key exists, `false` otherwise.
-   */
-  has(scope: Scope, locale?: string): boolean {
-    const resolvedTranslation = this.getNestedTranslation(scope, locale);
-    return resolvedTranslation !== undefined;
-  }
-  /**
-   * Resolves translation for nested keys.
-   * @param scope {Scope} The translation scope.
-   * @param locale The locale to use for translation.
-   * @returns The translated string or undefined if not found.
-   * @example
-   * // Register translations for the "en" locale.
-   * i18n.registerTranslations({
-   *   en: {
-   *     greeting: {
-   *       one: "Hello, {name}!",
-   *       other: "Hello, {name}s!",
-   *       zero: "Hello, {name}s!"
-   *     },
-   *     farewell: "Goodbye!"
-   *   }
-   * });
-   *
-   * // Resolve translation for the "greeting" key.
-   * i18n.getNestedTranslation("greeting.one", "en");
-   *
-   * // Resolve translation for the "greeting" key.
-   * i18n.getNestedTranslation("greeting.other", "en");
-   *
-   * // Resolve translation for the "greeting" key.
-   * i18n.getNestedTranslation("en", "greeting.zero", 0);
-   *
-   * // Resolve translation for the "farewell" key.
-   * i18n.getNestedTranslation("en", "farewell");
-   */
-  getNestedTranslation<T = string | Dictionary>(
-    scope: Scope,
-    locale?: string
-  ): T | undefined {
-    locale = defaultStr(locale, this.getLocale());
-    const scopeArray = (
-      isNonNullString(scope)
-        ? scope.trim().split('.')
-        : Array.isArray(scope)
-          ? scope
-          : []
-    ).filter(isNonNullString);
-    if (!scopeArray.length) return undefined;
-    let result: unknown = this.getTranslations(locale);
-    for (const k of scopeArray) {
-      if (isObj(result)) {
-        result = result[k];
-      } else {
-        return undefined;
-      }
-    }
-    return result as T;
-  }
-  /**
-   * Checks if the provided `TranslateOptions` object has a `count` property of type `number`.
-   * This is used to determine if the translation should be pluralized based on the provided count.
-   * @param options The `TranslateOptions` object to check.
-   * @returns `true` if the `options` object has a `count` property of type `number`, `false` otherwise.
-   */
-  isPluralizeOptions(options?: TranslateOptions): options is TranslateOptions {
-    return !!(isObj(options) && options && typeof options.count === 'number');
-  }
-  /**
-     * static function to attach translations to the I18n default instance.
-        @example : 
-        // --- Usage as a decorator ---
-        I18n.RegisterTranslations({
-            de: {
-                greeting: "Hallo, {name}!",
-                farewell: "Auf Wiedersehen!",
-            },
-        })
-    * @param translations The language translations.
-    */
-  static RegisterTranslations(translations: I18nTranslation): I18nTranslation {
-    return I18n.getInstance().registerTranslations(translations);
-  }
-
-  /**
-   * Factory method to create I18n instances dynamically.
-   * @param options Optional configuration options for the I18n instance.
+   * Factory method to create new I18n instances dynamically.
+   * @param translations Initial translations.
+   * @param options Configuration options.
    * @returns A new I18n instance.
    */
   static createInstance(
-    translations: I18nTranslation = {},
-    options: Partial<I18nOptions> & {
-      interpolate?: (i18n: I18nJs, str: string, params: Dictionary) => string;
-    } = {}
+    translations: I18nTranslations = {},
+    options: Partial<I18nOptions> = {}
   ): I18n {
-    const { interpolate: i18nInterpolate, ...restOptions } = Object.assign(
-      {},
-      options
-    );
-    const i18n = new I18n(translations, restOptions);
-    i18n.interpolate = (i18n: I18nJs, str: string, params: Dictionary) => {
-      const flattenParams = I18n.flattenObject(params);
-      const formattedValue = this.defaultInterpolator(i18n, str, flattenParams);
-      if (isNonNullString(formattedValue) && formattedValue !== str) {
-        str = formattedValue;
-      }
-      if (typeof i18nInterpolate == 'function') {
-        return i18nInterpolate(i18n, str, params);
-      }
-      return interpolate(str, params);
-    };
-    return i18n;
+    return new I18n(translations, options);
   }
 
   /**
-   * Gets the translations for the specified locale, or all translations if no locale is provided.
-   * @param locale The locale to get translations for. If not provided, returns all translations.
-   * @returns The translations for the specified locale, or all translations if no locale is provided.
-   * @example
-   * // Get all translations
-   * const translations = i18n.getTranslations();
-   * console.log(translations);
-   *
-   * // Get translations for the "en" locale
-   * const enTranslations = i18n.getTranslations("en");
-   * console.log(enTranslations);
+   * Flattens a nested object into a single-level object with dot-notation keys.
+   * @param obj Object to flatten.
    */
-  getTranslations(locale?: string) {
-    const r = isObj(this.translations) ? this.translations : {};
-    if (isNonNullString(locale)) {
-      return isObj(r[locale]) ? r[locale] : {};
-    }
-    return r;
+
+  static flattenObject(obj: any): Dictionary {
+    if (!isObj(obj)) return obj;
+    return flattenObject(obj);
   }
-  /***
-   * list of registered moment locales
-   */
-  private static momentLocales: Record<string, LocaleSpecification> = {};
-  private hasRegisteredDefaultTranslations: boolean = false;
-  /***
-   * register a moment locale
-   * @param {string} locale
-   * @param {LocaleSpecification} momentLocale
-   * @see https://momentjs.com/docs/#/customization/ for more information on customizing moment locales
-   * @see https://momentjs.com/docs/#/i18n/ for more information on moment locales
-   * @returns
-   */
+
+  static getLocaleFromSession(): string | undefined {
+    const locale = session.get('i18n.locale');
+    return isNonNullString(locale) ? locale : undefined;
+  }
+
   static registerMomentLocale(
     locale: string,
     momentLocale: LocaleSpecification
@@ -605,131 +150,177 @@ export class I18n extends I18nJs implements Observable<I18nEvent> {
     }
     return this.momentLocales;
   }
-  /***
-   * get a registered moment locale
-   * @param {string} locale
-   * @returns {LocaleSpecification}
-   */
-  static getMomentLocale(locale: string): LocaleSpecification {
-    return this.momentLocales[locale];
+
+  static getClassTanslationKeys<T extends ClassConstructor>(
+    target: T
+  ): Record<keyof T, string> {
+    return getDecoratedProperties(target, TRANSLATION_KEY);
   }
-  /***
-   * set a moment locale. the locale is picked from the momentLocales list
-   * @param {string} locale
-   * @param {Moment} momentInstance, The moment instance to set the locale on
-   * @returns {boolean}
+
+  /**
+   * Optional custom interpolator.
    */
-  static setMomentLocale(locale: string): boolean {
-    try {
-      moment.updateLocale(locale, this.getMomentLocale(locale));
-      return true;
-    } catch (error) {
-      console.error(error, ' setting moment locale : ', locale);
+  public interpolateFunc?: (
+    i18n: I18n,
+    str: string,
+    params: Dictionary
+  ) => string;
+
+  /**
+   * External missing placeholder handler.
+   */
+  public missingPlaceholder?: (
+    i18n: I18n,
+    placeholder: string,
+    message: string,
+    options?: Dictionary
+  ) => string;
+
+  /**
+   * Translates a single key or a list of keys with support for pluralization and interpolation.
+   *
+   * This is the core method for retrieving localized strings. It executes the following logic:
+   * 1. **Key Resolution**: Searches for the key in the current locale. If not found, checks for a fallback locale.
+   * 2. **Fallback**: If the key is missing, looks for `options.defaultValue` or follows the missing key strategy (returns key).
+   * 3. **Pluralization**: If `options.count` is provided, it attempts to find and return the pluralized form (zero, one, other).
+   * 4. **Interpolation**: Replaces placeholders (e.g. `%{name}`) with values from `options`.
+   *
+   * @template T - The expected return type (defaults to `string`).
+   * @param scope - The translation key (e.g. "auth.login") or an array of keys to try in order.
+   * @param options - Configuration options (interpolation params, `count` for pluralization, `locale`, etc).
+   * @returns The resolved translation string (or type `T`), interpolated and formatted.
+   *
+   * @example
+   * // Basic
+   * i18n.translate("welcome");
+   *
+   * @example
+   * // Interpolation & Pluralization
+   * i18n.translate("messages.inbox", { count: 3, user: "Alice" });
+   * // "Alice, you have 3 messages"
+   */
+  public translate<T = string>(
+    scope: I18nScope,
+    options?: I18nTranslateOptions
+  ): T {
+    options = options || {};
+    const locale = defaultStr(options?.locale, this.getLocale());
+
+    // 1. Resolve key
+    const keys: string[] = Array.isArray(scope) ? scope : [scope];
+    let resolvedValue: any = undefined;
+
+    // Simple lookup loop
+    for (const key of keys) {
+      if (!isNonNullString(key)) continue;
+      // Resolve value from storage
+      let res = this.lookup(key, locale);
+
+      // If not found, try fallback locale if different
+      if (res === undefined && locale !== this._fallbackLocale) {
+        res = this.lookup(key, this._fallbackLocale);
+      }
+
+      if (res !== undefined) {
+        resolvedValue = res;
+        break;
+      }
+    }
+
+    // 2. Handle missing translation
+    if (resolvedValue === undefined) {
+      if (options.defaultValue !== undefined) {
+        return options.defaultValue as unknown as T;
+      }
+      // Return key as fallback
+      // Check if user expected a string result?
+      // Usually we return the key.
+      return this.missingTranslation(scope, options) as unknown as T;
+    }
+
+    // 3. Handle Pluralization if needed
+    if (typeof options.count === 'number' && isObj(resolvedValue)) {
+      const count = options.count;
+      let pluralKey = 'other';
+      if (count === 0 && resolvedValue['zero'] !== undefined)
+        pluralKey = 'zero';
+      else if (count === 1 && resolvedValue['one'] !== undefined)
+        pluralKey = 'one';
+
+      if (resolvedValue[pluralKey] !== undefined) {
+        resolvedValue = resolvedValue[pluralKey];
+      } else if (resolvedValue['other']) {
+        resolvedValue = resolvedValue['other'];
+      }
+    }
+
+    // 4. Interpolation
+    if (typeof resolvedValue === 'string') {
+      // Format count if present
+      if (isNumber(options.count) && !options.countStr) {
+        options.countStr =
+          typeof options.count?.formatNumber == 'function'
+            ? options.count.formatNumber()
+            : options.count.toString();
+      }
+
+      resolvedValue = this.performInterpolation(resolvedValue, options);
+    }
+
+    return resolvedValue as T;
+  }
+
+  /**
+   * An alias for `translate`.
+   *
+   * A concise helper method for calling {@link translate}.
+   *
+   * @see {@link translate}
+   * @param scope - The translation key or keys.
+   * @param options - Translation options.
+   * @returns The translated result.
+   */
+  public t(scope: I18nScope, options?: I18nTranslateOptions) {
+    return this.translate(scope, options);
+  }
+
+  /**
+   * Checks if a translation exists.
+   */
+  public has(scope: I18nScope, locale?: string): boolean {
+    const l = locale || this.getLocale();
+    const keys: string[] = Array.isArray(scope) ? scope : [scope];
+    for (const key of keys) {
+      if (this.lookup(key, l) !== undefined) return true;
     }
     return false;
   }
-  /**
-   * Registers translations into the I18n manager.
-   * @param translations The translations to register.
-   * @returns The updated translations.
-   */
-  public registerTranslations(translations: I18nTranslation): I18nTranslation {
-    this.store(translations);
-    return this.getTranslations();
+
+  public getLocale(): string {
+    return this.locale;
   }
 
-  /**
-   * Stores the provided translations and triggers a "translations-changed" event with the current locale and translations.
-   * @param translations The translations to store.
-   */
-  store(translations: Dict): void {
-    super.store(translations);
-    this.trigger(
-      'translations-changed',
-      this.getLocale(),
-      this.getTranslations()
-    );
-  }
-  /**
-   * Automatically resolves translations using reflect Metadata.
-   * Translations created using the @Translate decorator will be resolved.
-   * @param target The target class instance or object.
-   * @example
-   * // Class with translations using the decorator
-   * class MyComponent {
-   *     @Translate("greeting")
-   *     public greeting: string;
-   *
-   *     @Translate("nested.example")
-   *     public nestedExample: string;
-   *
-   *     @Translate("farewell")
-   *     public sayGoodbye(): string {
-   *         return "";
-   *     }
-   * }
-   * // Resolve translations and print them
-   * const component = new MyComponent();
-   * I18n.getInstance().resolveTranslations(component);
-   */
-  public resolveTranslations<T extends object>(target: T): void {
-    try {
-      const keys = Object.getOwnPropertyNames(target);
-      for (const key of keys) {
-        const metadataKey = Reflect.getMetadata(TRANSLATION_KEY, target, key);
-        if (metadataKey) {
-          try {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            (target as any)[key] = this.translate(metadataKey);
-          } catch (error) {
-            Logger.error(
-              error,
-              ' resolving translation for key : ',
-              metadataKey
-            );
-          }
-        }
-      }
-    } catch (error) {
-      Logger.error(error, ' resolving translations for target : ', target);
+  public async setLocale(
+    locale: string,
+    forceUpdate: boolean = false
+  ): Promise<string> {
+    if (
+      this.locale === locale &&
+      forceUpdate !== true &&
+      this._namespacesLoaded[locale]
+    ) {
+      return this.locale;
     }
-  }
+    await this.loadNamespaces(locale);
+    this.locale = locale;
 
-  /***
-   * returns the missing placeholder string for the given placeholder and message.
-   * @param placeholder - The placeholder to be replaced.
-   * @param message - The message to be displayed.
-   * @param options - The options for the missing placeholder string.
-   * @returns The missing placeholder string.
-   */
-  getMissingPlaceholderString(
-    placeholder: string,
-    message?: string,
-    options?: I18nTranslation
-  ) {
-    if (typeof this.missingPlaceholder == 'function') {
-      return this.missingPlaceholder(
-        this,
-        placeholder,
-        defaultStr(message),
-        Object.assign({}, options)
-      );
+    if (this.isDefaultInstance()) {
+      I18n.setLocaleToSession(locale);
     }
-    return placeholder;
-  }
-  /**
-   * Gets the current locale for the i18n instance.
-   * @returns {string} The current locale.
-   */
-  getLocale() {
-    return super.locale;
+    this.setMomentLocale(locale);
+    return this.locale;
   }
 
-  /**
-   * Sets the list of supported locales for the i18n instance.
-   * @param locales - An array of locale strings to set as the supported locales.
-   * @returns The list of all locales supported by the i18n instance, including both the locales for which translations are available and the locales explicitly set as supported.
-   */
   public setLocales(locales: string[]) {
     this._locales = Array.isArray(locales) ? locales : ['en'];
     if (!this._locales.includes('en')) {
@@ -737,134 +328,56 @@ export class I18n extends I18nJs implements Observable<I18nEvent> {
     }
     return this.getLocales();
   }
-  /***
-   * returns true if the locale is supported by a i18n instance.
-   * @param locale - The locale to check.
-   * @returns true if the locale is supported, false otherwise.
-   */
+
+  public getLocales(): string[] {
+    const definedLocales = Object.keys(this._translations);
+    const supported = Array.isArray(this._locales) ? this._locales : ['en'];
+    const r = [
+      ...definedLocales,
+      ...supported.filter((l) => !definedLocales.includes(l)),
+    ];
+    // Unify
+    return Array.from(new Set(r));
+  }
+
   public hasLocale(locale: string) {
     return isNonNullString(locale) && this.getLocales().includes(locale);
   }
 
-  /**
-   * Gets the list of all locales supported by the i18n instance, including both the locales for which translations are available and the locales explicitly set as supported.
-   * @returns {string[]} The list of all supported locales.
-   */
-  getLocales(): string[] {
-    const translations = Object.keys(this.getTranslations());
-    const suportedLocales = Array.isArray(this._locales)
-      ? this._locales
-      : ['en'];
-    const r = [
-      ...translations,
-      ...suportedLocales.filter((locale) => !translations.includes(locale)),
-    ];
-    if (!r.includes('en')) {
-      r.push('en');
-    }
-    return r;
-  }
-  /***
-   * returns true if the locale is supported by the i18n instance.
-   * @param locale - The locale to check.
-   * @returns true if the locale is supported, false otherwise.
-   */
-  isLocaleSupported(locale: string): boolean {
-    if (!isNonNullString(locale)) return false;
-    return this.getLocales().includes(locale);
-  }
-  /***
-   * returns true if the instance is loading translations.
-   * @returns true if the instance is loading translations, false otherwise.
-   * @example
-   * // Check if the instance is loading translations.
-   * i18n.isLoading();
-   */
-  isLoading() {
-    return this._isLoading;
+  public isDefaultInstance() {
+    return this === I18n.instance;
   }
 
-  private _namespacesLoaded: Dictionary = {};
-  setLocale(locale: string, forceUpdate: boolean = false): Promise<string> {
-    if (
-      super.locale === locale &&
-      forceUpdate !== true &&
-      this._namespacesLoaded[locale]
-    ) {
-      return Promise.resolve(this.getLocale());
-    }
-    return new Promise((resolve, reject) => {
-      this._isLoading = true;
-      this.trigger('namespaces-before-load', locale);
-      return this.loadNamespaces(locale)
-        .then((translations) => {
-          if (this.isDefaultInstance()) {
-            I18n.instance = this;
-            if (this.isLocaleSupported(locale)) {
-              I18n.setLocaleToSession(locale);
-            }
-          }
-          super.locale = locale;
-          I18n.setMomentLocale(locale);
-          this.trigger('locale-changed', locale, translations);
-          resolve(locale);
-        })
-        .catch(reject)
-        .finally(() => {
-          this._isLoading = false;
-        });
-    });
+  public registerTranslations(
+    translations: I18nTranslations
+  ): I18nTranslations {
+    this._translations = extendObj({}, this._translations, translations);
+    return this._translations;
   }
-  /**
-   * Register a namespace resolver.
-   * @param namespace The namespace to register.
-   * @param resolver The resolver function to load the namespace.
-   * @example
-   * // Register a namespace resolver for the "common" namespace.
-   * i18n.registerNamespaceResolver("common", async (locale) => {
-   *   const response = await fetch(`/i18n/${locale}/common.json`);
-   *   return await response.json();
-   * });
-   */
-  registerNamespaceResolver(
+
+  public getTranslations(locale?: string): Dictionary {
+    if (isNonNullString(locale)) {
+      return this._translations[locale] || {};
+    }
+    return this._translations;
+  }
+
+  public registerNamespaceResolver(
     namespace: string,
-    resolver: (locale: string) => Promise<I18nTranslation>
+    resolver: (locale: string) => Promise<Dictionary>
   ): void {
     if (!isNonNullString(namespace) || typeof resolver !== 'function') {
-      console.warn(
-        'Invalid arguments for registerNamespaceResolver.',
-        namespace,
-        resolver
-      );
+      console.warn('Invalid arguments for registerNamespaceResolver.');
       return;
     }
     this.namespaceResolvers[namespace] = resolver;
   }
-  /**
-   * Static method to register a namespace resolver to the I18n default instance.
-   * @param namespace, The namespace to register.
-   * @param resolver, The resolver function to load the namespace.
-   * @returns
-   * @example
-   * // Register a namespace resolver for the "common" namespace.
-   * I18n.RegisterNamespaceResolver("common", async (locale) => {
-   *   const response = await fetch(`/i18n/${locale}/common.json`);
-   *   return await response.json();
-   * });
-   */
-  static RegisterNamespaceResolver(
-    namespace: string,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    resolver: (locale: string) => Promise<any>
-  ): void {
-    return I18n.getInstance().registerNamespaceResolver(namespace, resolver);
-  }
 
-  loadNamespace(
+  public loadNamespace(
     namespace: string,
     locale?: string,
     updateTranslations: boolean = true
-  ): Promise<I18nTranslation> {
+  ): Promise<Dictionary> {
     if (!isNonNullString(namespace) || !this.namespaceResolvers[namespace]) {
       return Promise.reject(
         new Error(`Invalid namespace or resolver for namespace "${namespace}".`)
@@ -876,204 +389,491 @@ export class I18n extends I18nJs implements Observable<I18nEvent> {
         new Error(`Locale is not set. Cannot load namespace "${namespace}".`)
       );
     }
+
     return this.namespaceResolvers[namespace](locale).then((translations) => {
-      const dict: I18nTranslation = {};
+      const dict: Dictionary = {};
       dict[locale as string] = Object.assign({}, translations);
+
       if (isObj(translations)) {
         if (updateTranslations !== false) {
-          this.store(dict);
+          this.registerTranslations(dict);
         }
-        this.trigger('namespace-loaded', namespace, locale, dict);
       }
       return dict;
     });
   }
 
-  static LoadNamespace(
-    namespace: string,
+  async loadNamespaces(
     locale?: string,
     updateTranslations: boolean = true
-  ): Promise<I18nTranslation> {
-    return I18n.getInstance().loadNamespace(
-      namespace,
-      locale,
-      updateTranslations
-    );
-  }
-
-  loadNamespaces(
-    locale?: string,
-    updateTranslations: boolean = true
-  ): Promise<I18nTranslation> {
-    const namespaces = [];
-    const translations: I18nTranslation = {};
+  ): Promise<I18nTranslations> {
     locale = defaultStr(locale, this.getLocale());
-    this._isLoading = true;
-    //const errors : any[] = [];
+
+    const processes = [];
+    const collected: Dictionary = {};
+
     for (const namespace in this.namespaceResolvers) {
       if (
-        Object.prototype.hasOwnProperty.call(
-          this.namespaceResolvers,
-          namespace
-        ) &&
-        typeof this.namespaceResolvers[namespace] === 'function'
+        Object.prototype.hasOwnProperty.call(this.namespaceResolvers, namespace)
       ) {
-        namespaces.push(
-          new Promise((resolve) => {
-            this.namespaceResolvers[namespace](locale as string)
-              .then((trs) => {
-                extendObj(translations, trs);
-              })
-              .finally(() => {
-                resolve(true);
-              });
+        processes.push(
+          this.namespaceResolvers[namespace](locale).then((trs) => {
+            extendObj(collected, trs);
           })
         );
       }
     }
-    return Promise.all(namespaces)
-      .then(() => {
-        const dict: I18nTranslation = {};
-        dict[locale as string] = translations;
-        if (updateTranslations !== false) {
-          this.store(dict);
-        }
-        setTimeout(() => {
-          this.trigger('namespaces-loaded', locale, dict);
-        }, 100);
-        return dict;
-      })
-      .finally(() => {
-        this._isLoading = false;
-      });
+    await Promise.all(processes);
+    const dict: I18nTranslations = {};
+    dict[locale!] = collected;
+
+    if (updateTranslations !== false) {
+      this.registerTranslations(dict);
+    }
+    this._namespacesLoaded[locale!] = true;
+
+    return dict;
   }
-  /***
-   * Load all registered namespaces for the current locale on the I18n default instance.
-   * @param locale optional locale to load the namespaces for
-   * @param updateTranslations optional boolean to update the translations
-   * @returns {Promise<I18nTranslation>} A promise that resolves to the combined translations for the current local
-   */
-  static LoadNamespaces(
-    locale?: string,
-    updateTranslations: boolean = true
-  ): Promise<I18nTranslation> {
-    return I18n.getInstance().loadNamespaces(locale, updateTranslations);
-  }
+
   /**
-   * Flattens a nested object into a single-level object with dot-notation keys.
+   * Retrieves a raw translation value or object from the registerTranslations for a specific scope and locale.
    *
-   * This utility method transforms complex nested objects into flat key-value pairs,
-   * where nested properties are represented using dot notation (e.g., `user.name`).
-   * This is particularly useful for interpolation processes that need to access
-   * nested values using simple string keys.
+   * This method provides direct access to the translation structure without performing
+   * interpolation, pluralization, or missing key fallbacks. It strictly traverses
+   * the object tree based on the provided dot-separated scope or array path.
    *
-   * @param obj - The object to flatten. Can be any type.
-   * @returns A flattened object where nested properties are accessible via dot-notation keys,
-   *          or the original input if it's not an object.
+   * It is particularly useful for:
+   * - Retrieving entire sections of translations (e.g., a dictionary of validation messages).
+   * - accessing lists/arrays defined in the localization files.
+   * - Checking if a specific key or branch exists in the registerTranslations.
+   *
+   * key resolution:
+   * - Dots in the scope string are ALWAYS treated as separators (traversal).
+   * - To match keys containing literal dots, use `lookup` internally or ensure your registerTranslations structure matches.
+   *
+   * @template T - The expected return type (defaults to `string | Dictionary`).
+   * @param scope - The path to the value. Can be a dot-separated string (e.g., "auth.login.title")
+   *                or an array of keys (e.g., ["auth", "login"]).
+   * @param locale - The locale to search in. Defaults to the current instance locale if omitted.
+   * @returns The value at the specified path cast to `T`, or `undefined` if resolution fails.
    *
    * @example
-   * ```typescript
-   * // Basic flattening
-   * const nested = {
-   *   user: {
-   *     name: 'John',
-   *     profile: {
-   *       age: 30,
-   *       city: 'New York'
-   *     }
-   *   },
-   *   settings: { theme: 'dark' }
+   * // Get a simple string
+   * const title = i18n.get("app.title");
+   *
+   * @example
+   * // Get a full dictionary object
+   * const validationMessages = i18n.get<Dictionary>("validation");
+   * // Result: { required: "Field is required", email: "Invalid email" }
+   *
+   * @example
+   * // Get from a specific locale (e.g. 'fr')
+   * const label = i18n.get("button.submit", "fr");
+   */
+  public get<T = string | Dictionary>(
+    scope: I18nScope,
+    locale?: string
+  ): T | undefined {
+    locale = defaultStr(locale, this.getLocale());
+    const parts = (
+      isNonNullString(scope)
+        ? scope.trim().split('.')
+        : Array.isArray(scope)
+          ? scope
+          : []
+    ).filter(isNonNullString);
+
+    if (!parts.length) return undefined;
+
+    let result: any = this.getTranslations(locale);
+    for (const k of parts) {
+      if (isObj(result)) {
+        result = result[k];
+      } else {
+        return undefined;
+      }
+    }
+    return result as T;
+  }
+
+  /**
+   * Resolves and translates properties decorated with `@Translate` on a specific class.
+   *
+   * This method uses reflection to find properties on the `target` that have been decorated
+   * with the `@Translate` decorator. It retrieves the translation keys stored in the metadata,
+   * translates them using the current locale and options, and returns a mapped object.
+   *
+   * **Note**: This does NOT modify the class itself. It returns a separate object containing
+   * the translated values for the decorated properties.
+   *
+   * Use Cases:
+   * - Fetching all localized labels for a specific component or form class.
+   * - aggregating static translation requirements for a module.
+   *
+   * @template T - The constructor type of the target class.
+   * @param target - The class constructor to inspect for `@Translate` decorators.
+   * @param options - Optional translation options (arguments, locale) to apply to all keys.
+   * @returns A dictionary mapping the property names to their translated string values.
+   *
+   * @example
+   * class AuthForm {
+   *   @Translate("auth.title")
+   *   static formTitle: string;
+   *
+   *   @Translate("auth.submit")
+   *   static submitBtn: string;
+   * }
+   *
+   * const texts = i18n.translateClass(AuthForm);
+   * // Returns: { formTitle: "Login", submitBtn: "Sign In" }
+   */
+  public translateClass<T extends ClassConstructor>(
+    target: T,
+    options?: I18nTranslateOptions
+  ): Record<keyof T, string> {
+    const translationKeys = I18n.getClassTanslationKeys(target);
+
+    for (const i in translationKeys) {
+      if (isNonNullString(translationKeys[i])) {
+        (translationKeys as any)[i] = this.translate(
+          translationKeys[i],
+          options
+        );
+      }
+    }
+    return translationKeys;
+  }
+
+  /**
+   * Translates the string values of a given object, treating them as translation keys.
+   *
+   * This method iterates over the provided object's properties. If a property value is a string,
+   * it treats that string as a translation scope (key) and attempts to translate it using the
+   * current or specified locale.
+   *
+   * Key Behaviors:
+   * - **Shallow Processing**: It processes only the top-level properties of the object. It does not recurse into nested objects.
+   * - **Immutability**: It returns a new object with the translated values, ensuring the original object remains unmodified.
+   * - **Type Safety**: It is typed to accept objects where values are strings (translation keys).
+   * - **Filtering**: Only non-null string values are processed and included in the result. Non-string values are omitted.
+   *
+   * Use cases:
+   * - specific dictionaries of labels (e.g. for dropdown options or map keys).
+   * - Batch translating a set of related keys.
+   *
+   * @template T - The type of the object (must extend Record<string, string>).
+   * @param object - The object containing translation keys as values.
+   * @param options - Optional translations options (e.g., interpolation parameters) that will be applied to EVERY translation in the object.
+   * @returns A new object with the same keys but translated values.
+   *
+   * @example
+   * const keys = {
+   *   welcome: "app.welcome",
+   *   goodbye: "app.goodbye"
    * };
    *
-   * const flattened = I18n.flattenObject(nested);
-   * // Result: {
-   * //   'user.name': 'John',
-   * //   'user.profile.age': 30,
-   * //   'user.profile.city': 'New York',
-   * //   'settings.theme': 'dark'
-   * // }
-   * ```
+   * const texts = i18n.translateObject(keys);
+   * // Returns: { welcome: "Welcome!", goodbye: "Goodbye!" }
    *
    * @example
-   * ```typescript
-   * // Non-object inputs are returned as-is
-   * I18n.flattenObject("string"); // Returns: "string"
-   * I18n.flattenObject(42); // Returns: 42
-   * I18n.flattenObject(null); // Returns: null
-   * ```
-   *
-   * @example
-   * ```typescript
-   * // Usage in interpolation
-   * const params = { user: { firstName: 'John', lastName: 'Doe' } };
-   * const flattened = I18n.flattenObject(params);
-   * // Now flattened can be used for interpolation like:
-   * // "Hello %{user.firstName} %{user.lastName}" -> "Hello John Doe"
-   * ```
-   *
-   * @note This method relies on `Object.flatten()` which should be available
-   *       in the environment. If the input is not an object, it is returned unchanged.
-   * @note Circular references in objects may cause issues during flattening.
-   * @note Arrays are treated as objects and their indices become keys in the flattened result.
-   *
-   * @see {@link defaultInterpolator} for how this method is used in string interpolation.
+   * // Using interpolation parameters for all keys
+   * const keys = { msg: "alerts.user_msg" }; // "alerts.user_msg" -> "User: %{user}"
+   * const result = i18n.translateObject(keys, { user: "Bob" });
+   * // Returns: { msg: "User: Bob" }
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  static flattenObject(obj: any): TranslateOptions {
-    if (!isObj(obj)) return obj;
-    return Object.flatten(obj);
+  public translateObject<T extends Record<string, string>>(
+    object: T,
+    options?: I18nTranslateOptions
+  ): T {
+    if (!isObj(object)) return {} as T;
+    const translatedKeys: T = {} as T;
+    for (const key in object) {
+      const i18nKey = object[key];
+      if (isNonNullString(i18nKey)) {
+        (translatedKeys as any)[key] = this.translate(i18nKey, options);
+      }
+    }
+    return translatedKeys;
   }
 
   /**
-   * Provides a default interpolation function for the I18n instance.
+   * Applies translations to the decorated properties of a target object instance.
    *
-   * If the input `value` is `undefined` or `null`, an empty string is returned.
-   * If the input `value` is not a number, boolean, or string, it is converted to a string using `stringify`.
-   * If the input `params` is not an object, the `value` is returned as-is.
-   * If the input `params` is an object, the `value` is replaced with any matching placeholders in the format `%{key}` using the corresponding values from the `params` object.
+   * This method performs a lookup for properties on the `target` object that have been
+   * decorated with `@Translate`. For each such property, it resolves the translation
+   * using the stored key and overwrites the property's value on the instance.
    *
-   * @param i18n The I18n instance.
-   * @param value The input value to be interpolated.
-   * @param params Optional object containing replacement values for placeholders in the `value`.
-   * @returns The interpolated string.
+   * **Side Effect Warning**: This method **mutates** the `target` object in place.
+   *
+   * Use Cases:
+   * - Hydrating a component instance with localized strings after initialization or locale change.
+   * - Converting a DTO with annotated fields into a display-ready object.
+   *
+   * @template T - The type of the target object.
+   * @param target - The object instance to apply translations to.
+   *
+   * @example
+   * class Page {
+   *   @Translate("page.title")
+   *   title: string = "";
+   * }
+   *
+   * const page = new Page();
+   * i18n.applyTranslations(page);
+   * console.log(page.title); // "My Page Title"
    */
-  private static defaultInterpolator(
-    i18n: I18nJs,
-    value: string,
-    params?: Dictionary
-  ) {
-    if (isNullable(value)) return '';
-    if (!isPrimitive(value)) {
-      return stringify(value, { escapeString: false });
+  public applyTranslations<T extends object>(target: T): void {
+    try {
+      const keys = Object.getOwnPropertyNames(target);
+      for (const key of keys) {
+        const metadataKey = Reflect.getMetadata(TRANSLATION_KEY, target, key);
+        if (metadataKey) {
+          try {
+            (target as any)[key] = this.translate(metadataKey);
+          } catch (error) {
+            Logger.error(
+              error,
+              ' resolving translation for key : ',
+              metadataKey,
+              ' on object : ',
+              target
+            );
+          }
+        }
+      }
+    } catch (error) {
+      Logger.error(error, ' resolving translations for object : ', target);
     }
-    value = String(value);
-    if (!isObj(params)) return value;
-    if (!params) return value;
-    if (!isObj(params) || !params) return value;
-    return value.replace(/%{(.*?)}/g, (_, key) => {
-      return isNullable(params[key])
-        ? ''
-        : isPrimitive(params[key])
-          ? String(params[key])
-          : stringify(params[key], { escapeString: false });
+  }
+
+  // -------------------------------------------------------------------------
+  // Instance Properties
+  // -------------------------------------------------------------------------
+
+  /**
+   * The current locale.
+   */
+  private locale: string = 'en';
+
+  /**
+   * Supported locales.
+   */
+  private _locales: string[] = ['en'];
+
+  /**
+   * Fallback locale.
+   */
+  private _fallbackLocale: string = 'en';
+
+  /**
+   * Dictionary of translations: { locale: { key: "value", ... } }
+   */
+  private _translations: I18nTranslations = {};
+
+  /**
+   * Namespace resolvers.
+   */
+  private namespaceResolvers: Record<
+    string,
+    (locale: string) => Promise<Dictionary>
+  > = {};
+
+  private _namespacesLoaded: Dictionary = {};
+  private _hasDefaultTranslations: boolean = false;
+
+  /**
+   * Singleton instance of the I18n class.
+   */
+  private static instance: I18n;
+
+  /**
+   * Fallback method when translation is missing.
+   */
+
+  private missingTranslation(
+    scope: I18nScope,
+
+    options?: I18nTranslateOptions
+  ): string {
+    const scopeString = Array.isArray(scope)
+      ? scope.filter(isNonNullString).join('.')
+      : defaultStr(scope);
+    if (typeof this.missingPlaceholder == 'function') {
+      return this.missingPlaceholder(
+        this,
+        scopeString,
+        defaultStr(options?.defaultValue),
+        options
+      );
+    }
+    return scopeString;
+  }
+
+  // Moment locales
+  private static momentLocales: Record<string, LocaleSpecification> = {};
+
+  /**
+   * Lookup a key in the translations for a locale.
+   * Supports dot notation 'a.b.c'.
+   */
+  private lookup(key: string, locale: string): any {
+    const localeTable = this._translations[locale];
+    if (!localeTable) return undefined;
+
+    // Direct access first
+    if (Object.prototype.hasOwnProperty.call(localeTable, key)) {
+      return localeTable[key];
+    }
+
+    // Deep access
+    const parts = key.split('.');
+
+    let current: any = localeTable;
+    for (const part of parts) {
+      if (
+        isObj(current) &&
+        Object.prototype.hasOwnProperty.call(current, part)
+      ) {
+        current = current[part];
+      } else {
+        return undefined;
+      }
+    }
+    return current;
+  }
+  /**
+   * Performs the interpolation on a string.
+   */
+  private performInterpolation(str: string, params: Dictionary): string {
+    // Flatten params for nested access (user.name)
+    const flatParams = flattenObject(params);
+
+    // Use custom interpolator if defined
+    if (this.interpolateFunc) {
+      return this.interpolateFunc(this, str, params);
+    }
+
+    // Internal default interpolation (%{key}) via utility
+    return this.defaultInterpolator(str, flatParams);
+  }
+
+  private defaultInterpolator(str: string, params: Dictionary): string {
+    return interpolate(str, params, {
+      tagRegex: /%\{([^}]+)\}/g,
     });
+  }
+  // Locale utils
+  private static setLocaleToSession(locale: string) {
+    session.set('i18n.locale', locale);
+  }
+
+  private getMomentLocale(locale: string): LocaleSpecification {
+    return I18n.momentLocales[locale];
+  }
+
+  private setMomentLocale(locale: string): boolean {
+    try {
+      moment.updateLocale(locale, this.getMomentLocale(locale));
+      return true;
+    } catch (error) {
+      console.error(error, ' setting moment locale : ', locale);
+    }
+    return false;
   }
 }
 
+// Export singleton
 const i18n = I18n.getInstance();
+export { i18n };
 
-// Ensure the default exported instance passes `instanceof I18n` checks.
-// When code is built and consumed across module boundaries, constructor
-// identity can be inconsistent — to make the exported `i18n` recognized by
-// `instanceof I18n` reliably in the same runtime, set its prototype to
-// the class prototype. This preserves the current exported logic.
-try {
-  Object.setPrototypeOf(i18n, I18n.prototype);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-} catch (e) {
-  // Setting the prototype may fail on frozen objects in some environments.
-  // If it does, fallback to relying on Symbol.hasInstance which is already
-  // implemented on the class for cross-realm compatibility.
+/**
+ * A key to registerTranslations metadata for translations.
+ */
+const TRANSLATION_KEY = Symbol('TRANSLATION_KEY');
+
+/**
+ * A decorator to attach metadata to properties or methods for translation.
+ * @param key The translation key in the translations.
+ * @returns A property and method decorator.
+ * @example
+ * ```ts
+ *   // Class with translations using the decorator
+ *     class MyComponent {
+ *         @Translate("greeting")
+ *         public greeting: string;
+ *
+ *         @Translate("nested.example")
+ *         public nestedExample: string;
+ *
+ *         @Translate("farewell")
+ *         public sayGoodbye(): string {
+ *             return "";
+ *         }
+ *     }
+ * ```
+ */
+export function Translate(key: string): PropertyDecorator & MethodDecorator {
+  return buildPropertyDecorator<string>(TRANSLATION_KEY, key);
 }
 
-export { i18n };
+/**
+ * @interface I18nOptions
+ * Options for configuring internationalization (i18n) settings.
+ *
+ * This interface defines the options that can be used to customize
+ * the behavior of the i18n system, including the locale, fallback
+ * locale, and a custom formatter for string values.
+ *
+ * @property {string} locale - The primary locale to use for translations.
+ * @property {string} [fallbackLocale] - An optional fallback locale to use if the primary locale is not available.
+ * @property {I18nFormatter} [formatter] - An optional custom formatter function for formatting strings.
+ *
+ * @example
+ * const i18nOptions: I18nOptions = {
+ *     locale: "en",
+ *     fallbackLocale: "es",
+ *     formatter: (value, params) => value.replace(/{(\w+)}/g, (_, key) => params[key] || '')
+ * };
+ */
+export interface I18nOptions {
+  /**
+   * The primary locale to use for translations.
+   *
+   * @type {string}
+   * @example
+   * const currentLocale = i18nOptions.locale; // "en"
+   */
+  locale: string;
+
+  /**
+   * An optional fallback locale to use if the primary locale is not available.
+   *
+   * @type {string}
+   * @example
+   * const fallback = i18nOptions.fallbackLocale; // "es"
+   */
+  fallbackLocale?: string;
+
+  /**
+     * An optional custom formatter function for formatting strings.
+     * 
+     * @type {I18nFormatter}
+     * @example
+     * const formattedString = i18nOptions.formatter("Hello, {name}!", { name: "Alice" });
+     * // Outputs: "Hello, Alice!"
+    ```typescript
+     * 
+     * @example
+     * const i18nOptions: I18nOptions = {
+     *     locale: "en",
+     *     fallbackLocale: "es",
+     *     formatter: (value, params) => value.replace(/{(\w+)}/g, (_, key) => params[key] || '')
+     * };
+     */
+  formatter?: I18nFormatter;
+
+  /**
+   * Optional custom interpolation.
+   */
+  interpolate?: (i18n: I18n, str: string, params: Dictionary) => string;
+}

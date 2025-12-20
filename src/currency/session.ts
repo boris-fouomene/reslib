@@ -195,7 +195,7 @@ const getCurrency: () => Currency = (): Currency => {
     decimalSeparator: defaultCurrency.decimalSeparator ?? '.', // default decimal separator
     thousandSeparator: defaultCurrency.thousandSeparator ?? ',', // default thousands separator
     decimalDigits: defaultCurrency.decimalDigits ?? 0, // default decimal digits
-    ...Object.assign({}, i18n.getNestedTranslation('currencies') as Currency),
+    ...Object.assign({}, i18n.get('currencies') as Currency),
     ...currency,
   } as Currency;
 };
