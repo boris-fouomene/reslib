@@ -174,7 +174,7 @@ export class I18n {
    */
   static getClassTanslationKeys<T extends ClassConstructor>(
     target: T
-  ): Record<keyof T, string> {
+  ): Record<keyof InstanceType<T>, string> {
     return getDecoratedProperties(target, TRANSLATION_KEY);
   }
 
@@ -657,7 +657,7 @@ export class I18n {
   public translateClass<T extends ClassConstructor>(
     target: T,
     options?: I18nTranslateOptions
-  ): Record<keyof T, string> {
+  ): Record<keyof InstanceType<T>, string> {
     const translationKeys = I18n.getClassTanslationKeys(target);
 
     for (const i in translationKeys) {

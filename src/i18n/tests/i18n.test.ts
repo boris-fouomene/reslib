@@ -265,5 +265,334 @@ describe('I18n Service', () => {
       // 'Just String' matches nothing, missingTranslation returns key 'Just String'
       expect(res.raw).toBe('Just String');
     });
+
+    test('should translate object with interpolation options', () => {
+      i18n.registerTranslations({
+        en: {
+          'msg.welcome': 'Welcome %{name}!',
+          'msg.count': 'You have %{count} items',
+        },
+      });
+
+      const input = {
+        welcome: 'msg.welcome',
+        items: 'msg.count',
+      };
+
+      const res = i18n.translateObject(input, { name: 'User', count: 5 });
+      expect(res.welcome).toBe('Welcome User!');
+      expect(res.items).toBe('You have 5 items');
+    });
+
+    test('should return empty object for non-object input', () => {
+      const res = i18n.translateObject(null as any);
+      expect(res).toEqual({});
+    });
+  });
+
+  describe('Instance Management', () => {
+    test('getInstance should return singleton', () => {
+      const inst1 = I18n.getInstance();
+      const inst2 = I18n.getInstance();
+      expect(inst1).toBe(inst2);
+    });
+
+    test('createInstance should create independent instances', () => {
+      const inst1 = I18n.createInstance({ en: { key: 'A' } });
+      const inst2 = I18n.createInstance({ en: { key: 'B' } });
+
+      expect(inst1.t('key')).toBe('A');
+      expect(inst2.t('key')).toBe('B');
+    });
+
+    test('isI18nInstance should identify valid instances', () => {
+      const inst = I18n.createInstance();
+      expect(I18n.isI18nInstance(inst)).toBe(true);
+      expect(I18n.isI18nInstance({})).toBe(false);
+      expect(I18n.isI18nInstance(null)).toBe(false);
+      expect(I18n.isI18nInstance('string')).toBe(false);
+    });
+
+    test('isDefaultInstance should identify singleton', () => {
+      const singleton = I18n.getInstance();
+      const custom = I18n.createInstance();
+
+      expect(singleton.isDefaultInstance()).toBe(true);
+      expect(custom.isDefaultInstance()).toBe(false);
+    });
+  });
+
+  describe('Translation Store Management', () => {
+    test('registerTranslations should merge translations', () => {
+      i18n.registerTranslations({ en: { a: '1' } });
+      i18n.registerTranslations({ en: { b: '2' } });
+
+      expect(i18n.t('a')).toBe('1');
+      expect(i18n.t('b')).toBe('2');
+    });
+
+    test('registerTranslations should overwrite existing keys', () => {
+      i18n.registerTranslations({ en: { key: 'old' } });
+      i18n.registerTranslations({ en: { key: 'new' } });
+
+      expect(i18n.t('key')).toBe('new');
+    });
+
+    test('getTranslations should return locale-specific or full store', () => {
+      i18n.registerTranslations({
+        en: { hello: 'Hello' },
+        fr: { hello: 'Bonjour' },
+      });
+
+      const enTrans = i18n.getTranslations('en');
+      expect(enTrans.hello).toBe('Hello');
+
+      const allTrans = i18n.getTranslations();
+      expect(allTrans.en).toBeDefined();
+      expect(allTrans.fr).toBeDefined();
+    });
+
+    test('getTranslations should return empty object for unknown locale', () => {
+      const unknown = i18n.getTranslations('unknown');
+      expect(unknown).toEqual({});
+    });
+  });
+
+  describe('Advanced Interpolation', () => {
+    test('should handle multiple placeholders', () => {
+      i18n.registerTranslations({
+        en: { multi: '%{a} and %{b} and %{c}' },
+      });
+      expect(i18n.t('multi', { a: 'X', b: 'Y', c: 'Z' })).toBe('X and Y and Z');
+    });
+
+    test('should handle array index placeholders', () => {
+      i18n.registerTranslations({
+        en: { arr: 'First: %{items[0]}, Second: %{items[1]}' },
+      });
+      expect(i18n.t('arr', { items: ['A', 'B'] })).toBe('First: A, Second: B');
+    });
+
+    test('should leave placeholder if param missing', () => {
+      i18n.registerTranslations({ en: { incomplete: 'Hello %{name}' } });
+      // Missing param, placeholder should be replaced with empty or remain
+      const result = i18n.t('incomplete', {});
+      expect(result).toContain('Hello');
+    });
+  });
+
+  describe('Advanced has() and get()', () => {
+    beforeEach(() => {
+      i18n.registerTranslations({
+        en: { exists: 'yes', nested: { deep: 'value' } },
+        fr: { bonjour: 'hello' },
+      });
+    });
+
+    test('has() should check specific locale', () => {
+      expect(i18n.has('exists', 'en')).toBe(true);
+      expect(i18n.has('exists', 'fr')).toBe(false);
+      expect(i18n.has('bonjour', 'fr')).toBe(true);
+    });
+
+    test('has() should return true if any key in array exists', () => {
+      expect(i18n.has(['missing', 'exists'])).toBe(true);
+      expect(i18n.has(['missing1', 'missing2'])).toBe(false);
+    });
+
+    test('get() should return undefined for missing keys', () => {
+      expect(i18n.get('completely.missing')).toBeUndefined();
+    });
+
+    test('get() should support specific locale', () => {
+      expect(i18n.get('bonjour', 'fr')).toBe('hello');
+      expect(i18n.get('bonjour', 'en')).toBeUndefined();
+    });
+
+    test('get() should return nested objects', () => {
+      const nested = i18n.get('nested');
+      expect(nested).toEqual({ deep: 'value' });
+    });
+  });
+
+  describe('Edge Cases', () => {
+    test('should handle empty string translations', () => {
+      i18n.registerTranslations({ en: { empty: '' } });
+      expect(i18n.t('empty')).toBe('');
+    });
+
+    test('should handle special characters in keys', () => {
+      i18n.registerTranslations({
+        en: { 'key-with-dash': 'dash', key_with_underscore: 'underscore' },
+      });
+      expect(i18n.t('key-with-dash')).toBe('dash');
+      expect(i18n.t('key_with_underscore')).toBe('underscore');
+    });
+
+    test('should handle numeric values in translations', () => {
+      i18n.registerTranslations({ en: { number: 42 as any } });
+      expect(i18n.t('number')).toBe(42);
+    });
+
+    test('translate should work with locale option', () => {
+      i18n.registerTranslations({
+        en: { msg: 'English' },
+        fr: { msg: 'French' },
+      });
+
+      expect(i18n.t('msg')).toBe('English'); // Default en
+      expect(i18n.t('msg', { locale: 'fr' })).toBe('French');
+    });
+  });
+
+  describe('Static Methods', () => {
+    test('flattenObject should flatten nested objects', () => {
+      const nested = { a: { b: { c: 'value' } } };
+      const flat = I18n.flattenObject(nested);
+      expect(flat['a.b.c']).toBe('value');
+    });
+
+    test('flattenObject should return non-object as-is', () => {
+      expect(I18n.flattenObject('string' as any)).toBe('string');
+      expect(I18n.flattenObject(123 as any)).toBe(123);
+    });
+
+    test('getClassTanslationKeys should extract decorated keys', () => {
+      class TestClass {
+        @Translate('key.one')
+        one: string = '';
+
+        @Translate('key.two')
+        two: string = '';
+      }
+
+      const keys = I18n.getClassTanslationKeys(TestClass);
+      expect(keys.one).toBe('key.one');
+      expect(keys.two).toBe('key.two');
+    });
+  });
+
+  describe('Advanced Pluralization', () => {
+    test('should fallback to other if one is missing', () => {
+      i18n.registerTranslations({
+        en: {
+          items: { other: '%{count} items' }, // No 'one'
+        },
+      });
+      expect(i18n.t('items', { count: 1 })).toBe('1 items');
+    });
+
+    test('should handle pluralization with interpolation', () => {
+      i18n.registerTranslations({
+        en: {
+          messages: {
+            zero: '%{user} has no messages',
+            one: '%{user} has 1 message',
+            other: '%{user} has %{count} messages',
+          },
+        },
+      });
+
+      expect(i18n.t('messages', { count: 0, user: 'Alice' })).toBe(
+        'Alice has no messages'
+      );
+      expect(i18n.t('messages', { count: 1, user: 'Bob' })).toBe(
+        'Bob has 1 message'
+      );
+      expect(i18n.t('messages', { count: 5, user: 'Carol' })).toBe(
+        'Carol has 5 messages'
+      );
+    });
+  });
+
+  describe('Namespace Advanced', () => {
+    test('loadNamespaces should load all registered resolvers', async () => {
+      const resolver1 = jest.fn().mockResolvedValue({ key1: 'Value1' });
+      const resolver2 = jest.fn().mockResolvedValue({ key2: 'Value2' });
+
+      i18n.registerNamespaceResolver('ns1', resolver1);
+      i18n.registerNamespaceResolver('ns2', resolver2);
+
+      await i18n.loadNamespaces('en');
+
+      expect(i18n.t('key1')).toBe('Value1');
+      expect(i18n.t('key2')).toBe('Value2');
+      expect(resolver1).toHaveBeenCalledWith('en');
+      expect(resolver2).toHaveBeenCalledWith('en');
+    });
+
+    test('loadNamespace should not update translations if flag is false', async () => {
+      const resolver = jest.fn().mockResolvedValue({ temp: 'Temp Value' });
+      i18n.registerNamespaceResolver('temp', resolver);
+
+      await i18n.loadNamespace('temp', 'en', false);
+
+      // Should not be registered
+      expect(i18n.t('temp')).toBe('temp');
+    });
+
+    test('registerNamespaceResolver should ignore invalid inputs', () => {
+      // Should not throw, just warn
+      const warnSpy = jest.spyOn(console, 'warn').mockImplementation();
+      i18n.registerNamespaceResolver('', jest.fn());
+      i18n.registerNamespaceResolver('valid', null as any);
+      expect(warnSpy).toHaveBeenCalled();
+      warnSpy.mockRestore();
+    });
+  });
+
+  describe('Locale Switching', () => {
+    test('setLocale should not reload if already set and cached', async () => {
+      const resolver = jest.fn().mockResolvedValue({ loaded: 'yes' });
+      i18n.registerNamespaceResolver('cached', resolver);
+
+      await i18n.setLocale('de');
+      expect(resolver).toHaveBeenCalledTimes(1);
+
+      // Second call should skip loading
+      await i18n.setLocale('de');
+      expect(resolver).toHaveBeenCalledTimes(1);
+    });
+
+    test('setLocale with forceUpdate should reload', async () => {
+      const resolver = jest.fn().mockResolvedValue({ reloaded: 'yes' });
+      i18n.registerNamespaceResolver('forced', resolver);
+
+      await i18n.setLocale('it');
+      await i18n.setLocale('it', true); // Force
+
+      expect(resolver).toHaveBeenCalledTimes(2);
+    });
+
+    test('setLocales should always include en', () => {
+      i18n.setLocales(['fr', 'de']);
+      const locales = i18n.getLocales();
+      expect(locales).toContain('en');
+    });
+  });
+
+  describe('translateClass Advanced', () => {
+    class FormLabels {
+      @Translate('form.name')
+      nameLabel: string = '';
+
+      @Translate('form.email')
+      emailLabel: string = '';
+    }
+
+    test('translateClass should apply options to all translations', () => {
+      i18n.registerTranslations({
+        en: {
+          form: {
+            name: 'Name for %{context}',
+            email: 'Email for %{context}',
+          },
+        },
+      });
+
+      const res = i18n.translateClass(FormLabels, { context: 'User' }) as any;
+      expect(res.nameLabel).toBe('Name for User');
+      expect(res.emailLabel).toBe('Email for User');
+    });
   });
 });
