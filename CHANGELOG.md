@@ -1,5 +1,24 @@
 ## 1.0.3 (2025-12-09)
 
+## 2.1.0
+
+### Minor Changes
+
+- Refactor I18n Module:
+  - **Architecture**: Removed external dependency on `i18n-js`. The module is now fully standalone, lightweight, and optimized for TypeScript.
+  - **Behavioral Changes**:
+    - **Fallback Keys Standardized**: When passing an array of keys (`t(['primary', 'secondary'])`), the system now strictly respects priority.
+    - **Missing Key Output**: If all keys in a fallback array are missing, the method now returns the **first key** (`'primary'`) instead of a joined string. This ensures consistent and predictable return values.
+  - **Documentation**:
+    - Completely rewrote `README.md` to be a comprehensive reference manual.
+    - Added deep-dive sections for **Interpolation** (nested objects), **Lazy Loading** (Namespaces), and **Class Decorators**.
+    - Clarified the interaction between `setLocale` and lazy-loaded namespaces (automatic reloading).
+  - **Testing**:
+    - Implemented a rigorous test suite with over 50 new test cases.
+    - Added coverage for edge cases: deeply nested fallbacks, cross-locale fallback chains (`fr` -> `en`), and complex interpolation scenarios.
+  - **Type Safety**:
+    - Enhanced `I18nScope` and `I18nTranslations` types for better IDE support and type inference.
+
 ## 2.0.3
 
 ### Patch Changes
