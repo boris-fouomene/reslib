@@ -348,6 +348,21 @@ export class I18n {
     return this === I18n.instance;
   }
 
+  /**
+   * Registers and merges new translations into the global store.
+   *
+   * This method merges the provided translation object with the existing translations.
+   * New keys are added, and existing keys are updated (overwritten).
+   *
+   * @param translations - The translations to register, grouped by locale.
+   * @returns The updated translation store.
+   *
+   * @example
+   * i18n.registerTranslations({
+   *   en: { title: "Welcome" },
+   *   fr: { title: "Bienvenue" }
+   * });
+   */
   public registerTranslations(
     translations: I18nTranslations
   ): I18nTranslations {
@@ -355,6 +370,12 @@ export class I18n {
     return this._translations;
   }
 
+  /**
+   * Retrieves specific translations or the entire store.
+   *
+   * @param locale - The locale to retrieve translations for. If omitted, returns the entire store.
+   * @returns A dictionary of translations (for a locale) or the full store (if no locale provided).
+   */
   public getTranslations(locale?: string): Dictionary {
     if (isNonNullString(locale)) {
       return this._translations[locale] || {};
@@ -436,7 +457,7 @@ export class I18n {
   }
 
   /**
-   * Retrieves a raw translation value or object from the registerTranslations for a specific scope and locale.
+   * Retrieves a raw translation value or object from the store for a specific scope and locale.
    *
    * This method provides direct access to the translation structure without performing
    * interpolation, pluralization, or missing key fallbacks. It strictly traverses
@@ -444,12 +465,12 @@ export class I18n {
    *
    * It is particularly useful for:
    * - Retrieving entire sections of translations (e.g., a dictionary of validation messages).
-   * - accessing lists/arrays defined in the localization files.
-   * - Checking if a specific key or branch exists in the registerTranslations.
+   * - Accessing lists/arrays defined in the localization files.
+   * - Checking if a specific key or branch exists in the store.
    *
-   * key resolution:
+   * Key Resolution:
    * - Dots in the scope string are ALWAYS treated as separators (traversal).
-   * - To match keys containing literal dots, use `lookup` internally or ensure your registerTranslations structure matches.
+   * - To match keys containing literal dots, use `lookup` internally or ensure your store structure matches.
    *
    * @template T - The expected return type (defaults to `string | Dictionary`).
    * @param scope - The path to the value. Can be a dot-separated string (e.g., "auth.login.title")
