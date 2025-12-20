@@ -128,11 +128,25 @@ export class I18n {
     return flattenObject(obj);
   }
 
+  /**
+   * Retrieves the user's locale from the active session.
+   * @returns The locale string if found, otherwise `undefined`.
+   */
   static getLocaleFromSession(): string | undefined {
     const locale = session.get('i18n.locale');
     return isNonNullString(locale) ? locale : undefined;
   }
 
+  /**
+   * Registers a custom Moment.js locale specification.
+   *
+   * This allows defining locale-specific date/time formatting rules (months, weekdays, etc.)
+   * that will be applied when the locale is active.
+   *
+   * @param locale - The locale code (e.g., "fr").
+   * @param momentLocale - The Moment.js locale specification object.
+   * @returns The updated dictionary of registered moment locales.
+   */
   static registerMomentLocale(
     locale: string,
     momentLocale: LocaleSpecification
@@ -151,6 +165,13 @@ export class I18n {
     return this.momentLocales;
   }
 
+  /**
+   * Retrieves translation keys defined via `@Translate` decorators on a class.
+   *
+   * @template T - The class constructor type.
+   * @param target - The class to inspect.
+   * @returns A record of property names to translation keys.
+   */
   static getClassTanslationKeys<T extends ClassConstructor>(
     target: T
   ): Record<keyof T, string> {
@@ -158,7 +179,15 @@ export class I18n {
   }
 
   /**
-   * Optional custom interpolator.
+   * Optional custom interpolation function.
+   *
+   * If provided, this function handles the replacement of placeholders in the translation string.
+   * It overrides the default `%{key}` interpolation.
+   *
+   * @param i18n - The I18n instance.
+   * @param str - The string to interpolate.
+   * @param params - The interpolation parameters.
+   * @returns The interpolated string.
    */
   public interpolateFunc?: (
     i18n: I18n,
@@ -167,7 +196,15 @@ export class I18n {
   ) => string;
 
   /**
-   * External missing placeholder handler.
+   * Callback for handling missing placeholders/keys.
+   *
+   * If defined, this function is called when a translation key (or placeholder) is not found.
+   * It provides a hook to log warnings, report errors, or provide custom fallback text.
+   *
+   * @param i18n - The I18n instance.
+   * @param placeholder - The missing key or placeholder.
+   * @param message - The default message/fallback.
+   * @param options - Context options.
    */
   public missingPlaceholder?: (
     i18n: I18n,
@@ -285,7 +322,11 @@ export class I18n {
   }
 
   /**
-   * Checks if a translation exists.
+   * Checks if a translation key exists in the store.
+   *
+   * @param scope - The key or array of keys to check.
+   * @param locale - Optional locale to check in (defaults to current).
+   * @returns `true` if the translation exists, `false` otherwise.
    */
   public has(scope: I18nScope, locale?: string): boolean {
     const l = locale || this.getLocale();
@@ -296,10 +337,27 @@ export class I18n {
     return false;
   }
 
+  /**
+   * Gets the currently active locale.
+   * @returns The language code of the current locale (e.g. "en").
+   */
   public getLocale(): string {
     return this.locale;
   }
 
+  /**
+   * Sets the active locale and triggers necessary updates.
+   *
+   * This method performs several actions:
+   * 1. Loads required namespaces for the new locale (if resolvers are registered).
+   * 2. Updates the internal `locale` state.
+   * 3. Persists the locale to the session (if default instance).
+   * 4. Updates the global Moment.js locale.
+   *
+   * @param locale - The new locale to set.
+   * @param forceUpdate - If true, reloads namespaces even if the locale is already active.
+   * @returns A promise that resolves to the new locale string.
+   */
   public async setLocale(
     locale: string,
     forceUpdate: boolean = false
@@ -321,6 +379,14 @@ export class I18n {
     return this.locale;
   }
 
+  /**
+   * Defines the list of supported locales.
+   *
+   * Ensures that "en" (default) is always included in the supported list.
+   *
+   * @param locales - An array of locale codes.
+   * @returns The updated list of supported locales.
+   */
   public setLocales(locales: string[]) {
     this._locales = Array.isArray(locales) ? locales : ['en'];
     if (!this._locales.includes('en')) {
@@ -329,6 +395,14 @@ export class I18n {
     return this.getLocales();
   }
 
+  /**
+   * Retrieves all available locales.
+   *
+   * Combines the explicitly supported locales (set via `setLocales`) with any
+   * locales discovered in the loaded translation store.
+   *
+   * @returns A unique list of all known locale codes.
+   */
   public getLocales(): string[] {
     const definedLocales = Object.keys(this._translations);
     const supported = Array.isArray(this._locales) ? this._locales : ['en'];
@@ -340,6 +414,12 @@ export class I18n {
     return Array.from(new Set(r));
   }
 
+  /**
+   * Checks if a specific locale is supported and known.
+   *
+   * @param locale - The locale code to check.
+   * @returns `true` if the locale is in the supported/available list.
+   */
   public hasLocale(locale: string) {
     return isNonNullString(locale) && this.getLocales().includes(locale);
   }
@@ -383,6 +463,15 @@ export class I18n {
     return this._translations;
   }
 
+  /**
+   * Registers a function to lazily load translations for a specific namespace.
+   *
+   * The resolver function is called when `loadNamespace` is invoked. It should return
+   * a promise resolving to a dictionary of translations.
+   *
+   * @param namespace - The unique name of the namespace.
+   * @param resolver - The async function that fetches translations.
+   */
   public registerNamespaceResolver(
     namespace: string,
     resolver: (locale: string) => Promise<Dictionary>
@@ -394,6 +483,14 @@ export class I18n {
     this.namespaceResolvers[namespace] = resolver;
   }
 
+  /**
+   * Loads translations for a specific namespace and merges them into the store.
+   *
+   * @param namespace - The namespace to load.
+   * @param locale - The locale to load for (defaults to current).
+   * @param updateTranslations - If true, automatically registers the loaded translations.
+   * @returns A promise resolving to the dictionary of loaded translations.
+   */
   public loadNamespace(
     namespace: string,
     locale?: string,
@@ -424,6 +521,15 @@ export class I18n {
     });
   }
 
+  /**
+   * Loads all registered namespaces for a specific locale.
+   *
+   * Executes all registered namespace resolvers concurrently.
+   *
+   * @param locale - The locale to load.
+   * @param updateTranslations - If true, updates the store with results.
+   * @returns A promise resolving to the combined translations from all namespaces.
+   */
   async loadNamespaces(
     locale?: string,
     updateTranslations: boolean = true
