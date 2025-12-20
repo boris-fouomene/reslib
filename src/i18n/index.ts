@@ -1004,3 +1004,5 @@ export interface I18nOptions {
    */
   interpolate?: (i18n: I18n, str: string, params: Dictionary) => string;
 }
+
+export * from './types';
