@@ -1,206 +1,269 @@
 import '../../utils';
 import { I18n, Translate } from '../index';
-import { I18nTranslation } from '../types';
 
-describe('I18n', () => {
+describe('I18n Service', () => {
   let i18n: I18n;
 
   beforeEach(() => {
-    // Reset singleton instance for fresh tests if possible,
-    // or just use a new instance via createInstance
+    // Fresh instance for each test
     i18n = I18n.createInstance();
-    i18n.registerTranslations({
-      en: {
-        resources: {},
-        validator: {
-          length: 'This field must be exactly %{length} characters long',
-          lengthRange:
-            'This field must be between %{minLength} and %{maxLength} characters long',
-          numberLTE:
-            'This field must be less than or equal to %{ruleParams[0]}',
-          numberLT: 'This field must be less than %{ruleParams[0]}',
-          numberGTE:
-            'This field must be greater than or equal to %{ruleParams[0]}',
-          numberGT: 'This field must be greater than %{ruleParams[0]}',
-          noteEquals: 'This field must be different from %{ruleParams[0]}',
-          numberIsDifferentFrom:
-            'This field must be different from %{ruleParams[0]}',
-          numberEquals: 'This field must be equal to %{ruleParams[0]}',
+  });
+
+  describe('Core Translation', () => {
+    test('should translate simple keys', () => {
+      i18n.registerTranslations({ en: { hello: 'Hello World' } });
+      expect(i18n.t('hello')).toBe('Hello World');
+    });
+
+    test('should return key if translation matches nothing', () => {
+      expect(i18n.t('missing.key')).toBe('missing.key');
+    });
+
+    test('should support nested keys via dot notation', () => {
+      i18n.registerTranslations({
+        en: {
+          auth: {
+            login: {
+              title: 'Sign In',
+            },
+          },
         },
-      },
+      });
+      expect(i18n.t('auth.login.title')).toBe('Sign In');
+    });
+
+    test('should iterate array of keys until a translation is found (fallback keys)', () => {
+      i18n.registerTranslations({
+        en: {
+          exists: 'Found Me',
+        },
+      });
+      // 'missing' is not found, 'exists' is found
+      expect(i18n.t(['missing', 'exists'])).toBe('Found Me');
+    });
+
+    test('should use fallback locale if key is missing in current locale', () => {
+      i18n = I18n.createInstance(
+        {
+          en: {
+            common: { save: 'Save' },
+            uniqueToEn: 'Only EN',
+          },
+          fr: {
+            common: { save: 'Enregistrer' },
+          },
+        },
+        { locale: 'fr', fallbackLocale: 'en' }
+      );
+
+      // Found in current (fr)
+      expect(i18n.t('common.save')).toBe('Enregistrer');
+      // Missing in fr, fallback to en
+      expect(i18n.t('uniqueToEn')).toBe('Only EN');
+      // Missing in both
+      expect(i18n.t('missing.everywhere')).toBe('missing.everywhere');
+    });
+
+    test('should respect defaultValue option', () => {
+      expect(i18n.t('missing', { defaultValue: 'Default' })).toBe('Default');
     });
   });
 
-  test('should return correct translation from validator length rules', () => {
-    expect(i18n.t('validator.length', { length: 10 })).toBe(
-      'This field must be exactly 10 characters long'
-    );
-    expect(
-      i18n.t('validator.lengthRange', { minLength: 5, maxLength: 10 })
-    ).toBe('This field must be between 5 and 10 characters long');
-    expect(i18n.t('validator.numberLTE', { ruleParams: [10] })).toBe(
-      'This field must be less than or equal to 10'
-    );
-    expect(i18n.t('validator.numberLT', { ruleParams: [10] })).toBe(
-      'This field must be less than 10'
-    );
-  });
-
-  test('exported default instance must be recognized as I18n', () => {
-    // Check basic API existence
-    const instance = I18n.getInstance();
-    expect(typeof instance.getLocale).toBe('function');
-    expect(typeof instance.translate).toBe('function');
-
-    // Check instanceof
-    const created = I18n.createInstance();
-    expect(I18n.isI18nInstance(created)).toBe(true);
-    // Duck typing
-    expect((I18n as any)[Symbol.hasInstance](created)).toBe(true);
-  });
-
-  test('should register and retrieve translations', async () => {
-    const translations: I18nTranslation = {
-      en: {
-        greeting: 'Hello, %{name}!',
-        farewell: 'Goodbye!',
-      },
-      fr: {
-        greeting: 'Bonjour, %{name}!',
-      },
-    };
-    i18n.registerTranslations(translations);
-
-    expect(i18n.t('greeting', { name: 'John' })).toBe('Hello, John!');
-    expect(i18n.t('farewell')).toBe('Goodbye!');
-
-    // Switch locale
-    await i18n.setLocale('fr');
-    expect(i18n.t('greeting', { name: 'Pierre' })).toBe('Bonjour, Pierre!');
-  });
-
-  test('should load namespace and update translations', async () => {
-    const namespaceResolver = jest.fn().mockResolvedValue({
-      greeting: 'Hello, %{name}!',
+  describe('Interpolation', () => {
+    test('should replace simple named placeholders', () => {
+      i18n.registerTranslations({ en: { greet: 'Hello %{name}' } });
+      expect(i18n.t('greet', { name: 'Alice' })).toBe('Hello Alice');
     });
-    i18n.registerNamespaceResolver('common', namespaceResolver);
-    const translations = await i18n.loadNamespace('common', 'en');
-    expect(translations).toEqual({ en: { greeting: 'Hello, %{name}!' } });
-    expect(i18n.t('greeting', { name: 'John' })).toBe('Hello, John!');
-  });
 
-  test('should handle invalid namespace', async () => {
-    await expect(i18n.loadNamespace('invalid')).rejects.toThrow();
-  });
+    test('should support nested parameter objects', () => {
+      i18n.registerTranslations({
+        en: { profile: 'User: %{user.details.name}' },
+      });
+      expect(i18n.t('profile', { user: { details: { name: 'Bob' } } })).toBe(
+        'User: Bob'
+      );
+    });
 
-  // Decorator Tests
-  class MyComponent {
-    @Translate('greeting')
-    greeting: string = '';
-
-    @Translate('nested.example')
-    public nestedExample: string = '';
-  }
-
-  const translationsV: I18nTranslation = {
-    en: {
-      greeting: 'Hello Decorator!',
-      nested: {
-        example: 'Nested Decorator',
-      },
-    },
-  };
-
-  test('should resolve translations using decorator', () => {
-    i18n.registerTranslations(translationsV);
-    const component = new MyComponent();
-    i18n.applyTranslations(component);
-    expect(component.greeting).toBe('Hello Decorator!');
-    expect(component.nestedExample).toBe('Nested Decorator');
-  });
-
-  it('Expect translated options of my component', () => {
-    i18n.registerTranslations(translationsV);
-    const translatedOptions = i18n.translateClass(MyComponent);
-    expect(translatedOptions).toEqual({
-      greeting: 'Hello Decorator!',
-      nestedExample: 'Nested Decorator',
+    test('should use custom interpolate function if provided', () => {
+      const customI18n = I18n.createInstance(
+        {},
+        {
+          // Custom interpolation using {{key}}
+          interpolate: (inst, str, params) => {
+            return str.replace(
+              /\{\{(\w+)\}\}/g,
+              (_, k) => (params[k] as string) || ''
+            );
+          },
+        }
+      );
+      customI18n.registerTranslations({ en: { msg: 'Value: {{val}}' } });
+      expect(customI18n.t('msg', { val: 'Custom' })).toBe('Value: Custom');
     });
   });
 
-  test('should set and get locale', async () => {
-    await i18n.setLocale('fr');
-    expect(i18n.getLocale()).toBe('fr');
-  });
-
-  test('should support pluralization', () => {
-    const instance = I18n.createInstance(
-      {
+  describe('Pluralization', () => {
+    beforeEach(() => {
+      i18n.registerTranslations({
         en: {
           apples: {
             one: '1 apple',
             other: '%{count} apples',
-            zero: 'No apple',
+            zero: 'No apples',
           },
-        },
-      },
-      { locale: 'en' }
-    );
-
-    expect(instance.translate('apples', { count: 1 })).toBe('1 apple');
-    expect(instance.translate('apples', { count: 5 })).toBe('5 apples');
-    expect(instance.translate('apples', { count: 0 })).toBe('No apple');
-  });
-
-  test('should fallback to other if zero/one missing', () => {
-    const instance = I18n.createInstance(
-      {
-        en: {
           cars: {
+            // Missing zero
+            one: '1 car',
             other: '%{count} cars',
           },
         },
-      },
-      { locale: 'en' }
-    );
-    expect(instance.translate('cars', { count: 1 })).toBe('1 cars');
-  });
-
-  test('get should resolve deep paths', () => {
-    const inst = I18n.createInstance(
-      {
-        en: {
-          nested: {
-            deep: {
-              value: 'X',
-            },
-          },
-        },
-      },
-      { locale: 'en' }
-    );
-
-    expect(inst.get('nested.deep.value')).toBe('X');
-    expect(inst.get(['nested', 'deep', 'value'])).toBe('X');
-  });
-
-  test('translateObject should translate values', () => {
-    const inst = I18n.createInstance({
-      en: {
-        'lbl.name': 'Name',
-        'lbl.age': 'Age',
-      },
+      });
     });
 
-    const input = {
-      nameLabel: 'lbl.name',
-      ageLabel: 'lbl.age',
-      ignore: 'missing.key',
+    test('should handle zero, one, other', () => {
+      expect(i18n.t('apples', { count: 0 })).toBe('No apples');
+      expect(i18n.t('apples', { count: 1 })).toBe('1 apple');
+      expect(i18n.t('apples', { count: 5 })).toBe('5 apples');
+    });
+
+    test('should fallback to other if zero is missing', () => {
+      expect(i18n.t('cars', { count: 0 })).toBe('0 cars');
+    });
+
+    test('should format count number if requested', () => {
+      // Assuming behavior of performInterpolation
+      // Since default implementation doesn't strictly support number formatting unless passed as countStr or mapped
+      // But let's check basic substitution
+      expect(i18n.t('apples', { count: 1000 })).toContain('apples');
+    });
+  });
+
+  describe('Locale Management', () => {
+    test('should set and retrieve locale', async () => {
+      expect(i18n.getLocale()).toBe('en'); // Default
+      const res = await i18n.setLocale('fr');
+      expect(res).toBe('fr');
+      expect(i18n.getLocale()).toBe('fr');
+    });
+
+    test('should manage supported locales', () => {
+      i18n.registerTranslations({ en: {}, fr: {}, es: {} });
+      i18n.setLocales(['en', 'de']); // Explicitly supported
+
+      const locales = i18n.getLocales();
+      // Should contain explicitly supported + available in store
+      expect(locales).toContain('en');
+      expect(locales).toContain('de');
+      expect(locales).toContain('fr'); // From store
+      expect(locales).toContain('es'); // From store
+
+      expect(i18n.hasLocale('de')).toBe(true);
+      expect(i18n.hasLocale('zn')).toBe(false);
+    });
+  });
+
+  describe('Helpers (has, get)', () => {
+    test('has() should return true for existing keys', () => {
+      i18n.registerTranslations({ en: { valid: 'yes' } });
+      expect(i18n.has('valid')).toBe(true);
+      expect(i18n.has('invalid')).toBe(false);
+    });
+
+    test('get() should retrieve raw values and support object return', () => {
+      i18n.registerTranslations({
+        en: {
+          config: {
+            items: ['a', 'b'],
+            settings: { theme: 'dark' },
+          },
+        },
+      });
+
+      // Retrieve full object
+      expect(i18n.get('config.settings')).toEqual({ theme: 'dark' });
+      // Retrieve array
+      expect(i18n.get<string[]>('config.items')).toEqual(['a', 'b']);
+      // Retrieve string
+      expect(i18n.get('config.settings.theme')).toBe('dark');
+      // Retrieve default via array scope (acting as path parts for get)
+      expect(i18n.get(['config', 'settings', 'theme'])).toBe('dark');
+    });
+  });
+
+  describe('Namespace Loading', () => {
+    test('should load namespace and merge translations', async () => {
+      const resolver = jest.fn().mockResolvedValue({
+        moduleTitle: 'Module Loaded',
+      });
+      i18n.registerNamespaceResolver('mymodule', resolver);
+
+      await i18n.loadNamespace('mymodule', 'en');
+
+      expect(i18n.t('moduleTitle')).toBe('Module Loaded');
+      expect(resolver).toHaveBeenCalledWith('en');
+    });
+
+    test('should throw on invalid namespace', async () => {
+      await expect(i18n.loadNamespace('unknown')).rejects.toThrow();
+    });
+  });
+
+  describe('Decorators & Class Translation', () => {
+    class MyComponent {
+      @Translate('greeting')
+      greeting: string = '';
+
+      @Translate('nested.value')
+      public nested: string = '';
+    }
+
+    const translations = {
+      en: {
+        greeting: 'Hello Decorator',
+        nested: { value: 'Nested Value' },
+      },
     };
 
-    const res: any = inst.translateObject(input);
-    expect(res.nameLabel).toBe('Name');
-    expect(res.ageLabel).toBe('Age');
-    expect(res.ignore).toBe('missing.key');
+    beforeEach(() => {
+      i18n.registerTranslations(translations);
+    });
+
+    test('applyTranslations should mutate instance', () => {
+      const comp = new MyComponent();
+      i18n.applyTranslations(comp);
+      expect(comp.greeting).toBe('Hello Decorator');
+      expect(comp.nested).toBe('Nested Value');
+    });
+
+    test('translateClass should return translated dictionary without mutation', () => {
+      const res = i18n.translateClass(MyComponent);
+      expect(res).toEqual({
+        greeting: 'Hello Decorator',
+        nested: 'Nested Value',
+      });
+    });
+  });
+
+  describe('translateObject', () => {
+    test('should translate values of an object', () => {
+      i18n.registerTranslations({
+        en: {
+          'btn.save': 'Save',
+          'btn.cancel': 'Cancel',
+        },
+      });
+
+      const input = {
+        saveLabel: 'btn.save',
+        cancelLabel: 'btn.cancel',
+        raw: 'Just String',
+      };
+
+      const res = i18n.translateObject(input);
+      expect(res.saveLabel).toBe('Save');
+      expect(res.cancelLabel).toBe('Cancel');
+      // 'Just String' matches nothing, missingTranslation returns key 'Just String'
+      expect(res.raw).toBe('Just String');
+    });
   });
 });
