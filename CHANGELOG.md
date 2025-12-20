@@ -1,5 +1,12 @@
 ## 1.0.3 (2025-12-09)
 
+## 2.1.1
+
+### Patch Changes
+
+- ## Features
+  - **I18n**: Introduced core `I18n` class and related types for managing translations, interpolation, and locale settings.
+
 ## 2.1.0
 
 ### Minor Changes
