@@ -142,7 +142,7 @@ i18n.t('validation.length.min'); // "Too short"
 
 ### Fallback Keys
 
-If you are unsure if a specific key exists (e.g., dynamic error codes), you can provide an array of keys. `I18n` will return the translation for the **first key found**.
+If you are unsure if a specific key exists (e.g., dynamic error codes), you can provide an array of keys. `I18n` treats this as a **priority list**: it checks each key in order and returns the translation for the **first key found**.
 
 ```typescript
 // "api.errors.500" does not exist
@@ -150,7 +150,13 @@ If you are unsure if a specific key exists (e.g., dynamic error codes), you can 
 i18n.t(['api.errors.500', 'api.errors.generic']); // "An error occurred"
 ```
 
-If _none_ are found, it functions according to the `missingTranslation` logic (usually returns the key).
+**Missing Key Behavior**:
+If **none** of the keys in the array are found (and no default value is provided), `I18n` returns the **first key** in the array as the fallback.
+
+```typescript
+// Both missing
+i18n.t(['miss1', 'miss2']); // Returns "miss1"
+```
 
 ---
 
@@ -397,22 +403,35 @@ if (i18n.has('feature.flag')) {
 
 ## Lazy Loading & Namespaces
 
-For large applications, loading all translations at startup is inefficient. I18n supports **namespaces** (chunks) that can be loaded lazily.
+For large applications, loading all translations at startup is inefficient. I18n supports **namespaces** (chunks) that can be loaded lazily via resolvers.
 
-1. **Register a Resolver**: Tell I18n how to fetch a namespace.
-2. **Load Namespaces**: Trigger the load when a module/page initializes.
+### 1. Registering Resolvers
+
+You register a resolver function for a specific namespace. This functions as a "recipe" for fetching translations. Use `registerNamespaceResolver` to define how to load a specific chunk.
 
 ```typescript
-// Register a resolver function
+// Register a resolver function for 'account_module'
 i18n.registerNamespaceResolver('account_module', async (locale) => {
   // Simulate API call or dynamic import
   const result = await fetch(`/locales/${locale}/account.json`);
   return result.json();
 });
+```
 
-// Later, inside your Account Page component
+### 2. Loading Namespaces
+
+Resolvers are **lazy**. They don't run until you explicitly ask for them (or when the locale changes).
+
+```typescript
+// Manually load a namespace (e.g., when a component mounts)
 await i18n.loadNamespace('account_module');
 
 // Now keys are merged and available
 console.log(i18n.t('account_module.title'));
 ```
+
+### 3. Automatic Reloading on Locale Change
+
+When you call `setLocale('fr')`, `I18n` automatically triggers **all registered resolvers** for the new locale. This ensures that any namespaces you've "subscribed" to (by registering them) are kept in sync with the active language.
+
+**Performance Note**: Since `setLocale` awaits all resolvers, keep your chunks granular and avoid registering resolvers that aren't needed for the current session.
