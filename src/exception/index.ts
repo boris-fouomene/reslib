@@ -92,14 +92,6 @@ export class BaseException<TDetails = unknown, TCause = unknown> extends Error {
   public readonly timestamp: Date;
 
   public readonly success: boolean = false;
-
-  /**
-   * The validation error that caused this exception.
-   */
-  public validatorError?:
-    | ValidatorError
-    | ValidatorClassError
-    | ValidatorBulkError;
   /**
    * Creates a new BaseException instance.
    *
@@ -1010,7 +1002,6 @@ export class BaseException<TDetails = unknown, TCause = unknown> extends Error {
       (details as any).statusCode,
       500
     );
-    const isValidator = Validator.isError(error);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const result: TException = (this as any).create(message, {
       ...options,
@@ -1019,9 +1010,6 @@ export class BaseException<TDetails = unknown, TCause = unknown> extends Error {
       statusCode: finalStatus,
       cause: options?.cause ?? error,
     });
-    if (isValidator) {
-      result.validatorError = error;
-    }
     return result;
   }
   /**
@@ -1373,9 +1361,7 @@ export class BaseException<TDetails = unknown, TCause = unknown> extends Error {
       return error;
     }
     if (this.is(error)) {
-      return this.isAnyValidatorError(error.validatorError)
-        ? error.validatorError
-        : null;
+      return this.isAnyValidatorError(error.cause) ? error.cause : null;
     }
     return null;
   }

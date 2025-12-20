@@ -8,6 +8,8 @@ import {
 /**
  * ## Single Validation Error
  *
+ * @interface ValidatorError
+ * @extends {Omit<ValidatorBaseError,"name">}
  * Represents a specific failure of a single validation rule against a single value.
  * This is the most granular error type in the validation system.
  *
@@ -15,7 +17,7 @@ import {
  * the rule name, parameters, and the specific value that was rejected.
  *
  */
-export interface ValidatorError extends ValidatorBaseError {
+export interface ValidatorError extends Omit<ValidatorBaseError, 'name'> {
   name: 'ValidatorError';
 
   /**
@@ -167,6 +169,8 @@ export interface ValidatorBulkErrorItem<
 }
 
 /**
+ * @interface ValidatorBulkError
+ * @extends {Omit<ValidatorBaseError, 'name'>}
  * ## Validator Bulk Error Details
  *
  * Specialized error type for reporting failures in bulk operations (e.g., validating an array of 100 users).
@@ -180,7 +184,7 @@ export interface ValidatorBulkErrorItem<
  */
 export interface ValidatorBulkError<
   TClass extends ClassConstructor = ClassConstructor,
-> extends ValidatorBaseError {
+> extends Omit<ValidatorBaseError, 'name'> {
   name: 'ValidatorBulkError';
 
   /**
@@ -273,6 +277,8 @@ export interface ValidatorBaseError {
 /**
  * ## Validator Class Error
  *
+ * @interface ValidatorClassError
+ * @extends {Omit<ValidatorBaseError,'name'>}
  * Represents validation failures for a complex class instance or object target.
  * Unlike simple errors, a Class Error aggregates multiple failures across different fields
  * of the same object/instance.
@@ -284,7 +290,7 @@ export interface ValidatorBaseError {
  */
 export interface ValidatorClassError<
   TClass extends ClassConstructor = ClassConstructor,
-> extends ValidatorBaseError {
+> extends Omit<ValidatorBaseError, 'name'> {
   name: 'ValidatorClassError';
 
   /**
