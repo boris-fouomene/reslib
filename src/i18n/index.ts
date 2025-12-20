@@ -17,6 +17,8 @@ import { isNumber } from '@utils/isNumber';
 import { ClassConstructor, Dictionary } from '../types/index';
 import {
   I18nFormatter,
+  I18nNamespaceResolver,
+  I18nNamespaceResolvers,
   I18nScope,
   I18nTranslateOptions,
   I18nTranslations,
@@ -468,12 +470,12 @@ export class I18n {
    * The resolver function is called when `loadNamespace` is invoked. It should return
    * a promise resolving to a dictionary of translations.
    *
-   * @param namespace - The unique name of the namespace.
-   * @param resolver - The async function that fetches translations.
+   * @param {string} namespace - The unique name of the namespace.
+   * @param {I18nNamespaceResolver} resolver - The async function that fetches translations.
    */
   public registerNamespaceResolver(
     namespace: string,
-    resolver: (locale: string) => Promise<Dictionary>
+    resolver: I18nNamespaceResolver
   ): void {
     if (!isNonNullString(namespace) || typeof resolver !== 'function') {
       console.warn('Invalid arguments for registerNamespaceResolver.');
@@ -799,10 +801,7 @@ export class I18n {
   /**
    * Namespace resolvers.
    */
-  private namespaceResolvers: Record<
-    string,
-    (locale: string) => Promise<Dictionary>
-  > = {};
+  private namespaceResolvers: I18nNamespaceResolvers = {};
 
   private _namespacesLoaded: Dictionary = {};
   private _hasDefaultTranslations: boolean = false;

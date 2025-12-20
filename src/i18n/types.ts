@@ -75,3 +75,40 @@ export interface I18nTranslateOptions extends Dictionary {
    */
   count?: number;
 }
+
+/**
+ * Type defining a namespace resolver function.
+ *
+ * This type defines a function that takes a locale string and returns a promise
+ * that resolves to a dictionary of translations for that locale. The resolver
+ * is used to load translations dynamically when a namespace is requested.
+ *
+ * @param {string} locale - The locale code (e.g., "en").
+ * @returns {Promise<Dictionary>} A promise that resolves to a dictionary of translations.
+ *
+ * @example
+ * const resolver: I18nNamespaceResolver = async (locale) => {
+ *     const response = await fetch(`/translations/${locale}.json`);
+ *     return response.json();
+ * };
+ */
+export type I18nNamespaceResolver = (locale: string) => Promise<Dictionary>;
+
+/**
+ * Interface defining a map of namespace resolvers.
+ *
+ * This interface extends the Record type to define a map of namespace resolvers,
+ * where each key is a string (the namespace name) and each value is an
+ * I18nNamespaceResolver function.
+ *
+ * @example
+ * const resolvers: I18nNamespaceResolvers = {
+ *     'common': (locale) => import('./locales/common'),
+ *     'auth': (locale) => import('./locales/auth'),
+ * };
+ */
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export interface I18nNamespaceResolvers extends Record<
+  string,
+  I18nNamespaceResolver
+> {}
