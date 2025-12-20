@@ -69,8 +69,8 @@ export const IsEnum = Validator.buildRuleDecorator<
     });
     return message;
   }
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const exists = allInRules(value, ruleParams as any);
+
+  const exists = allInRules(value, ruleParams);
   if (!exists) {
     return i18n.t('validator.invalidEnumValue', {
       field: translatedPropertyName || fieldName,
