@@ -82,8 +82,7 @@ export class I18n {
       typeof obj.translateClass === 'function' &&
       typeof obj.registerTranslations === 'function' &&
       typeof obj.loadNamespace == 'function' &&
-      typeof obj.registerNamespaceResolver === 'function' &&
-      typeof obj.locale === 'string'
+      typeof obj.registerNamespaceResolver === 'function'
     );
   }
 
@@ -822,9 +821,11 @@ export class I18n {
 
     options?: I18nTranslateOptions
   ): string {
-    const scopeString = Array.isArray(scope)
-      ? scope.filter(isNonNullString).join('.')
-      : defaultStr(scope);
+    const scopeString = defaultStr(
+      Array.isArray(scope)
+        ? scope.filter(isNonNullString)[0]
+        : defaultStr(scope)
+    );
     if (typeof this.missingPlaceholder == 'function') {
       return this.missingPlaceholder(
         this,

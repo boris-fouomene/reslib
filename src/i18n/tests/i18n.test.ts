@@ -290,6 +290,80 @@ describe('I18n Service', () => {
     });
   });
 
+  describe('Array Key Fallback Strategies (Complex)', () => {
+    beforeEach(() => {
+      i18n.registerTranslations({
+        en: {
+          common: { generic: 'Generic Message' },
+          errors: {
+            auth: 'Auth Error',
+            specific_404: 'Page Not Found',
+          },
+          greetings: {
+            formal: 'Good Evening, %{name}',
+            casual: 'Hi, %{name}',
+          },
+          items: {
+            generic: { other: '%{count} items' },
+            specific: { one: '1 special item' },
+          },
+        },
+        fr: {
+          errors: {
+            auth: "Erreur d'authentification",
+          },
+        },
+      });
+    });
+
+    test('should respect priority order (return first found)', () => {
+      // Both exist, first one returned
+      expect(i18n.t(['errors.auth', 'common.generic'])).toBe('Auth Error');
+    });
+
+    test('should skip multiple missing keys to find a match', () => {
+      expect(
+        i18n.t(['errors.missing1', 'errors.missing2', 'common.generic'])
+      ).toBe('Generic Message');
+    });
+
+    test('should fallback to default locale for EACH key sequentially', async () => {
+      // Scenario:
+      // Locale is FR.
+      // Keys: ['errors.specific_404', 'common.generic']
+      // 1. Check errors.specific_404 in FR -> Missing
+      // 2. Check errors.specific_404 in EN (Fallback) -> Found! -> "Page Not Found"
+      // It should NOT skip to common.generic unless specific_404 is missing in BOTH FR and EN.
+
+      await i18n.setLocale('fr');
+      // 'errors.specific_404' is missing in FR, but exists in EN.
+      expect(i18n.t(['errors.specific_404', 'common.generic'])).toBe(
+        'Page Not Found'
+      );
+    });
+
+    test('should apply interpolation to the found key', () => {
+      // First is missing, second found -> interpolate second
+      expect(
+        i18n.t(['greetings.missing', 'greetings.formal'], { name: 'Sir' })
+      ).toBe('Good Evening, Sir');
+    });
+
+    test('should apply pluralization to the found key', () => {
+      // 'items.unknown' missing
+      // 'items.generic' found -> uses 'other' for count: 10
+      expect(i18n.t(['items.unknown', 'items.generic'], { count: 10 })).toBe(
+        '10 items'
+      );
+    });
+
+    test('should handle completely missing array (return combined key)', () => {
+      const res = i18n.t(['miss1', 'miss2']);
+      // Default implementation joins with dot
+      expect(res).toBe('miss1');
+    });
+  });
+
   describe('Instance Management', () => {
     test('getInstance should return singleton', () => {
       const inst1 = I18n.getInstance();
