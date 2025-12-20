@@ -1,5 +1,11 @@
 ## 1.0.3 (2025-12-09)
 
+## 2.0.3
+
+### Patch Changes
+
+- 7712ba6: Fix validator error extraction in BaseException.getValidatorError() to correctly check error.cause instead of non-existent error.validatorError property. Add JSDoc annotations to ValidatorError interface for better documentation.
+
 ## 2.0.2
 
 ### Patch Changes
