@@ -181,13 +181,29 @@ export const IsNonNullString = Validator.buildRuleDecorator<
  */
 export const Length = Validator.buildRuleDecorator<
   ValidatorRuleParamTypes['Length']
->(function stringLength({ value, ruleParams, i18n }) {
+>(function stringLength({
+  value,
+  ruleParams,
+  i18n,
+  fieldLabel,
+  translatedPropertyName,
+  propertyName,
+}) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   (ruleParams as any) = Array.isArray(ruleParams) ? ruleParams : [];
   value = defaultStr(value);
   const minLength = toNumber(ruleParams[0]);
   const maxLength = toNumber(ruleParams[1]);
-  const i18nParams = { value, minLength, maxLength, length: minLength };
+
+  const i18nParams = {
+    value,
+    minLength,
+    maxLength,
+    length: minLength,
+    fieldLabel,
+    translatedPropertyName,
+    propertyName,
+  };
   const message =
     isNumber(minLength) && isNumber(maxLength)
       ? i18n.t('validator.lengthRange', i18nParams)

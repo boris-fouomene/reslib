@@ -473,6 +473,7 @@ describe('String Validation Rules', () => {
       it('should validate with Length range decorator', async () => {
         class TestClass {
           @Length(2, 10)
+          @Length(6)
           code: string = '';
         }
 

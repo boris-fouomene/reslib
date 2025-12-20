@@ -997,7 +997,6 @@ export class Validator {
       Validator.parseAndValidateRules<Context>(rules);
     const separators = Validator.getErrorMessageSeparators(i18n);
     const { value, context, data } = extra;
-
     const translateOptions = this.getI18nTranslateOptions(extra);
     const successOrErrorData = {
       ...translateOptions,
@@ -1099,6 +1098,7 @@ export class Validator {
           data: data ?? Object.assign({}, data),
           startTime,
           ...i18nRuleOptions,
+          //ruleParams,
           ruleName: defaultStr(ruleName) as ValidatorRuleName,
           value,
           i18n,
@@ -2341,6 +2341,7 @@ export class Validator {
         translatedPropertyNames[propertyKey],
         propertyKey
       );
+
       validationPromises.push(
         Validator.validate<Context>({
           context,
@@ -2351,8 +2352,7 @@ export class Validator {
           translatedPropertyName,
           fieldName: propertyKey,
           propertyName: propertyKey,
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          rules: sanitizedRules as any,
+          rules: sanitizedRules as ValidatorRules,
           fieldLabel: translatedPropertyName,
         }).then((validationResult) => {
           if (validationResult.success) {
