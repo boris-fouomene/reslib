@@ -5038,9 +5038,9 @@ All format validators are optimized for production use:
 
 ### Rule Summary
 
-| Rule   | Decorator            | Usage                                             |
-| ------ | -------------------- | ------------------------------------------------- |
-| `Enum` | `@IsEnum(...values)` | Value must be in allowed set (OR array of values) |
+| Rule   | Decorator         | Usage                                             |
+| ------ | ----------------- | ------------------------------------------------- |
+| `Enum` | `@IsEnum(values)` | Value must be in allowed set (OR array of values) |
 
 **Quick Example:**
 
@@ -5051,7 +5051,7 @@ enum Status {
 }
 
 class User {
-  @IsEnum(Status.ACTIVE, Status.INACTIVE, 'pending')
+  @IsEnum([Status.ACTIVE, Status.INACTIVE, 'pending'])
   status: string;
 }
 

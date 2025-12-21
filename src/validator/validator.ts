@@ -13,7 +13,7 @@ import {
   lowerFirst,
   stringify,
 } from '@utils/index';
-import { I18n, i18n as defaultI18n } from '../i18n';
+import { i18n as defaultI18n, I18n } from '../i18n';
 import {
   ValidatorBaseError,
   ValidatorBulkError,
@@ -2341,7 +2341,6 @@ export class Validator {
         translatedPropertyNames[propertyKey],
         propertyKey
       );
-
       validationPromises.push(
         Validator.validate<Context>({
           context,
@@ -3560,6 +3559,74 @@ export class Validator {
       this._prepareRuleDecorator(ruleFunction, ruleName, symbolMarker);
     }
     return (...ruleParameters: TRuleParams) => {
+      return this._buildRuleDecorator<TRuleParams, Context>(
+        ruleParameters,
+        ruleFunction,
+        ruleName,
+        symbolMarker
+      );
+    };
+  }
+  /**
+   * ## Build Rule Array Decorator Factory
+   *
+   * Creates a specialized decorator factory for validation rules that expect their parameters
+   * passed as a single argument (typically an array) rather than as spread arguments.
+   *
+   * ### Purpose
+   * While {@link buildRuleDecorator} creates decorators that accept parameters as a comma-separated list
+   * (e.g. `@d(p1, p2)`), this method creates decorators that accept parameters as a single object or array
+   * (e.g. `@d([p1, p2])`).
+   *
+   * This is particularly useful for:
+   * - Rules that accept dynamic lists of options (like Enums) where spreading is inconvenient
+   * - Rules where parameters are logically grouped into a single config object
+   * - Better type inference for complex parameter structures
+   *
+   * ### Difference from buildRuleDecorator
+   * - **buildRuleDecorator**: `(...args: Params) => Decorator`
+   *   - Usage: `@Rule(param1, param2)`
+   * - **buildRuleArrayDecorator**: `(args: Params) => Decorator`
+   *   - Usage: `@Rule([param1, param2])` or `@Rule(paramsObject)`
+   *
+   * @template TRuleParams - Type of the parameters expected by the rule (usually an array type)
+   * @template Context - Type of the validation context
+   *
+   * @param ruleFunction - The function that implements the validation logic
+   * @param ruleName - Unique name for the rule (for checking existence and error messages)
+   * @param symbolMarker - Optional symbol to mark the rule for reflection (internal use)
+   *
+   * @returns A decorator factory function that accepts a single argument containing all rule parameters
+   *
+   * @example
+   * ```typescript
+   * // Define an Enum rule that accepts an array of values
+   * const IsEnum = Validator.buildRuleArrayDecorator(
+   *   ({ value, ruleParams }) => ruleParams.includes(value),
+   *   'IsEnum'
+   * );
+   *
+   * class Dto {
+   *   // Usage without spread operator
+   *   @IsEnum(['A', 'B', 'C'])
+   *   type: string;
+   * }
+   * ```
+   *
+   * @public
+   */
+  static buildRuleArrayDecorator<
+    TRuleParams extends ValidatorRuleParams = ValidatorRuleParams,
+    Context = unknown,
+  >(
+    ruleFunction: ValidatorRuleFunction<TRuleParams, Context>,
+    ruleName?: ValidatorRuleName,
+    symbolMarker?: symbol
+  ): (ruleParameters: TRuleParams) => PropertyDecorator {
+    if (ruleName) {
+      this._prepareRuleDecorator(ruleFunction, ruleName, symbolMarker);
+    }
+    return (ruleParameters: TRuleParams) => {
       return this._buildRuleDecorator<TRuleParams, Context>(
         ruleParameters,
         ruleFunction,

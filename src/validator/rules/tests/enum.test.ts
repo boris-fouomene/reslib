@@ -1,4 +1,13 @@
-import { ensureRulesRegistered, IsEnum, Validator } from '../../index';
+import { Translate } from '@/i18n';
+import {
+  ensureRulesRegistered,
+  IsEmail,
+  IsEnum,
+  IsOptional,
+  IsPhoneNumber,
+  IsRequired,
+  Validator,
+} from '../../index';
 
 // Ensure rules are registered
 ensureRulesRegistered();
@@ -189,7 +198,7 @@ describe('Enum Validation Rules', () => {
     // Decorator test
     it('should work with decorator for valid enum value', async () => {
       class TestClass {
-        @IsEnum(...Object.values(Status))
+        @IsEnum(Object.values(Status))
         status!: Status;
       }
 
@@ -204,7 +213,7 @@ describe('Enum Validation Rules', () => {
 
     it('should work with decorator for valid string enum value', async () => {
       class TestClass {
-        @IsEnum(...Object.values(Status))
+        @IsEnum(Object.values(Status))
         status!: Status;
       }
 
@@ -219,7 +228,7 @@ describe('Enum Validation Rules', () => {
 
     it('should work with decorator for valid numeric enum value', async () => {
       class TestClass {
-        @IsEnum(...Object.values(Priority))
+        @IsEnum(Object.values(Priority))
         priority!: Priority;
       }
 
@@ -234,7 +243,7 @@ describe('Enum Validation Rules', () => {
 
     it('should fail with decorator for invalid enum value', async () => {
       class TestClass {
-        @IsEnum(...Object.values(Status))
+        @IsEnum(Object.values(Status))
         status!: Status;
       }
 
@@ -299,6 +308,36 @@ describe('Enum Validation Rules', () => {
         value: 'val5',
         rules: [{ Enum: Object.values(LargeEnum) }],
       });
+      expect(result.success).toBe(true);
+    });
+    it('should pass SendVerificationDto', async () => {
+      enum OTPVerificationType {
+        email = 'email',
+        phone = 'phone',
+      }
+      class SendVerificationDto {
+        @IsEnum(Object.values(OTPVerificationType))
+        @IsRequired()
+        @Translate('auth.verification.type')
+        type!: OTPVerificationType;
+
+        @IsEmail()
+        @IsOptional()
+        @Translate('auth.verification.email')
+        email?: string;
+
+        @IsPhoneNumber()
+        @IsOptional()
+        @Translate('auth.verification.phoneNumber')
+        phoneNumber?: string;
+      }
+      const instance = new SendVerificationDto();
+      instance.type = OTPVerificationType.email;
+      instance.email = 'test@example.com';
+      const result = await Validator.validateClass(SendVerificationDto, {
+        data: instance,
+      });
+      console.log(result, ' is result heeein ');
       expect(result.success).toBe(true);
     });
   });

@@ -308,7 +308,7 @@ enum Status {
 }
 
 class User {
-  @IsEnum(Status.ACTIVE, Status.INACTIVE)
+  @IsEnum([Status.ACTIVE, Status.INACTIVE])
   status: string;
 }
 ```

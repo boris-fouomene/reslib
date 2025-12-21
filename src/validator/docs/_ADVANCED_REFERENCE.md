@@ -12,9 +12,9 @@ This document contains the complete documentation for the 4 specialized rule cat
 
 ### Rules in this Category
 
-| Rule   | Decorator            | Parameters | String Format | Object Format             | Description                  |
-| ------ | -------------------- | ---------- | ------------- | ------------------------- | ---------------------------- |
-| `Enum` | `@IsEnum(...values)` | `any[]`    | ❌            | ✅ `[{ Enum: [values] }]` | Value must be in allowed set |
+| Rule   | Decorator         | Parameters | String Format | Object Format             | Description                  |
+| ------ | ----------------- | ---------- | ------------- | ------------------------- | ---------------------------- |
+| `Enum` | `@IsEnum(values)` | `any[]`    | ❌            | ✅ `[{ Enum: [values] }]` | Value must be in allowed set |
 
 ### IsEnum -Enum Validation
 
@@ -44,7 +44,7 @@ enum Status {
 }
 
 class User {
-  @IsEnum(Status.ACTIVE, Status.INACTIVE)
+  @IsEnum([Status.ACTIVE, Status.INACTIVE])
   status: string;
 }
 ```

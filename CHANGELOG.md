@@ -1,5 +1,18 @@
 ## 1.0.3 (2025-12-09)
 
+## 2.2.0
+
+### Minor Changes
+
+- ## Features
+  - **Validator**: Enhanced `IsEnum` decorator to accept an array of values as a single argument (e.g., `@IsEnum([Value1, Value2])`), improving support for array-based enum definitions and cleaner syntax.
+  - **Validator**: Added `Validator.buildRuleArrayDecorator` to easily create custom validation rules that accept parameters as a single array/object argument.
+  - **Utils**: Updated `JsonHelper.stringify` to support the standard `JSON.stringify` signature (`value, replacer, space`) while maintaining backward compatibility for the `decycle` parameter.
+
+  ## Improvements
+  - Updated JSDoc documentation for `JsonHelper.stringify` and `Validator.buildRuleArrayDecorator`.
+  - Fixed lint errors in `JsonHelper`.
+
 ## 2.1.1
 
 ### Patch Changes

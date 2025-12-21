@@ -23,7 +23,7 @@ type t = ValidatorRuleParams;
  * }
  *
  * class User {
- *   @IsEnum(Status.ACTIVE, Status.INACTIVE, Status.PENDING)
+ *   @IsEnum([Status.ACTIVE, Status.INACTIVE, Status.PENDING])
  *   status: string;
  * }
  *
@@ -37,7 +37,7 @@ type t = ValidatorRuleParams;
  * ```typescript
  * // Multiple selection (array input)
  * class Survey {
- *   @IsEnum('yes', 'no', 'maybe')
+ *   @IsEnum(['yes', 'no', 'maybe'])
  *   responses: string[];
  * }
  *
@@ -50,7 +50,7 @@ type t = ValidatorRuleParams;
  *
  * @public
  */
-export const IsEnum = Validator.buildRuleDecorator<
+export const IsEnum = Validator.buildRuleArrayDecorator<
   ValidatorRuleParamTypes['Enum']
 >(function Enum({
   value,
@@ -176,12 +176,12 @@ declare module '../types' {
      * }
      *
      * class User {
-     *   @IsEnum(UserStatus.ACTIVE, UserStatus.INACTIVE, UserStatus.PENDING)
+     *   @IsEnum([UserStatus.ACTIVE, UserStatus.INACTIVE, UserStatus.PENDING])
      *   status: string;
      * }
      *
      * class Survey {
-     *   @IsEnum('excellent', 'good', 'average', 'poor')
+     *   @IsEnum(['excellent', 'good', 'average', 'poor'])
      *   ratings: string[];
      * }
      * ```

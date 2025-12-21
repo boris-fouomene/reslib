@@ -116,14 +116,14 @@ export class JsonHelper {
    * remove circular references before serialization. If the input is already a string,
    * it is returned as-is.
    *
-   * @param jsonObj - The value to convert to a JSON string. Can be any type.
-   * @param decylcleVal - Whether to remove circular references before stringification.
-   *                      Defaults to `false` for performance. Set to `true` to handle
-   *                      objects with circular references.
+   * @param value - The value to convert to a JSON string. Can be any type.
+   * @param replacer - A function that alters the behavior of the stringification process, or an array of String and Number objects that serve as a whitelist for selecting/filtering the properties of the value object to be included in the JSON string.
+   * @param space - A String or Number object that's used to insert white space into the output JSON string for readability purposes.
+   * @param decycle - Whether to remove circular references before stringification. Defaults to `false`.
    * @returns A JSON string representation of the input value.
    *
    * @throws Will throw the same errors as `JSON.stringify()` if the value cannot be serialized
-   *         and `decylcleVal` is `false`, or if circular references cannot be resolved.
+   *         and `decycle` is `false`, or if circular references cannot be resolved.
    *
    * @example
    * ```typescript
@@ -150,14 +150,30 @@ export class JsonHelper {
    * // String input is returned as-is
    * console.log(JsonHelper.stringify('already a string')); // 'already a string'
    * ```
+   *
+   * @example
+   * ```typescript
+   * // Using standard JSON.stringify arguments
+   * const obj = { a: 1, b: 2 };
+   * console.log(JsonHelper.stringify(obj, null, 2)); // Pretty print
+   * ```
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  static stringify(jsonObj: any, decylcleVal: boolean = false): string {
+
+  static stringify(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    jsonObj: any,
+    decylcleVal: boolean = false,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    replacer?: ((this: any, key: string, value: any) => any) | undefined,
+    space?: string | number | undefined
+  ): string {
     if (typeof jsonObj === 'string') {
       return jsonObj;
     }
     return JSON.stringify(
-      decylcleVal !== false ? JsonHelper.decycle(jsonObj) : jsonObj
+      decylcleVal !== false ? JsonHelper.decycle(jsonObj) : jsonObj,
+      replacer,
+      space
     );
   }
 
