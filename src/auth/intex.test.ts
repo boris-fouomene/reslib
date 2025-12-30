@@ -115,33 +115,42 @@ describe('Auth', () => {
   });
 
   describe('isMasterAdmin', () => {
-    it('should return false by default when no custom function is set', () => {
+    it('should return false by default when no custom function is set', async () => {
       // Test indirectly through isAllowed method
       const user: AuthUser = { id: '123' };
       expect(
-        Auth.isAllowed({ resourceName: 'documents', action: 'read' }, user)
+        await Auth.isAllowed(
+          { resourceName: 'documents', action: 'read' },
+          user
+        )
       ).toBe(false);
     });
 
-    it('should return false when custom function is set but returns false', () => {
+    it('should return false when custom function is set but returns false', async () => {
       Auth.isMasterAdmin = () => false;
       const user: AuthUser = { id: 'admin' };
       expect(
-        Auth.isAllowed({ resourceName: 'documents', action: 'read' }, user)
+        await Auth.isAllowed(
+          { resourceName: 'documents', action: 'read' },
+          user
+        )
       ).toBe(false);
       Auth.isMasterAdmin = undefined;
     });
 
-    it('should return true when custom function returns true', () => {
+    it('should return true when custom function returns true', async () => {
       Auth.isMasterAdmin = (user) => user?.id === 'admin';
       const adminUser: AuthUser = { id: 'admin' };
       const regularUser: AuthUser = { id: 'user', perms: {} };
 
       expect(
-        Auth.isAllowed({ resourceName: 'documents', action: 'read' }, adminUser)
+        await Auth.isAllowed(
+          { resourceName: 'documents', action: 'read' },
+          adminUser
+        )
       ).toBe(true);
       expect(
-        Auth.isAllowed(
+        await Auth.isAllowed(
           { resourceName: 'documents', action: 'read' },
           regularUser
         )
@@ -149,20 +158,20 @@ describe('Auth', () => {
       Auth.isMasterAdmin = undefined;
     });
 
-    it('should use currently signed user when no user parameter provided', () => {
+    it('should use currently signed user when no user parameter provided', async () => {
       const adminUser: AuthUser = { id: 'admin' };
       Auth.isMasterAdmin = (user) => user?.id === 'admin';
 
       // Sign in as admin
       Auth.setSignedUser(adminUser, false);
       expect(
-        Auth.isAllowed({ resourceName: 'documents', action: 'read' })
+        await Auth.isAllowed({ resourceName: 'documents', action: 'read' })
       ).toBe(true);
 
       // Sign out
       Auth.setSignedUser(null, false);
       expect(
-        Auth.isAllowed({ resourceName: 'documents', action: 'read' })
+        await Auth.isAllowed({ resourceName: 'documents', action: 'read' })
       ).toBe(false);
 
       Auth.isMasterAdmin = undefined;
@@ -170,8 +179,8 @@ describe('Auth', () => {
   });
 
   describe('getSignedUser', () => {
-    it('should return null when no user is signed in', () => {
-      expect(Auth.getSignedUser()).toBeNull();
+    it('should return null when no user is signed in', async () => {
+      expect(await Auth.getSignedUser()).toBeNull();
     });
 
     it('should return the signed in user', async () => {
@@ -182,7 +191,7 @@ describe('Auth', () => {
       };
 
       await Auth.setSignedUser(testUser, false);
-      const retrievedUser = await Auth.getSignedUser();
+      const retrievedUser = await await Auth.getSignedUser();
 
       expect(retrievedUser).toEqual(testUser);
       expect(retrievedUser?.id).toBe(testUser.id);
@@ -194,11 +203,11 @@ describe('Auth', () => {
       await Auth.setSignedUser(testUser, false);
 
       // First call should load from session storage
-      const user1 = Auth.getSignedUser();
+      const user1 = await Auth.getSignedUser();
       expect(user1).toEqual(testUser);
 
       // Second call should use cache
-      const user2 = Auth.getSignedUser();
+      const user2 = await Auth.getSignedUser();
       expect(user2).toEqual(testUser);
 
       // They should be the same object reference (cached)
@@ -207,13 +216,13 @@ describe('Auth', () => {
 
     it('should handle corrupted session data gracefully', async () => {
       // When session is missing or corrupted, getSignedUser returns null
-      const user = Auth.getSignedUser();
+      const user = await Auth.getSignedUser();
       expect(user).toBeNull();
     });
 
-    it('should handle missing session data', () => {
+    it('should handle missing session data', async () => {
       Session.remove('user-session');
-      expect(Auth.getSignedUser()).toBeNull();
+      expect(await Auth.getSignedUser()).toBeNull();
     });
 
     it('should decrypt and parse encrypted user data', async () => {
@@ -223,7 +232,7 @@ describe('Auth', () => {
       };
 
       await Auth.setSignedUser(testUser, false);
-      const retrievedUser = Auth.getSignedUser();
+      const retrievedUser = await Auth.getSignedUser();
 
       expect(retrievedUser).toEqual(testUser);
     });
@@ -232,10 +241,10 @@ describe('Auth', () => {
       const testUser: AuthUser = { id: 'test123' };
       await Auth.setSignedUser(testUser, false);
 
-      expect(Auth.getSignedUser()).toEqual(testUser);
+      expect(await Auth.getSignedUser()).toEqual(testUser);
 
       await Auth.setSignedUser(null, false);
-      expect(Auth.getSignedUser()).toBeNull();
+      expect(await Auth.getSignedUser()).toBeNull();
     });
   });
 
@@ -247,7 +256,7 @@ describe('Auth', () => {
       const testUser: AuthUser = { id: 'test123', email: 'test@example.com' };
       await Auth.setSignedUser(testUser, true);
 
-      expect(Auth.getSignedUser()).toEqual(testUser);
+      expect(await Auth.getSignedUser()).toEqual(testUser);
       expect(mockCallback).toHaveBeenCalledWith(testUser);
     });
 
@@ -261,7 +270,7 @@ describe('Auth', () => {
       // Then sign out (with triggerEvent = true)
       await Auth.setSignedUser(null, true);
 
-      expect(Auth.getSignedUser()).toBeNull();
+      expect(await Auth.getSignedUser()).toBeNull();
       expect(mockCallback).toHaveBeenCalledWith(null);
     });
 
@@ -286,7 +295,7 @@ describe('Auth', () => {
 
       await Auth.setSignedUser(testUser, false);
 
-      const storedUser = await Auth.getSignedUser();
+      const storedUser = await await Auth.getSignedUser();
       expect(storedUser?.sessionCreatedAt).toBeDefined();
       expect(storedUser?.sessionCreatedAt).toBeGreaterThanOrEqual(beforeTime);
     });
@@ -299,7 +308,7 @@ describe('Auth', () => {
       await Auth.setSignedUser(testUser, false);
 
       // User should be stored and retrievable
-      const storedUser = await Auth.getSignedUser();
+      const storedUser = await await Auth.getSignedUser();
       expect(storedUser).not.toBeNull();
       expect(storedUser?.id).toBe('test123');
       expect(storedUser?.sessionCreatedAt).toBeDefined();
@@ -311,7 +320,7 @@ describe('Auth', () => {
       await Auth.setSignedUser(testUser, false);
 
       // Should be immediately available
-      expect(Auth.getSignedUser()).toEqual(testUser);
+      expect(await Auth.getSignedUser()).toEqual(testUser);
     });
   });
 
@@ -325,7 +334,7 @@ describe('Auth', () => {
 
       const result = await Auth.signIn(testUser);
       expect(result).toEqual(testUser);
-      expect(Auth.getSignedUser()).toEqual(testUser);
+      expect(await Auth.getSignedUser()).toEqual(testUser);
     });
 
     it('should trigger SIGN_IN event by default', async () => {
@@ -386,7 +395,7 @@ describe('Auth', () => {
 
       const result = await Auth.signIn(complexUser);
       expect(result).toEqual(complexUser);
-      expect(Auth.getSignedUser()).toEqual(complexUser);
+      expect(await Auth.getSignedUser()).toEqual(complexUser);
     });
   });
 
@@ -395,11 +404,11 @@ describe('Auth', () => {
       const testUser: AuthUser = { id: 'signout123' };
       await Auth.signIn(testUser, false);
 
-      expect(Auth.getSignedUser()).toEqual(testUser);
+      expect(await Auth.getSignedUser()).toEqual(testUser);
 
       await Auth.signOut();
 
-      expect(Auth.getSignedUser()).toBeNull();
+      expect(await Auth.getSignedUser()).toBeNull();
     });
 
     it('should trigger SIGN_OUT event by default', async () => {
@@ -421,25 +430,25 @@ describe('Auth', () => {
     });
 
     it('should handle sign out when no user is signed in', async () => {
-      expect(Auth.getSignedUser()).toBeNull();
+      expect(await Auth.getSignedUser()).toBeNull();
 
       const result = await Auth.signOut();
 
       // signOut returns null (from setSignedUser(null, true))
       expect(result).toBeNull();
-      expect(Auth.getSignedUser()).toBeNull();
+      expect(await Auth.getSignedUser()).toBeNull();
     });
 
     it('should clear session data completely', async () => {
       const testUser: AuthUser = { id: 'cleanup123' };
       await Auth.signIn(testUser, false);
-      expect(Auth.getSignedUser()).toEqual(testUser);
+      expect(await Auth.getSignedUser()).toEqual(testUser);
       expect(Session.get('user-session')).toBeDefined();
 
       await Auth.signOut(false);
 
       // Verify everything is cleared
-      expect(Auth.getSignedUser()).toBeNull();
+      expect(await Auth.getSignedUser()).toBeNull();
       // Session stores empty string for cleared values
       const sessionValue = Session.get('user-session');
       expect(
@@ -607,39 +616,39 @@ describe('Auth', () => {
   });
 
   describe('isAllowed', () => {
-    it('should return false for false permission', () => {
-      expect(Auth.isAllowed(false)).toBe(false);
+    it('should return false for false permission', async () => {
+      expect(await Auth.isAllowed(false)).toBe(false);
     });
 
-    it('should return true for true permission', () => {
-      expect(Auth.isAllowed(true as any)).toBe(true);
+    it('should return true for true permission', async () => {
+      expect(await Auth.isAllowed(true as any)).toBe(true);
     });
 
-    it('should return true for master admin', () => {
+    it('should return true for master admin', async () => {
       Auth.isMasterAdmin = () => true;
-      expect(Auth.isAllowed(['documents', 'create'])).toBe(true);
+      expect(await Auth.isAllowed(['documents', 'create'])).toBe(true);
       expect(
-        Auth.isAllowed({ resourceName: 'admin', action: 'delete' } as any)
+        await Auth.isAllowed({ resourceName: 'admin', action: 'delete' } as any)
       ).toBe(true);
       Auth.isMasterAdmin = undefined;
     });
 
-    it('should return true for null/undefined permissions', () => {
-      expect(Auth.isAllowed(null as any)).toBe(true);
-      expect(Auth.isAllowed(undefined as any)).toBe(true);
+    it('should return true for null/undefined permissions', async () => {
+      expect(await Auth.isAllowed(null as any)).toBe(true);
+      expect(await Auth.isAllowed(undefined as any)).toBe(true);
     });
 
-    it('should handle function permissions', () => {
+    it('should handle function permissions', async () => {
       const user: AuthUser = { id: 'func123', perms: { documents: ['read'] } };
 
       const permFn = (u: AuthUser) => u.id === 'func123';
-      expect(Auth.isAllowed(permFn, user)).toBe(true);
+      expect(await Auth.isAllowed(permFn, user)).toBe(true);
 
       const falseFn = (u: AuthUser) => u.id === 'different';
-      expect(Auth.isAllowed(falseFn, user)).toBe(false);
+      expect(await Auth.isAllowed(falseFn, user)).toBe(false);
     });
 
-    it('should validate resource:action tuple objects', () => {
+    it('should validate resource:action tuple objects', async () => {
       const user: AuthUser = {
         id: 'tuple123',
         perms: {
@@ -649,23 +658,32 @@ describe('Auth', () => {
       };
 
       expect(
-        Auth.isAllowed({ resourceName: 'documents', action: 'read' }, user)
+        await Auth.isAllowed(
+          { resourceName: 'documents', action: 'read' },
+          user
+        )
       ).toBe(true);
       expect(
-        Auth.isAllowed({ resourceName: 'documents', action: 'create' }, user)
+        await Auth.isAllowed(
+          { resourceName: 'documents', action: 'create' },
+          user
+        )
       ).toBe(true);
       expect(
-        Auth.isAllowed({ resourceName: 'documents', action: 'delete' }, user)
+        await Auth.isAllowed(
+          { resourceName: 'documents', action: 'delete' },
+          user
+        )
       ).toBe(false);
       expect(
-        Auth.isAllowed({ resourceName: 'users', action: 'read' }, user)
+        await Auth.isAllowed({ resourceName: 'users', action: 'read' }, user)
       ).toBe(true);
       expect(
-        Auth.isAllowed({ resourceName: 'articles', action: 'read' }, user)
+        await Auth.isAllowed({ resourceName: 'articles', action: 'read' }, user)
       ).toBe(false);
     });
 
-    it('should validate resource:action tuple arrays', () => {
+    it('should validate resource:action tuple arrays', async () => {
       const user: AuthUser = {
         id: 'array123',
         perms: {
@@ -674,14 +692,14 @@ describe('Auth', () => {
         },
       };
 
-      expect(Auth.isAllowed(['documents', 'read'], user)).toBe(true);
-      expect(Auth.isAllowed(['documents', 'create'], user)).toBe(true);
-      expect(Auth.isAllowed(['documents', 'delete'], user)).toBe(false);
-      expect(Auth.isAllowed(['users', 'read'], user)).toBe(true);
-      expect(Auth.isAllowed(['articles', 'read'], user)).toBe(false);
+      expect(await Auth.isAllowed(['documents', 'read'], user)).toBe(true);
+      expect(await Auth.isAllowed(['documents', 'create'], user)).toBe(true);
+      expect(await Auth.isAllowed(['documents', 'delete'], user)).toBe(false);
+      expect(await Auth.isAllowed(['users', 'read'], user)).toBe(true);
+      expect(await Auth.isAllowed(['articles', 'read'], user)).toBe(false);
     });
 
-    it('should handle arrays of permissions with OR logic', () => {
+    it('should handle arrays of permissions with OR logic', async () => {
       const user: AuthUser = {
         id: 'or123',
         perms: {
@@ -695,17 +713,17 @@ describe('Auth', () => {
         { resourceName: 'documents', action: 'read' }, // true
         { resourceName: 'users', action: 'delete' }, // false
       ];
-      expect(Auth.isAllowed(orPerms as any, user)).toBe(true);
+      expect(await Auth.isAllowed(orPerms as any, user)).toBe(true);
 
       // All false - should deny access
       const falsePerms: AuthPerm[] = [
         { resourceName: 'documents', action: 'delete' }, // false
         { resourceName: 'users', action: 'delete' }, // false
       ];
-      expect(Auth.isAllowed(falsePerms as any, user)).toBe(false);
+      expect(await Auth.isAllowed(falsePerms as any, user)).toBe(false);
     });
 
-    it('should use currently signed in user when no user provided', () => {
+    it('should use currently signed in user when no user provided', async () => {
       const testUser: AuthUser = {
         id: 'signed123',
         perms: { documents: ['read'] },
@@ -714,16 +732,16 @@ describe('Auth', () => {
       Auth.setSignedUser(testUser, false);
 
       expect(
-        Auth.isAllowed({ resourceName: 'documents', action: 'read' })
+        await Auth.isAllowed({ resourceName: 'documents', action: 'read' })
       ).toBe(true);
       expect(
-        Auth.isAllowed({ resourceName: 'documents', action: 'create' })
+        await Auth.isAllowed({ resourceName: 'documents', action: 'create' })
       ).toBe(false);
 
       Auth.setSignedUser(null, false);
     });
 
-    it('should handle complex permission scenarios', () => {
+    it('should handle complex permission scenarios', async () => {
       const user: AuthUser = {
         id: 'complex123',
         perms: {
@@ -742,20 +760,29 @@ describe('Auth', () => {
 
       // Direct permission
       expect(
-        Auth.isAllowed({ resourceName: 'documents', action: 'read' }, user)
+        await Auth.isAllowed(
+          { resourceName: 'documents', action: 'read' },
+          user
+        )
       ).toBe(true);
 
       // Role permission
       expect(
-        Auth.isAllowed({ resourceName: 'documents', action: 'create' }, user)
+        await Auth.isAllowed(
+          { resourceName: 'documents', action: 'create' },
+          user
+        )
       ).toBe(true);
       expect(
-        Auth.isAllowed({ resourceName: 'articles', action: 'publish' }, user)
+        await Auth.isAllowed(
+          { resourceName: 'articles', action: 'publish' },
+          user
+        )
       ).toBe(true);
 
       // No permission
       expect(
-        Auth.isAllowed({ resourceName: 'admin', action: 'all' }, user)
+        await Auth.isAllowed({ resourceName: 'admin', action: 'all' }, user)
       ).toBe(false);
     });
   });
@@ -1024,27 +1051,27 @@ describe('Auth', () => {
 
       // Sign in
       await Auth.signIn(user);
-      expect(Auth.getSignedUser()).toEqual(user);
+      expect(await Auth.getSignedUser()).toEqual(user);
       expect(signInCallback).toHaveBeenCalledWith(user);
 
       // Check permissions work
       expect(
-        Auth.isAllowed({ resourceName: 'documents', action: 'read' })
+        await Auth.isAllowed({ resourceName: 'documents', action: 'read' })
       ).toBe(true);
       expect(Auth.checkUserPermission(user, 'documents', 'create')).toBe(true);
 
       // Sign out
       await Auth.signOut();
-      expect(Auth.getSignedUser()).toBeNull();
+      expect(await Auth.getSignedUser()).toBeNull();
       expect(signOutCallback).toHaveBeenCalledWith(null);
 
       // Permissions should no longer work
       expect(
-        Auth.isAllowed({ resourceName: 'documents', action: 'read' })
+        await Auth.isAllowed({ resourceName: 'documents', action: 'read' })
       ).toBe(false);
     });
 
-    it('should handle master admin override in permission checks', () => {
+    it('should handle master admin override in permission checks', async () => {
       Auth.isMasterAdmin = (user) => user?.id === 'admin';
 
       const adminUser: AuthUser = { id: 'admin' };
@@ -1061,7 +1088,7 @@ describe('Auth', () => {
         ],
       };
       expect(
-        Auth.isAllowed(
+        await Auth.isAllowed(
           { resourceName: 'documents', action: 'delete' },
           adminWithRole
         )
@@ -1069,7 +1096,7 @@ describe('Auth', () => {
 
       // Regular user should follow normal rules
       expect(
-        Auth.isAllowed(
+        await Auth.isAllowed(
           { resourceName: 'documents', action: 'read' },
           regularUser
         )
@@ -1160,7 +1187,7 @@ describe('Auth', () => {
       (Auth as any).localUserRef.current = null;
 
       // Should reload from session storage
-      const reloadedUser = Auth.getSignedUser();
+      const reloadedUser = await Auth.getSignedUser();
       expect(reloadedUser).toEqual(user);
     });
   });

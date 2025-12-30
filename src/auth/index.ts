@@ -11,6 +11,7 @@ import { Logger } from '../logger';
 import { Session as $session } from '../session';
 import { Dictionary } from '../types/dictionary';
 import { isNonNullString, isObj, isPrimitive, JsonHelper } from '../utils';
+import { AuthError } from './errors';
 import './types';
 import {
   AuthConfig,
@@ -71,6 +72,7 @@ export class Auth {
   private static localUserRef: LocalUserRef = { current: null };
   private static config: AuthConfig = {
     sessionTTL: DEFAULT_SESSION_TTL,
+    storage: DefaultAuthStorage,
   };
 
   static isMasterAdmin?: (user?: AuthUser) => Promise<boolean> | boolean;
@@ -119,49 +121,107 @@ export class Auth {
     return age <= (Auth.config.sessionTTL || DEFAULT_SESSION_TTL);
   }
 
+  /**
+   * Retrieves the currently authenticated user from secure storage.
+   *
+   * @returns The authenticated user or null if not signed in
+   */
   static async getSignedUser(): Promise<AuthUser | null> {
+    // Check cached user first
     if (this.isValidUser(Auth.localUserRef.current)) {
-      // Check if cached user session is still valid
+      // Validate session expiration
       if (!Auth.isSessionValid(Auth.localUserRef.current.sessionCreatedAt)) {
-        Auth.signOut(false); // Silent sign out
+        // Clear cache and throw error instead of side effect
+        Auth.localUserRef.current = null;
+      }
+      return Auth.localUserRef.current;
+    }
+
+    // Fetch from storage
+    try {
+      const userJson = await this.secureStorage.get(USER_SESSION_KEY);
+
+      if (!userJson) {
         return null;
       }
-    }
-    try {
-      const r = await this.secureStorage.get(USER_SESSION_KEY);
-      const u = r ? JsonHelper.parse(r) : null;
-      if (this.isValidUser(u)) {
-        Auth.localUserRef.current = u;
-        return Auth.localUserRef.current;
+
+      const user = JsonHelper.parse(userJson);
+
+      // Validate user structure
+      if (!this.isValidUser(user)) {
+        Logger.log('Invalid user structure in storage');
+        return null;
       }
+
+      // Validate session expiration
+      if (!Auth.isSessionValid(user.sessionCreatedAt)) {
+        Auth.localUserRef.current = null;
+      }
+
+      // Cache and return
+      Auth.localUserRef.current = user;
+      return user;
     } catch (e) {
-      Logger.log('getting local user ', e);
+      Logger.log(Auth.name, 'Error getting signed user:', e);
+      throw AuthError.from(e);
     }
-    return null;
   }
 
+  /**
+   * Forces a refresh of the user session from storage.
+   * Clears the cache and retrieves fresh data.
+   *
+   * @returns The refreshed user object or null
+   */
   static async refreshSignedUser(): Promise<AuthUser | null> {
     Auth.localUserRef.current = null;
-    return Auth.getSignedUser();
+    return await Auth.getSignedUser();
   }
 
-  static async setSignedUser(u: AuthUser | null, triggerEvent?: boolean) {
-    Auth.localUserRef.current = u;
-    const uToSave = u;
+  /**
+   * Securely stores an authenticated user in secure storage.
+   * Only triggers events if storage operation succeeds.
+   *
+   * @param u - The user object to store, or null to sign out
+   * @param triggerEvent - Whether to trigger SIGN_IN/SIGN_OUT events
+   * @returns The stored user object
+   * @throws {AuthError} If storage operation fails
+   */
+  static async setSignedUser(
+    u: AuthUser | null,
+    triggerEvent?: boolean
+  ): Promise<AuthUser | null> {
     try {
-      if (this.isValidUser(uToSave)) {
-        uToSave.sessionCreatedAt = new Date().getTime();
+      let userToStore: AuthUser | null = u;
+
+      // Add timestamp if storing a user
+      if (this.isValidUser(u)) {
+        userToStore = { ...u, sessionCreatedAt: new Date().getTime() };
       }
-      await this.secureStorage.set(USER_SESSION_KEY, JSON.stringify(uToSave));
+
+      // Store or remove from secure storage
+      if (userToStore) {
+        const userJson = JSON.stringify(userToStore);
+        await this.secureStorage.set(USER_SESSION_KEY, userJson);
+      } else {
+        await this.secureStorage.remove(USER_SESSION_KEY);
+      }
+
+      // Only update cache after successful storage
+      Auth.localUserRef.current = userToStore;
+
+      // Only trigger events after successful storage
+      if (triggerEvent) {
+        const event = userToStore ? 'SIGN_IN' : 'SIGN_OUT';
+        Auth.events.trigger(event, userToStore);
+      }
+
+      return userToStore;
     } catch (e) {
-      Auth.localUserRef.current = null;
-      Logger.log(e, ' setting local user');
+      Logger.log('Error setting signed user:', e);
+      // Don't update cache on error
+      throw new AuthError('Failed to store user session');
     }
-    if (triggerEvent) {
-      const event = uToSave ? 'SIGN_IN' : 'SIGN_OUT';
-      Auth.events.trigger(event, uToSave);
-    }
-    return uToSave;
   }
 
   static async signIn(
@@ -200,13 +260,17 @@ export class Auth {
       isNonNullString(perm.action)
     );
   }
+
   static isValidUser(user: unknown): user is AuthUser {
-    return user &&
-      typeof user == 'object' &&
-      !Array.isArray(user) &&
-      !isPrimitive(user)
-      ? true
-      : false;
+    if (
+      !user ||
+      typeof user !== 'object' ||
+      Array.isArray(user) ||
+      isPrimitive(user)
+    ) {
+      return false;
+    }
+    return true;
   }
   static async isAllowed<TResourceName extends ResourceName = ResourceName>(
     perm: AuthPerm<TResourceName>,

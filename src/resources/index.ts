@@ -198,28 +198,29 @@ export abstract class Resource<
     if (!this.hasDataService()) {
       throw new Error(this.INVALID_DATA_PROVIDER_ERROR);
     }
-    let hasPermission: boolean;
+    let permFunc: (() => Promise<boolean>) | undefined = undefined;
 
     // Map action names to permission methods
     switch (action) {
       case 'read':
-        hasPermission = this.canUserRead();
+        permFunc = this.canUserRead;
         break;
       case 'create':
-        hasPermission = this.canUserCreate();
+        permFunc = this.canUserCreate;
         break;
       case 'update':
-        hasPermission = this.canUserUpdate();
+        permFunc = this.canUserUpdate;
         break;
       case 'delete':
-        hasPermission = this.canUserDelete();
+        permFunc = this.canUserDelete;
         break;
       default:
-        // For custom actions, check if user is allowed
-        hasPermission = this.isAllowed(action as ResourceActionName<Name>);
         break;
     }
 
+    const hasPermission = await (typeof permFunc == 'function'
+      ? permFunc()
+      : this.isAllowed(action as ResourceActionName<Name>));
     if (!hasPermission) {
       throw new Error(
         this.getI18n().t(
@@ -798,10 +799,10 @@ export abstract class Resource<
    * 5. If the action is "all" or matches any of the resource's actions, it returns true.
    * 6. Otherwise, it delegates the permission check to the Auth.isAllowed method.
    */
-  isAllowed(
+  async isAllowed(
     action?: ResourceActionName<Name> | ResourceActionName<Name>[],
     user?: AuthUser
-  ): boolean {
+  ): Promise<boolean> {
     const perms: ResourceActionTupleArray<Name>[] = [];
     if (isNonNullString(action)) {
       perms.push([this.getName(), action as ResourceActionName<Name>]);
@@ -819,7 +820,7 @@ export abstract class Resource<
    * @param user - The user whose read access is being checked. If no user is provided, the method will use default permissions.
    * @returns A boolean indicating whether the user has read access.
    */
-  canUserRead(user?: AuthUser): boolean {
+  async canUserRead(user?: AuthUser): Promise<boolean> {
     return this.isAllowed(`read`, user);
   }
   /**
@@ -828,7 +829,7 @@ export abstract class Resource<
    * @param user - The user whose permissions are being checked. If not provided, the method will use the default user.
    * @returns A boolean indicating whether the user is allowed to create the resource.
    */
-  canUserCreate(user?: AuthUser): boolean {
+  async canUserCreate(user?: AuthUser): Promise<boolean> {
     return this.isAllowed(`create`, user);
   }
   /**
@@ -837,7 +838,7 @@ export abstract class Resource<
    * @param user - The user whose update permissions are being checked. If no user is provided, the method will use default permissions.
    * @returns A boolean indicating whether the user has permission to update the resource.
    */
-  canUserUpdate(user?: AuthUser): boolean {
+  async canUserUpdate(user?: AuthUser): Promise<boolean> {
     return this.isAllowed(`update`, user);
   }
 
@@ -847,7 +848,7 @@ export abstract class Resource<
    * @param user - The authenticated user whose permissions are being checked. Optional.
    * @returns A boolean indicating whether the user is allowed to delete.
    */
-  canUserDelete(user?: AuthUser): boolean {
+  async canUserDelete(user?: AuthUser): Promise<boolean> {
     return this.isAllowed(`delete`, user);
   }
 
