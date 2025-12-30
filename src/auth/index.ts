@@ -276,11 +276,11 @@ export class Auth {
     perm: AuthPerm<TResourceName>,
     user?: AuthUser | null
   ): Promise<boolean> {
+    if (typeof perm === 'boolean') return perm;
     user = this.isValidUser(user) ? user : await this.getSignedUser();
     if (!this.isValidUser(user)) {
       return false;
     }
-    if (typeof perm === 'boolean') return perm;
     const isMasterAdmin = await this._isMasterAdmin(user);
     if (isMasterAdmin) {
       return true;

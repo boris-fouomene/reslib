@@ -160,10 +160,10 @@ describe('Resource Class', () => {
     i18n.setLocale('en');
   });
 
-  beforeEach(() => {
+  beforeEach(async () => {
     resource = new TestUserResource();
     resource.clearData();
-    Auth.setSignedUser(null, false);
+    await Auth.setSignedUser(null, false);
     Auth.isMasterAdmin = undefined;
     Resource.events.offAll();
     adminUser = { id: 'admin-1', perms: { users: ['all'] } };
@@ -198,8 +198,8 @@ describe('Resource Class', () => {
   });
 
   describe('CRUD - Create', () => {
-    beforeEach(() => {
-      Auth.setSignedUser(adminUser, false);
+    beforeEach(async () => {
+      await Auth.setSignedUser(adminUser, false);
     });
 
     it('should create record', async () => {
@@ -221,7 +221,10 @@ describe('Resource Class', () => {
     });
 
     it('should reject unauthorized create', async () => {
-      Auth.setSignedUser({ id: 'user-1', perms: { users: ['read'] } }, false);
+      await Auth.setSignedUser(
+        { id: 'user-1', perms: { users: ['read'] } },
+        false
+      );
       await expect(
         resource.create({ name: 'Test', email: 'test@test.com', id: '3' })
       ).rejects.toThrow();
@@ -230,7 +233,7 @@ describe('Resource Class', () => {
 
   describe('CRUD - Read', () => {
     beforeEach(async () => {
-      Auth.setSignedUser(adminUser, false);
+      await Auth.setSignedUser(adminUser, false);
       await resource.create({ name: 'John', email: 'john@test.com', id: '1' });
       await resource.create({ name: 'Jane', email: 'jane@test.com', id: '2' });
     });
@@ -253,7 +256,10 @@ describe('Resource Class', () => {
     });
 
     it('should reject unauthorized read', async () => {
-      Auth.setSignedUser({ id: 'user-1', perms: { users: ['create'] } }, false);
+      await Auth.setSignedUser(
+        { id: 'user-1', perms: { users: ['create'] } },
+        false
+      );
       await expect(resource.find()).rejects.toThrow();
     });
   });
@@ -271,7 +277,10 @@ describe('Resource Class', () => {
     });
 
     it('should reject unauthorized update', async () => {
-      Auth.setSignedUser({ id: 'user-1', perms: { users: ['read'] } }, false);
+      await Auth.setSignedUser(
+        { id: 'user-1', perms: { users: ['read'] } },
+        false
+      );
       const all = resource.getAllData();
       await expect(
         resource.update(all[0].id, { name: 'Hacked' })
@@ -292,7 +301,10 @@ describe('Resource Class', () => {
     });
 
     it('should reject unauthorized delete', async () => {
-      Auth.setSignedUser({ id: 'user-1', perms: { users: ['read'] } }, false);
+      await Auth.setSignedUser(
+        { id: 'user-1', perms: { users: ['read'] } },
+        false
+      );
       const all = resource.getAllData();
       await expect(resource.delete(all[0].id)).rejects.toThrow();
     });
@@ -300,32 +312,41 @@ describe('Resource Class', () => {
 
   describe('Authorization', () => {
     it('should authorize read', async () => {
-      Auth.setSignedUser({ id: 'user-1', perms: { users: ['read'] } }, false);
+      await Auth.setSignedUser(
+        { id: 'user-1', perms: { users: ['read'] } },
+        false
+      );
       await expect(resource.authorizeAction('read')).resolves.toBeUndefined();
     });
 
     it('should reject unauthorized', async () => {
-      Auth.setSignedUser({ id: 'user-1', perms: { users: ['create'] } }, false);
+      await Auth.setSignedUser(
+        { id: 'user-1', perms: { users: ['create'] } },
+        false
+      );
       await expect(resource.authorizeAction('read')).rejects.toThrow();
     });
   });
 
   describe('Permissions', () => {
-    it('should check canUserRead', () => {
-      expect(resource.canUserRead(adminUser)).toBe(true);
+    it('should check canUserRead', async () => {
+      expect(await resource.canUserRead(adminUser)).toBe(true);
       expect(
-        resource.canUserRead({ id: 'user-1', perms: { users: ['create'] } })
+        await resource.canUserRead({
+          id: 'user-1',
+          perms: { users: ['create'] },
+        })
       ).toBe(false);
     });
 
-    it('should check canUserCreate', () => {
-      expect(resource.canUserCreate(adminUser)).toBe(true);
+    it('should check canUserCreate', async () => {
+      expect(await resource.canUserCreate(adminUser)).toBe(true);
     });
 
-    it('should check isAllowed', () => {
-      expect(resource.isAllowed('read', adminUser)).toBe(true);
+    it('should check isAllowed', async () => {
+      expect(await resource.isAllowed('read', adminUser)).toBe(true);
       expect(
-        resource.isAllowed('read', {
+        await resource.isAllowed('read', {
           id: 'user-1',
           perms: { users: ['delete'] },
         })
@@ -384,7 +405,7 @@ describe('Resource Class', () => {
 
   describe('Integration', () => {
     it('should complete CRUD workflow', async () => {
-      Auth.setSignedUser(adminUser, false);
+      await Auth.setSignedUser(adminUser, false);
       const created = await resource.create({
         name: 'Test',
         email: 'test@test.com',

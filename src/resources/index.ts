@@ -203,16 +203,16 @@ export abstract class Resource<
     // Map action names to permission methods
     switch (action) {
       case 'read':
-        permFunc = this.canUserRead;
+        permFunc = this.canUserRead.bind(this);
         break;
       case 'create':
-        permFunc = this.canUserCreate;
+        permFunc = this.canUserCreate.bind(this);
         break;
       case 'update':
-        permFunc = this.canUserUpdate;
+        permFunc = this.canUserUpdate.bind(this);
         break;
       case 'delete':
-        permFunc = this.canUserDelete;
+        permFunc = this.canUserDelete.bind(this);
         break;
       default:
         break;
