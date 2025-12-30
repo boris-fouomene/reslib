@@ -70,7 +70,6 @@ import { Dictionary } from '../types/dictionary';
  */
 
 export interface AuthUser {
-  //id: string | number | object;
   sessionCreatedAt?: number;
   perms?: AuthPerms;
 
@@ -563,4 +562,49 @@ export interface AuthSecureStorage {
    * @returns Promise that resolves when removal is complete
    */
   remove(key: string): Promise<void>;
+}
+
+/**
+ * @interface AuthConfig
+ * Configuration options for the Auth module.
+ *
+ * This interface defines the available configuration options that can be set
+ * to customize the behavior of the authentication system, including encryption,
+ * session management, and storage mechanisms.
+ *
+ * ### Configuration Options
+ *
+ * - `sessionTTL`: Session time-to-live in milliseconds (default: 24 hours)
+ * - `storage`: Custom secure storage implementation
+ * - `masterAdminCheck`: Custom function to determine if a user is a master admin
+ *
+ * ### Example Usage
+ *
+ * ```typescript
+ * Auth.configure({
+ *   sessionTTL: 7 * 24 * 60 * 60 * 1000, // 7 days
+ *   storage: new CustomSecureStorage(),
+ *   masterAdminCheck: (user) => user?.roles?.includes('super_admin')
+ * });
+ * ```
+ */
+export interface AuthConfig {
+  /**
+   * Session time-to-live in milliseconds.
+   * Sessions older than this will be automatically invalidated.
+   * Default: 24 hours (86400000 ms)
+   */
+  sessionTTL?: number;
+
+  /**
+   * Custom secure storage implementation.
+   * Allows platform-specific storage mechanisms.
+   */
+  storage?: AuthSecureStorage;
+
+  /**
+   * Custom function to determine if a user is a master admin.
+   * Master admins bypass all permission checks.
+   */
+  masterAdminCheck?: (user?: AuthUser) => Promise<boolean> | boolean;
 }

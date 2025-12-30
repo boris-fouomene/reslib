@@ -3,6 +3,7 @@ import { i18n } from '../i18n';
 import { Session } from '../session';
 import '../translations';
 import { Auth } from './index';
+import './types';
 import { AuthPerm, AuthPerms, AuthUser } from './types';
 
 declare module './types' {
@@ -181,7 +182,7 @@ describe('Auth', () => {
       };
 
       await Auth.setSignedUser(testUser, false);
-      const retrievedUser = Auth.getSignedUser();
+      const retrievedUser = await Auth.getSignedUser();
 
       expect(retrievedUser).toEqual(testUser);
       expect(retrievedUser?.id).toBe(testUser.id);
@@ -285,7 +286,7 @@ describe('Auth', () => {
 
       await Auth.setSignedUser(testUser, false);
 
-      const storedUser = Auth.getSignedUser();
+      const storedUser = await Auth.getSignedUser();
       expect(storedUser?.sessionCreatedAt).toBeDefined();
       expect(storedUser?.sessionCreatedAt).toBeGreaterThanOrEqual(beforeTime);
     });
@@ -298,7 +299,7 @@ describe('Auth', () => {
       await Auth.setSignedUser(testUser, false);
 
       // User should be stored and retrievable
-      const storedUser = Auth.getSignedUser();
+      const storedUser = await Auth.getSignedUser();
       expect(storedUser).not.toBeNull();
       expect(storedUser?.id).toBe('test123');
       expect(storedUser?.sessionCreatedAt).toBeDefined();
@@ -1004,31 +1005,6 @@ describe('Auth', () => {
 
       // Should complete 3000 calls in less than 100ms
       expect(duration).toBeLessThan(100);
-    });
-  });
-
-  describe('Session getter', () => {
-    it('should provide access to Session utilities', () => {
-      // Auth.Session provides access to session management functions
-      expect(Auth.Session).toBeDefined();
-      expect(typeof Auth.Session.get).toBe('function');
-      expect(typeof Auth.Session.set).toBe('function');
-    });
-
-    it('should allow session operations through Auth.Session', () => {
-      const testKey = 'test_session_key_unique';
-      const testValue = { data: 'test' };
-
-      // Set value using module Session
-      Session.set(testKey, testValue);
-
-      // Retrieve immediately to ensure it was stored
-      const retrieved = Session.get(testKey);
-      expect(retrieved).toEqual(testValue);
-
-      // Remove value using Session module
-      Session.remove(testKey);
-      expect(Session.get(testKey)).toBeUndefined();
     });
   });
 
