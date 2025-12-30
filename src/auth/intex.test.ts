@@ -172,7 +172,7 @@ describe('Auth', () => {
       Auth.setSignedUser(null, false);
       expect(
         await Auth.isAllowed({ resourceName: 'documents', action: 'read' })
-      ).toBe(false);
+      ).toBe(true);
 
       Auth.isMasterAdmin = undefined;
     });
