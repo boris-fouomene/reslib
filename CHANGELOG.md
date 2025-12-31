@@ -1,5 +1,30 @@
 ## 1.0.3 (2025-12-09)
 
+## 2.3.0
+
+### Minor Changes
+
+- ## 🚀 Validator Enhancements (v2.3.0)
+
+  ### Conditional Validation (New Feature)
+  - **`@If` Rule**: Added a powerful new conditional validation rule that allows dynamic application of rules based on runtime context, data state, or value content.
+  - **`Validator.if()`**: Introduced a fluent API factory for creating conditional rules programmaticallly.
+  - **`Validator.validateIfRule()`**: Added public method for executing conditional validation logic imperatively.
+  - **Dynamic Resolvers**: Implemented `ValidatorIfResolver` type to support both synchronous and asynchronous path resolution in `@If` rules.
+  - **Context Access**: Resolvers have full access to the validation `context` and `rootData`, enabling cross-field dependency checks (e.g., "required if type is 'business'").
+
+  ### API Improvements & Refactoring
+  - **Exposed Decorator Builder**: Publicly exposed `Validator.createPropertyDecoratorFromRule` (formerly `_buildRuleDecorator`). This method matches the internal functionality of `buildRuleDecorator` but is designed for creating _bound_ decorator instances directly from rule parameters, clarifying the distinction between factory-builders and decorator-creators.
+  - **Enhanced Message Config**: Updated `ValidatorMessageConfig` to support consistent custom error message definitions across all rule types (including the new `@If` rule).
+
+  ### Documentation
+  - **New Section**: Added comprehensive "Conditional Validation" section to `GUIDE.md` with 4 detailed examples (Role-Based, Dependent Fields, Async Logic).
+  - **API Reference**: Updated `API_REFERENCE.md` with full documentation for `Validator.if`, `Validator.validateIfRule`, `createPropertyDecoratorFromRule`, and related types.
+  - **Rules Reference**: Added `@If` rule entry to `RULES.md` with parameter specifications.
+
+  ### Versioning
+  - Bumped `reslib` version to `2.3.0` to reflect these feature additions.
+
 ## 2.2.0
 
 ### Minor Changes
