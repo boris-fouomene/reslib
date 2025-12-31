@@ -38,6 +38,8 @@ import {
   ValidatorClassOptions,
   ValidatorClassResult,
   ValidatorDefaultMultiRule,
+  ValidatorIfResolver,
+  ValidatorIfRuleOptions,
   ValidatorMultiRuleFunction,
   ValidatorMultiRuleNames,
   ValidatorMultiRuleOptions,
@@ -1573,6 +1575,221 @@ export class Validator {
 
     return `${header}${single}${details}`;
   }
+
+  /**
+   * ## Validate If Rule
+   *
+   * Conditional validation method that applies rules based on a resolver function.
+   * The resolver dynamically determines which rules to apply (if any) based on
+   * runtime conditions, enabling flexible, context-aware validation.
+   *
+   * ### Resolver Pattern
+   * Unlike traditional condition + then/otherwise approach, this method uses a single
+   * resolver function that returns:
+   * - **Rules array**: Apply these validation rules
+   * - **Object with `rules` and `message`**: Apply rules with custom error message
+   * - **Empty array, `undefined`, or `null`**: Skip validation (return success)
+   *
+   * ### Use Cases
+   * - **Optional Validation**: Only validate if a value is present
+   * - **Role-Based Rules**: Different validation based on user role
+   * - **Context-Aware Validation**: Rules that depend on application state
+   * - **Dynamic Messages**: Custom error messages based on context
+   * - **Feature Flags**: Enable/disable validation based on configuration
+   *
+   * ### Examples
+   *
+   * #### Optional field validation
+   * ```typescript
+   * const result = await Validator.validateIfRule({
+   *   value: optionalEmail,
+   *   resolver: ({ value }) => {
+   *     if (!value) return [];  // Skip validation
+   *     return ['Email'];
+   *   },
+   *   fieldName: 'email'
+   * });
+   * ```
+   *
+   * #### Role-based validation with custom message
+   * ```typescript
+   * const result = await Validator.validateIfRule({
+   *   value: password,
+   *   data: { role: 'admin' },
+   *   resolver: ({ data }) => {
+   *     if (data?.role === 'admin') {
+   *       return {
+   *         rules: ['Required', 'StrongPassword'],
+   *         message: 'Admin passwords must be strong',
+   *       };
+   *     }
+   *     return ['Required', { MinLength: [6] }];
+   *   },
+   *   fieldName: 'password'
+   * });
+   * ```
+   *
+   * #### Context-aware validation
+   * ```typescript
+   * const result = await Validator.validateIfRule({
+   *   value: username,
+   *   context: { strictMode: true },
+   *   resolver: ({ context }) => {
+   *     if (context?.strictMode) {
+   *       return ['Required', 'Alphanumeric', { MinLength: [5] }];
+   *     }
+   *     return ['Required'];
+   *   },
+   *   fieldName: 'username'
+   * });
+   * ```
+   *
+   * #### Async resolver - Load rules from database
+   * ```typescript
+   * const result = await Validator.validateIfRule({
+   *   value: password,
+   *   context: { tenantId: 'tenant-123' },
+   *   resolver: async ({ context }) => {
+   *     // Load validation config from database
+   *     const config = await loadValidationConfig(context?.tenantId);
+   *     return config.passwordRules;
+   *   },
+   *   fieldName: 'password'
+   * });
+   * ```
+   *
+   * #### Async resolver - Feature flag check
+   * ```typescript
+   * const result = await Validator.validateIfRule({
+   *   value: username,
+   *   resolver: async () => {
+   *     const useStrictValidation = await featureFlags.isEnabled('strict-username');
+   *     if (useStrictValidation) {
+   *       return ['Required', 'Alphanumeric', { MinLength: [5] }];
+   *     }
+   *     return ['Required'];
+   *   },
+   *   fieldName: 'username'
+   * });
+   * ```
+   *
+   * @template Context - Type of the optional validation context
+   *
+   * @param options - The validation options including resolver function
+   * @param options.resolver - Function that returns rules to apply (sync or async)
+   * @param options.value - The value to validate
+   * @param options.data - Optional additional data (other fields)
+   * @param options.context - Optional application-specific context
+   * @param options.message - Optional fallback message (used if resolver doesn't provide one)
+   *
+   * @returns ValidatorAsyncRuleResult - `true` if validation passes, error string otherwise
+   *
+   * @public
+   * @async
+   * @see {@link if} - Factory method to create reusable If rules
+   * @see {@link ValidatorIfRuleOptions} - Options interface
+   * @see {@link ValidatorIfResolver} - Resolver function type (supports sync/async)
+   * @see {@link ValidatorIfResolverResult} - Resolver return type
+   */
+  static async validateIfRule<Context = unknown>(
+    options: ValidatorIfRuleOptions<Context>
+  ): ValidatorAsyncRuleResult {
+    const {
+      resolver,
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      startTime,
+      message: fallbackMessage,
+      ...extra
+    } = options;
+    const {
+      value,
+      data,
+      context,
+      fieldName,
+      propertyName,
+      translatedPropertyName,
+    } = extra;
+    const i18n = this.getI18n(extra);
+
+    // Call the resolver to get rules (and optional message)
+    // Supports both sync and async resolvers
+    const resolverResult = await resolver({
+      value,
+      data,
+      context,
+      fieldName,
+      propertyName,
+      translatedPropertyName,
+      i18n,
+    });
+
+    // If resolver returns null, undefined, or empty array, skip validation
+    if (!resolverResult) {
+      return true;
+    }
+
+    // Parse the resolver result
+    let rulesToApply: ValidatorRules<Context>;
+    let customMessage: ValidatorRuleConfigMessage | undefined;
+
+    if (Array.isArray(resolverResult)) {
+      // Resolver returned just an array of rules
+      if (resolverResult.length === 0) {
+        return true; // Empty array = skip validation
+      }
+      rulesToApply = resolverResult;
+      customMessage = fallbackMessage;
+    } else {
+      // Resolver returned an object with rules and optional message
+      rulesToApply = resolverResult.rules;
+      if (!rulesToApply || rulesToApply.length === 0) {
+        return true; // Empty rules = skip validation
+      }
+      customMessage = resolverResult.message ?? fallbackMessage;
+    }
+
+    // Validate using the selected rules
+    const result = await Validator.validate<Context>({
+      ...extra,
+      value,
+      rules: rulesToApply,
+      i18n,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any);
+
+    // If validation succeeded, return true
+    if (result.success) {
+      return true;
+    }
+
+    // Check if a custom message was provided (from resolver or fallback)
+    if (customMessage) {
+      const i18nTranslateOptions = this.getI18nTranslateOptions(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        extra as any
+      );
+      const translatedMessage = Validator.translateRuleConfigMessage<Context>({
+        message: customMessage,
+        i18n,
+        validateOptions: {
+          ...extra,
+          ...i18nTranslateOptions,
+          value,
+          ruleName: 'If' as ValidatorRuleName,
+          ruleParams: [],
+          i18n,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } as any,
+      });
+      if (isNonNullString(translatedMessage)) {
+        return translatedMessage;
+      }
+    }
+
+    // Return the validation error message
+    return result.message;
+  }
+
   static getI18nTranslateOptions<Context = unknown>({
     fieldName,
     propertyName,
@@ -2216,6 +2433,141 @@ export class Validator {
           ValidatorDefaultMultiRule<Context>
         >),
         ruleParams,
+      });
+    };
+  }
+
+  /**
+   * ## Create If Validation Rule
+   *
+   * Factory method that creates a conditional validation rule function. This method provides
+   * a programmatic way to create validation rules that apply different sub-rules based on
+   * a runtime resolver function.
+   *
+   * ### Resolver Pattern
+   * Unlike traditional condition + then/otherwise approach, this factory accepts a single
+   * resolver function that returns the rules to apply. This enables:
+   * - **Complex conditional logic**: Multi-branch conditions, nested checks
+   * - **Dynamic messages**: Different messages based on context
+   * - **Rule composition**: Build rules dynamically from multiple sources
+   * - **Early exit**: Return empty array to skip validation entirely
+   *
+   * ### Return Value
+   * Returns a `ValidatorRuleFunction` that can be used:
+   * - In `Validator.validate()` calls
+   * - In validation decorators like `@IsProperty()`
+   * - As part of rule arrays in class-based validation
+   *
+   * ### Examples
+   *
+   * #### Optional Field Validation
+   * ```typescript
+   * // Only validate email format if value is present
+   * const optionalEmail = Validator.if(({ value }) => {
+   *   if (!value) return [];  // Skip validation
+   *   return ['Email'];
+   * });
+   *
+   * await optionalEmail({ value: '' }); // true (resolver returns [])
+   * await optionalEmail({ value: 'invalid' }); // error (Email fails)
+   * await optionalEmail({ value: 'user@example.com' }); // true
+   * ```
+   *
+   * #### Role-Based Validation
+   * ```typescript
+   * const passwordRule = Validator.if(({ data }) => {
+   *   if (data?.role === 'admin') {
+   *     return ['Required', 'StrongPassword'];
+   *   }
+   *   if (data?.role === 'moderator') {
+   *     return ['Required', { MinLength: [8] }];
+   *   }
+   *   return ['Required', { MinLength: [6] }];
+   * });
+   * ```
+   *
+   * #### With Custom Message
+   * ```typescript
+   * const strictModeRule = Validator.if(({ context, i18n }) => {
+   *   if (context?.strictMode) {
+   *     return {
+   *       rules: ['Required', { MinLength: [10] }],
+   *       message: i18n.t('validation.strict_mode_required'),
+   *     };
+   *   }
+   *   return ['Required'];
+   * });
+   * ```
+   *
+   * #### Dependent Field Validation
+   * ```typescript
+   * const confirmPasswordRule = Validator.if(({ value, data }) => {
+   *   if (!data?.password) return [];  // Skip if no password
+   *   return {
+   *     rules: ['Required', { Equals: [data.password] }],
+   *     message: 'Passwords must match',
+   *   };
+   * });
+   * ```
+   *
+   * #### Async Resolver - Load from Database
+   * ```typescript
+   * const dynamicRule = Validator.if(async ({ context }) => {
+   *   const config = await loadValidationConfig(context?.tenantId);
+   *   return config.rules;
+   * });
+   * ```
+   *
+   * #### Async Resolver - Feature Flag
+   * ```typescript
+   * const featureFlagRule = Validator.if(async () => {
+   *   const enabled = await featureFlags.isEnabled('strict-validation');
+   *   return enabled ? ['Required', 'StrictFormat'] : ['Required'];
+   * });
+   * ```
+   *
+   * ### Decorator Usage
+   * ```typescript
+   * class UserForm {
+   *   @IsProperty([
+   *     Validator.if(({ data }) => {
+   *       if (data?.userType === 'business') {
+   *         return ['Required', { MinLength: [3] }];
+   *       }
+   *       return [];  // No validation for non-business users
+   *     })
+   *   ])
+   *   companyName?: string;
+   * }
+   * ```
+   *
+   * ### Sync vs Async
+   * The resolver supports both synchronous and asynchronous operations:
+   * - **Sync**: Return the result directly for simple, non-blocking logic
+   * - **Async**: Return a Promise for database lookups, API calls, or async configuration
+   *
+   * @template Context - Type of the optional validation context
+   *
+   * @param resolver - Resolver function (sync or async) that returns rules to apply
+   *
+   * @returns A `ValidatorRuleFunction` that performs conditional validation
+   *
+   * @public
+   * @see {@link validateIfRule} - The underlying validation method
+   * @see {@link ValidatorIfResolver} - Resolver function type (supports sync/async)
+   * @see {@link ValidatorIfResolverResult} - Resolver return type
+   * @see {@link oneOf} - Similar factory for OR logic validation
+   * @see {@link allOf} - Similar factory for AND logic validation
+   */
+  static if<Context = unknown>(
+    resolver: ValidatorIfResolver<Context>
+  ): ValidatorRuleFunction<ValidatorDefaultArray, Context> {
+    return function If(
+      options: ValidatorOptions<ValidatorDefaultArray, Context>
+    ) {
+      return Validator.validateIfRule<Context>({
+        ...options,
+        resolver,
       });
     };
   }
