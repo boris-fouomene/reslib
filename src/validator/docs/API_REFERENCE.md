@@ -491,6 +491,66 @@ const result2 = await UserSchema.validate({ id: 2, email: 'c@d.com' });
 
 ---
 
+### Validator.if()
+
+**Factory method to create a conditional validation rule.**
+
+```typescript
+static if<Context = unknown>(
+  resolver: ValidatorIfResolver<Context>
+): ValidatorIfRuleFunction<Context>
+```
+
+#### Parameters
+
+| Parameter  | Type                  | Required | Description                                     |
+| :--------- | :-------------------- | :------- | :---------------------------------------------- |
+| `resolver` | `ValidatorIfResolver` | ✅       | Function that returns rules or skips validation |
+
+#### Returns
+
+A validation rule function that can be used in `rules` arrays or decorators.
+
+#### Examples
+
+```typescript
+const ifAdmin = Validator.if(({ context }) =>
+  context.isAdmin ? ['Required'] : []
+);
+
+const rules = [ifAdmin, { MinLength: [5] }];
+```
+
+---
+
+### Validator.validateIfRule()
+
+**Execute a conditional validation rule directly.**
+
+```typescript
+static async validateIfRule<Context = unknown>(
+  options: ValidatorIfRuleOptions<Context>
+): Promise<ValidatorRuleResult>
+```
+
+#### Parameters
+
+| Parameter          | Type                     | Required | Description                 |
+| :----------------- | :----------------------- | :------- | :-------------------------- |
+| `options`          | `ValidatorIfRuleOptions` | ✅       | Configuration options       |
+| `options.resolver` | `ValidatorIfResolver`    | ✅       | Logic to determine rules    |
+| `options.value`    | `any`                    | ✅       | Value being validated       |
+| `options.data`     | `object`                 | ❌       | Object containing the value |
+| `options.context`  | `Context`                | ❌       | Validation context          |
+
+#### Returns
+
+```typescript
+Promise<string | true>; // Error message or true if valid
+```
+
+---
+
 ### Validator.registerRule()
 
 **Register a custom validation rule.**
@@ -796,7 +856,50 @@ const rules: ValidatorRules = [
     }
   }
 ];
-````
+```
+
+### ValidatorIfResolver
+
+Function that determines rules dynamically.
+
+```typescript
+type ValidatorIfResolver<Context = unknown> = (
+  options: Pick<ValidatorOptions<ValidatorRuleParams, Context>, 'value' | 'data' | 'context' | 'i18n'>
+) =>
+  | ValidatorRules
+  | { rules: ValidatorRules; message?: string | ((opts: any) => string) } // With custom message
+  | [] // Skip validation
+  | undefined
+  | null
+  | Promise<ValidatorRules | { rules: ValidatorRules; message?: string } | [] | undefined | null>;
+```
+
+### ValidatorIfRuleOptions
+
+Options for `validateIfRule`, extending standard options but replacing `rules` with `resolver`.
+
+```typescript
+interface ValidatorIfRuleOptions<Context = unknown>
+  extends Omit<ValidatorOptions<ValidatorRuleParams, Context>, 'rules' | 'ruleParams'>,
+    ValidatorMessageConfig {
+  resolver: ValidatorIfResolver<Context>;
+}
+```
+
+### ValidatorMessageConfig
+
+Mixin interface for providing custom error messages.
+
+```typescript
+interface ValidatorMessageConfig {
+  /**
+   * Custom error message or generator function.
+   * If a function is provided, it receives the validation options/results.
+   */
+  message?: string | ((options: ValidatorOptions) => string);
+}
+```
+`
 
 ---
 
@@ -846,7 +949,7 @@ All 67 validation rules have corresponding decorators.
 @AllOf(...rules)
 @ArrayOf(...rules)
 @ValidateNested(Class)
-````
+```
 
 📋 **[See All Rules →](./RULES.md)**
 

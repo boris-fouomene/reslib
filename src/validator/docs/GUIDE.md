@@ -5780,6 +5780,75 @@ if (result.success) {
 
 ---
 
+---
+
+## Conditional Validation
+
+The `@If` rule allows you to apply validation logic dynamically based on runtime conditions. This is powerful for multi-step forms, user-role based validation, or interdependent fields.
+
+### Features
+
+- **Dynamic Rules:** Return different rules based on value, data, or context.
+- **Skip Logic:** Return empty array `[]` to skip validation.
+- **Async Support:** Fetch rules from database or API.
+- **Context Access:** Full access to validation context.
+
+### Examples
+
+#### 1. Role-Based Validation
+
+```typescript
+class UserProfile {
+  @If(({ context }) => (context.isAdmin ? ['Required'] : []))
+  adminCode: string;
+}
+
+// Admin context -> Required
+await Validator.validateClass(UserProfile, {
+  data: data,
+  context: { isAdmin: true },
+});
+```
+
+#### 2. Dependent Fields
+
+```typescript
+class Order {
+  @IsEnum(['personal', 'business'])
+  type: string;
+
+  // Company name required only if type is business
+  @If(({ data }) => (data.type === 'business' ? ['Required'] : []))
+  companyName: string;
+}
+```
+
+#### 3. Async Logic
+
+```typescript
+class Subscription {
+  @If(async ({ value }) => {
+    const isPremium = await checkPremiumStatus(value);
+    return isPremium ? [] : ['MaxLength'];
+  })
+  planId: string;
+}
+```
+
+#### 4. Custom Messages with @If
+
+You can return a configuration object from the resolver to set a custom message for the conditional logic itself.
+
+```typescript
+@If(() => ({
+  rules: ['Required'],
+  message: 'This field is required for your account type'
+}))
+field: string;
+```
+
+---
+
 ## Custom Messages
 
 Reslib Validator supports highly flexible error message customization.

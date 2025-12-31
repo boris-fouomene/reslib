@@ -4081,7 +4081,7 @@ export class Validator {
       this._prepareRuleDecorator(ruleFunction, ruleName, symbolMarker);
     }
     return (...ruleParameters: TRuleParams) => {
-      return this._buildRuleDecorator<TRuleParams, Context>(
+      return this.createPropertyDecoratorFromRule<TRuleParams, Context>(
         ruleParameters,
         ruleFunction,
         ruleName,
@@ -4149,7 +4149,7 @@ export class Validator {
       this._prepareRuleDecorator(ruleFunction, ruleName, symbolMarker);
     }
     return (ruleParameters: TRuleParams) => {
-      return this._buildRuleDecorator<TRuleParams, Context>(
+      return this.createPropertyDecoratorFromRule<TRuleParams, Context>(
         ruleParameters,
         ruleFunction,
         ruleName,
@@ -5041,7 +5041,27 @@ export class Validator {
     }
     return ruleFunction;
   }
-  private static _buildRuleDecorator<
+  /**
+   * ## Create Property Decorator from Rule
+   *
+   * Creates a property decorator for a validation rule with specific parameters.
+   * This method combines rule registration (if a name is provided) with property decorator creation.
+   * Unlike `buildRuleDecorator` which returns a factory, this returns the actual decorator
+   * bound to the provided rule parameters.
+   *
+   * @remarks
+   * **Naming Guide**:
+   * - `buildRuleDecorator`: Creates a **Factory** (e.g. `IsRequired()`) that produces decorators.
+   * - `createPropertyDecoratorFromRule`: Creates the **Decorator** instance directly from parameters.
+   *
+   * @param ruleParameters - The parameters for the validation rule
+   * @param ruleFunction - The validation rule logic
+   * @param ruleName - Optional name to register the rule with
+   * @param symbolMarker - Internal symbol marker
+   * @returns The PropertyDecorator
+   * @public
+   */
+  public static createPropertyDecoratorFromRule<
     TRuleParams extends ValidatorRuleParams = ValidatorRuleParams,
     Context = unknown,
   >(
@@ -5530,7 +5550,7 @@ export class Validator {
     symbolMarker?: symbol
   ) {
     return (ruleParameters: RulesFunctions) => {
-      return this._buildRuleDecorator<RulesFunctions, Context>(
+      return this.createPropertyDecoratorFromRule<RulesFunctions, Context>(
         ruleParameters,
         ruleFunction,
         undefined,
@@ -5572,7 +5592,7 @@ export class Validator {
    * @returns A decorator factory that accepts a resolver function
    *
    * @public
-   * @see {@link _buildRuleDecorator} - The internal decorator builder
+   * @see {@link createPropertyDecoratorFromRule} - The internal decorator builder
    * @see {@link ValidatorIfRuleFunction} - The type of the validation function
    * @see {@link ValidatorIfResolver} - The resolver type accepted by the decorator
    * @see {@link ValidatorIfResolver} - The resolver type accepted by the decorator
@@ -5582,12 +5602,10 @@ export class Validator {
     symbolMarker?: symbol
   ) {
     return (ifRuleResolver: ValidatorIfResolver<Context>) => {
-      return this._buildRuleDecorator<[ValidatorIfResolver<Context>], Context>(
-        [ifRuleResolver],
-        ruleFunction,
-        undefined,
-        symbolMarker
-      );
+      return this.createPropertyDecoratorFromRule<
+        [ValidatorIfResolver<Context>],
+        Context
+      >([ifRuleResolver], ruleFunction, undefined, symbolMarker);
     };
   }
 

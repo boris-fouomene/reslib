@@ -351,6 +351,53 @@ class User {
 }
 ```
 
+### Conditional Rules (1 rule)
+
+**Purpose:** Dynamic validation based on runtime conditions (value, data, context, async).
+
+| Rule  | Parameters   | Description                                         |
+| ----- | ------------ | --------------------------------------------------- |
+| `@If` | `[resolver]` | Applies rules dynamically using a resolver function |
+
+**Sync Example:**
+
+```typescript
+class User {
+  // Only required if role is admin
+  @If(({ data }) => (data.role === 'admin' ? ['Required'] : []))
+  adminCode: string;
+
+  // Different rules based on value
+  @If(({ value }) => (value ? ['Email'] : []))
+  recoveryEmail?: string;
+}
+```
+
+**Async Example:**
+
+```typescript
+class Config {
+  // Load rules from database/API
+  @If(async ({ context }) => {
+    const rules = await fetchRulesForTenant(context.tenantId);
+    return rules;
+  })
+  settings: object;
+}
+```
+
+**Custom Message Example:**
+
+```typescript
+class Profile {
+  @If(({ data }) => ({
+    rules: ['Required'],
+    message: 'Bio is required for public profiles',
+  }))
+  bio: string;
+}
+```
+
 ### Class Rules (1 rule)
 
 | Rule                | Description                     |
