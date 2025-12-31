@@ -2,7 +2,12 @@ import {
   buildPropertyDecorator,
   getDecoratedProperties,
 } from '@/resources/decorators';
-import { ClassConstructor, Dictionary, MakeOptional } from '@/types';
+import {
+  ClassConstructor,
+  Dictionary,
+  MakeOptional,
+  MakeRequired,
+} from '@/types';
 import { Logger } from '@logger';
 import {
   defaultStr,
@@ -984,6 +989,116 @@ export class Validator {
     );
   }
 
+  /**
+   * ## Translate Rule Config Message
+   *
+   * Translates or processes a custom rule message from a `ValidatorRuleConfigMessage`.
+   * This method handles both static string messages (with optional i18n translation)
+   * and dynamic function-based messages.
+   *
+   * ### Purpose
+   * This method extracts the rule message translation logic into a reusable function
+   * that can be called independently of the `validate` method. It's particularly useful
+   * when you need to process custom rule messages in custom validation pipelines or
+   * when building custom error handling logic.
+   *
+   * ### Message Types
+   * 1. **Static String**: Can be a direct message or an i18n translation key
+   *    - If the string is a valid i18n key, it will be translated
+   *    - Otherwise, the string is used as-is
+   * 2. **Dynamic Function**: A function that receives validation options and returns a message
+   *    - If the function throws an error, an empty string is returned
+   *
+   * ### Examples
+   *
+   * #### Static String Message
+   * ```typescript
+   * const message = Validator.translateRuleConfigMessage({
+   *   message: 'This field is required',
+   *   i18n: i18nInstance,
+   *   validateOptions: { value: '', ruleName: 'Required', ruleParams: [] }
+   * });
+   * // message = 'This field is required'
+   * ```
+   *
+   * #### i18n Translation Key
+   * ```typescript
+   * const message = Validator.translateRuleConfigMessage({
+   *   message: 'validation.required',
+   *   i18n: i18nInstance,
+   *   validateOptions: { value: '', ruleName: 'Required', ruleParams: [] }
+   * });
+   * // message = 'Ce champ est obligatoire' (if i18n is set to French)
+   * ```
+   *
+   * #### Dynamic Function Message
+   * ```typescript
+   * const message = Validator.translateRuleConfigMessage({
+   *   message: ({ value, ruleName }) => `Value "${value}" failed ${ruleName} rule`,
+   *   i18n: i18nInstance,
+   *   validateOptions: { value: 'test', ruleName: 'Email', ruleParams: [] }
+   * });
+   * // message = 'Value "test" failed Email rule'
+   * ```
+   *
+   * @template Context - The type of the optional validation context
+   *
+   * @param options - The options for translating the rule message
+   * @param options.message - The rule message to translate (string or function)
+   * @param options.i18n - The i18n instance for translation
+   * @param options.validateOptions - The validation options passed to function messages
+   *
+   * @returns The translated/processed message string, or empty string if:
+   *          - The message is undefined/null
+   *          - The function message throws an error
+   *          - The message is not a valid string or function
+   *
+   * @see {@link ValidatorRuleConfigMessage} - Type definition for rule messages
+   * @see {@link validate} - Main validation method that uses this internally
+   * @public
+   */
+  static translateRuleConfigMessage<Context = unknown>({
+    message,
+    i18n,
+    validateOptions,
+  }: {
+    message: ValidatorRuleConfigMessage | undefined;
+    i18n: I18n;
+    validateOptions: MakeRequired<
+      Omit<
+        ValidatorOptions<ValidatorDefaultArray, Context>,
+        'sanitizedRules' | 'rules' | 'rule'
+      >,
+      'i18n' | 'ruleName' | 'ruleParams'
+    >;
+  }): string {
+    if (!message) {
+      return '';
+    }
+
+    if (isNonNullString(message)) {
+      return i18n.has(message) ? i18n.t(message, validateOptions) : message;
+    }
+
+    if (typeof message === 'function') {
+      try {
+        return message(validateOptions);
+      } catch (e) {
+        // Custom message function failed; ignore and use default message
+        Logger.log(
+          Validator.name,
+          ' Error generated when running custom translate rule message ',
+          validateOptions.ruleName,
+          validateOptions.ruleParams,
+          e
+        );
+        return '';
+      }
+    }
+
+    return '';
+  }
+
   static async validate<Context = unknown>({
     rules,
     ...extra
@@ -1109,27 +1224,12 @@ export class Validator {
           }
           let translatedRuleMessage: string = '';
           if (result !== true && ruleMessage) {
-            if (isNonNullString(ruleMessage)) {
-              translatedRuleMessage = i18n.has(ruleMessage)
-                ? i18n.t(ruleMessage, i18nRuleOptions)
-                : ruleMessage;
-            } else if (typeof ruleMessage === 'function') {
-              try {
-                translatedRuleMessage = ruleMessage({
-                  ...validateOptions,
-                });
-              } catch (e) {
-                // Custom message function failed; ignore and use default message
-                Logger.log(
-                  Validator.name,
-                  ' Error generated when runing custom translate rule message ',
-                  ruleName,
-                  ruleParams,
-                  e
-                );
-                translatedRuleMessage = '';
-              }
-            }
+            translatedRuleMessage =
+              Validator.translateRuleConfigMessage<Context>({
+                message: ruleMessage,
+                i18n,
+                validateOptions,
+              });
           }
           if (isNonNullString(translatedRuleMessage)) {
             return resolve(
@@ -1360,7 +1460,7 @@ export class Validator {
   >(
     options: ValidatorMultiRuleOptions<Context, RulesFunctions>
   ): ValidatorAsyncRuleResult {
-    let { value, ruleParams, startTime, ...extra } = options;
+    let { value, ruleParams, startTime, message, ...extra } = options;
     startTime = isNumber(startTime) ? startTime : Date.now();
     const subRules = (
       Array.isArray(ruleParams) ? ruleParams : []
@@ -1421,6 +1521,39 @@ export class Validator {
       itemList = `${visibleIndices.join(separator)}${separator}${moreText}`;
     }
 
+    // Check if a custom message was provided via ValidatorMessageConfig
+    if (message) {
+      const i18nTranslateOptions = this.getI18nTranslateOptions(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        extra as any
+      );
+      const translatedMessage = Validator.translateRuleConfigMessage<Context>({
+        message,
+        i18n,
+        validateOptions: {
+          ...extra,
+          ...i18nTranslateOptions,
+          context: extra.context,
+          value,
+          ruleName: 'ArrayOf' as ValidatorRuleName,
+          ruleParams: ruleParams ?? ([] as unknown as RulesFunctions),
+          i18n,
+          // Include failure details for use in dynamic message functions
+          ...{
+            failures,
+            failedIndices,
+            itemCount,
+            itemList,
+            totalCount: value.length,
+          },
+        },
+      });
+      if (isNonNullString(translatedMessage)) {
+        return translatedMessage;
+      }
+    }
+
+    // Default error message with header and details
     const header = i18n.t('validator.arrayValidationFailed', {
       count: failures.length,
       itemCount,
@@ -1639,19 +1772,28 @@ export class Validator {
     }
     const nestedErrors = this.translateNestedErrorResult(nestedResult, i18n);
     // Aggregate nested errors with field path information
-    const nestedOptions = Object.assign({}, ruleParamsArray[1]);
-    const message = defaultStr(nestedOptions.message);
-    if (message) {
-      if (i18n.has(message)) {
-        return defaultStr(
-          i18n.t(message, {
-            ...translateProperties,
-            nestedErrors,
-          })
-        );
+
+    // Check if a custom message was provided via ValidatorMessageConfig
+    if (options.message) {
+      const translatedMessage = Validator.translateRuleConfigMessage<Context>({
+        message: options.message,
+        i18n,
+        validateOptions: {
+          ...extra,
+          ...translateProperties,
+          value,
+          ruleName: 'ValidateNested' as ValidatorRuleName,
+          ruleParams: ruleParams ?? [],
+          i18n,
+          ...{ nestedErrors }, // Include nestedErrors for use in dynamic message functions
+        },
+      });
+      if (isNonNullString(translatedMessage)) {
+        return translatedMessage;
       }
-      return message;
     }
+
+    // Default error message with nested errors
     return i18n.t('validator.validateNested', {
       nestedErrors,
       ...translateProperties,
@@ -1755,6 +1897,7 @@ export class Validator {
       value,
       ruleParams,
       startTime,
+      message,
       ...extra
     }: ValidatorMultiRuleOptions<Context, RulesFunctions>
   ) {
@@ -1796,6 +1939,32 @@ export class Validator {
       return true;
     }
     if (allErrors.length === 0) return true;
+
+    // Check if a custom message was provided via ValidatorMessageConfig
+    if (message) {
+      const i18nTranslateOptions = this.getI18nTranslateOptions(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        extra as any
+      );
+      const translatedMessage = Validator.translateRuleConfigMessage<Context>({
+        message,
+        i18n,
+        validateOptions: {
+          ...extra,
+          ...i18nTranslateOptions,
+          value,
+          ruleName: ruleName as ValidatorRuleName,
+          ruleParams: ruleParams ?? [],
+          i18n,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } as any,
+      });
+      if (isNonNullString(translatedMessage)) {
+        return translatedMessage;
+      }
+    }
+
+    // Default error message with aggregated sub-rule errors
     return i18n.t(`validator.${lowerFirst(ruleName)}`, {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       ...this.getI18nTranslateOptions(extra as any),

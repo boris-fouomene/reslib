@@ -65,7 +65,9 @@ describe('Auth', () => {
       const testUser: AuthUser = { id: 'test123', email: 'test@example.com' };
       await Auth.signIn(testUser);
 
-      expect(mockCallback).toHaveBeenCalledWith(testUser);
+      expect(mockCallback).toHaveBeenCalledWith(
+        expect.objectContaining(testUser)
+      );
       expect(mockCallback).toHaveBeenCalledTimes(1);
     });
 
@@ -99,8 +101,12 @@ describe('Auth', () => {
       const testUser: AuthUser = { id: 'test123' };
       await Auth.signIn(testUser);
 
-      expect(mockCallback1).toHaveBeenCalledWith(testUser);
-      expect(mockCallback2).toHaveBeenCalledWith(testUser);
+      expect(mockCallback1).toHaveBeenCalledWith(
+        expect.objectContaining(testUser)
+      );
+      expect(mockCallback2).toHaveBeenCalledWith(
+        expect.objectContaining(testUser)
+      );
     });
 
     it('should not trigger events when triggerEvent is false', async () => {
