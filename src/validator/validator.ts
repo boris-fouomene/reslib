@@ -39,6 +39,7 @@ import {
   ValidatorClassResult,
   ValidatorDefaultMultiRule,
   ValidatorIfResolver,
+  ValidatorIfRuleFunction,
   ValidatorIfRuleOptions,
   ValidatorMultiRuleFunction,
   ValidatorMultiRuleNames,
@@ -5531,6 +5532,58 @@ export class Validator {
     return (ruleParameters: RulesFunctions) => {
       return this._buildRuleDecorator<RulesFunctions, Context>(
         ruleParameters,
+        ruleFunction,
+        undefined,
+        symbolMarker
+      );
+    };
+  }
+
+  /**
+   * ## Build If Rule Decorator Factory
+   *
+   * Creates a specialized decorator factory for the conditional `@If` rule.
+   * This method wraps `_buildRuleDecorator` to specifically handle the single
+   * resolver function argument pattern used by `Validator.if`.
+   *
+   * ### Purpose
+   * Standard decorators created by `buildRuleDecorator` typically accept rule parameters
+   * as a spread of arguments (`...args`). However, the `@If` decorator accepts a
+   * single resolver function argument. This factory method adapts the generic decorator
+   * builder to enforce this specific signature, providing better type safety and DX
+   * for conditional validation.
+   *
+   * ### How It Works
+   * 1. Takes the `If` validation function as input
+   * 2. Returns a new decorator factory function
+   * 3. This factory takes a single `ValidatorIfResolver` argument
+   * 4. It passes this resolver as a single-element array to the underlying `_buildRuleDecorator`
+   *
+   * ### Benefits
+   * - **Type Safety**: Enforces that exactly one resolver is passed
+   * - **Simplified API**: Users just pass the function: `@If(({ value }) => ...)`
+   * - **Internal consistency**: Reuses the core decorator infrastructure
+   *
+   * @template Context - Type of the optional validation context
+   *
+   * @param ruleFunction - The core validation logic function (processes the rule)
+   * @param symbolMarker - Optional symbol to tag the decorator for reflection
+   *
+   * @returns A decorator factory that accepts a resolver function
+   *
+   * @public
+   * @see {@link _buildRuleDecorator} - The internal decorator builder
+   * @see {@link ValidatorIfRuleFunction} - The type of the validation function
+   * @see {@link ValidatorIfResolver} - The resolver type accepted by the decorator
+   * @see {@link ValidatorIfResolver} - The resolver type accepted by the decorator
+   */
+  static buildIfRuleDecorator<Context = unknown>(
+    ruleFunction: ValidatorIfRuleFunction<Context>,
+    symbolMarker?: symbol
+  ) {
+    return (ifRuleResolver: ValidatorIfResolver<Context>) => {
+      return this._buildRuleDecorator<[ValidatorIfResolver<Context>], Context>(
+        [ifRuleResolver],
         ruleFunction,
         undefined,
         symbolMarker

@@ -1601,6 +1601,36 @@ export type ValidatorMultiRuleFunction<
 > = ValidatorRuleFunction<RulesFunctions, Context>;
 
 /**
+ * ## Validator If Rule Function
+ *
+ * Specialized validation function type for the conditional `@If` rule.
+ * This type definition constrains the `ValidatorRuleFunction` to strictly accept
+ * a single `ValidatorIfResolver` as its parameter source.
+ *
+ * ### Purpose
+ * Standard validation rule functions are generic and can accept any array of parameters.
+ * The `@If` rule specifically requires exactly one parameter: the resolver function.
+ * This type alias enforces that constraint at the type system level.
+ *
+ * ### Structure
+ * ```typescript
+ * ValidatorRuleFunction<[ValidatorIfResolver<Context>], Context>
+ * ```
+ * - **Params**: Tuple containing exactly one `ValidatorIfResolver`
+ * - **Context**: Generic shared validation context
+ *
+ * @template Context - The type of the validation context object (optional)
+ *
+ * @public
+ * @see {@link Validator.if} - The factory method that returns this function type
+ * @see {@link ValidatorIfResolver} - The resolver function used as the parameter
+ */
+export type ValidatorIfRuleFunction<Context = unknown> = ValidatorRuleFunction<
+  [ValidatorIfResolver<Context>],
+  Context
+>;
+
+/**
  * ## Validator If Resolver Result
  *
  * Defines the possible return types for a conditional validation resolver function.

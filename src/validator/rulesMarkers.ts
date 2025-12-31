@@ -8,5 +8,6 @@ export const VALIDATOR_RULE_MARKERS = {
   optional: Symbol.for('validatorOptionalRuleMarker'),
   empty: Symbol.for('validatorEmptyRuleMarker'),
   nullable: Symbol.for('validatorNullableRuleMarker'),
+  if: Symbol.for('validatorIfRuleMarker'),
   ruleName: Symbol.for('validatorRuleNameMarker'),
 };

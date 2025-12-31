@@ -7,6 +7,7 @@ export * from './default';
 export * from './enum';
 export * from './file';
 export * from './format';
+export * from './ifRule';
 export * from './multiRules';
 export * from './numeric';
 export * from './object';
