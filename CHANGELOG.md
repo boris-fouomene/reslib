@@ -1,5 +1,11 @@
 ## 1.0.3 (2025-12-09)
 
+## 2.3.1
+
+### Patch Changes
+
+- feat: Add new utility functions for type checking (isRegex, isNumber, isPrimitive, isPromise, isEmpty, isNonNullString, isEmail) and URI manipulation.
+
 ## 2.3.0
 
 ### Minor Changes
