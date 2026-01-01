@@ -3,7 +3,7 @@
  *
  * A value is considered empty if it is null, undefined, an empty string, or an empty array.
  *
- * @param {any} value The value to check.
+ * @param {unknown} value The value to check.
  * @returns {boolean} True if the value is empty, false otherwise.
  * @example
  * ```typescript
@@ -15,8 +15,8 @@
  * console.log(isEmpty([1, 2, 3])); // Output: false
  * ```
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function isEmpty(value: any): boolean {
+
+export function isEmpty(value: unknown): boolean {
   /**
    * Check if the value is null or undefined.
    */

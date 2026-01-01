@@ -3,7 +3,7 @@
  *
  * A value is considered a regular expression if it is an instance of the RegExp constructor, or if it can be converted to a RegExp.
  *
- * @param {any} regExp The value to check.
+ * @param {unknown} regExp The value to check.
  * @returns {boolean} True if the value is a regular expression, false otherwise.
  * @example
  * ```typescript
@@ -12,8 +12,7 @@
  * console.log(isRegExp({})); // Output: false
  * ```
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function isRegExp(regExp: any): regExp is RegExp {
+export function isRegExp(regExp: unknown): regExp is RegExp {
   /**
    * If the value is an instance of the RegExp constructor, it's a regular expression.
    */
@@ -32,10 +31,9 @@ export function isRegExp(regExp: any): regExp is RegExp {
     return false;
   }
   try {
-    new RegExp(regExp);
+    new RegExp(regExp as unknown as string);
     return true;
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  } catch (e) {
+  } catch {
     return false;
   }
 }

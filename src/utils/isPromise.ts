@@ -3,7 +3,7 @@
  *
  * A value is considered a native Promise if it is an instance of the Promise constructor, or if its constructor is a function that is similar to the Promise constructor.
  *
- * @param {any} p The value to check.
+ * @param {unknown} p The value to check.
  * @returns {boolean} True if the value is a native Promise, false otherwise.
  * @example
  * ```typescript
@@ -11,8 +11,7 @@
  * console.log(isNativePromise({})); // Output: false
  * ```
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function isNativePromise(p: any): boolean {
+function isNativePromise(p: unknown): boolean {
   if (
     typeof p === 'boolean' ||
     !p ||
@@ -47,9 +46,9 @@ function isNativePromise(p: any): boolean {
     return true;
   }
   if (
-    typeof p?.then == 'function' &&
-    typeof p?.catch === 'function' &&
-    typeof p?.finally === 'function'
+    typeof (p as { then: unknown })?.then == 'function' &&
+    typeof (p as { catch: unknown })?.catch === 'function' &&
+    typeof (p as { finally: unknown })?.finally === 'function'
   ) {
     return true;
   }
@@ -73,7 +72,7 @@ function isNativePromise(p: any): boolean {
  *
  * A value is considered a Promise if it is a native Promise or if it has a Promise-like interface.
  *
- * @param {any} value The value to check.
+ * @param {unknown} value The value to check.
  * @returns {boolean} True if the value is a Promise, false otherwise.
  * @example
  * ```typescript
@@ -81,8 +80,7 @@ function isNativePromise(p: any): boolean {
  * console.log(isPromise({})); // Output: false
  * ```
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function isPromise(value: any): boolean {
+export function isPromise(value: unknown): boolean {
   /**
    * Check if the value is a native Promise.
    */

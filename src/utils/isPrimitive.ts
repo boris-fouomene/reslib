@@ -3,7 +3,7 @@ import { Primitive } from '../types';
 /**
  * Type guard to check if a value is a primitive type.
  *
- * @param {any} value - The value to check
+ * @param {unknown} value - The value to check
  * @returns {boolean} True if the value is a primitive, false otherwise
  *
  * @example
@@ -14,8 +14,7 @@ import { Primitive } from '../types';
  * isPrimitive({})          // returns false
  * isPrimitive([])          // returns false
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function isPrimitive(value: any): value is Primitive {
+export function isPrimitive(value: unknown): value is Primitive {
   return (
     value === null ||
     value === undefined ||

@@ -368,7 +368,7 @@ export interface IsUrlOptions {
  *
  * @public
  */
-export function isUrl(value: string, options: IsUrlOptions = {}): boolean {
+export function isUrl(value: unknown, options: IsUrlOptions = {}): boolean {
   const { requireHost = true, allowedProtocols } = Object.assign({}, options);
 
   // Early return for non-string or empty values

@@ -33,7 +33,7 @@
  * @note This function rejects infinite values (Infinity/-Infinity) as they typically
  *       represent error conditions or overflow in validation contexts.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function isNumber(value: any): value is number {
+
+export function isNumber(value: unknown): value is number {
   return typeof value === 'number' && !isNaN(value) && isFinite(value);
 }

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { isNonNullString } from './isNonNullString';
 
 /**
@@ -61,7 +60,7 @@ export interface IsEmailOptions {
  * // Custom length limits
  * isEmail("very.long.email@domain.com", { maxTotalLength: 100 }) // true if under 100 chars
  */
-export function isEmail(email: string, options: IsEmailOptions = {}): boolean {
+export function isEmail(email: unknown, options: IsEmailOptions = {}): boolean {
   // Set default options
   const {
     maxTotalLength = 320,
@@ -302,44 +301,4 @@ function isValidIPv6(ip: string): boolean {
   }
 
   return true;
-}
-/**
- * @function isEmail
- *
- * Validates whether a given value is a valid email address format.
- * This function checks if the input is a non-null string and then applies a regular expression
- * to determine if the value conforms to standard email formatting rules.
- *
- * ### Parameters:
- * - **value**: `any` - The value to validate as an email address. This can be of any type, but the function will check if it is a non-null string.
- *
- * ### Return Value:
- * - `boolean`: Returns `true` if the value is a valid email format; otherwise, returns `false`.
- *
- * ### Example Usage:
- * ```typescript
- * const email1 = "test@example.com";
- * const email2 = "invalid-email@.com";
- *
- * console.log(isEmail(email1)); // Output: true
- * console.log(isEmail(email2)); // Output: false
- * ```
- *
- * ### Notes:
- * - The function utilizes the `isNonNullString` utility to ensure that the input is a valid string before performing the regex check.
- * - The regular expression used in this function checks for a variety of valid email formats, including those with special characters and domain specifications.
- * - This function is useful for form validation where email input is required, ensuring that users provide a correctly formatted email address.
- */
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function isEmail2(value: any): boolean {
-  if (!isNonNullString(value)) {
-    return false;
-  }
-  return value.match(
-    // eslint-disable-next-line no-useless-escape
-    /^(")?(?:[^\."])(?:(?:[\.])?(?:[\w\-!#$%&'*+\/=?\^_`{|}~]))*\1@(\w[\-\w]*\.){1,5}([A-Za-z]){2,6}$/
-  )
-    ? true
-    : false;
 }
