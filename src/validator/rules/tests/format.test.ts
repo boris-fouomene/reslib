@@ -11,6 +11,8 @@ import {
   IsJSON,
   IsMACAddress,
   IsMongoId,
+  IsNonNullString,
+  IsOptional,
   IsPhoneNumber,
   IsUUID,
   IsUrl,
@@ -78,6 +80,19 @@ describe('Format Validation Rules', () => {
       const instance = new TestClass();
       instance.email = 'test@example.com';
 
+      const result = await Validator.validateClass(TestClass, {
+        data: instance,
+      });
+      expect(result.success).toBe(true);
+    });
+
+    it('should skip validation for optional non null string', async () => {
+      class TestClass {
+        @IsNonNullString()
+        @IsOptional()
+        email?: string;
+      }
+      const instance = new TestClass();
       const result = await Validator.validateClass(TestClass, {
         data: instance,
       });
