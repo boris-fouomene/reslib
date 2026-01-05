@@ -1324,7 +1324,7 @@ export class Validator {
     value: unknown;
   }) {
     // Check for nullable rules - if value meets nullable conditions, skip validation
-    if (isEmpty(value) && Array.isArray(rules)) {
+    if (isEmpty(value)) {
       const nullableConditions = {
         /**
          * Empty rule
@@ -1393,8 +1393,8 @@ export class Validator {
    */
   static validateOneOfRule<
     Context = unknown,
-    RulesFunctions extends ValidatorDefaultMultiRule<Context> =
-      ValidatorDefaultMultiRule<Context>,
+    RulesFunctions extends
+      ValidatorDefaultMultiRule<Context> = ValidatorDefaultMultiRule<Context>,
   >(
     options: ValidatorMultiRuleOptions<Context, RulesFunctions>
   ): ValidatorRuleResult {
@@ -1424,8 +1424,8 @@ export class Validator {
    */
   static validateAllOfRule<
     Context = unknown,
-    RulesFunctions extends ValidatorDefaultMultiRule<Context> =
-      ValidatorDefaultMultiRule<Context>,
+    RulesFunctions extends
+      ValidatorDefaultMultiRule<Context> = ValidatorDefaultMultiRule<Context>,
   >(
     options: ValidatorMultiRuleOptions<Context, RulesFunctions>
   ): ValidatorRuleResult {
@@ -1458,8 +1458,8 @@ export class Validator {
    */
   static async validateArrayOfRule<
     Context = unknown,
-    RulesFunctions extends ValidatorDefaultMultiRule<Context> =
-      ValidatorDefaultMultiRule<Context>,
+    RulesFunctions extends
+      ValidatorDefaultMultiRule<Context> = ValidatorDefaultMultiRule<Context>,
   >(
     options: ValidatorMultiRuleOptions<Context, RulesFunctions>
   ): ValidatorAsyncRuleResult {
@@ -2107,8 +2107,8 @@ export class Validator {
    */
   static async validateMultiRule<
     Context = unknown,
-    RulesFunctions extends ValidatorDefaultMultiRule<Context> =
-      ValidatorDefaultMultiRule<Context>,
+    RulesFunctions extends
+      ValidatorDefaultMultiRule<Context> = ValidatorDefaultMultiRule<Context>,
   >(
     ruleName: ValidatorMultiRuleNames,
     {
@@ -2854,7 +2854,9 @@ export class Validator {
     for (const propertyKey in targetRules) {
       const rules = targetRules[propertyKey];
       const { sanitizedRules } = this.parseAndValidateRules(rules);
-      const value = data[propertyKey as keyof typeof data];
+      const value = Object.prototype.hasOwnProperty.call(data, propertyKey)
+        ? data[propertyKey as keyof typeof data]
+        : undefined;
       // Skip validation for Optional fields that are not present in data
       if (this.shouldSkipValidation({ value, rules: sanitizedRules })) {
         continue;
@@ -5543,8 +5545,8 @@ export class Validator {
    */
   static buildMultiRuleDecorator<
     Context = unknown,
-    RulesFunctions extends ValidatorDefaultMultiRule<Context> =
-      ValidatorDefaultMultiRule<Context>,
+    RulesFunctions extends
+      ValidatorDefaultMultiRule<Context> = ValidatorDefaultMultiRule<Context>,
   >(
     ruleFunction: ValidatorMultiRuleFunction<Context, RulesFunctions>,
     symbolMarker?: symbol
