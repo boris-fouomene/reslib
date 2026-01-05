@@ -1,12 +1,4 @@
 export const validator = {
-  //use for validating single data
-  /**
-   * @deprecated Use classValidationFailed instead for more descriptive error messages
-   */
-  failedForNFields: {
-    one: 'Validation failed for one field',
-    other: 'Validation failed for %{count} fields',
-  },
   // New, more descriptive validation error message
   classValidationFailed: {
     one: 'Validation failed for field: %{fields}',
@@ -16,14 +8,6 @@ export const validator = {
   fieldListOverflow: {
     one: '1 more',
     other: '%{count} more',
-  },
-  //use for validating multi data
-  /**
-   * @deprecated Use arrayValidationFailed instead for more descriptive error messages
-   */
-  failedForNItems: {
-    one: 'Validation failed for one item',
-    other: 'Validation failed for %{count} items',
   },
   // New, more descriptive array validation error message
   arrayValidationFailed: {
