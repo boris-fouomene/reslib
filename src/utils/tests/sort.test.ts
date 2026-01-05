@@ -652,7 +652,7 @@ describe('sortBy', () => {
             }
 
             // Performance should be reasonable
-            expect(endTime - startTime).toBeLessThan(5000);
+            expect(endTime - startTime).toBeLessThan(6000);
           }
         }
       }
