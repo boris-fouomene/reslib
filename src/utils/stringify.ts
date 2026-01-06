@@ -93,6 +93,11 @@ export function stringify(
    * If the input is an object, return its string representation as a comma-separated list of key-value pairs.
    */
   if (typeof obj === 'object') {
+    try {
+      return JSON.stringify(obj, null, 2);
+    } catch {
+      /* empty */
+    }
     return (
       openParen +
       '{' +
