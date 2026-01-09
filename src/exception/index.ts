@@ -681,7 +681,7 @@ export class BaseException<TDetails = unknown, TCause = unknown> extends Error {
     options?: BaseExceptionOptions<TDetails, TCause>
   ): TException {
     // If it's already an instance of the class we are calling from, just reuse/merge
-    if (error instanceof this) {
+    if (error instanceof this || error instanceof BaseException) {
       // Call withOptions from the class hierarchy
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       return (this as any).withOptions(error, options) as TException;
