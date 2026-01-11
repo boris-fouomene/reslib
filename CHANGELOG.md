@@ -1,5 +1,11 @@
 ## 1.0.3 (2025-12-09)
 
+## 2.3.3
+
+### Patch Changes
+
+- test(JsonHelper): add additional test case for isJSON method with complex JSON string
+
 ## 2.3.2
 
 ### Patch Changes

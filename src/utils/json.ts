@@ -235,10 +235,10 @@ export class JsonHelper {
     // For the helper we only want to parse object/array JSON strings, not
     // primitive JSON values like numbers, booleans or quoted strings.
     // Quick check for starting token helps avoid parsing primitives.
-    const first = text[0];
+    /* const first = text[0];
     if (first !== '{' && first !== '[') {
       return false;
-    }
+    } */
 
     try {
       const parsed = JSON.parse(text);
