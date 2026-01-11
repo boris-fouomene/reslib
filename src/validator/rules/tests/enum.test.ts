@@ -337,7 +337,6 @@ describe('Enum Validation Rules', () => {
       const result = await Validator.validateClass(SendVerificationDto, {
         data: instance,
       });
-      console.log(result, ' is result heeein ');
       expect(result.success).toBe(true);
     });
   });

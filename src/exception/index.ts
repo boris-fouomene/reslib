@@ -4,6 +4,7 @@ import { isNonNullString } from '@utils/isNonNullString';
 import { JsonHelper } from '@utils/json';
 import { defaultNumber } from '@utils/numbers';
 import { isObj } from '@utils/object';
+import { stringify } from '@utils/stringify';
 import {
   ValidatorBulkError,
   ValidatorClassError,
@@ -170,7 +171,7 @@ export class BaseException<TDetails = unknown, TCause = unknown> extends Error {
     this.statusCode = options?.statusCode;
     this.details = options?.details as TDetails;
     this.timestamp = options?.timestamp ?? new Date();
-    this.cause = options?.cause; // Error.cause is standard in modern JS, but we keep a public property too.
+    this.cause = this.normalizeCause(options?.cause); // Error.cause is standard in modern JS, but we keep a public property too.
     this.success = false;
   }
 
@@ -294,19 +295,120 @@ export class BaseException<TDetails = unknown, TCause = unknown> extends Error {
       success: false,
     };
   }
+  /**
+   * Normalizes the cause value by extracting the deepest root cause.
+   *
+   * This method recursively unwraps `BaseException` instances to find the **ultimate origin**
+   * of the error. When a `BaseException` is passed as a cause, it drills down through the
+   * chain until it finds a non-BaseException value (typically a standard `Error` or primitive).
+   *
+   * **Design Philosophy**:
+   * - The `cause` property should point to the **root cause** (the original error),
+   *   not intermediate wrapper exceptions.
+   * - This prevents the "t.toJSON is not a function" error by avoiding duck-typed
+   *   `BaseException` objects that lack actual methods.
+   * - It simplifies error analysis by exposing the original error directly.
+   *
+   * **Behavior**:
+   * - If `cause` is a `BaseException` (or duck-typed equivalent), recursively extract its cause
+   * - If `cause` is any other value (Error, string, object, undefined), return it as-is
+   * - If the chain has no root cause (deepest BaseException has no cause), returns `undefined`
+   *
+   * @template T - The expected return type (defaults to TCause)
+   * @param cause - The cause value to normalize
+   * @returns The deepest non-BaseException cause, or undefined if none exists
+   *
+   * @example
+   * ```typescript
+   * // Given a chain: level1 -> level2 -> level3 -> rootError
+   * const rootError = new Error('Database timeout');
+   * const level3 = new BaseException('Query failed', { cause: rootError });
+   * const level2 = new BaseException('Service error', { cause: level3 });
+   * const level1 = new BaseException('API error', { cause: level2 });
+   *
+   * // level1.cause is normalized to rootError, not level2
+   * console.log(level1.cause === rootError); // true
+   * ```
+   *
+   * @example
+   * ```typescript
+   * // All levels without a root non-BaseException cause result in undefined
+   * const level2 = new BaseException('Level 2');
+   * const level1 = new BaseException('Level 1', { cause: level2 });
+   *
+   * console.log(level1.cause); // undefined (level2 has no cause)
+   * ```
+   *
+   * @see {@link serializeCause} - Uses normalized cause for JSON serialization
+   */
+  normalizeCause<T = TCause>(cause: unknown): T {
+    if (BaseException.is(cause)) {
+      return this.normalizeCause(cause.cause);
+    }
+    return cause as T;
+  }
 
   /**
-   * Helper to Recursively serialize causes.
+   * Serializes the cause value into a JSON-safe representation.
+   *
+   * This method is called by `toJSON()` to convert the error cause into a format
+   * that can be safely passed through `JSON.stringify()`, transmitted over HTTP,
+   * or stored in databases.
+   *
+   * **Process Flow**:
+   * 1. **Normalize**: Calls `normalizeCause()` to extract the root cause
+   * 2. **Serialize Error**: If the cause is an `Error` instance, extracts key properties
+   * 3. **Serialize Other**: For non-Error values, uses `JsonHelper.stringify()` or string fallback
+   *
+   * **Depth Limiting**:
+   * - The `depth` parameter prevents infinite recursion in circular cause chains
+   * - When depth reaches 0, returns the string `'[Max Depth Reached]'`
+   * - Default max depth is 10 (configurable via `toJSON({ maxCauseDepth })`)
+   *
+   * **Error Serialization**:
+   * When the cause is an `Error` instance, extracts:
+   * - `name`: Error class name (e.g., "TypeError", "Error")
+   * - `message`: The error message
+   * - `code`: Application-specific error code (if present)
+   * - `statusCode`: HTTP status code (if present)
+   * - `timestamp`: Error timestamp (if present)
+   * - `cause`: Recursively serialized nested cause (if present)
+   *
+   * @param cause - The cause value to serialize
+   * @param depth - Remaining depth for recursive serialization (prevents infinite loops)
+   * @returns A JSON-serializable representation of the cause
+   *
+   * @example
+   * ```typescript
+   * // Serializing a standard Error
+   * const dbError = new Error('Connection refused');
+   * dbError.code = 'ECONNREFUSED';
+   *
+   * const exception = new BaseException('Database unavailable', { cause: dbError });
+   * const json = exception.toJSON({ cause: true });
+   *
+   * console.log(json.cause);
+   * // { name: 'Error', message: 'Connection refused', code: 'ECONNREFUSED' }
+   * ```
+   *
+   * @example
+   * ```typescript
+   * // Serializing a plain object cause
+   * const apiResponse = { status: 500, body: 'Internal Server Error' };
+   * const exception = new BaseException('API failed', { cause: apiResponse });
+   *
+   * const json = exception.toJSON({ cause: true });
+   * console.log(json.cause);
+   * // '{\n  "status": 500,\n  "body": "Internal Server Error"\n}'
+   * ```
+   *
+   * @protected - Can be overridden in subclasses for custom serialization
+   * @see {@link normalizeCause} - Extracts root cause before serialization
+   * @see {@link toJSON} - Primary method that calls this for cause serialization
    */
-  private serializeCause(cause: unknown, depth: number): unknown {
+  protected serializeCause(cause: unknown, depth: number): unknown {
     if (depth <= 0) return '[Max Depth Reached]';
-    if (BaseException.is(cause)) {
-      return cause.toJSON({
-        stack: false,
-        cause: true,
-        maxCauseDepth: depth - 1,
-      });
-    }
+    cause = this.normalizeCause(cause);
     if (cause instanceof Error) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const c = cause as any;
@@ -314,9 +416,16 @@ export class BaseException<TDetails = unknown, TCause = unknown> extends Error {
         name: c.name,
         message: c.message,
         ...(c.code ? { code: c.code } : {}),
+        ...(c.statusCode ? { statusCode: c.statusCode } : {}),
+        ...(c.timestamp ? { timestamp: c.timestamp } : {}),
+        ...(c.cause ? { cause: this.serializeCause(c.cause, depth - 1) } : {}),
       };
     }
-    return String(cause);
+    try {
+      return JsonHelper.stringify(cause, true, undefined, 2);
+    } catch {
+      return stringify(cause);
+    }
   }
 
   /**

@@ -195,8 +195,8 @@ describe('BaseException - Comprehensive Test Suite', () => {
           details: { field2: 'value2' },
         });
 
-        expect(ex.details?.field1).toBe('value1');
-        expect((ex.details as any)?.field2).toBe('value2');
+        expect((ex.details as { field1: string })?.field1).toBe('value1');
+        expect((ex.details as { field2: string })?.field2).toBe('value2');
       });
     });
 
@@ -487,7 +487,7 @@ describe('BaseException - Comprehensive Test Suite', () => {
       const middle = new BaseException('Middle', { cause: root });
       const top = new BaseException('Top', { cause: middle });
 
-      expect(top.cause).toBe(middle);
+      expect(top.cause).toBe(root);
       expect(middle.cause).toBe(root);
     });
 
@@ -499,8 +499,8 @@ describe('BaseException - Comprehensive Test Suite', () => {
       const json = top.toJSON({ cause: true, maxCauseDepth: 10 });
       expect(json.cause).toBeDefined();
       const middleJson = json.cause as any;
-      expect(middleJson.message).toBe('Middle layer');
-      expect(middleJson.cause).toBeDefined();
+      expect(middleJson.message).toBe('Root cause');
+      expect(middleJson.cause).not.toBeDefined();
     });
   });
 });

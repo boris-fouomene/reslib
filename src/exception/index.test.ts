@@ -640,3 +640,569 @@ describe('BaseException.from() Extensibility (Inheritance Cases)', () => {
     });
   });
 });
+
+// ==================== Test Case 8: Deeply Nested Recursive Exceptions ====================
+/**
+ * Test suite for deeply nested exceptions created using the from() method
+ * These tests ensure toJSON works correctly with 5+ levels of nesting
+ */
+describe('BaseException Deeply Nested Recursive Exceptions', () => {
+  describe('5+ Level Nested Exceptions using from()', () => {
+    test('should normalize cause to the root cause (non-BaseException)', () => {
+      // normalizeCause extracts the deepest non-BaseException cause
+      // Since level5 has no cause, all exceptions will have undefined cause
+
+      const level5 = new BaseException('Level 5 - Root cause', {
+        code: 'LEVEL_5',
+        statusCode: 500,
+      });
+
+      const level4 = new BaseException('Level 4', {
+        code: 'LEVEL_4',
+        statusCode: 404,
+        cause: level5,
+      });
+
+      const level3 = new BaseException('Level 3', {
+        code: 'LEVEL_3',
+        statusCode: 400,
+        cause: level4,
+      });
+
+      const level2 = new BaseException('Level 2', {
+        code: 'LEVEL_2',
+        statusCode: 401,
+        cause: level3,
+      });
+
+      const level1 = new BaseException('Level 1', {
+        code: 'LEVEL_1',
+        statusCode: 503,
+        cause: level2,
+      });
+
+      // Should not throw when calling toJSON
+      expect(() => level1.toJSON()).not.toThrow();
+
+      const json = level1.toJSON({ cause: true, maxCauseDepth: 10 });
+
+      expect(json.code).toBe('LEVEL_1');
+      expect(json.__isBaseException).toBe(true);
+      // With normalizeCause, cause is extracted to the root (which is undefined in this case)
+      expect(json.cause).toBeUndefined();
+    });
+
+    test('should extract root Error cause from nested BaseExceptions', () => {
+      // When the deepest cause is a regular Error, it should be preserved
+      const rootError = new Error('Root database error');
+
+      const level3 = new BaseException('Level 3', {
+        code: 'LEVEL_3',
+        cause: rootError,
+      });
+
+      const level2 = new BaseException('Level 2', {
+        code: 'LEVEL_2',
+        cause: level3,
+      });
+
+      const level1 = new BaseException('Level 1', {
+        code: 'LEVEL_1',
+        cause: level2,
+      });
+
+      // Should not throw when calling toJSON
+      expect(() => level1.toJSON()).not.toThrow();
+
+      // The cause should be the root Error, not the intermediate BaseExceptions
+      expect(level1.cause).toBe(rootError);
+
+      const json = level1.toJSON({ cause: true });
+      expect(json.cause).toBeDefined();
+      expect((json.cause as Record<string, unknown>).message).toBe(
+        'Root database error'
+      );
+      expect((json.cause as Record<string, unknown>).name).toBe('Error');
+    });
+
+    test('should handle 7 levels of nested exceptions and respect maxCauseDepth', () => {
+      // Create 7 levels of nested exceptions using proper cause chain
+      let current: BaseException = new BaseException('Level 7 - Deepest', {
+        code: 'LEVEL_7',
+      });
+
+      for (let i = 6; i >= 1; i--) {
+        current = new BaseException(`Level ${i}`, {
+          code: `LEVEL_${i}`,
+          cause: current,
+        });
+      }
+
+      // Should not throw
+      expect(() => current.toJSON()).not.toThrow();
+
+      // With maxCauseDepth = 3, should only show 3 levels of causes
+      const json = current.toJSON({ cause: true, maxCauseDepth: 3 });
+      expect(json.code).toBe('LEVEL_1');
+
+      // Navigate through the cause chain
+      let causeCount = 0;
+      let currentCause: Record<string, unknown> | string | undefined =
+        json.cause as Record<string, unknown> | string | undefined;
+      while (
+        currentCause &&
+        typeof currentCause !== 'string' &&
+        causeCount < 10
+      ) {
+        causeCount++;
+        currentCause = currentCause.cause as
+          | Record<string, unknown>
+          | string
+          | undefined;
+        if (currentCause === '[Max Depth Reached]') break;
+      }
+
+      // Should have limited depth due to maxCauseDepth
+      expect(causeCount).toBeLessThanOrEqual(4);
+    });
+
+    test('should handle 10 levels of nested exceptions with default maxCauseDepth', () => {
+      // Create 10 levels of nested exceptions using proper cause chain
+      let current: BaseException = new BaseException('Level 10 - Root', {
+        code: 'LEVEL_10',
+        details: { level: 10 },
+      });
+
+      for (let i = 9; i >= 1; i--) {
+        current = new BaseException(`Level ${i}`, {
+          code: `LEVEL_${i}`,
+          details: { level: i },
+          cause: current,
+        });
+      }
+
+      // Should not throw
+      expect(() => current.toJSON()).not.toThrow();
+
+      const json = current.toJSON({ cause: true }); // Default maxCauseDepth is 10
+      expect(json.code).toBe('LEVEL_1');
+      expect(json.details).toEqual({ level: 1 });
+    });
+
+    test('should handle mixed exception types in nested chain', () => {
+      // Create chain with different exception types
+      class CustomException extends BaseException<{ custom: string }> {}
+
+      const rootCause = new Error('Standard Error at root');
+
+      // BaseException.from() on a non-BaseException creates a new instance with cause
+      const level4 = BaseException.from(rootCause, { code: 'WRAPPED_ERROR' });
+
+      // Create proper nested chain with cause option
+      const level3 = new CustomException('Level 3', {
+        code: 'CUSTOM_3',
+        details: { custom: 'custom-data' },
+        cause: level4,
+      });
+
+      const level2 = new BaseException('Level 2', {
+        code: 'BASE_2',
+        cause: level3,
+      });
+
+      const level1 = new CustomException('Level 1', {
+        code: 'CUSTOM_1',
+        details: { custom: 'final' },
+        cause: level2,
+      });
+
+      expect(() => level1.toJSON()).not.toThrow();
+
+      const json = level1.toJSON({ cause: true, maxCauseDepth: 10 });
+      expect(json.code).toBe('CUSTOM_1');
+      expect((json.details as { custom: string })?.custom).toBe('final');
+
+      // With normalizeCause, the cause is the root Error (normalized through the chain)
+      // level1.cause should be the rootCause Error (normalized through level2 -> level3 -> level4)
+      expect(level1.cause).toBe(rootCause);
+
+      // The serialized cause should be the root Error
+      const serializedCause = json.cause as Record<string, unknown>;
+      expect(serializedCause.name).toBe('Error');
+      expect(serializedCause.message).toBe('Standard Error at root');
+    });
+  });
+
+  describe('Duck-typed / Serialized Exception Handling', () => {
+    test('should handle duck-typed BaseException objects without toJSON method', () => {
+      // Simulate a serialized/deserialized exception (plain object)
+      // With normalizeCause, duck-typed BaseExceptions are unwrapped to their inner cause
+      // Since this duck-typed object has no inner cause, the result will be undefined
+      const duckTypedException = {
+        __isBaseException: true,
+        __baseExceptionName: 'BaseException',
+        name: 'BaseException',
+        message: 'Duck typed error',
+        code: 'DUCK_ERROR',
+        statusCode: 400,
+        success: false,
+        timestamp: new Date().toISOString(),
+      };
+
+      // Create a BaseException with the duck-typed object as cause
+      const exception = BaseException.from('Wrapper error', {
+        cause: duckTypedException,
+      });
+
+      // Should not throw "t.toJSON is not a function"
+      expect(() => exception.toJSON()).not.toThrow();
+
+      // With normalizeCause, duck-typed BaseExceptions are unwrapped
+      // Since duckTypedException has no inner cause, exception.cause is undefined
+      expect(exception.cause).toBeUndefined();
+
+      const json = exception.toJSON({ cause: true });
+      // cause is undefined since the duck-typed object was normalized (unwrapped)
+      expect(json.cause).toBeUndefined();
+    });
+
+    test('should extract root cause from duck-typed BaseException with nested Error', () => {
+      // Create a duck-typed BaseException that wraps a real Error
+      const rootError = { name: 'Error', message: 'Root database error' };
+      const duckTypedException = {
+        __isBaseException: true,
+        __baseExceptionName: 'BaseException',
+        name: 'BaseException',
+        message: 'Duck typed wrapper',
+        success: false,
+        cause: rootError,
+      };
+
+      const exception = new BaseException('Top level', {
+        cause: duckTypedException,
+      });
+
+      // Should not throw
+      expect(() => exception.toJSON()).not.toThrow();
+
+      // The cause should be the root error object (normalizeCause unwrapped the duck-typed)
+      expect(exception.cause).toBe(rootError);
+    });
+
+    test('should handle nested duck-typed exceptions (5 levels)', () => {
+      // Create deeply nested duck-typed exceptions
+      const level5 = {
+        __isBaseException: true,
+        __baseExceptionName: 'BaseException',
+        name: 'BaseException',
+        message: 'Level 5',
+        code: 'DUCK_5',
+        success: false,
+      };
+
+      const level4 = {
+        __isBaseException: true,
+        __baseExceptionName: 'BaseException',
+        name: 'BaseException',
+        message: 'Level 4',
+        code: 'DUCK_4',
+        success: false,
+        cause: level5,
+      };
+
+      const level3 = {
+        __isBaseException: true,
+        __baseExceptionName: 'BaseException',
+        name: 'BaseException',
+        message: 'Level 3',
+        code: 'DUCK_3',
+        success: false,
+        cause: level4,
+      };
+
+      const level2 = BaseException.from('Level 2', {
+        code: 'LEVEL_2',
+        cause: level3,
+      });
+
+      const level1 = BaseException.from(level2, { code: 'LEVEL_1' });
+
+      // Should not throw
+      expect(() => level1.toJSON()).not.toThrow();
+
+      const json = level1.toJSON({ cause: true, maxCauseDepth: 10 });
+      expect(json.code).toBe('LEVEL_1');
+    });
+
+    test('should handle JSON.parse/JSON.stringify roundtrip with nested exceptions', () => {
+      // Create nested exceptions
+      const inner = new BaseException('Inner', {
+        code: 'INNER',
+        details: { nested: true },
+      });
+      const outer = BaseException.from(inner, {
+        code: 'OUTER',
+        details: { wrapper: true },
+      });
+
+      // Serialize to JSON string
+      const jsonString = JSON.stringify(outer.toJSON());
+
+      // Parse back to object (simulating API response)
+      const parsed = JSON.parse(jsonString);
+
+      // Create new exception from parsed object
+      const restored = BaseException.from(parsed);
+
+      // Should not throw when calling toJSON
+      expect(() => restored.toJSON()).not.toThrow();
+
+      const json = restored.toJSON({ cause: true });
+      expect(json.message).toBe('Inner'); // Message from original inner exception
+    });
+
+    test('should handle exception chain transmitted over network (simulated)', () => {
+      // Simulate server-side exception
+      const serverException = new BaseException('Database connection failed', {
+        code: 'DB_ERROR',
+        statusCode: 500,
+        details: { host: 'db.example.com', port: 5432 },
+        cause: new Error('ECONNREFUSED'),
+      });
+
+      // Serialize for API response
+      const apiResponse = JSON.stringify(
+        serverException.toJSON({ cause: true })
+      );
+
+      // Client-side: parse response
+      const clientParsed = JSON.parse(apiResponse);
+
+      // Client creates exception from parsed data
+      const clientException = BaseException.from(clientParsed);
+
+      // Should not throw
+      expect(() => clientException.toJSON()).not.toThrow();
+
+      const json = clientException.toJSON({ cause: true });
+      expect(json.code).toBe('DB_ERROR');
+      expect(json.statusCode).toBe(500);
+    });
+  });
+
+  describe('toJSON Robustness', () => {
+    test('should not throw for any type of cause', () => {
+      const testCauses = [
+        null,
+        undefined,
+        'string cause',
+        123,
+        true,
+        { message: 'plain object' },
+        new Error('standard error'),
+        new BaseException('base exception'),
+        () => 'function as cause',
+        Symbol('symbol cause'),
+        [1, 2, 3],
+        new Map([['key', 'value']]),
+        new Set([1, 2, 3]),
+        Promise.resolve('promise'),
+      ];
+
+      for (const cause of testCauses) {
+        const exception = new BaseException('Test', { cause });
+
+        expect(() => exception.toJSON()).not.toThrow();
+      }
+    });
+
+    test('should handle circular references gracefully', () => {
+      const circular: Record<string, unknown> = { message: 'Circular' };
+      circular.self = circular;
+
+      const exception = new BaseException('Test', { cause: circular });
+
+      // Should not throw, should handle circular reference
+      expect(() => exception.toJSON()).not.toThrow();
+    });
+
+    test('should handle objects with broken toJSON method', () => {
+      const brokenToJSON = {
+        __isBaseException: true,
+        __baseExceptionName: 'BaseException',
+        name: 'BaseException',
+        message: 'Broken',
+        success: false,
+        toJSON: () => {
+          throw new Error('toJSON is broken');
+        },
+      };
+
+      const exception = new BaseException('Wrapper', { cause: brokenToJSON });
+
+      // Should not throw, should fallback gracefully
+      expect(() => exception.toJSON()).not.toThrow();
+
+      const json = exception.toJSON({ cause: true });
+      expect(json.cause).not.toBeDefined();
+    });
+
+    test('should preserve all properties in deeply nested serialization', () => {
+      const level3 = new BaseException('Level 3', {
+        code: 'L3',
+        statusCode: 500,
+        details: { depth: 3, data: 'level3' },
+      });
+
+      const level2 = BaseException.from(level3, {
+        code: 'L2',
+        statusCode: 400,
+        details: { depth: 2, data: 'level2' },
+      });
+
+      const level1 = BaseException.from(level2, {
+        code: 'L1',
+        statusCode: 503,
+        details: { depth: 1, data: 'level1' },
+      });
+
+      const json = level1.toJSON({
+        cause: true,
+        maxCauseDepth: 10,
+        stack: false,
+      });
+
+      // Check all levels have correct properties
+      expect(json.code).toBe('L1');
+      expect(json.statusCode).toBe(503);
+      expect((json.details as Record<string, unknown>).depth).toBe(1);
+    });
+
+    test('should handle 5-level from() chain with different option overrides', () => {
+      // This specifically tests the from() -> withOptions -> toJSON chain
+      const root = new BaseException('Root', { code: 'ROOT', statusCode: 500 });
+
+      const l4 = BaseException.from(root, { code: 'L4' });
+      const l3 = BaseException.from(l4, { statusCode: 404 });
+      const l2 = BaseException.from(l3, { details: { added: 'at-l2' } });
+      const l1 = BaseException.from(l2, { code: 'FINAL', statusCode: 503 });
+
+      expect(() => l1.toJSON()).not.toThrow();
+
+      const json = l1.toJSON({ cause: true });
+      expect(json.code).toBe('FINAL');
+      expect(json.statusCode).toBe(503);
+    });
+  });
+
+  describe('Edge Cases with from() Method', () => {
+    test('should handle from() with already-serialized exception as input', () => {
+      const original = new BaseException('Original', {
+        code: 'ORIG',
+        details: { key: 'value' },
+      });
+
+      const serialized = original.toJSON();
+      const jsonString = JSON.stringify(serialized);
+      const parsed = JSON.parse(jsonString);
+
+      // from() should handle the parsed object
+      const restored = BaseException.from(parsed);
+
+      expect(() => restored.toJSON()).not.toThrow();
+      expect(restored.code).toBe('ORIG');
+    });
+
+    test('should handle multiple from() calls on same exception', () => {
+      const base = new BaseException('Base', { code: 'BASE' });
+
+      // Call from() multiple times on same base
+      const v1 = BaseException.from(base, { code: 'V1' });
+      const v2 = BaseException.from(base, { code: 'V2' });
+      const v3 = BaseException.from(base, { code: 'V3' });
+
+      // Note: from() with existing instance mutates, so all point to same instance
+      expect(() => v1.toJSON()).not.toThrow();
+      expect(() => v2.toJSON()).not.toThrow();
+      expect(() => v3.toJSON()).not.toThrow();
+    });
+
+    test('should handle from() with null/undefined cause in options', () => {
+      const exception = BaseException.from('Error', {
+        code: 'TEST',
+        cause: undefined,
+      });
+
+      expect(() => exception.toJSON()).not.toThrow();
+
+      const json = exception.toJSON({ cause: true });
+      // cause should be the original error string, not undefined
+      expect(json.cause).toBeDefined();
+    });
+
+    test('should handle recursive from() pattern used in catch blocks', () => {
+      // Common pattern: wrapping exceptions in catch blocks
+      const simulateErrorChain = () => {
+        try {
+          try {
+            try {
+              try {
+                try {
+                  throw new Error('Database error');
+                } catch (e) {
+                  throw BaseException.from(e, { code: 'DB_ERROR' });
+                }
+              } catch (e) {
+                throw BaseException.from(e, { code: 'SERVICE_ERROR' });
+              }
+            } catch (e) {
+              throw BaseException.from(e, { code: 'CONTROLLER_ERROR' });
+            }
+          } catch (e) {
+            throw BaseException.from(e, { code: 'MIDDLEWARE_ERROR' });
+          }
+        } catch (e) {
+          return BaseException.from(e, { code: 'APP_ERROR' });
+        }
+      };
+
+      const finalException = simulateErrorChain();
+
+      expect(() => finalException?.toJSON()).not.toThrow();
+
+      const json = finalException?.toJSON({ cause: true, maxCauseDepth: 10 });
+      expect(json?.code).toBe('APP_ERROR');
+    });
+
+    test('should stringify and parse 5-level nested exception correctly', () => {
+      // Create 5 levels
+      let current = new BaseException('Level 5', {
+        code: 'L5',
+        details: { level: 5 },
+      });
+      for (let i = 4; i >= 1; i--) {
+        current = BaseException.from(
+          new BaseException(`Level ${i}`, {
+            code: `L${i}`,
+            details: { level: i },
+            cause: current,
+          })
+        );
+      }
+
+      // Serialize and deserialize
+      const jsonString = JSON.stringify(
+        current.toJSON({ cause: true, maxCauseDepth: 10 })
+      );
+      const parsed = JSON.parse(jsonString);
+
+      // Create from parsed
+      const restored = BaseException.from(parsed);
+
+      expect(() => restored.toJSON()).not.toThrow();
+
+      const json = restored.toJSON({ cause: true });
+      expect(json.__isBaseException).toBe(true);
+    });
+  });
+});

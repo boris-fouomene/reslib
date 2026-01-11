@@ -1,5 +1,78 @@
 ## 1.0.3 (2025-12-09)
 
+## 2.3.2
+
+### Patch Changes
+
+- ## BaseException: Root Cause Normalization
+
+  ### New Feature: Automatic Cause Chain Flattening
+
+  `BaseException` now implements **intelligent cause normalization** that automatically extracts the root cause from nested exception chains. This prevents the "t.toJSON is not a function" error and simplifies error analysis.
+
+  #### Problem Solved
+
+  When exceptions wrap other exceptions multiple times (common in layered architectures), the cause chain could become deeply nested with duck-typed `BaseException` objects (e.g., from `JSON.parse()`) that lack actual methods. This caused serialization failures:
+
+  ```typescript
+  // Previously would throw "t.toJSON is not a function"
+  const parsed = JSON.parse(serializedError);
+  const wrapped = new BaseException('Wrapper', { cause: parsed });
+  wrapped.toJSON(); // ❌ Error!
+  ```
+
+  #### How It Works
+
+  The new `normalizeCause()` method recursively unwraps `BaseException` instances to find the ultimate origin of the error:
+
+  ```typescript
+  const rootDbError = new Error('ECONNREFUSED');
+  const level3 = new BaseException('Query failed', { cause: rootDbError });
+  const level2 = new BaseException('Service error', { cause: level3 });
+  const level1 = new BaseException('API error', { cause: level2 });
+
+  // The cause is NORMALIZED to the root error
+  console.log(level1.cause === rootDbError); // ✅ true (not level2!)
+  ```
+
+  #### Key Behaviors
+
+  | Scenario                                         | Cause Value                  | Normalized To      |
+  | ------------------------------------------------ | ---------------------------- | ------------------ |
+  | `cause` is an `Error`                            | `new Error('fail')`          | The `Error` itself |
+  | `cause` is a `BaseException` with a root `Error` | `BaseException <- Error`     | The root `Error`   |
+  | `cause` is a deep `BaseException` chain          | `BE <- BE <- BE <- Error`    | The root `Error`   |
+  | `cause` is a `BaseException` with no root        | `BaseException <- undefined` | `undefined`        |
+  | `cause` is a plain object                        | `{ code: 500 }`              | The object itself  |
+  | `cause` is a string                              | `'Something failed'`         | The string itself  |
+
+  #### New Methods
+  - **`normalizeCause<T>(cause: unknown): T`** - Extracts the deepest non-BaseException cause from a chain
+  - **Enhanced `serializeCause(cause, depth)`** - Now uses `normalizeCause()` and `JsonHelper.stringify()` for safe serialization
+
+  #### Override for Custom Behavior
+
+  If you need to preserve the full chain or implement custom normalization logic:
+
+  ```typescript
+  class ChainPreservingException extends BaseException {
+    // Preserve the full chain (disable normalization)
+    normalizeCause<T>(cause: unknown): T {
+      return cause as T; // No unwrapping
+    }
+  }
+  ```
+
+  ### Documentation
+  - Added comprehensive JSDoc documentation to `normalizeCause()` and `serializeCause()` methods
+  - Updated `BaseException.md` with detailed explanation of cause normalization behavior
+  - Added practical examples for error wrapping patterns in layered architectures
+
+  ### Tests
+  - Updated test suite to reflect new normalization behavior
+  - Added tests for duck-typed exception handling with nested errors
+  - All 42 exception tests passing
+
 ## 2.3.1
 
 ### Patch Changes

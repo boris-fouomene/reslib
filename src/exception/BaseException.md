@@ -329,14 +329,169 @@ if (BaseException.is(someObject)) {
 }
 ```
 
-### Error Chaining (`cause`)
+### Error Chaining (`cause`) with Root Cause Normalization
 
-Preserves the history of errors.
+BaseException implements an **intelligent cause normalization** system that automatically extracts the **root cause** from nested exception chains.
+
+#### The Problem It Solves
+
+When exceptions wrap other exceptions multiple times (common in layered architectures), the cause chain can become deeply nested:
 
 ```typescript
+// Traditional approach creates deep nesting
 const dbError = new Error('Connection timeout');
-const apiError = new BaseException('Request failed', { cause: dbError });
+const serviceError = new BaseException('Service failed', { cause: dbError });
+const controllerError = new BaseException('Request failed', {
+  cause: serviceError,
+});
+const middlewareError = new BaseException('Operation failed', {
+  cause: controllerError,
+});
 
-// In your error logger:
-console.log(apiError.cause); // Prints 'Error: Connection timeout'
+// Without normalization: middlewareError.cause === controllerError (not the root!)
+```
+
+This causes problems:
+
+1. **Serialization failures**: Duck-typed exceptions from `JSON.parse()` don't have a `toJSON()` method
+2. **Debugging complexity**: Finding the root cause requires manual traversal
+3. **Inconsistent behavior**: Different exception instances may have different cause depths
+
+#### How Cause Normalization Works
+
+When you set a `cause` on a `BaseException`, it automatically **extracts the deepest non-BaseException cause**:
+
+```typescript
+const rootDbError = new Error('ECONNREFUSED');
+const level3 = new BaseException('Query failed', { cause: rootDbError });
+const level2 = new BaseException('Service error', { cause: level3 });
+const level1 = new BaseException('API error', { cause: level2 });
+
+// The cause is NORMALIZED to the root error
+console.log(level1.cause === rootDbError); // ✅ true (not level2!)
+console.log(level2.cause === rootDbError); // ✅ true (not level3!)
+console.log(level3.cause === rootDbError); // ✅ true
+```
+
+#### Key Behaviors
+
+| Scenario                                         | Cause Value                  | Normalized To      |
+| ------------------------------------------------ | ---------------------------- | ------------------ |
+| `cause` is an `Error`                            | `new Error('fail')`          | The `Error` itself |
+| `cause` is a `BaseException` with a root `Error` | `BaseException <- Error`     | The root `Error`   |
+| `cause` is a deep `BaseException` chain          | `BE <- BE <- BE <- Error`    | The root `Error`   |
+| `cause` is a `BaseException` with no root        | `BaseException <- undefined` | `undefined`        |
+| `cause` is a plain object                        | `{ code: 500 }`              | The object itself  |
+| `cause` is a string                              | `'Something failed'`         | The string itself  |
+
+#### Serialization of Causes
+
+When calling `toJSON()`, the cause is serialized safely:
+
+```typescript
+const dbError = new Error('Connection refused');
+dbError.code = 'ECONNREFUSED';
+
+const exception = new BaseException('Database unavailable', { cause: dbError });
+const json = exception.toJSON({ cause: true });
+
+console.log(json.cause);
+// {
+//   name: 'Error',
+//   message: 'Connection refused',
+//   code: 'ECONNREFUSED'
+// }
+```
+
+For non-Error causes, `JsonHelper.stringify()` is used:
+
+```typescript
+const apiResponse = { status: 500, errors: ['Internal error'] };
+const exception = new BaseException('API failed', { cause: apiResponse });
+
+const json = exception.toJSON({ cause: true });
+console.log(json.cause);
+// '{\n  "status": 500,\n  "errors": ["Internal error"]\n}'
+```
+
+#### Depth Limiting
+
+To prevent infinite recursion with circular references, cause serialization has a configurable depth limit:
+
+```typescript
+const json = exception.toJSON({
+  cause: true,
+  maxCauseDepth: 5, // Default is 10
+});
+```
+
+When the depth limit is reached, the cause is replaced with `'[Max Depth Reached]'`.
+
+#### Practical Pattern: Error Wrapping in Catch Blocks
+
+With cause normalization, you can safely wrap errors at each layer without losing the original:
+
+```typescript
+// Database layer
+async function queryUser(id: string) {
+  try {
+    return await db.query('SELECT * FROM users WHERE id = ?', [id]);
+  } catch (err) {
+    throw new BaseException('Database query failed', {
+      code: 'DB_QUERY_ERROR',
+      cause: err, // Original DB error
+    });
+  }
+}
+
+// Service layer
+async function getUser(id: string) {
+  try {
+    return await queryUser(id);
+  } catch (err) {
+    throw new BaseException('User service error', {
+      code: 'USER_SERVICE_ERROR',
+      cause: err, // BaseException from DB layer → normalized to original DB error
+    });
+  }
+}
+
+// Controller layer
+async function handleGetUser(req, res) {
+  try {
+    const user = await getUser(req.params.id);
+    res.json(user);
+  } catch (err) {
+    const exception = BaseException.from(err, { code: 'REQUEST_ERROR' });
+
+    // exception.cause is the ORIGINAL database error, not intermediate layers
+    console.log(exception.cause); // The raw DB error
+
+    res.status(exception.statusCode || 500).json(exception.toJSON());
+  }
+}
+```
+
+#### Override `normalizeCause` for Custom Behavior
+
+If you need to preserve the full chain or implement custom normalization logic, override `normalizeCause`:
+
+```typescript
+class ChainPreservingException extends BaseException {
+  // Preserve the full chain (disable normalization)
+  normalizeCause<T>(cause: unknown): T {
+    return cause as T; // No unwrapping
+  }
+}
+
+class LoggingException extends BaseException {
+  // Log each level while normalizing
+  normalizeCause<T>(cause: unknown): T {
+    if (BaseException.is(cause)) {
+      console.log('Unwrapping:', cause.message);
+      return this.normalizeCause(cause.cause);
+    }
+    return cause as T;
+  }
+}
 ```

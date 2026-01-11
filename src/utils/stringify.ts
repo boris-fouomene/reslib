@@ -63,7 +63,7 @@ export function stringify(
    * If the input is a string, return its string representation wrapped in single quotes.
    */
   if (typeof obj === 'string') {
-    return options?.escapeString !== false
+    return options?.escapeString
       ? "'" + escapeString(obj as string) + "'"
       : obj;
   }
