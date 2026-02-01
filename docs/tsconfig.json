@@ -1,0 +1,16 @@
+{
+  "extends": "@docusaurus/tsconfig",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "noEmit": true,
+    "moduleResolution": "node"
+  },
+  "include": [
+    "src/**/*",
+    "docs/**/*",
+    "docusaurus.config.ts",
+    "sidebars.ts",
+    "*.d.ts"
+  ],
+  "exclude": ["node_modules", "build", ".docusaurus"]
+}

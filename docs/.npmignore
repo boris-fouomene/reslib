@@ -1,0 +1,4 @@
+# The docs folder should not be published to npm
+# This file exists for safety if someone tries to publish it
+
+*

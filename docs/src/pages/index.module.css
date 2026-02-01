@@ -1,0 +1,33 @@
+.heroBanner {
+  padding: 4rem 0;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.buttons {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 1.5rem;
+}
+
+.features {
+  display: flex;
+  align-items: center;
+  padding: 2rem 0;
+  width: 100%;
+  background-color: var(--ifm-background-surface-color);
+}
+
+.featureItem {
+  margin-bottom: 2rem;
+}
+
+.featureItem h3 {
+  font-size: 1.25rem;
+}
+
+.featureItem p {
+  color: var(--ifm-color-content-secondary);
+}

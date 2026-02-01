@@ -1,0 +1,46 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "entryPoints": ["./src/index.ts"],
+  "entryPointStrategy": "expand",
+  "out": "docs/docs/api",
+  "tsconfig": "./tsconfig.json",
+  "name": "ResLib API Reference",
+  "readme": "none",
+  "includeVersion": true,
+  "excludePrivate": true,
+  "excludeProtected": false,
+  "excludeInternal": true,
+  "excludeExternals": true,
+  "externalPattern": ["**/node_modules/**"],
+  "hideGenerator": true,
+  "searchInComments": true,
+  "cleanOutputDir": false,
+  "sort": ["source-order"],
+  "categorizeByGroup": true,
+  "categoryOrder": [
+    "Resources",
+    "Validation",
+    "I18n",
+    "Auth",
+    "Session",
+    "Observable",
+    "Utils",
+    "Types",
+    "*"
+  ],
+  "navigation": {
+    "includeCategories": true,
+    "includeGroups": true
+  },
+  "plugin": ["typedoc-plugin-markdown"],
+  "outputFileStrategy": "members",
+  "flattenOutputFiles": false,
+  "entryFileName": "index",
+  "membersWithOwnFile": ["Class", "Enum", "Interface", "TypeAlias", "Function"],
+  "visibilityFilters": {
+    "protected": true,
+    "private": false,
+    "inherited": true,
+    "external": false
+  }
+}
