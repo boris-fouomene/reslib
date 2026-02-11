@@ -1,5 +1,17 @@
 ## 1.0.3 (2025-12-09)
 
+## 2.4.0
+
+### Minor Changes
+
+- Refactor `CountryRegistry` to improve testability and feature completeness.
+  - **Breaking Change**: `CountryRegistry.setCountries` now returns `void` instead of the updated `Countries` object. This aligns with standard setter patterns and simplifies the implementation.
+  - **Refactor**: Internal storage now uses `Reflect` metadata, improving compatibility with framework patterns.
+  - **Feature**: Added `dialCodePriority` to the `Country` interface to help resolve ambiguous dial codes (e.g., +1).
+  - **Feature**: Enhanced `getCountry` and `setCountry` logic to correctly prioritize and merge i18n translations with registry data.
+  - **Refactor**: `isValid` now only enforces the presence of `code`, allowing for more flexible partial inputs.
+  - **Documentation**: Added comprehensive documentation in `src/countries/README.md` inclusive of usage examples and augmentation guides.
+
 ## 2.3.3
 
 ### Patch Changes
