@@ -573,10 +573,10 @@ declare global {
  * from the source objects into the target object. If a property exists in both the target
  * and a source object, the value from the source object will overwrite the target's value.
  * For arrays, the function merges the contents of the arrays, preserving the original order of the elements.
- *@template T - The type of the target object.
- * @param {T} target - The object to extend. It will receive the new properties.
+ *@template TResult - The type of the target object.
+ * @param {unknown} target - The object to extend. It will receive the new properties.
  * @param {...any[]} sources - The source objects to merge into the target. These objects will not be modified.
- * @returns {T} The extended target object, which contains properties from the source objects.
+ * @returns {TResult} The extended target object, which contains properties from the source objects.
  *
  * @example
  * ```ts
@@ -601,13 +601,10 @@ declare global {
  * For arrays, The function replaces the contents of the arrays, preserving the original order of the elements.
  * Empty values like null, undefined, and empty strings are ignored.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function extendObj<T extends Record<any, any> = any>(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  target: any,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  ...sources: any[]
-): T {
+export function extendObj<TResult extends Dictionary>(
+  target: unknown,
+  ...sources: unknown[]
+): TResult {
   const isClassArray = Array.isArray(target);
   const isClassObj = isObj(target);
   // Return if no target provided
@@ -629,7 +626,7 @@ export function extendObj<T extends Record<any, any> = any>(
     }
     if (isClassArray) {
       if (isSourceArr) {
-        mergeTwoArray(target, source);
+        mergeTwoArray(target as unknown[], source as unknown[]);
       } else {
         //preserving the type
         //target.push(source);
@@ -642,8 +639,7 @@ export function extendObj<T extends Record<any, any> = any>(
     //We are sure that target is a plain object and source is a plain object
     // Extend the target with source properties
     for (let j in source) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const srcValue = (source as any)[j];
+      const srcValue: unknown = (source as Dictionary)[j];
 
       // Skip undefined values
       if (srcValue === undefined || srcValue === null) {
@@ -654,39 +650,33 @@ export function extendObj<T extends Record<any, any> = any>(
         (target as any)[j] = target; // Point to the target itself
         continue;
       }
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const targetValue = (target as any)[j];
+
+      const targetValue = (target as Dictionary)[j];
       const isClassValueArr = Array.isArray(targetValue);
       const isSrcArr = Array.isArray(srcValue);
       if (isClassValueArr) {
         if (isSrcArr) {
-          mergeTwoArray(target[j], srcValue);
+          mergeTwoArray((target as Dictionary)[j], srcValue);
         } else {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          (target as any)[j] = srcValue;
+          (target as Dictionary)[j] = srcValue;
         }
         continue;
       } else if (!isObj(targetValue)) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (target as any)[j] = srcValue;
+        (target as Dictionary)[j] = srcValue;
         continue;
       }
       //here targetValue is a plain object
       if (isSrcArr || !isObj(srcValue)) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (target as any)[j] = srcValue;
+        (target as Dictionary)[j] = srcValue;
         continue;
       }
-      //here targetValue is a plain object and srcValue is an object, recursively extend them
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (target as any)[j] = extendObj({}, targetValue, srcValue);
+      (target as Dictionary)[j] = extendObj({}, targetValue, srcValue);
     }
   }
-  return target as T;
+  return target as TResult;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const mergeTwoArray = (target: any[], source: any[]) => {
+const mergeTwoArray = (target: unknown[], source: unknown[]) => {
   const sourceLength = source.length;
   let indexCounter = 0;
   for (let k = 0; k < target.length; k++) {
@@ -724,9 +714,9 @@ const mergeTwoArray = (target: any[], source: any[]) => {
  * Handles various data structures including Arrays, Sets, Maps, and plain objects.
  * Skips non-primitive values like functions, class instances.
  *
- * @param {any} obj - The object to flatten
+ * @param {unknown} obj - The object to flatten
  * @param {string} [prefix=''] - The prefix to use for nested keys
- * @returns {Record<string, Primitive>} A flattened object with primitive values
+ * @returns {Dictionary} A flattened object with primitive values
  *
  * @example
  * // Basic object flattening
@@ -784,21 +774,17 @@ const mergeTwoArray = (target: any[], source: any[]) => {
  *
  */
 export function flattenObject(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  obj: any,
+  obj: unknown,
   options?: FlattenObjectOptions
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-): Record<string, any> {
+): Dictionary {
   return _flattenObject(obj, '', {}, options);
 }
 function _flattenObject(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  obj: any,
+  obj: unknown,
   prefix: string = '',
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  flattened: Record<string, any> = {},
+  flattened: Dictionary = {},
   options?: FlattenObjectOptions
-): Record<string, Primitive> {
+): Dictionary {
   flattened = isObj(flattened) ? flattened : {};
   // Handle null/undefined early
   if (

@@ -94,7 +94,7 @@ export class I18n {
    * @returns The singleton I18n instance.
    */
   static getInstance(options?: Partial<I18nOptions>): I18n {
-    if (!I18n.instance) {
+    if (!I18n.instance || !I18n.isI18nInstance(I18n.instance)) {
       const locale = I18n.getLocaleFromSession();
       // Use "en" as default if session is empty or user didn't specify
       const opts: Partial<I18nOptions> = Object.assign(

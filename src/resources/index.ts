@@ -667,7 +667,11 @@ export abstract class Resource<
   }
   updateMetadata(options: ResourceBase<Name>): ResourceBase<Name> {
     options = Object.assign({}, options);
-    const metadata = extendObj({}, this.getMetaData(), options);
+    const metadata = extendObj<ResourceBase<Name>>(
+      {},
+      this.getMetaData(),
+      options
+    );
     Reflect.defineMetadata(
       ResourcesManager.resourceMetaData,
       metadata,

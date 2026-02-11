@@ -22,6 +22,21 @@ class Manager {
   private static _keyNamespace?: string = undefined;
 
   /**
+   * In-memory storage used as a fallback when no other storage mechanism is available.
+   *
+   * This property is a private dictionary that stores session data in memory.
+   * It is used when the application is running in a server-side environment
+   * or when the browser's localStorage is not available or disabled.
+   *
+   * The in-memory storage is automatically garbage collected when the application ends.
+   *
+   * @private
+   * @type {Dictionary}
+   * @default {}
+   */
+  private static __inMemoryStorage: Dictionary = {};
+
+  /**
    * Retrieves or initializes the session storage implementation used by the Manager.
    *
    * This getter implements a sophisticated storage initialization strategy with multiple fallback mechanisms
@@ -235,15 +250,14 @@ class Manager {
       };
     } else {
       //in memory storage. When there is not a localStorage, we use an in memory storage
-      let InMemoryStorage: Dictionary = {};
       this._storage = {
-        get: (key: string) => InMemoryStorage[key],
+        get: (key: string) => this.__inMemoryStorage[key],
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        set: (key: string, value: any) => (InMemoryStorage[key] = value),
+        set: (key: string, value: any) => (this.__inMemoryStorage[key] = value),
         remove: (key: string) => {
-          delete InMemoryStorage[key];
+          delete this.__inMemoryStorage[key];
         },
-        removeAll: () => (InMemoryStorage = {}),
+        removeAll: () => (this.__inMemoryStorage = {}),
       };
     }
     return this._storage as SessionStorage;

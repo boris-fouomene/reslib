@@ -1,16 +1,16 @@
 import { Currency } from '@/currency/types';
-import { i18n } from '@/i18n';
+import { I18n } from '@/i18n';
+import { Dictionary } from '@/types';
 import { defaultStr } from '@utils/defaultStr';
 import { isNonNullString } from '@utils/isNonNullString';
 import { extendObj, isObj } from '@utils/object';
 import 'reflect-metadata';
 import { countries } from './countries';
-import { Country, CountryCode } from './types';
+import { Countries, Country, CountryCode } from './types';
 const countriesByDialCodes = {};
 Object.keys(countries).map((countryCode) => {
-  const country = countries[countryCode as keyof typeof countries];
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  (countriesByDialCodes as any)[country.dialCode] = country.code;
+  const country = countries[countryCode as CountryCode];
+  (countriesByDialCodes as Dictionary)[country.dialCode] = country.code;
 });
 
 export * from './types';
@@ -20,26 +20,34 @@ export * from './types';
  *
  * @example
  * ```typescript
- * CountriesManager.setCountry({
+ * CountryRegistry.setCountry({
  *   code: 'US',
  *   dialCode: '+1',
  *   phoneNumberExample: '(123) 456-7890',
  *   flag: '🇺🇸'
  * });
  *
- * const usCountry = CountriesManager.getCountry('US');
+ * const usCountry = CountryRegistry.getCountry('US');
  * console.log(usCountry); // { code: 'US', dialCode: '+1', phoneNumberExample: '(123) 456-7890', flag: '🇺🇸' }
  * ```
  */
-export class CountriesManager {
-  /**
-   * A private static record of countries, where each key is a country code and each value is an Country object.
-   *
-   * @private
-   * @type {Record<CountryCode, Country>}
-   */
-  private static countries: Record<CountryCode, Country> =
-    countries as unknown as Record<CountryCode, Country>;
+export class CountryRegistry {
+  private static readonly registryMetaData = Symbol('countries:registry');
+
+  private static get registry(): Countries {
+    return Object.assign(
+      {},
+      Reflect.getMetadata(CountryRegistry.registryMetaData, CountryRegistry)
+    );
+  }
+
+  private static set registry(countries: Partial<Countries>) {
+    Reflect.defineMetadata(
+      CountryRegistry.registryMetaData,
+      countries,
+      CountryRegistry
+    );
+  }
 
   /**
    * Checks if a given country object is valid.
@@ -57,10 +65,10 @@ export class CountriesManager {
    *   phoneNumberExample: '(123) 456-7890',
    *   flag: '🇺🇸'
    * };
-   * console.log(CountriesManager.isValid(country)); // true
+   * console.log(CountryRegistry.isValid(country)); // true
    * ```
    */
-  static isValid(country: Country): boolean {
+  static isValid(country: unknown): country is Country {
     return isObj(country) && isNonNullString(country.code);
   }
 
@@ -72,11 +80,11 @@ export class CountriesManager {
    *
    * @example
    * ```typescript
-   * console.log(CountriesManager.getPhoneNumberExample('US')); // '(123) 456-7890'
+   * console.log(CountryRegistry.getPhoneNumberExample('US')); // '(123) 456-7890'
    * ```
    */
   static getPhoneNumberExample(code: CountryCode): string {
-    return defaultStr(this.getCountry(code)?.phoneNumberExample);
+    return defaultStr(CountryRegistry.getCountry(code)?.phoneNumberExample);
   }
 
   /**
@@ -87,11 +95,11 @@ export class CountriesManager {
    *
    * @example
    * ```typescript
-   * console.log(CountriesManager.getFlag('US')); // '🇺🇸'
+   * console.log(CountryRegistry.getFlag('US')); // '🇺🇸'
    * ```
    */
   static getFlag(code: CountryCode): string {
-    return defaultStr(this.getCountry(code)?.flag);
+    return defaultStr(CountryRegistry.getCountry(code)?.flag);
   }
 
   /**
@@ -102,11 +110,11 @@ export class CountriesManager {
    *
    * @example
    * ```typescript
-   * console.log(CountriesManager.getCurrency('US')); // { code: 'USD', symbol: '$' }
+   * console.log(CountryRegistry.getCurrency('US')); // { code: 'USD', symbol: '$' }
    * ```
    */
   static getCurrency(code: CountryCode): Currency | undefined {
-    return this.getCountry(code)?.currency;
+    return CountryRegistry.getCountry(code)?.currency;
   }
 
   /**
@@ -118,7 +126,7 @@ export class CountriesManager {
    *
    * @example
    * ```typescript
-   * CountriesManager.setCountry({
+   * CountryRegistry.setCountry({
    *   code: 'US',
    *   dialCode: '+1',
    *   phoneNumberExample: '(123) 456-7890',
@@ -127,8 +135,10 @@ export class CountriesManager {
    * ```
    */
   static setCountry(country: Country): void {
-    if (this.isValid(country)) {
-      this.countries[country.code] = country;
+    if (CountryRegistry.isValid(country)) {
+      const registry = CountryRegistry.registry;
+      registry[country.code] = country;
+      CountryRegistry.registry = registry;
     }
   }
 
@@ -142,36 +152,52 @@ export class CountriesManager {
    *
    * @example
    * ```typescript
-   * const country = CountriesManager.getCountry('US');
+   * i18n.registerTranslations({
+   *   fr : {
+   *    countries : {
+   *     US : {name : 'Etats Unis'}
+   *  },
+   * en : {
+   *   countries : {name:'United States'}
+   * }
+   *  }
+   * })
+   * const country = CountryRegistry.getCountry('US');
    * console.log(country); // { code: 'US', dialCode: '+1', phoneNumberExample: '(123) 456-7890', flag: '🇺🇸' }
    * ```
    */
   static getCountry(code: CountryCode): Country | undefined {
     if (!isNonNullString(code)) return undefined;
-    return extendObj<Country>(
-      {} as Country,
-      i18n.t(`countries.${code}`),
-      this.countries[code]
+    const i18nCountry = I18n.getInstance().get<Partial<Country>>(
+      `countries.${code}`
     );
+    const registeredCountry = CountryRegistry.registry[code];
+    if (!isObj(i18nCountry) && !isObj(registeredCountry)) {
+      return undefined;
+    }
+    return extendObj<Country>({}, i18nCountry, registeredCountry);
   }
 
   /**
    * Retrieves all countries stored in the internal record.
    *
-   * @returns {Record<CountryCode, Country>} A record of all countries, where each key is a country code and each value is an Country object.
+   * @returns {Countries} A record of all countries, where each key is a country code and each value is an Country object.
    *
    * @example
    * ```typescript
-   * const allCountries = CountriesManager.getCountries();
+   * const allCountries = CountryRegistry.getCountries();
    * console.log(allCountries); // { 'US': { code: 'US', ... }, ... }
    * ```
    */
-  static getCountries(): Record<CountryCode, Country> {
-    const countries = i18n.t('countries');
-    if (isObj(countries)) {
-      return extendObj({}, countries, this.countries);
-    }
-    return this.countries;
+  static getCountries(): Countries {
+    const i18nCountries =
+      I18n.getInstance().get<Partial<Countries>>('countries');
+    return extendObj(
+      {},
+      countries,
+      isObj(i18nCountries) ? i18nCountries : {},
+      CountryRegistry.registry
+    );
   }
 
   /**
@@ -181,12 +207,12 @@ export class CountriesManager {
    *
    * If the provided countries object is not an object, it returns the current internal record of countries.
    *
-   * @param {Partial<Record<CountryCode, Country>>} countries A partial record of countries to set.
-   * @returns {Record<CountryCode, Country>} The updated internal record of countries.
+   * @param {Partial<Countries>} countries A partial record of countries to set.
+   * @returns {void}
    *
    * @example
    * ```typescript
-   * CountriesManager.setCountries({
+   * CountryRegistry.setCountries({
    *   'US': {
    *     code: 'US',
    *     dialCode: '+1',
@@ -203,20 +229,20 @@ export class CountriesManager {
    * ```
    */
   static setCountries(
-    countries: Partial<Record<CountryCode, Country>>
-  ): Record<CountryCode, Country> {
-    if (!isObj(countries)) return this.countries;
+    countries: Partial<{ [key in CountryCode]: Country }>
+  ): void {
+    if (!isObj(countries)) return;
+    const registry: Countries = CountryRegistry.registry;
     for (const countryCode in countries) {
-      const country = countries[countryCode as keyof typeof countries];
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      if (this.isValid(country as any)) {
-        this.countries[countryCode as keyof typeof countries] = extendObj(
+      const country = countries[countryCode as CountryCode];
+      if (CountryRegistry.isValid(country)) {
+        registry[countryCode as CountryCode] = extendObj(
           {},
-          this.countries[countryCode as keyof typeof countries],
+          registry[countryCode as CountryCode],
           country
         );
       }
     }
-    return this.countries;
+    CountryRegistry.registry = registry;
   }
 }

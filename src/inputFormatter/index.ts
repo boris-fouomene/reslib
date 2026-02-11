@@ -1,4 +1,4 @@
-import { CountriesManager, CountryCode } from '@countries/index';
+import { CountryCode, CountryRegistry } from '@countries/index';
 import { Logger } from '@logger';
 import { DateHelper } from '@utils/date/dateHelper';
 import { defaultStr } from '@utils/defaultStr';
@@ -198,11 +198,11 @@ export class InputFormatter {
    *
    * @example
    * ```typescript
-   * console.log(CountriesManager.getCountryDialCode('US')); // '+1'
+   * console.log(CountryRegistry.getCountryDialCode('US')); // '+1'
    * ```
    */
   static getCountryDialCode(countryCode: CountryCode): string {
-    const r = defaultStr(CountriesManager.getCountry(countryCode)?.dialCode);
+    const r = defaultStr(CountryRegistry.getCountry(countryCode)?.dialCode);
     if (r) return r;
     try {
       // Get the country calling code (dial code)
@@ -654,7 +654,7 @@ export class InputFormatter {
     countryCode: CountryCode,
     format?: PhoneNumberFormat
   ): InputFormatterMaskWithValidation {
-    const countryExample = CountriesManager.getPhoneNumberExample(countryCode);
+    const countryExample = CountryRegistry.getPhoneNumberExample(countryCode);
     if (isNonNullString(countryExample)) {
       const r = InputFormatter.createPhoneNumberMaskFromExample(
         countryExample,
@@ -709,7 +709,7 @@ export class InputFormatter {
     if (!isNonNullString(countryCode)) {
       return null;
     }
-    const example = CountriesManager.getPhoneNumberExample(countryCode);
+    const example = CountryRegistry.getPhoneNumberExample(countryCode);
     if (isNonNullString(example)) {
       return InputFormatter.parsePhoneNumber(example);
     }
