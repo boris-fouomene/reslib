@@ -1,4 +1,4 @@
-import { CurrencyUtils } from '../currency';
+import { CurrencyFormatter } from '../currency';
 import {
   Currency,
   CurrencyAbbreviateFormatName,
@@ -9,7 +9,7 @@ import {
 import { defaultStr } from './defaultStr';
 import { isNumber } from './isNumber';
 
-const { currencies } = CurrencyUtils;
+const { currencies } = CurrencyFormatter;
 
 /**
  * Extends the Number interface with additional methods for formatting and abbreviating numbers.
@@ -141,7 +141,7 @@ Number.prototype.formatNumber = function (
   /**
    * Call the formatNumber function with the current number value and the specified options.
    */
-  return CurrencyUtils.formatNumber(
+  return CurrencyFormatter.formatNumber(
     this.valueOf(),
     optionsOrDecimalDigits,
     thousandSeparator,
@@ -169,7 +169,7 @@ Number.prototype.formatMoney = function (
   /**
    * Call the formatMoney function with the current number value and the specified options.
    */
-  return CurrencyUtils.formatMoney(
+  return CurrencyFormatter.formatMoney(
     this.valueOf(),
     symbol,
     decimalDigits,
@@ -465,14 +465,15 @@ export const abreviate2FormatMoney = (
   format?: string
 ): string => {
   if (!isNumber(number)) return '';
-  const { formattedValue: fVal, ...rest } = CurrencyUtils.formatMoneyAsObject(
-    number,
-    symbol,
-    decimalDigits,
-    thousandSeparator,
-    decimalSeparator,
-    format
-  );
+  const { formattedValue: fVal, ...rest } =
+    CurrencyFormatter.formatMoneyAsObject(
+      number,
+      symbol,
+      decimalDigits,
+      thousandSeparator,
+      decimalSeparator,
+      format
+    );
   return fVal.replace(
     '%v',
     abreviateNumber(
@@ -544,7 +545,7 @@ Object.keys(currencies).forEach((currencyKey) => {
     /**
      * Call the formatMoney function with the current number value and the specified options.
      */
-    return CurrencyUtils.formatMoney(
+    return CurrencyFormatter.formatMoney(
       this.valueOf(),
       currency,
       decimalDigits,

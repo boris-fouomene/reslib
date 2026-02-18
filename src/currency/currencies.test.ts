@@ -7,14 +7,14 @@ import {
   abreviateNumber,
   AbreviateNumberResult,
 } from '../utils/numbers';
-import { CurrencyUtils } from './index';
+import { CurrencyFormatter } from './index';
 import { session } from './session';
 import { Currency } from './types';
 
 describe('Currency Utils', () => {
   beforeEach(() => {
     // Reset session to default USD currency
-    CurrencyUtils.session.setCurrency({
+    CurrencyFormatter.session.setCurrency({
       symbol: '$',
       name: 'US Dollar',
       symbolNative: '$',
@@ -29,34 +29,34 @@ describe('Currency Utils', () => {
   });
   describe('prepareOptions', () => {
     it('should return default currency when no options provided', () => {
-      expect(CurrencyUtils.prepareOptions()).toEqual(session.getCurrency());
+      expect(CurrencyFormatter.prepareOptions()).toEqual(session.getCurrency());
     });
 
     it('should merge options with default currency', () => {
       const customOptions = { format: '$%v', decimalDigits: 3 };
       expect(
-        CurrencyUtils.prepareOptions(customOptions as Currency)
+        CurrencyFormatter.prepareOptions(customOptions as Currency)
       ).toMatchObject(customOptions);
     });
 
     it('should handle undefined options', () => {
-      const result = CurrencyUtils.prepareOptions(undefined);
+      const result = CurrencyFormatter.prepareOptions(undefined);
       expect(result).toEqual(session.getCurrency());
     });
 
     it('should handle null options', () => {
-      const result = CurrencyUtils.prepareOptions(null as any);
+      const result = CurrencyFormatter.prepareOptions(null as any);
       expect(result).toEqual(session.getCurrency());
     });
 
     it('should handle non-object options', () => {
-      const result = CurrencyUtils.prepareOptions('invalid' as any);
+      const result = CurrencyFormatter.prepareOptions('invalid' as any);
       expect(result).toEqual(session.getCurrency());
     });
 
     it('should parse format string with decimal digits', () => {
       const options = { format: '%s%v .###' };
-      const result = CurrencyUtils.prepareOptions(options as Currency);
+      const result = CurrencyFormatter.prepareOptions(options as Currency);
       expect(result.decimalDigits).toBe(3);
       // Format parsing removes the .### but leaves trailing space
       expect((result.format || '').trim()).toBe('%s%v');
@@ -64,21 +64,21 @@ describe('Currency Utils', () => {
 
     it('should parse format string with no decimal digits', () => {
       const options = { format: '%s%v .' };
-      const result = CurrencyUtils.prepareOptions(options as Currency);
+      const result = CurrencyFormatter.prepareOptions(options as Currency);
       expect(result.decimalDigits).toBe(0);
       expect((result.format || '').trim()).toBe('%s%v');
     });
 
     it('should parse format string with 9 decimal digits', () => {
       const options = { format: '%s%v .#########' };
-      const result = CurrencyUtils.prepareOptions(options as Currency);
+      const result = CurrencyFormatter.prepareOptions(options as Currency);
       expect(result.decimalDigits).toBe(9);
       expect((result.format || '').trim()).toBe('%s%v');
     });
 
     it('should not override explicit decimalDigits with format parsing', () => {
       const options = { format: '%s%v .###', decimalDigits: 2 };
-      const result = CurrencyUtils.prepareOptions(options as Currency);
+      const result = CurrencyFormatter.prepareOptions(options as Currency);
       // Format parsing extracts 3 from .###, but explicit decimalDigits should be checked
       // The current implementation shows format parsing takes precedence
       expect(result.decimalDigits).toBe(3); // Current implementation behavior
@@ -88,7 +88,7 @@ describe('Currency Utils', () => {
     it('should merge partial options correctly', () => {
       const defaultCurrency = session.getCurrency();
       const options = { symbol: '€', thousandSeparator: ' ' };
-      const result = CurrencyUtils.prepareOptions(options as Currency);
+      const result = CurrencyFormatter.prepareOptions(options as Currency);
       expect(result.symbol).toBe('€');
       expect(result.thousandSeparator).toBe(' ');
       expect(result.decimalDigits).toBe(defaultCurrency.decimalDigits);
@@ -97,7 +97,7 @@ describe('Currency Utils', () => {
 
     it('should ignore undefined properties in options', () => {
       const options = { symbol: '€', name: undefined, decimalDigits: 3 };
-      const result = CurrencyUtils.prepareOptions(options as Currency);
+      const result = CurrencyFormatter.prepareOptions(options as Currency);
       expect(result.symbol).toBe('€');
       expect(result.decimalDigits).toBe(3);
       expect(result.name).toBe(session.getCurrency().name); // should use default
@@ -106,116 +106,116 @@ describe('Currency Utils', () => {
 
   describe('unformat', () => {
     it('should return number for valid input', () => {
-      expect(CurrencyUtils.unformat('$1,234.56', '.')).toBe(1234.56);
+      expect(CurrencyFormatter.unformat('$1,234.56', '.')).toBe(1234.56);
     });
     it('should return 0 for invalid input', () => {
-      expect(CurrencyUtils.unformat('invalid', '.')).toBe(0);
+      expect(CurrencyFormatter.unformat('invalid', '.')).toBe(0);
     });
 
     it('should handle already numeric input', () => {
-      expect(CurrencyUtils.unformat(1234.56)).toBe(1234.56);
-      expect(CurrencyUtils.unformat(0)).toBe(0);
-      expect(CurrencyUtils.unformat(-123.45)).toBe(-123.45);
+      expect(CurrencyFormatter.unformat(1234.56)).toBe(1234.56);
+      expect(CurrencyFormatter.unformat(0)).toBe(0);
+      expect(CurrencyFormatter.unformat(-123.45)).toBe(-123.45);
     });
 
     it('should handle null and undefined input', () => {
-      expect(CurrencyUtils.unformat(null)).toBe(0);
-      expect(CurrencyUtils.unformat(undefined)).toBe(0);
+      expect(CurrencyFormatter.unformat(null)).toBe(0);
+      expect(CurrencyFormatter.unformat(undefined)).toBe(0);
     });
 
     it('should handle empty string', () => {
-      expect(CurrencyUtils.unformat('')).toBe(0);
+      expect(CurrencyFormatter.unformat('')).toBe(0);
     });
 
     it('should handle bracketed negatives', () => {
       // The implementation regex is /\((?=\d+)(.*)\)/ which doesn't properly handle currency symbols
       // It will strip the brackets and replace content with negative, but other chars interfere
-      expect(CurrencyUtils.unformat('($1,234.56)')).toBe(1234.56); // Implementation doesn't negate with symbols
-      expect(CurrencyUtils.unformat('(1234.56)')).toBe(-1234.56); // This works correctly
-      expect(CurrencyUtils.unformat('($ 1,234.56)')).toBe(1234.56); // Space and symbol break the regex
+      expect(CurrencyFormatter.unformat('($1,234.56)')).toBe(1234.56); // Implementation doesn't negate with symbols
+      expect(CurrencyFormatter.unformat('(1234.56)')).toBe(-1234.56); // This works correctly
+      expect(CurrencyFormatter.unformat('($ 1,234.56)')).toBe(1234.56); // Space and symbol break the regex
     });
 
     it('should handle different decimal separators', () => {
-      expect(CurrencyUtils.unformat('1.234,56', ',')).toBe(1234.56);
-      expect(CurrencyUtils.unformat('1 234,56', ',')).toBe(1234.56);
-      expect(CurrencyUtils.unformat('1234,56', ',')).toBe(1234.56);
+      expect(CurrencyFormatter.unformat('1.234,56', ',')).toBe(1234.56);
+      expect(CurrencyFormatter.unformat('1 234,56', ',')).toBe(1234.56);
+      expect(CurrencyFormatter.unformat('1234,56', ',')).toBe(1234.56);
     });
 
     it('should use default decimal separator when none provided', () => {
       const defaultCurrency = session.getCurrency();
-      expect(CurrencyUtils.unformat('1234.56')).toBe(1234.56);
-      expect(CurrencyUtils.unformat('1234,56', ',')).toBe(1234.56); // comma as decimal separator
+      expect(CurrencyFormatter.unformat('1234.56')).toBe(1234.56);
+      expect(CurrencyFormatter.unformat('1234,56', ',')).toBe(1234.56); // comma as decimal separator
     });
 
     it('should strip various currency symbols and formatting', () => {
-      expect(CurrencyUtils.unformat('$1,234.56')).toBe(1234.56);
-      expect(CurrencyUtils.unformat('€1.234,56', ',')).toBe(1234.56);
-      expect(CurrencyUtils.unformat('£ 1,234.56')).toBe(1234.56);
-      expect(CurrencyUtils.unformat('USD 1,234.56')).toBe(1234.56);
+      expect(CurrencyFormatter.unformat('$1,234.56')).toBe(1234.56);
+      expect(CurrencyFormatter.unformat('€1.234,56', ',')).toBe(1234.56);
+      expect(CurrencyFormatter.unformat('£ 1,234.56')).toBe(1234.56);
+      expect(CurrencyFormatter.unformat('USD 1,234.56')).toBe(1234.56);
     });
 
     it('should handle arrays of strings', () => {
       // unformat converts array to string ["$1,234.56", "$2,345.67"] => "$1,234.56,$2,345.67"
       // But the parsing treats this as nested decimal points: 1234.562345
-      const result = CurrencyUtils.unformat(['$1,234.56', '$2,345.67']);
+      const result = CurrencyFormatter.unformat(['$1,234.56', '$2,345.67']);
       // The actual result is 1234.562345 due to how the regex processes the joined string
       expect(result).toBeCloseTo(1234.562345, 3);
-      expect(CurrencyUtils.unformat([])).toBe(0);
+      expect(CurrencyFormatter.unformat([])).toBe(0);
     });
 
     it('should handle scientific notation and special number formats', () => {
       // When parsing "1.23e4", the regex removes 'e' before parseFloat, leaving "1.234"
       // So parseFloat("1.234") = 1.234
-      expect(CurrencyUtils.unformat('1.23e4')).toBeCloseTo(1.234, 2);
+      expect(CurrencyFormatter.unformat('1.23e4')).toBeCloseTo(1.234, 2);
       // For "1.23E-2", the regex removes 'E' and '-', leaving "1.232"
-      expect(CurrencyUtils.unformat('1.23E-2')).toBeCloseTo(1.232, 2);
+      expect(CurrencyFormatter.unformat('1.23E-2')).toBeCloseTo(1.232, 2);
     });
 
     it('should return 0 for NaN results', () => {
-      expect(CurrencyUtils.unformat('NaN')).toBe(0);
-      expect(CurrencyUtils.unformat('Infinity')).toBe(0);
-      expect(CurrencyUtils.unformat('-Infinity')).toBe(0);
+      expect(CurrencyFormatter.unformat('NaN')).toBe(0);
+      expect(CurrencyFormatter.unformat('Infinity')).toBe(0);
+      expect(CurrencyFormatter.unformat('-Infinity')).toBe(0);
     });
   });
 
   describe('toFixed', () => {
     it('should round to correct decimal places', () => {
-      expect(CurrencyUtils.toFixed(1.235, 2)).toBe('1.24');
+      expect(CurrencyFormatter.toFixed(1.235, 2)).toBe('1.24');
     });
 
     it('should handle rounding up', () => {
-      expect(CurrencyUtils.toFixed(1.235, 2)).toBe('1.24');
-      expect(CurrencyUtils.toFixed(1.234, 2)).toBe('1.23');
+      expect(CurrencyFormatter.toFixed(1.235, 2)).toBe('1.24');
+      expect(CurrencyFormatter.toFixed(1.234, 2)).toBe('1.23');
     });
 
     it('should handle zero decimal places', () => {
-      expect(CurrencyUtils.toFixed(1.9, 0)).toBe('2');
-      expect(CurrencyUtils.toFixed(1.1, 0)).toBe('1');
+      expect(CurrencyFormatter.toFixed(1.9, 0)).toBe('2');
+      expect(CurrencyFormatter.toFixed(1.1, 0)).toBe('1');
     });
 
     it('should handle large decimal places', () => {
-      expect(CurrencyUtils.toFixed(1.23456789, 6)).toBe('1.234568');
+      expect(CurrencyFormatter.toFixed(1.23456789, 6)).toBe('1.234568');
     });
 
     it('should handle negative numbers', () => {
       // The toFixed implementation has rounding behavior - test what it actually returns
-      const result1 = CurrencyUtils.toFixed(-1.235, 2);
-      const result2 = CurrencyUtils.toFixed(-1.234, 2);
+      const result1 = CurrencyFormatter.toFixed(-1.235, 2);
+      const result2 = CurrencyFormatter.toFixed(-1.234, 2);
       // The implementation may round down for negatives
       expect(result1).toBe('-1.23');
       expect(result2).toBe('-1.23');
     });
 
     it('should handle zero', () => {
-      expect(CurrencyUtils.toFixed(0, 2)).toBe('0.00');
-      expect(CurrencyUtils.toFixed(0, 0)).toBe('0');
+      expect(CurrencyFormatter.toFixed(0, 2)).toBe('0.00');
+      expect(CurrencyFormatter.toFixed(0, 0)).toBe('0');
     });
 
     it('should handle very small numbers', () => {
       // Very small numbers may result in NaN due to precision limits
       // 0.0000001 with 7 decimals may cause NaN
-      expect(CurrencyUtils.toFixed(0.000001, 6)).toMatch(/0\.000001/);
-      const result = CurrencyUtils.toFixed(0.0000001, 7);
+      expect(CurrencyFormatter.toFixed(0.000001, 6)).toMatch(/0\.000001/);
+      const result = CurrencyFormatter.toFixed(0.0000001, 7);
       // Accept either proper rounding or NaN for numbers beyond precision
       expect(
         result === '0.0000000' || result === 'NaN' || result === '0.000000'
@@ -227,14 +227,14 @@ describe('Currency Utils', () => {
       // The implementation converts to string for large numbers
       // eslint-disable-next-line no-loss-of-precision
       const largeNum = 123456789012345678901234567890;
-      const result = CurrencyUtils.toFixed(largeNum, 2);
+      const result = CurrencyFormatter.toFixed(largeNum, 2);
       // Large numbers lose precision in JavaScript, accept string result
       expect(result).toMatch(/^[0-9]+(\.[0-9]{2})?$/);
     });
 
     it('should handle integers larger than 15 digits', () => {
       // Large integers get converted to exponential notation in JavaScript
-      const result = CurrencyUtils.toFixed(1234567890123456, 2);
+      const result = CurrencyFormatter.toFixed(1234567890123456, 2);
       // Accept either the string representation or a valid number format
       expect(result).toMatch(/^[0-9.e+-]+$/);
     });
@@ -243,13 +243,13 @@ describe('Currency Utils', () => {
       // The implementation converts to string first, so NaN becomes "NaN" string
       // Then regex cleanup removes non-numeric chars, leaving empty string
       // parseFloat("") returns NaN, then isNaN check returns 0
-      expect(CurrencyUtils.toFixed(NaN, 2)).toBe('0.00');
+      expect(CurrencyFormatter.toFixed(NaN, 2)).toBe('0.00');
     });
 
     it('should handle Infinity', () => {
       // Infinity becomes "Infinity" string, then converted
-      const result1 = CurrencyUtils.toFixed(Infinity, 2);
-      const result2 = CurrencyUtils.toFixed(-Infinity, 2);
+      const result1 = CurrencyFormatter.toFixed(Infinity, 2);
+      const result2 = CurrencyFormatter.toFixed(-Infinity, 2);
       // Accept either NaN or 0.00 depending on implementation
       expect(result1 === 'NaN' || result1 === '0.00').toBe(true);
       expect(result2 === 'NaN' || result2 === '0.00').toBe(true);
@@ -257,7 +257,7 @@ describe('Currency Utils', () => {
 
     it('should use default decimal digits when not provided', () => {
       // The session default is 2 decimal digits
-      const result1 = CurrencyUtils.toFixed(1.235);
+      const result1 = CurrencyFormatter.toFixed(1.235);
       // The default session has 2 decimals, so this should give "1"
       // (the implementation cleans the number as string)
       expect(result1).toBe('1');
@@ -267,7 +267,7 @@ describe('Currency Utils', () => {
   describe('formatNumber', () => {
     it('should format number correctly', () => {
       expect(
-        CurrencyUtils.formatNumber(1234567.89, {
+        CurrencyFormatter.formatNumber(1234567.89, {
           decimalDigits: 2,
           thousandSeparator: ',',
           decimalSeparator: '.',
@@ -276,49 +276,51 @@ describe('Currency Utils', () => {
     });
 
     it('should format number with default options', () => {
-      expect(CurrencyUtils.formatNumber(1234567.89)).toBe('1,234,567.89');
+      expect(CurrencyFormatter.formatNumber(1234567.89)).toBe('1,234,567.89');
     });
 
     it('should handle negative numbers', () => {
-      expect(CurrencyUtils.formatNumber(-1234567.89)).toBe('-1,234,567.89');
+      expect(CurrencyFormatter.formatNumber(-1234567.89)).toBe('-1,234,567.89');
     });
 
     it('should handle zero', () => {
       // formatNumber with 0 and default settings (the implementation extracts decimal digits from the number)
       // For 0, there are no decimals so it returns "0" without decimal places
-      expect(CurrencyUtils.formatNumber(0)).toBe('0');
+      expect(CurrencyFormatter.formatNumber(0)).toBe('0');
       // Even with explicit decimal digits as second parameter
       // The implementation checks: if (!toPrepare.decimalDigits) use from number
       // Since 0 has no decimal part, it results in "0"
-      expect(CurrencyUtils.formatNumber(0, 2)).toBe('0');
+      expect(CurrencyFormatter.formatNumber(0, 2)).toBe('0');
     });
 
     it('should handle custom separators', () => {
       // formatNumber when passed with decimal digits as number parameter
       // The positional parameters are: (number, decimalDigits, thousandSeparator, decimalSeparator)
-      const result = CurrencyUtils.formatNumber(1234567.89, 2, ' ', ',');
+      const result = CurrencyFormatter.formatNumber(1234567.89, 2, ' ', ',');
       // This should format with space as thousand separator and comma as decimal
       expect(result).toBe('1 234 567,89');
     });
 
     it('should handle different decimal digits', () => {
       // When decimalDigits is second parameter (number), it's used as decimal digits
-      expect(CurrencyUtils.formatNumber(1234.56789, 0)).toBe('1,235'); // Rounded
-      expect(CurrencyUtils.formatNumber(1234.56789, 3)).toBe('1,234.568'); // 3 decimals
-      expect(CurrencyUtils.formatNumber(1234.56789, 5)).toBe('1,234.56789');
+      expect(CurrencyFormatter.formatNumber(1234.56789, 0)).toBe('1,235'); // Rounded
+      expect(CurrencyFormatter.formatNumber(1234.56789, 3)).toBe('1,234.568'); // 3 decimals
+      expect(CurrencyFormatter.formatNumber(1234.56789, 5)).toBe('1,234.56789');
     });
 
     it('should handle large numbers', () => {
       // JavaScript converts very large numbers to exponential notation
       // formatNumber handles this but may lose precision
-      // eslint-disable-next-line no-loss-of-precision
-      const result = CurrencyUtils.formatNumber(123456789012345678901234567890);
+
+      const result =
+        // eslint-disable-next-line no-loss-of-precision
+        CurrencyFormatter.formatNumber(123456789012345678901234567890);
       expect(result).toMatch(/^[0-9,.]+$/);
     });
 
     it('should handle numbers with many decimal places', () => {
       // formatNumber extracts decimal digits from the number itself if not provided
-      const result = CurrencyUtils.formatNumber(1.23456789, {
+      const result = CurrencyFormatter.formatNumber(1.23456789, {
         decimalDigits: 8,
         thousandSeparator: ',',
         decimalSeparator: '.',
@@ -333,7 +335,7 @@ describe('Currency Utils', () => {
         decimalSeparator: ',',
         symbol: '€',
       };
-      const result = CurrencyUtils.formatNumber(1234567.89, currency);
+      const result = CurrencyFormatter.formatNumber(1234567.89, currency);
       // When currency object has custom separators, formatNumber should use the session default
       // because formatNumber doesn't properly apply custom separators from the object
       expect(result).toBe('1,234,567.89');
@@ -342,13 +344,13 @@ describe('Currency Utils', () => {
 
   describe('format', () => {
     it('should format number correctly', () => {
-      expect(CurrencyUtils.formatNumber(1234567.89)).toBe('1,234,567.89');
+      expect(CurrencyFormatter.formatNumber(1234567.89)).toBe('1,234,567.89');
     });
   });
 
   describe('formatMoneyAsObject', () => {
     it('should format positive numbers correctly', () => {
-      const result = CurrencyUtils.formatMoneyAsObject(1234.56);
+      const result = CurrencyFormatter.formatMoneyAsObject(1234.56);
       expect(result.result).toBe('1,234.56 $');
       // The formattedValue is the format string with the symbol replaced
       expect(result.formattedValue).toContain('%v');
@@ -357,20 +359,20 @@ describe('Currency Utils', () => {
     });
 
     it('should format negative numbers correctly', () => {
-      const result = CurrencyUtils.formatMoneyAsObject(-1234.56);
+      const result = CurrencyFormatter.formatMoneyAsObject(-1234.56);
       expect(result.result).toBe('-1,234.56 $');
       expect(result.usedFormat).toBe('-%v %s');
     });
 
     it('should format zero correctly', () => {
-      const result = CurrencyUtils.formatMoneyAsObject(0);
+      const result = CurrencyFormatter.formatMoneyAsObject(0);
       // formatNumber returns "0" for 0 without explicit decimal digits
       expect(result.result).toBe('0 $');
       expect(result.usedFormat).toBe('%v %s');
     });
 
     it('should handle custom symbol', () => {
-      const result = CurrencyUtils.formatMoneyAsObject(1234.56, '€');
+      const result = CurrencyFormatter.formatMoneyAsObject(1234.56, '€');
       expect(result.result).toBe('1,234.56 €');
       expect(result.symbol).toBe('€');
     });
@@ -383,7 +385,7 @@ describe('Currency Utils', () => {
         decimalSeparator: ',',
         format: '%s %v',
       };
-      const result = CurrencyUtils.formatMoneyAsObject(1234.567, options);
+      const result = CurrencyFormatter.formatMoneyAsObject(1234.567, options);
       // The implementation doesn't fully respect custom separators and decimal digits from options
       // It uses session defaults for formatting
       expect(result.result).toBe('1,234.57 $');
@@ -392,7 +394,7 @@ describe('Currency Utils', () => {
     });
 
     it('should handle custom format', () => {
-      const result = CurrencyUtils.formatMoneyAsObject(
+      const result = CurrencyFormatter.formatMoneyAsObject(
         1234.56,
         '$',
         2,
@@ -405,13 +407,13 @@ describe('Currency Utils', () => {
     });
 
     it('should handle different decimal digits', () => {
-      const result = CurrencyUtils.formatMoneyAsObject(1234.56789, '$', 3);
+      const result = CurrencyFormatter.formatMoneyAsObject(1234.56789, '$', 3);
       expect(result.result).toContain('$');
       expect(result.formattedNumber).toBe('1,234.568');
     });
 
     it('should handle custom separators', () => {
-      const result = CurrencyUtils.formatMoneyAsObject(
+      const result = CurrencyFormatter.formatMoneyAsObject(
         1234.56,
         '$',
         2,
@@ -424,7 +426,7 @@ describe('Currency Utils', () => {
     });
 
     it('should return all required properties', () => {
-      const result = CurrencyUtils.formatMoneyAsObject(1234.56, '$');
+      const result = CurrencyFormatter.formatMoneyAsObject(1234.56, '$');
       expect(result).toHaveProperty('formattedValue');
       expect(result).toHaveProperty('formattedNumber');
       expect(result).toHaveProperty('usedFormat');
@@ -436,7 +438,7 @@ describe('Currency Utils', () => {
     });
 
     it('should handle null/undefined number', () => {
-      const result = CurrencyUtils.formatMoneyAsObject(undefined);
+      const result = CurrencyFormatter.formatMoneyAsObject(undefined);
       // Format "0" without decimal digits by default
       expect(result.result).toBe('0 $');
     });
@@ -444,20 +446,20 @@ describe('Currency Utils', () => {
 
   describe('formatMoney', () => {
     it('should format positive numbers correctly', () => {
-      expect(CurrencyUtils.formatMoney(1234.56)).toBe('1,234.56 $');
+      expect(CurrencyFormatter.formatMoney(1234.56)).toBe('1,234.56 $');
     });
 
     it('should format negative numbers correctly', () => {
-      expect(CurrencyUtils.formatMoney(-1234.56)).toBe('-1,234.56 $');
+      expect(CurrencyFormatter.formatMoney(-1234.56)).toBe('-1,234.56 $');
     });
 
     it('should format zero correctly', () => {
       // Default format of 0 without explicit decimal digits
-      expect(CurrencyUtils.formatMoney(0)).toBe('0 $');
+      expect(CurrencyFormatter.formatMoney(0)).toBe('0 $');
     });
 
     it('should handle custom symbol', () => {
-      expect(CurrencyUtils.formatMoney(1234.56, '€')).toBe('1,234.56 €');
+      expect(CurrencyFormatter.formatMoney(1234.56, '€')).toBe('1,234.56 €');
     });
 
     it('should handle custom options object', () => {
@@ -467,83 +469,83 @@ describe('Currency Utils', () => {
         format: '%s %v',
       };
       // formatMoney applies the symbol and format from options but uses session formatting
-      const result = CurrencyUtils.formatMoney(1234.567, options);
+      const result = CurrencyFormatter.formatMoney(1234.567, options);
       // The symbol from options is not applied when options is Currency
       // formatMoney seems to check if symbol is a string first
       expect(result).toBe('1,234.57 $');
     });
 
     it('should handle custom format', () => {
-      expect(CurrencyUtils.formatMoney(1234.56, '$', 2, ',', '.', '%s%v')).toBe(
-        '$1,234.56'
-      );
+      expect(
+        CurrencyFormatter.formatMoney(1234.56, '$', 2, ',', '.', '%s%v')
+      ).toBe('$1,234.56');
     });
 
     it('should handle different decimal digits', () => {
-      expect(CurrencyUtils.formatMoney(1234.56789, '$', 3)).toContain('$');
+      expect(CurrencyFormatter.formatMoney(1234.56789, '$', 3)).toContain('$');
     });
 
     it('should handle custom separators', () => {
-      const result = CurrencyUtils.formatMoney(1234.56, '$', 2, ' ', ',');
+      const result = CurrencyFormatter.formatMoney(1234.56, '$', 2, ' ', ',');
       expect(result).toContain('$');
     });
 
     it('should handle undefined number', () => {
-      expect(CurrencyUtils.formatMoney(undefined)).toBe('0 $');
+      expect(CurrencyFormatter.formatMoney(undefined)).toBe('0 $');
     });
   });
 
   describe('parseFormat', () => {
     it('should parse format with decimal digits', () => {
-      const result = CurrencyUtils.parseFormat('%s%v .###');
+      const result = CurrencyFormatter.parseFormat('%s%v .###');
       expect(result.format?.trim()).toBe('%s%v');
       expect(result.decimalDigits).toBe(3);
     });
 
     it('should parse format with no decimal digits', () => {
-      const result = CurrencyUtils.parseFormat('%s%v .');
+      const result = CurrencyFormatter.parseFormat('%s%v .');
       expect(result.format?.trim()).toBe('%s%v');
       expect(result.decimalDigits).toBe(0);
     });
 
     it('should parse format with 9 decimal digits', () => {
-      const result = CurrencyUtils.parseFormat('%s%v .#########');
+      const result = CurrencyFormatter.parseFormat('%s%v .#########');
       expect(result.format?.trim()).toBe('%s%v');
       expect(result.decimalDigits).toBe(9);
     });
 
     it('should handle format without decimal specification', () => {
-      const result = CurrencyUtils.parseFormat('%s %v');
+      const result = CurrencyFormatter.parseFormat('%s %v');
       expect(result.format).toBe('%s %v');
       expect(result.decimalDigits).toBeUndefined();
     });
 
     it('should handle empty format', () => {
-      const result = CurrencyUtils.parseFormat('');
+      const result = CurrencyFormatter.parseFormat('');
       expect(result.format).toBe('');
       expect(result.decimalDigits).toBeUndefined();
     });
 
     it('should handle undefined format', () => {
-      const result = CurrencyUtils.parseFormat(undefined);
+      const result = CurrencyFormatter.parseFormat(undefined);
       expect(result.format).toBe(''); // Implementation returns empty string not undefined
       expect(result.decimalDigits).toBeUndefined();
     });
 
     it('should trim whitespace from format', () => {
-      const result = CurrencyUtils.parseFormat('  %s%v .##  ');
+      const result = CurrencyFormatter.parseFormat('  %s%v .##  ');
       expect(result.format?.trim()).toBe('%s%v');
       expect(result.decimalDigits).toBe(2);
     });
 
     it('should handle format with only decimal specification', () => {
-      const result = CurrencyUtils.parseFormat('.###');
+      const result = CurrencyFormatter.parseFormat('.###');
       expect(result.format?.trim()).toBe('');
       expect(result.decimalDigits).toBe(3);
     });
 
     it('should handle complex format strings', () => {
-      const result = CurrencyUtils.parseFormat('%s %v .## extra text');
+      const result = CurrencyFormatter.parseFormat('%s %v .## extra text');
       expect(result.format).toContain('%s %v');
       // The regex doesn't properly handle text after the decimal specification
       // So decimalDigits might not be extracted correctly
@@ -555,50 +557,50 @@ describe('Currency Utils', () => {
 
   describe('currencies', () => {
     it('should export currencies object', () => {
-      expect(CurrencyUtils.currencies).toBeDefined();
-      expect(typeof CurrencyUtils.currencies).toBe('object');
+      expect(CurrencyFormatter.currencies).toBeDefined();
+      expect(typeof CurrencyFormatter.currencies).toBe('object');
     });
 
     it('should contain USD currency', () => {
-      expect(CurrencyUtils.currencies.USD).toBeDefined();
-      expect(CurrencyUtils.currencies.USD.symbol).toBe('$');
-      expect(CurrencyUtils.currencies.USD.code).toBe('USD');
+      expect(CurrencyFormatter.currencies.USD).toBeDefined();
+      expect(CurrencyFormatter.currencies.USD.symbol).toBe('$');
+      expect(CurrencyFormatter.currencies.USD.code).toBe('USD');
     });
 
     it('should contain EUR currency', () => {
-      expect(CurrencyUtils.currencies.EUR).toBeDefined();
-      expect(CurrencyUtils.currencies.EUR.symbol).toBe('€');
-      expect(CurrencyUtils.currencies.EUR.code).toBe('EUR');
+      expect(CurrencyFormatter.currencies.EUR).toBeDefined();
+      expect(CurrencyFormatter.currencies.EUR.symbol).toBe('€');
+      expect(CurrencyFormatter.currencies.EUR.code).toBe('EUR');
     });
   });
 
   describe('isCurrency', () => {
     it('should validate valid currency objects', () => {
       const validCurrency = { name: 'Test Currency', symbol: '$' };
-      expect(CurrencyUtils.isCurrency(validCurrency)).toBe(true);
+      expect(CurrencyFormatter.isCurrency(validCurrency)).toBe(true);
     });
 
     it('should reject invalid currency objects', () => {
       // Implementation may return undefined/falsy instead of false
-      expect(!CurrencyUtils.isCurrency({ name: 'Test' })).toBe(true);
-      expect(!CurrencyUtils.isCurrency({ symbol: '$' })).toBe(true);
-      expect(!CurrencyUtils.isCurrency('string')).toBe(true);
-      expect(!CurrencyUtils.isCurrency(null)).toBe(true);
-      expect(!CurrencyUtils.isCurrency([])).toBe(true);
+      expect(!CurrencyFormatter.isCurrency({ name: 'Test' })).toBe(true);
+      expect(!CurrencyFormatter.isCurrency({ symbol: '$' })).toBe(true);
+      expect(!CurrencyFormatter.isCurrency('string')).toBe(true);
+      expect(!CurrencyFormatter.isCurrency(null)).toBe(true);
+      expect(!CurrencyFormatter.isCurrency([])).toBe(true);
     });
   });
 
   describe('session', () => {
     it('should have session methods', () => {
-      expect(CurrencyUtils.session).toBeDefined();
-      expect(typeof CurrencyUtils.session.getCurrency).toBe('function');
-      expect(typeof CurrencyUtils.session.setCurrency).toBe('function');
-      expect(typeof CurrencyUtils.session.getFormat).toBe('function');
-      expect(typeof CurrencyUtils.session.setFormat).toBe('function');
+      expect(CurrencyFormatter.session).toBeDefined();
+      expect(typeof CurrencyFormatter.session.getCurrency).toBe('function');
+      expect(typeof CurrencyFormatter.session.setCurrency).toBe('function');
+      expect(typeof CurrencyFormatter.session.getFormat).toBe('function');
+      expect(typeof CurrencyFormatter.session.setFormat).toBe('function');
     });
 
     it('should get current currency', () => {
-      const currency = CurrencyUtils.session.getCurrency();
+      const currency = CurrencyFormatter.session.getCurrency();
       expect(currency).toBeDefined();
       expect(currency.symbol).toBeDefined();
       expect(currency.decimalDigits).toBeDefined();
@@ -606,16 +608,16 @@ describe('Currency Utils', () => {
 
     it('should set and get currency format', () => {
       const testFormat = '%s %v';
-      CurrencyUtils.session.setFormat(testFormat);
-      expect(CurrencyUtils.session.getFormat()).toBe(testFormat);
+      CurrencyFormatter.session.setFormat(testFormat);
+      expect(CurrencyFormatter.session.getFormat()).toBe(testFormat);
     });
   });
 
   describe('Integration Tests', () => {
     it('should format and unformat currency values correctly', () => {
       const originalValue = 1234.56;
-      const formatted = CurrencyUtils.formatMoney(originalValue);
-      const unformatted = CurrencyUtils.unformat(formatted);
+      const formatted = CurrencyFormatter.formatMoney(originalValue);
+      const unformatted = CurrencyFormatter.unformat(formatted);
       expect(unformatted).toBe(originalValue);
     });
 
@@ -628,30 +630,35 @@ describe('Currency Utils', () => {
         format: '%s %v',
       };
       const originalValue = 1234.567;
-      const formatted = CurrencyUtils.formatMoney(
+      const formatted = CurrencyFormatter.formatMoney(
         originalValue,
         customCurrency
       );
       // The implementation doesn't fully apply custom separators, uses session defaults
       expect(formatted).toBe('1,234.57 $');
       // We can still extract a value
-      const unformatted = CurrencyUtils.unformat(formatted);
+      const unformatted = CurrencyFormatter.unformat(formatted);
       expect(unformatted).toBeCloseTo(1234.57, 1);
     });
 
     it('should work with different locales', () => {
       // Test with European formatting passed as parameters
       const euroValue = 1234567.89;
-      const euroFormatted = CurrencyUtils.formatNumber(euroValue, 2, ' ', ',');
+      const euroFormatted = CurrencyFormatter.formatNumber(
+        euroValue,
+        2,
+        ' ',
+        ','
+      );
       // formatNumber with positional parameters for custom separators
       expect(euroFormatted).toBe('1 234 567,89');
       // Test unformatting European format
-      const backToNumber = CurrencyUtils.unformat(euroFormatted, ',');
+      const backToNumber = CurrencyFormatter.unformat(euroFormatted, ',');
       expect(backToNumber).toBe(euroValue);
     });
 
     it('should handle currency session changes', () => {
-      const originalCurrency = CurrencyUtils.session.getCurrency();
+      const originalCurrency = CurrencyFormatter.session.getCurrency();
 
       // Set custom currency
       const customCurrency: Currency = {
@@ -659,28 +666,28 @@ describe('Currency Utils', () => {
         decimalDigits: 2,
         format: '%s%v',
       };
-      CurrencyUtils.session.setCurrency(customCurrency);
+      CurrencyFormatter.session.setCurrency(customCurrency);
 
       // Test formatting with new currency
-      const formatted = CurrencyUtils.formatMoney(1234.56);
+      const formatted = CurrencyFormatter.formatMoney(1234.56);
       expect(formatted).toContain('£');
 
       // Reset to original
-      CurrencyUtils.session.setCurrency(originalCurrency);
-      const resetFormatted = CurrencyUtils.formatMoney(1234.56);
+      CurrencyFormatter.session.setCurrency(originalCurrency);
+      const resetFormatted = CurrencyFormatter.formatMoney(1234.56);
       expect(resetFormatted).not.toContain('£');
     });
 
     it('should handle large numbers consistently', () => {
       const largeNumber = 448745130379325400000;
-      const formatted = CurrencyUtils.formatNumber(largeNumber);
+      const formatted = CurrencyFormatter.formatNumber(largeNumber);
       // Check that it formats as a number string
       expect(formatted).toMatch(/^[0-9,]+$/);
 
-      const moneyFormatted = CurrencyUtils.formatMoney(largeNumber);
+      const moneyFormatted = CurrencyFormatter.formatMoney(largeNumber);
       expect(moneyFormatted).toContain('$');
 
-      const unformatted = CurrencyUtils.unformat(moneyFormatted);
+      const unformatted = CurrencyFormatter.unformat(moneyFormatted);
       expect(unformatted).toBe(largeNumber);
     });
   });
@@ -699,7 +706,7 @@ describe('Currency Utils', () => {
       await i18n.setLocale('fr');
     });
     it('Should format number in french', () => {
-      const currency = CurrencyUtils.session.getCurrency();
+      const currency = CurrencyFormatter.session.getCurrency();
       expect(currency.decimalDigits).toBe(2);
       expect(currency.decimalSeparator).toBe('.');
       // Session may not be updated immediately, check for either value
@@ -708,7 +715,7 @@ describe('Currency Utils', () => {
       ).toBe(true);
 
       // The formatNumber should use session settings
-      const formatted = CurrencyUtils.formatNumber(1234567.89);
+      const formatted = CurrencyFormatter.formatNumber(1234567.89);
       // It should contain the full number formatted with separators
       expect(formatted).toMatch(/1[,\s]234[,\s]567/);
     });
@@ -768,10 +775,10 @@ describe('Will format large numbers', () => {
   test('should format large number correctly', () => {
     const largeNum = 448745130379325400000;
     // Note: JavaScript loses precision with very large numbers
-    const formatted = CurrencyUtils.formatNumber(largeNum);
+    const formatted = CurrencyFormatter.formatNumber(largeNum);
     expect(formatted).toMatch(/^[0-9, ]+$/);
 
-    const formattedMoney = CurrencyUtils.formatMoney(largeNum);
+    const formattedMoney = CurrencyFormatter.formatMoney(largeNum);
     expect(formattedMoney).toContain('$');
   });
 });
@@ -1279,7 +1286,7 @@ describe('Dynamic Currency Formatters - Number.prototype.formatXXX', () => {
 describe('Big Number Formatting - Comprehensive Test Suite', () => {
   beforeEach(() => {
     // Reset session to default USD currency
-    CurrencyUtils.session.setCurrency({
+    CurrencyFormatter.session.setCurrency({
       symbol: '$',
       name: 'US Dollar',
       symbolNative: '$',
@@ -1296,44 +1303,44 @@ describe('Big Number Formatting - Comprehensive Test Suite', () => {
   describe('Extremely Large Numbers (Billions and Beyond)', () => {
     it('should format one billion', () => {
       const billion = 1_000_000_000;
-      const result = CurrencyUtils.formatMoney(billion);
+      const result = CurrencyFormatter.formatMoney(billion);
       expect(result).toContain('1,000,000,000');
       expect(result).toContain('$');
     });
 
     it('should format 500 billion', () => {
       const amount = 500_000_000_000;
-      const result = CurrencyUtils.formatMoney(amount);
+      const result = CurrencyFormatter.formatMoney(amount);
       expect(result).toContain('$');
       expect(result).toMatch(/500|500,000,000,000/);
     });
 
     it('should format one trillion', () => {
       const trillion = 1_000_000_000_000;
-      const result = CurrencyUtils.formatMoney(trillion);
+      const result = CurrencyFormatter.formatMoney(trillion);
       expect(result).toContain('$');
-      const formatted = CurrencyUtils.formatNumber(trillion);
+      const formatted = CurrencyFormatter.formatNumber(trillion);
       expect(formatted).toMatch(/^[0-9,]+$/);
     });
 
     it('should format 123 trillion 456 billion 789 million', () => {
       const amount = 123_456_789_000_000;
-      const result = CurrencyUtils.formatMoney(amount);
+      const result = CurrencyFormatter.formatMoney(amount);
       expect(result).toContain('$');
       expect(result).toMatch(/123|456|789/);
     });
 
     it("should format numbers larger than JavaScript's MAX_SAFE_INTEGER", () => {
       const safeMax = 9_007_199_254_740_991; // MAX_SAFE_INTEGER
-      const result = CurrencyUtils.formatMoney(safeMax);
+      const result = CurrencyFormatter.formatMoney(safeMax);
       expect(result).toContain('$');
-      const formatted = CurrencyUtils.formatNumber(safeMax);
+      const formatted = CurrencyFormatter.formatNumber(safeMax);
       expect(formatted).toMatch(/^[0-9,.]+$/);
     });
 
     it('should handle numbers in scientific notation range', () => {
       const largeNum = 1e15; // 1 quadrillion
-      const result = CurrencyUtils.formatMoney(largeNum);
+      const result = CurrencyFormatter.formatMoney(largeNum);
       expect(result).toContain('$');
     });
 
@@ -1360,14 +1367,14 @@ describe('Big Number Formatting - Comprehensive Test Suite', () => {
   describe('Large Decimal Numbers', () => {
     it('should format large number with two decimal places', () => {
       const amount = 999_999_999_999.99;
-      const result = CurrencyUtils.formatMoney(amount);
+      const result = CurrencyFormatter.formatMoney(amount);
       expect(result).toContain('$');
       expect(result).toContain('.99');
     });
 
     it('should format large number with maximum precision', () => {
       const amount = 1_234_567_890.123456;
-      const result = CurrencyUtils.formatNumber(amount, 6);
+      const result = CurrencyFormatter.formatNumber(amount, 6);
       expect(result).toMatch(/1,234,567,890/);
       expect(result).toContain('.');
     });
@@ -1375,20 +1382,20 @@ describe('Big Number Formatting - Comprehensive Test Suite', () => {
     it('should handle large numbers with many decimal places', () => {
       // eslint-disable-next-line no-loss-of-precision
       const amount = 99_999_999.999999999;
-      const result = CurrencyUtils.formatNumber(amount, 9);
+      const result = CurrencyFormatter.formatNumber(amount, 9);
       // JavaScript may round the last digit due to precision
       expect(result).toMatch(/99,999,999|100,000,000/);
     });
 
     it('should round large decimals correctly', () => {
       const amount = 1_000_000.456789;
-      const result = CurrencyUtils.formatNumber(amount, 2);
+      const result = CurrencyFormatter.formatNumber(amount, 2);
       expect(result).toContain('1,000,000.46');
     });
 
     it('should format number with leading zeros after decimal', () => {
       const amount = 1_000_000.0001;
-      const result = CurrencyUtils.formatNumber(amount, 4);
+      const result = CurrencyFormatter.formatNumber(amount, 4);
       expect(result).toContain('1,000,000');
       expect(result).toContain('.0001');
     });
@@ -1396,14 +1403,14 @@ describe('Big Number Formatting - Comprehensive Test Suite', () => {
     it('should handle large numbers that need precision truncation', () => {
       // eslint-disable-next-line no-loss-of-precision
       const amount = 123_456_789.123456789;
-      const result = CurrencyUtils.formatNumber(amount, 3);
+      const result = CurrencyFormatter.formatNumber(amount, 3);
       expect(result).toMatch(/123,456,789\.123|123,456,789\.124/);
     });
 
     it('should handle very large fractional amounts', () => {
       // eslint-disable-next-line no-loss-of-precision
       const amount = 999_999_999_999.999999;
-      const result = CurrencyUtils.formatNumber(amount, 6);
+      const result = CurrencyFormatter.formatNumber(amount, 6);
       // JavaScript may round due to floating point precision limits
       expect(result).toMatch(/999,999,999,999|1,000,000,000,000/);
     });
@@ -1412,25 +1419,25 @@ describe('Big Number Formatting - Comprehensive Test Suite', () => {
   describe('Big Number Formatting with Different Locales', () => {
     it('should format large number with European separators', () => {
       const amount = 1_234_567.89;
-      const result = CurrencyUtils.formatNumber(amount, 2, ' ', ',');
+      const result = CurrencyFormatter.formatNumber(amount, 2, ' ', ',');
       expect(result).toBe('1 234 567,89');
     });
 
     it('should format large number with alternative separators', () => {
       const amount = 999_999_999.99;
-      const result = CurrencyUtils.formatNumber(amount, 2, ' ', '.');
+      const result = CurrencyFormatter.formatNumber(amount, 2, ' ', '.');
       expect(result).toMatch(/999 999 999/);
     });
 
     it('should unformat large European formatted number', () => {
       const formatted = '1 234 567,89';
-      const result = CurrencyUtils.unformat(formatted, ',');
+      const result = CurrencyFormatter.unformat(formatted, ',');
       expect(result).toBe(1_234_567.89);
     });
 
     it('should unformat large number with different thousand separator', () => {
       const formatted = '999.999.999,99';
-      const result = CurrencyUtils.unformat(formatted, ',');
+      const result = CurrencyFormatter.unformat(formatted, ',');
       expect(result).toBe(999_999_999.99);
     });
   });
@@ -1438,25 +1445,25 @@ describe('Big Number Formatting - Comprehensive Test Suite', () => {
   describe('Big Number Unformatting', () => {
     it('should unformat large formatted currency string', () => {
       const formatted = '$1,000,000,000.00';
-      const result = CurrencyUtils.unformat(formatted);
+      const result = CurrencyFormatter.unformat(formatted);
       expect(result).toBe(1_000_000_000);
     });
 
     it('should unformat large negative formatted currency', () => {
       const formatted = '-$999,999,999.99';
-      const result = CurrencyUtils.unformat(formatted);
+      const result = CurrencyFormatter.unformat(formatted);
       expect(result).toBe(-999_999_999.99);
     });
 
     it('should unformat large bracketed negative', () => {
       const formatted = '(1,234,567.89)';
-      const result = CurrencyUtils.unformat(formatted);
+      const result = CurrencyFormatter.unformat(formatted);
       expect(result).toBe(-1_234_567.89);
     });
 
     it('should unformat very large numbers without decimals', () => {
       const formatted = '1,000,000,000,000';
-      const result = CurrencyUtils.unformat(formatted);
+      const result = CurrencyFormatter.unformat(formatted);
       expect(result).toBe(1_000_000_000_000);
     });
 
@@ -1468,7 +1475,7 @@ describe('Big Number Formatting - Comprehensive Test Suite', () => {
       ];
 
       testCases.forEach((testCase) => {
-        const result = CurrencyUtils.unformat(
+        const result = CurrencyFormatter.unformat(
           testCase.formatted,
           testCase.separator
         );
@@ -1480,25 +1487,25 @@ describe('Big Number Formatting - Comprehensive Test Suite', () => {
   describe('Big Number Rounding and Precision', () => {
     it('should round up large number correctly', () => {
       const amount = 999_999_999.995;
-      const result = CurrencyUtils.toFixed(amount, 2);
+      const result = CurrencyFormatter.toFixed(amount, 2);
       expect(result).toBe('1000000000.00');
     });
 
     it('should round down large number correctly', () => {
       const amount = 999_999_999.994;
-      const result = CurrencyUtils.toFixed(amount, 2);
+      const result = CurrencyFormatter.toFixed(amount, 2);
       expect(result).toBe('999999999.99');
     });
 
     it('should handle large number with 0 decimal digits', () => {
       const amount = 1_234_567.89;
-      const result = CurrencyUtils.toFixed(amount, 0);
+      const result = CurrencyFormatter.toFixed(amount, 0);
       expect(result).toBe('1234568'); // Should round up
     });
 
     it('should handle large number with many decimal precision', () => {
       const amount = 1_234_567.123456789;
-      const result = CurrencyUtils.toFixed(amount, 8);
+      const result = CurrencyFormatter.toFixed(amount, 8);
       expect(result).toMatch(/1234567\.12345679|1234567\.12345678/);
     });
 
@@ -1507,7 +1514,7 @@ describe('Big Number Formatting - Comprehensive Test Suite', () => {
       const rate = 0.05;
       const years = 10;
       const result = principal * Math.pow(1 + rate, years);
-      const formatted = CurrencyUtils.formatMoney(result);
+      const formatted = CurrencyFormatter.formatMoney(result);
       expect(formatted).toContain('$');
     });
   });
@@ -1516,21 +1523,21 @@ describe('Big Number Formatting - Comprehensive Test Suite', () => {
     it('should format sum of large numbers', () => {
       const num1 = 500_000_000;
       const num2 = 600_000_000;
-      const result = CurrencyUtils.formatMoney(num1 + num2);
+      const result = CurrencyFormatter.formatMoney(num1 + num2);
       expect(result).toContain('1,100,000,000');
     });
 
     it('should format product of large numbers', () => {
       const num1 = 1_000_000;
       const num2 = 1_000;
-      const result = CurrencyUtils.formatMoney(num1 * num2);
+      const result = CurrencyFormatter.formatMoney(num1 * num2);
       expect(result).toContain('1,000,000,000');
     });
 
     it('should format division result of large numbers', () => {
       const dividend = 1_000_000_000;
       const divisor = 3;
-      const result = CurrencyUtils.formatMoney(dividend / divisor);
+      const result = CurrencyFormatter.formatMoney(dividend / divisor);
       expect(result).toContain('333,333,333');
     });
 
@@ -1539,16 +1546,16 @@ describe('Big Number Formatting - Comprehensive Test Suite', () => {
       const rate = 0.08;
       const years = 20;
       const amount = principal * Math.pow(1 + rate, years);
-      const formatted = CurrencyUtils.formatMoney(amount);
+      const formatted = CurrencyFormatter.formatMoney(amount);
       expect(formatted).toContain('$');
-      const unformatted = CurrencyUtils.unformat(formatted);
+      const unformatted = CurrencyFormatter.unformat(formatted);
       expect(unformatted).toBeCloseTo(amount, 0);
     });
 
     it('should format large percentage calculations', () => {
       const amount = 1_000_000_000;
       const percentage = 0.15;
-      const result = CurrencyUtils.formatMoney(amount * percentage);
+      const result = CurrencyFormatter.formatMoney(amount * percentage);
       expect(result).toContain('150,000,000');
     });
   });
@@ -1556,44 +1563,44 @@ describe('Big Number Formatting - Comprehensive Test Suite', () => {
   describe('Big Number Edge Cases', () => {
     it('should handle number at MAX_SAFE_INTEGER boundary', () => {
       const maxSafe = Number.MAX_SAFE_INTEGER;
-      const result = CurrencyUtils.formatNumber(maxSafe);
+      const result = CurrencyFormatter.formatNumber(maxSafe);
       expect(result).toMatch(/^[0-9,]+$/);
-      const money = CurrencyUtils.formatMoney(maxSafe);
+      const money = CurrencyFormatter.formatMoney(maxSafe);
       expect(money).toContain('$');
     });
 
     it('should handle number just below MAX_SAFE_INTEGER', () => {
       const belowMax = Number.MAX_SAFE_INTEGER - 1;
-      const result = CurrencyUtils.formatMoney(belowMax);
+      const result = CurrencyFormatter.formatMoney(belowMax);
       expect(result).toContain('$');
     });
 
     it('should handle very close large numbers without loss of precision', () => {
       const num1 = 1_000_000_000.01;
       const num2 = 1_000_000_000.02;
-      const result1 = CurrencyUtils.formatNumber(num1, 2);
-      const result2 = CurrencyUtils.formatNumber(num2, 2);
+      const result1 = CurrencyFormatter.formatNumber(num1, 2);
+      const result2 = CurrencyFormatter.formatNumber(num2, 2);
       expect(result1).toContain('.01');
       expect(result2).toContain('.02');
     });
 
     it('should handle large number formatted and unformatted roundtrip', () => {
       const original = 987_654_321.98;
-      const formatted = CurrencyUtils.formatMoney(original);
-      const unformatted = CurrencyUtils.unformat(formatted);
+      const formatted = CurrencyFormatter.formatMoney(original);
+      const unformatted = CurrencyFormatter.unformat(formatted);
       expect(unformatted).toBe(original);
     });
 
     it('should handle negative large numbers', () => {
       const amount = -1_234_567_890.12;
-      const result = CurrencyUtils.formatMoney(amount);
+      const result = CurrencyFormatter.formatMoney(amount);
       expect(result).toContain('-');
       expect(result).toContain('1,234,567,890.12');
     });
 
     it('should handle large numbers with custom decimal separators', () => {
       const amount = 1_234_567.89;
-      const result = CurrencyUtils.formatNumber(amount, 2, '.', ',');
+      const result = CurrencyFormatter.formatNumber(amount, 2, '.', ',');
       expect(result).toBe('1.234.567,89');
     });
   });
@@ -1696,7 +1703,7 @@ describe('Big Number Formatting - Comprehensive Test Suite', () => {
         1_000_000, 1_000_000_000, 1_000_000_000_000, 999_999_999.99,
         123_456_789.01,
       ];
-      const results = numbers.map((n) => CurrencyUtils.formatMoney(n));
+      const results = numbers.map((n) => CurrencyFormatter.formatMoney(n));
       expect(results).toHaveLength(5);
       results.forEach((result) => {
         expect(result).toContain('$');
@@ -1715,8 +1722,8 @@ describe('Big Number Formatting - Comprehensive Test Suite', () => {
     it('should handle mixed operations on large numbers', () => {
       const principal = 100_000;
       const operations = [
-        CurrencyUtils.formatMoney(principal * 10),
-        CurrencyUtils.formatNumber(principal * 100),
+        CurrencyFormatter.formatMoney(principal * 10),
+        CurrencyFormatter.formatNumber(principal * 100),
         abreviateNumber(principal * 1000),
         (principal * 10000).formatUSD(),
       ];
@@ -1731,7 +1738,7 @@ describe('Big Number Formatting - Comprehensive Test Suite', () => {
       for (let i = 0; i < 1000; i++) {
         sum += 1_000_000;
       }
-      const result = CurrencyUtils.formatMoney(sum);
+      const result = CurrencyFormatter.formatMoney(sum);
       expect(result).toContain('$');
       expect(result).toContain('1,000,000,000');
     });
@@ -1740,8 +1747,8 @@ describe('Big Number Formatting - Comprehensive Test Suite', () => {
   describe('Big Number Formatting Consistency', () => {
     it('should maintain consistency across multiple formats', () => {
       const amount = 1_234_567.89;
-      const money = CurrencyUtils.formatMoney(amount);
-      const number = CurrencyUtils.formatNumber(amount);
+      const money = CurrencyFormatter.formatMoney(amount);
+      const number = CurrencyFormatter.formatNumber(amount);
       const abbrev = abreviateNumber(amount);
 
       expect(money).toContain('$');
@@ -1751,16 +1758,16 @@ describe('Big Number Formatting - Comprehensive Test Suite', () => {
 
     it('should maintain precision through format/unformat cycle', () => {
       const original = 1_234_567.89;
-      const formatted = CurrencyUtils.formatMoney(original);
-      const unformatted = CurrencyUtils.unformat(formatted);
+      const formatted = CurrencyFormatter.formatMoney(original);
+      const unformatted = CurrencyFormatter.unformat(formatted);
       expect(unformatted).toBe(original);
     });
 
     it('should handle consistent large number with all functions', () => {
       const amount = 1_000_000_000;
-      const formatted = CurrencyUtils.formatMoney(amount);
+      const formatted = CurrencyFormatter.formatMoney(amount);
       const abbrev = abreviateNumber(amount);
-      const asNumber = CurrencyUtils.formatNumber(amount);
+      const asNumber = CurrencyFormatter.formatNumber(amount);
 
       expect(formatted).toContain('$');
       expect(abbrev).toContain('B');
@@ -1771,13 +1778,13 @@ describe('Big Number Formatting - Comprehensive Test Suite', () => {
   describe('Big Number Special Cases and Boundary Tests', () => {
     it('should handle number that rounds to exactly 1 million', () => {
       const amount = 999_999.999;
-      const result = CurrencyUtils.toFixed(amount, 0);
+      const result = CurrencyFormatter.toFixed(amount, 0);
       expect(result).toBe('1000000');
     });
 
     it('should handle number with trailing zeros', () => {
       const amount = 1_000_000_000;
-      const result = CurrencyUtils.formatMoney(amount);
+      const result = CurrencyFormatter.formatMoney(amount);
       expect(result).toContain('1,000,000,000');
     });
 
@@ -1785,7 +1792,7 @@ describe('Big Number Formatting - Comprehensive Test Suite', () => {
       const large = 1_000_000_000;
       const small = 0.01;
       const total = large + small;
-      const result = CurrencyUtils.formatNumber(total, 2);
+      const result = CurrencyFormatter.formatNumber(total, 2);
       expect(result).toContain('1,000,000,000.01');
     });
 
@@ -1794,22 +1801,22 @@ describe('Big Number Formatting - Comprehensive Test Suite', () => {
       value = value * 1000; // 1 billion
       value = value / 2; // 500 million
       value = value + 123.45;
-      const result = CurrencyUtils.formatMoney(value);
+      const result = CurrencyFormatter.formatMoney(value);
       expect(result).toContain('$');
     });
 
     it('should format number at 1 thousand boundary', () => {
-      const result = CurrencyUtils.formatNumber(1_000);
+      const result = CurrencyFormatter.formatNumber(1_000);
       expect(result).toBe('1,000');
     });
 
     it('should format number at 1 million boundary', () => {
-      const result = CurrencyUtils.formatNumber(1_000_000);
+      const result = CurrencyFormatter.formatNumber(1_000_000);
       expect(result).toBe('1,000,000');
     });
 
     it('should format number at 1 billion boundary', () => {
-      const result = CurrencyUtils.formatNumber(1_000_000_000);
+      const result = CurrencyFormatter.formatNumber(1_000_000_000);
       expect(result).toContain('1,000,000,000');
     });
   });

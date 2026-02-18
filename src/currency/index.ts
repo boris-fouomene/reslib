@@ -613,7 +613,7 @@ const parseFormat: (format?: string) => Currency = (
 	for example, the format %v %s .## returns: 12.35 $ for the value 12.357777 converted into dollard.  
 `; */
 
-export const CurrencyUtils = {
+export const CurrencyFormatter = {
   parse: unformat,
   session,
   formatMoney,

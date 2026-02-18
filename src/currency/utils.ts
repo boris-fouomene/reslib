@@ -7,7 +7,7 @@ import { Currency } from './types';
  * - `name`: A string representing the name of the currency.
  * - `symbol`: A string representing the symbol of the currency.
  *
- * @param {any} obj - The object to be validated as a currency.
+ * @param {unknown} obj - The object to be validated as a currency.
  * @returns {boolean} Returns `true` if the object is a valid currency, otherwise `false`.
  *
  * @example
@@ -23,12 +23,15 @@ import { Currency } from './types';
  * const arrayInput = ["$"];
  * console.log(isCurrency(arrayInput)); // Output: false
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const isCurrency = (obj: any): obj is Currency =>
-  obj &&
+
+export const isCurrency = (obj: unknown): obj is Currency =>
+  (obj as Currency) !== null &&
+  (obj as Currency) !== undefined &&
   typeof obj === 'object' &&
   !Array.isArray(obj) &&
-  obj.name &&
-  typeof obj.name === 'string' &&
-  obj.symbol &&
-  typeof obj.symbol === 'string';
+  (obj as Currency).name !== null &&
+  (obj as Currency).name !== undefined &&
+  typeof (obj as Currency).name === 'string' &&
+  (obj as Currency).symbol !== null &&
+  (obj as Currency).symbol !== undefined &&
+  typeof (obj as Currency).symbol === 'string';
