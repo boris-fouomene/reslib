@@ -282,8 +282,7 @@ export class InputFormatter {
    * const decimal4 = parseDecimal("invalid");    // Returns: 0
    * ```
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  static parseDecimal = (value: any): number => {
+  static parseDecimal = (value: unknown): number => {
     if (typeof value === 'number') return value;
     if (
       value == undefined ||
@@ -301,11 +300,10 @@ export class InputFormatter {
     This method takes a value and a facultative decimal separator. It removes leading and trailing
     whitespace, commas. It also replaces the comma with the decimal separator.
     If the value is a number, it will be converted to a string.
-    @param {any} value - The value to normalize
+    @param {unknown} value - The value to normalize
     @param {string} decimalSeparator - The decimal separator to use
   */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  static normalizeNumber(value: any, decimalSeparator: string = '.') {
+  static normalizeNumber(value: unknown, decimalSeparator: string = '.') {
     if (typeof value == 'number') {
       return value.toString();
     }
@@ -317,11 +315,10 @@ export class InputFormatter {
   }
   /***
    * Check if the value ends with a decimal separator
-   * @param {any} value - The value to Check
+   * @param {unkown} value - The value to Check
    * @returns {boolean} Whether the value ends with a decimal separator
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  static endsWithDecimalSeparator = (value: any): boolean => {
+  static endsWithDecimalSeparator = (value: unknown): boolean => {
     const val = String(value).trim().replace(/\s/g, '');
     return val.endsWith('.') || val.endsWith(',') || val.endsWith('٫');
   };
