@@ -1,3 +1,9 @@
+## 2.6.0
+
+### Minor Changes
+
+- feat: enhance CurrencyFormatter with unformat and improved formatting options
+
 ## 2.5.0
 
 ### Minor Changes
