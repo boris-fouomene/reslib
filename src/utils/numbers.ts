@@ -292,15 +292,6 @@ export const _abreviateNumber = (
     5
   );
   /**
-
-  /**
-   * Determine the number of decimal places to show.
-   */
-  let fixed = Math.min(decimals, 5);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  fixed = !fixed || fixed < 0 ? 0 : fixed;
-
-  /**
    * If the number is 0, return it as is.
    */
   if (num === 0) {

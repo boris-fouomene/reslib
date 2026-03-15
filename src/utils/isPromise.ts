@@ -72,15 +72,19 @@ function isNativePromise(p: unknown): boolean {
  *
  * A value is considered a Promise if it is a native Promise or if it has a Promise-like interface.
  *
+ * @template T The type of the value to check.
  * @param {unknown} value The value to check.
- * @returns {boolean} True if the value is a Promise, false otherwise.
+ * @returns {value is Promise<T>} True if the value is a Promise, false otherwise.
  * @example
  * ```typescript
  * console.log(isPromise(Promise.resolve())); // Output: true
  * console.log(isPromise({})); // Output: false
  * ```
  */
-export function isPromise(value: unknown): boolean {
+export function isPromise<T = unknown>(value: unknown): value is Promise<T> {
+  if (value instanceof Promise) {
+    return true;
+  }
   /**
    * Check if the value is a native Promise.
    */

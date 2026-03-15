@@ -1393,8 +1393,8 @@ export class Validator {
    */
   static validateOneOfRule<
     Context = unknown,
-    RulesFunctions extends
-      ValidatorDefaultMultiRule<Context> = ValidatorDefaultMultiRule<Context>,
+    RulesFunctions extends ValidatorDefaultMultiRule<Context> =
+      ValidatorDefaultMultiRule<Context>,
   >(
     options: ValidatorMultiRuleOptions<Context, RulesFunctions>
   ): ValidatorRuleResult {
@@ -1424,8 +1424,8 @@ export class Validator {
    */
   static validateAllOfRule<
     Context = unknown,
-    RulesFunctions extends
-      ValidatorDefaultMultiRule<Context> = ValidatorDefaultMultiRule<Context>,
+    RulesFunctions extends ValidatorDefaultMultiRule<Context> =
+      ValidatorDefaultMultiRule<Context>,
   >(
     options: ValidatorMultiRuleOptions<Context, RulesFunctions>
   ): ValidatorRuleResult {
@@ -1458,8 +1458,8 @@ export class Validator {
    */
   static async validateArrayOfRule<
     Context = unknown,
-    RulesFunctions extends
-      ValidatorDefaultMultiRule<Context> = ValidatorDefaultMultiRule<Context>,
+    RulesFunctions extends ValidatorDefaultMultiRule<Context> =
+      ValidatorDefaultMultiRule<Context>,
   >(
     options: ValidatorMultiRuleOptions<Context, RulesFunctions>
   ): ValidatorAsyncRuleResult {
@@ -2107,20 +2107,17 @@ export class Validator {
    */
   static async validateMultiRule<
     Context = unknown,
-    RulesFunctions extends
-      ValidatorDefaultMultiRule<Context> = ValidatorDefaultMultiRule<Context>,
+    RulesFunctions extends ValidatorDefaultMultiRule<Context> =
+      ValidatorDefaultMultiRule<Context>,
   >(
     ruleName: ValidatorMultiRuleNames,
     {
       value,
       ruleParams,
-      startTime,
       message,
       ...extra
     }: ValidatorMultiRuleOptions<Context, RulesFunctions>
   ) {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    startTime = isNumber(startTime) ? startTime : Date.now();
     // Special handling for OneOf: validate against each sub-rule in parallel
     const subRules = (
       Array.isArray(ruleParams) ? ruleParams : []
@@ -5545,8 +5542,8 @@ export class Validator {
    */
   static buildMultiRuleDecorator<
     Context = unknown,
-    RulesFunctions extends
-      ValidatorDefaultMultiRule<Context> = ValidatorDefaultMultiRule<Context>,
+    RulesFunctions extends ValidatorDefaultMultiRule<Context> =
+      ValidatorDefaultMultiRule<Context>,
   >(
     ruleFunction: ValidatorMultiRuleFunction<Context, RulesFunctions>,
     symbolMarker?: symbol
