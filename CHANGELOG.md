@@ -1,3 +1,15 @@
+## 2.5.0
+
+### Minor Changes
+
+- chore: update dependencies and improve type definitions
+  - Bump @changesets/cli to version 2.30.0
+  - Add @eslint/js as a new dependency
+  - Update various [@types](https://github.com/types) and eslint packages to their latest versions
+  - Improve type definition in isPromise function to return a more specific type
+  - Remove unused code in \_abreviateNumber function
+  - Clean up type definitions in Validator class methods
+
 ## 1.0.3 (2025-12-09)
 
 ## 2.4.0
