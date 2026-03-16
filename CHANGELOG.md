@@ -1,3 +1,9 @@
+## 2.6.1
+
+### Patch Changes
+
+- build: Generate CommonJS wrapper files for all library modules.
+
 ## 2.6.0
 
 ### Minor Changes
